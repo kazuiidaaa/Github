@@ -2,9 +2,11 @@ import { supabase } from "./supabase";
 import {
   EMPTY_EMPLOYMENT,
   type Applicant,
+  type CustomRequirement,
   type EmploymentInfo,
   type OrgCategory,
   type RequirementState,
+  type RequirementStatus,
   type CaseRecord,
   type DocumentRecord,
   type DocumentStatus,
@@ -59,9 +61,20 @@ interface EmploymentRow {
 }
 interface RequirementRow {
   requirement_id: string;
-  submitted: boolean;
+  status: RequirementStatus;
+  due_date: string | null;
   override: "required" | "not_required" | null;
   note: string | null;
+}
+interface CustomRequirementRow {
+  id: string;
+  name: string;
+  party: "applicant" | "organization";
+  is_required: boolean;
+  status: RequirementStatus;
+  due_date: string | null;
+  note: string | null;
+  created_at: string;
 }
 interface CaseRow {
   id: string;
@@ -76,6 +89,7 @@ interface CaseRow {
   applicants: ApplicantRow | ApplicantRow[] | null;
   employment_details: EmploymentRow | EmploymentRow[] | null;
   requirement_states: RequirementRow[] | null;
+  custom_requirements: CustomRequirementRow[] | null;
   documents: DocumentRow[] | null;
 }
 
@@ -155,12 +169,27 @@ function toRequirementStates(rows: RequirementRow[] | null): Record<string, Requ
   const out: Record<string, RequirementState> = {};
   for (const r of rows ?? []) {
     out[r.requirement_id] = {
-      submitted: r.submitted,
+      status: r.status,
+      dueDate: r.due_date ?? undefined,
       override: r.override ?? undefined,
       note: r.note ?? undefined,
     };
   }
   return out;
+}
+
+function toCustomRequirements(rows: CustomRequirementRow[] | null): CustomRequirement[] {
+  return [...(rows ?? [])]
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      party: r.party,
+      isRequired: r.is_required,
+      status: r.status,
+      dueDate: r.due_date ?? undefined,
+      note: r.note ?? undefined,
+    }));
 }
 
 function toDocument(row: DocumentRow): DocumentRecord {
@@ -189,7 +218,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), requirement_states(*), documents(*, document_extractions(*))")
+      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), documents(*, document_extractions(*))")
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -205,6 +234,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
     applicant: toApplicant(r.applicants),
     employment: toEmployment(r.employment_details),
     requirementStates: toRequirementStates(r.requirement_states),
+    customRequirements: toCustomRequirements(r.custom_requirements),
     documents: (r.documents ?? []).map(toDocument),
   }));
 }
@@ -281,10 +311,35 @@ export async function persistCase(c: CaseRecord): Promise<void> {
           case_id: c.id,
           organization_id: org,
           requirement_id: rid,
-          submitted: c.requirementStates[rid].submitted,
+          status: c.requirementStates[rid].status,
+          due_date: c.requirementStates[rid].dueDate || null,
           override: c.requirementStates[rid].override ?? null,
           note: c.requirementStates[rid].note || null,
           updated_at: c.updatedAt,
+        })),
+      ),
+    );
+  }
+
+  const customIds = c.customRequirements.map((r) => r.id);
+  const existingCustom = ok(await db.from("custom_requirements").select("id").eq("case_id", c.id)) as { id: string }[];
+  const staleCustom = existingCustom.map((r) => r.id).filter((id) => !customIds.includes(id));
+  if (staleCustom.length > 0) {
+    ok(await db.from("custom_requirements").delete().eq("case_id", c.id).in("id", staleCustom));
+  }
+  if (c.customRequirements.length > 0) {
+    ok(
+      await db.from("custom_requirements").upsert(
+        c.customRequirements.map((r) => ({
+          id: r.id,
+          case_id: c.id,
+          organization_id: org,
+          name: r.name,
+          party: r.party,
+          is_required: r.isRequired,
+          status: r.status,
+          due_date: r.dueDate || null,
+          note: r.note || null,
         })),
       ),
     );

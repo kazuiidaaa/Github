@@ -32,6 +32,16 @@ function messageOf(e: unknown): string {
   return e instanceof Error ? e.message : "不明なエラーが発生しました。";
 }
 
+/** 旧形式（submitted）の記録を、状態（status）へ補正する */
+function migrateStates(states: CaseRecord["requirementStates"] | undefined): CaseRecord["requirementStates"] {
+  const out: CaseRecord["requirementStates"] = {};
+  for (const [id, s] of Object.entries(states ?? {})) {
+    const legacy = s as { submitted?: boolean };
+    out[id] = { ...s, status: s.status ?? (legacy.submitted ? "received" : "not_received") };
+  }
+  return out;
+}
+
 function readLocal(): CaseRecord[] {
   try {
     const raw = localStorage.getItem(KEY);
@@ -40,7 +50,8 @@ function readLocal(): CaseRecord[] {
     return (JSON.parse(raw) as CaseRecord[]).map((c) => ({
       ...c,
       employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
-      requirementStates: c.requirementStates ?? {},
+      requirementStates: migrateStates(c.requirementStates),
+      customRequirements: c.customRequirements ?? [],
     }));
   } catch {
     return EMPTY;

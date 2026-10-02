@@ -124,11 +124,36 @@ export const EMPTY_EMPLOYMENT: EmploymentInfo = {
   contractPeriod: "",
 };
 
+/** 必要書類の収集状況（管理上の状態であり、書類の適否の判断ではない） */
+export const REQUIREMENT_STATUS_LABELS = {
+  not_received: "未受領",
+  requested: "依頼済み",
+  received: "受領済み",
+  reviewed: "確認済み",
+} as const;
+
+export type RequirementStatus = keyof typeof REQUIREMENT_STATUS_LABELS;
+
+export const REQUIREMENT_STATUSES = Object.keys(REQUIREMENT_STATUS_LABELS) as RequirementStatus[];
+
 /** 必要書類ごとの、行政書士による記録 */
 export interface RequirementState {
-  submitted: boolean;
+  status: RequirementStatus;
+  /** 受領の期限（YYYY-MM-DD） */
+  dueDate?: string;
   /** 規則の判定を行政書士が上書きした場合 */
   override?: "required" | "not_required";
+  note?: string;
+}
+
+/** 規則にない書類として、行政書士が案件ごとに追加する書類 */
+export interface CustomRequirement {
+  id: string;
+  name: string;
+  party: "applicant" | "organization";
+  isRequired: boolean;
+  status: RequirementStatus;
+  dueDate?: string;
   note?: string;
 }
 
@@ -145,5 +170,6 @@ export interface CaseRecord {
   applicant: Applicant;
   employment: EmploymentInfo;
   requirementStates: Record<string, RequirementState>;
+  customRequirements: CustomRequirement[];
   documents: DocumentRecord[];
 }

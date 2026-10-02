@@ -23,6 +23,7 @@ function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withho
     },
     employment: { ...EMPTY_EMPLOYMENT, category, withholdingSpecial },
     requirementStates: {},
+    customRequirements: [],
     documents: [],
     ...over,
   };
@@ -72,13 +73,13 @@ describe("evaluate", () => {
   it("行政書士の上書きと提出状況を反映して、不足書類を算出する", () => {
     const c = make({}, "3");
     c.requirementStates = {
-      photo: { submitted: true },
-      employment_contract: { submitted: false, override: "not_required", note: "別途確認済み" },
+      photo: { status: "received" },
+      employment_contract: { status: "not_received", override: "not_required", note: "別途確認済み" },
     };
     const e = evaluate(c);
     expect(e.missing.map((i) => i.rule.id)).not.toContain("photo");
     expect(e.missing.map((i) => i.rule.id)).not.toContain("employment_contract");
-    expect(e.submittedCount).toBe(1);
-    expect(e.requiredCount).toBe(e.submittedCount + e.missing.length);
+    expect(e.receivedCount).toBe(1);
+    expect(e.requiredCount).toBe(e.receivedCount + e.missing.length);
   });
 });

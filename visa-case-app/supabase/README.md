@@ -8,7 +8,7 @@
 
 ## 2. テーブルを作成する
 1. 左メニューの **SQL Editor** を開きます。
-2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）も、同様に順番に実行します。
+2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）、`0004_requirement_tracking.sql`（必要書類の状態・期限と追加書類）も、同様に順番に実行します。`0004` は `requirement_states.submitted` 列を削除するため、実行前にファイル冒頭の確認用 SQL で件数を確認してください。
 3. エラーが出ないことを確認します。
 
 ## 3. ご自身のログイン用ユーザーを作成する
