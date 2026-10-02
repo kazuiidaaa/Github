@@ -1,13 +1,17 @@
 import { supabase } from "./supabase";
-import type {
-  Applicant,
-  CaseRecord,
-  DocumentRecord,
-  DocumentStatus,
-  Extraction,
-  FieldKey,
-  ProcedureType,
-  WorkflowStatus,
+import {
+  EMPTY_EMPLOYMENT,
+  type Applicant,
+  type EmploymentInfo,
+  type OrgCategory,
+  type RequirementState,
+  type CaseRecord,
+  type DocumentRecord,
+  type DocumentStatus,
+  type Extraction,
+  type FieldKey,
+  type ProcedureType,
+  type WorkflowStatus,
 } from "./types";
 
 const BUCKET = "documents";
@@ -39,6 +43,26 @@ interface ApplicantRow {
   confirmed_at: string | null;
   confirmed_by: string | null;
 }
+interface EmploymentRow {
+  company_name: string | null;
+  company_address: string | null;
+  industry: string | null;
+  capital: string | null;
+  employee_count: string | null;
+  category: OrgCategory | null;
+  withholding_special: boolean;
+  job_description: string | null;
+  employment_type: string | null;
+  monthly_salary: string | null;
+  employment_start_date: string | null;
+  contract_period: string | null;
+}
+interface RequirementRow {
+  requirement_id: string;
+  submitted: boolean;
+  override: "required" | "not_required" | null;
+  note: string | null;
+}
 interface CaseRow {
   id: string;
   case_name: string;
@@ -50,6 +74,8 @@ interface CaseRow {
   created_at: string;
   updated_at: string;
   applicants: ApplicantRow | ApplicantRow[] | null;
+  employment_details: EmploymentRow | EmploymentRow[] | null;
+  requirement_states: RequirementRow[] | null;
   documents: DocumentRow[] | null;
 }
 
@@ -106,6 +132,37 @@ function toApplicant(row: ApplicantRow | ApplicantRow[] | null): Applicant {
   };
 }
 
+function toEmployment(row: EmploymentRow | EmploymentRow[] | null): EmploymentInfo {
+  const e = Array.isArray(row) ? row[0] : row;
+  if (!e) return { ...EMPTY_EMPLOYMENT };
+  return {
+    companyName: e.company_name ?? "",
+    companyAddress: e.company_address ?? "",
+    industry: e.industry ?? "",
+    capital: e.capital ?? "",
+    employeeCount: e.employee_count ?? "",
+    category: e.category ?? "",
+    withholdingSpecial: e.withholding_special,
+    jobDescription: e.job_description ?? "",
+    employmentType: e.employment_type ?? "",
+    monthlySalary: e.monthly_salary ?? "",
+    employmentStartDate: e.employment_start_date ?? "",
+    contractPeriod: e.contract_period ?? "",
+  };
+}
+
+function toRequirementStates(rows: RequirementRow[] | null): Record<string, RequirementState> {
+  const out: Record<string, RequirementState> = {};
+  for (const r of rows ?? []) {
+    out[r.requirement_id] = {
+      submitted: r.submitted,
+      override: r.override ?? undefined,
+      note: r.note ?? undefined,
+    };
+  }
+  return out;
+}
+
 function toDocument(row: DocumentRow): DocumentRecord {
   return {
     id: row.id,
@@ -132,7 +189,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), documents(*, document_extractions(*))")
+      .select("*, applicants(*), employment_details(*), requirement_states(*), documents(*, document_extractions(*))")
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -146,6 +203,8 @@ export async function loadAll(): Promise<CaseRecord[]> {
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     applicant: toApplicant(r.applicants),
+    employment: toEmployment(r.employment_details),
+    requirementStates: toRequirementStates(r.requirement_states),
     documents: (r.documents ?? []).map(toDocument),
   }));
 }
@@ -186,6 +245,50 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       confirmed_by: a.confirmedBy ?? null,
     }),
   );
+
+  const emp = c.employment;
+  ok(
+    await db.from("employment_details").upsert({
+      case_id: c.id,
+      organization_id: org,
+      company_name: emp.companyName || null,
+      company_address: emp.companyAddress || null,
+      industry: emp.industry || null,
+      capital: emp.capital || null,
+      employee_count: emp.employeeCount || null,
+      category: emp.category || null,
+      withholding_special: emp.withholdingSpecial,
+      job_description: emp.jobDescription || null,
+      employment_type: emp.employmentType || null,
+      monthly_salary: emp.monthlySalary || null,
+      employment_start_date: emp.employmentStartDate || null,
+      contract_period: emp.contractPeriod || null,
+    }),
+  );
+
+  const stateIds = Object.keys(c.requirementStates);
+  const existingStates = ok(await db.from("requirement_states").select("requirement_id").eq("case_id", c.id)) as {
+    requirement_id: string;
+  }[];
+  const staleStates = existingStates.map((r) => r.requirement_id).filter((rid) => !stateIds.includes(rid));
+  if (staleStates.length > 0) {
+    ok(await db.from("requirement_states").delete().eq("case_id", c.id).in("requirement_id", staleStates));
+  }
+  if (stateIds.length > 0) {
+    ok(
+      await db.from("requirement_states").upsert(
+        stateIds.map((rid) => ({
+          case_id: c.id,
+          organization_id: org,
+          requirement_id: rid,
+          submitted: c.requirementStates[rid].submitted,
+          override: c.requirementStates[rid].override ?? null,
+          note: c.requirementStates[rid].note || null,
+          updated_at: c.updatedAt,
+        })),
+      ),
+    );
+  }
 
   // 差し替えられた書類を削除する（関連する抽出結果と保存ファイルも対象）
   const existing = ok(await db.from("documents").select("id, storage_path").eq("case_id", c.id)) as {

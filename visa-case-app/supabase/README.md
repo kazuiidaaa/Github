@@ -8,7 +8,7 @@
 
 ## 2. テーブルを作成する
 1. 左メニューの **SQL Editor** を開きます。
-2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。
+2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql` も同様に実行します（雇用・会社情報と必要書類の記録用）。
 3. エラーが出ないことを確認します。
 
 ## 3. ご自身のログイン用ユーザーを作成する
@@ -48,4 +48,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 | applicants | 確認済みの正式な申請人情報（案件名とは別に保持） |
 | documents | アップロードした書類（実体は非公開ストレージ） |
 | document_extractions | OCRの抽出候補と、行政書士が確認した値 |
+| employment_details | 雇用・会社情報（所属機関のカテゴリーを含む） |
+| requirement_states | 必要書類ごとの、提出済み・判定の上書き・理由の記録 |
 | audit_logs | 案件作成・書類登録・確定などの記録（追記のみ） |

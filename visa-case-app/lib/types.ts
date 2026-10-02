@@ -89,6 +89,49 @@ export interface Applicant {
   confirmedBy?: string;
 }
 
+export type OrgCategory = "" | "1" | "2" | "3" | "4";
+
+/** 雇用・会社情報（確認済みの申請人情報とは別に保持する） */
+export interface EmploymentInfo {
+  companyName: string;
+  companyAddress: string;
+  industry: string;
+  capital: string;
+  employeeCount: string;
+  /** 所属機関のカテゴリー（1〜4） */
+  category: OrgCategory;
+  /** 源泉所得税の納期の特例の承認を受けているか */
+  withholdingSpecial: boolean;
+  jobDescription: string;
+  employmentType: string;
+  monthlySalary: string;
+  employmentStartDate: string;
+  contractPeriod: string;
+}
+
+export const EMPTY_EMPLOYMENT: EmploymentInfo = {
+  companyName: "",
+  companyAddress: "",
+  industry: "",
+  capital: "",
+  employeeCount: "",
+  category: "",
+  withholdingSpecial: false,
+  jobDescription: "",
+  employmentType: "",
+  monthlySalary: "",
+  employmentStartDate: "",
+  contractPeriod: "",
+};
+
+/** 必要書類ごとの、行政書士による記録 */
+export interface RequirementState {
+  submitted: boolean;
+  /** 規則の判定を行政書士が上書きした場合 */
+  override?: "required" | "not_required";
+  note?: string;
+}
+
 export interface CaseRecord {
   id: string;
   caseName: string;
@@ -100,5 +143,7 @@ export interface CaseRecord {
   createdAt: string;
   updatedAt: string;
   applicant: Applicant;
+  employment: EmploymentInfo;
+  requirementStates: Record<string, RequirementState>;
   documents: DocumentRecord[];
 }

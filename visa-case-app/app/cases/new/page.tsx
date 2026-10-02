@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, newId, saveCase } from "@/lib/store";
-import { PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
+import { EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -49,6 +49,8 @@ export default function NewCasePage() {
         residenceExpiryDate: "",
         confirmationStatus: "unconfirmed",
       },
+      employment: { ...EMPTY_EMPLOYMENT },
+      requirementStates: {},
       documents: [],
     });
     logAudit(id, "case_created");

@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { isSupabaseEnabled } from "./supabase";
 import * as remote from "./supabaseBackend";
-import type { CaseRecord } from "./types";
+import { EMPTY_EMPLOYMENT, type CaseRecord } from "./types";
 
 // 接続情報が設定されていれば Supabase、未設定ならブラウザ内の仮データを使う。
 // 画面側は、どちらの場合も同じ関数・フックで読み書きする。
@@ -35,7 +35,13 @@ function messageOf(e: unknown): string {
 function readLocal(): CaseRecord[] {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as CaseRecord[]) : EMPTY;
+    if (!raw) return EMPTY;
+    // 雇用・必要書類の追加前に保存されたデータにも、既定値を補う
+    return (JSON.parse(raw) as CaseRecord[]).map((c) => ({
+      ...c,
+      employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
+      requirementStates: c.requirementStates ?? {},
+    }));
   } catch {
     return EMPTY;
   }

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { EmploymentForm } from "@/components/EmploymentForm";
+import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
@@ -16,11 +18,13 @@ import {
   WORKFLOW_LABELS,
 } from "@/lib/types";
 
-type Tab = "overview" | "documents" | "extractions";
+type Tab = "overview" | "documents" | "extractions" | "employment" | "requirements";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
   { key: "extractions", label: "抽出結果" },
+  { key: "employment", label: "雇用・会社" },
+  { key: "requirements", label: "必要書類" },
 ];
 
 export default function CaseDetailPage() {
@@ -165,6 +169,10 @@ export default function CaseDetailPage() {
           {doc && doc.status === "processed" && <ReviewPanel record={record} doc={doc} fields={REQUIRED_FIELDS} />}
         </>
       )}
+
+      {tab === "employment" && <EmploymentForm record={record} />}
+
+      {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
     </div>
   );
 }
