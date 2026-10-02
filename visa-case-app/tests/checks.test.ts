@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { CHECK_DEFINITIONS, missingChecks, sortChecks, unresolvedCount } from "../lib/checks/definitions";
 import { referenceFor } from "../lib/checks/reference";
@@ -16,6 +17,7 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
     updatedAt: "",
     applicant: { ...EMPTY_APPLICANT, legalName: "LI MING" },
     employment: { ...EMPTY_EMPLOYMENT },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
     plannedApplicationDate: "",

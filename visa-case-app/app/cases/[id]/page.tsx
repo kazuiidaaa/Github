@@ -8,6 +8,7 @@ import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
+import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
@@ -21,12 +22,13 @@ import {
   type DocumentRecord,
 } from "@/lib/types";
 
-type Tab = "overview" | "documents" | "applicant" | "employment" | "requirements" | "checks";
+type Tab = "overview" | "documents" | "applicant" | "employment" | "formDetails" | "requirements" | "checks";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
   { key: "applicant", label: "申請人情報" },
   { key: "employment", label: "雇用・会社" },
+  { key: "formDetails", label: "公式様式項目" },
   { key: "requirements", label: "必要書類" },
   { key: "checks", label: "申請前チェック" },
 ];
@@ -234,6 +236,8 @@ export default function CaseDetailPage() {
       {tab === "applicant" && <ApplicantForm record={record} onGoDocuments={() => setTab("documents")} />}
 
       {tab === "employment" && <EmploymentForm record={record} />}
+
+      {tab === "formDetails" && <FormDetailsForm record={record} />}
 
       {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
 

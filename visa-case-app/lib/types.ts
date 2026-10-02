@@ -1,3 +1,5 @@
+import type { FormDetails } from "./formDetails";
+
 export const PROCEDURE_TYPES = [
   {
     value: "renewal",
@@ -189,6 +191,8 @@ export interface CaseRecord {
   updatedAt: string;
   applicant: Applicant;
   employment: EmploymentInfo;
+  /** 公式の申請書にあって、上記にない入力項目（フェーズ9） */
+  formDetails: FormDetails;
   requirementStates: Record<string, RequirementState>;
   customRequirements: CustomRequirement[];
   /** 申請予定日（YYYY-MM-DD）。未定なら空 */

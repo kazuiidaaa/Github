@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { buildContent } from "../lib/documents/snapshot";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
@@ -15,6 +16,7 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
     updatedAt: "2026-10-01T00:00:00.000Z",
     applicant: { ...EMPTY_APPLICANT, legalName: "LI MING" },
     employment: { ...EMPTY_EMPLOYMENT, category: "3", companyName: "株式会社A" },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
     plannedApplicationDate: "",

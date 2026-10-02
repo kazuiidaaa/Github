@@ -1,3 +1,4 @@
+import { normalizeFormDetails } from "./formDetails";
 import type { AuditOutcome } from "./auditDetail";
 import { AppError, toAppError } from "./errors";
 import { storageExtension } from "./documentValidation";
@@ -103,6 +104,7 @@ interface CaseRow {
   case_checks: CheckRow[] | null;
   applicants: ApplicantRow | ApplicantRow[] | null;
   employment_details: EmploymentRow | EmploymentRow[] | null;
+  form_details: { data: unknown } | { data: unknown }[] | null;
   requirement_states: RequirementRow[] | null;
   custom_requirements: CustomRequirementRow[] | null;
   documents: DocumentRow[] | null;
@@ -247,7 +249,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), case_checks(*), documents(*)")
+      .select("*, applicants(*), employment_details(*), form_details(*), requirement_states(*), custom_requirements(*), case_checks(*), documents(*)")
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -262,6 +264,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
     updatedAt: r.updated_at,
     applicant: toApplicant(r.applicants),
     employment: toEmployment(r.employment_details),
+    formDetails: normalizeFormDetails((Array.isArray(r.form_details) ? r.form_details[0] : r.form_details)?.data),
     requirementStates: toRequirementStates(r.requirement_states),
     customRequirements: toCustomRequirements(r.custom_requirements),
     plannedApplicationDate: r.planned_application_date ?? "",
@@ -332,6 +335,15 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       monthly_salary: emp.monthlySalary || null,
       employment_start_date: emp.employmentStartDate || null,
       contract_period: emp.contractPeriod || null,
+    }),
+  );
+
+  ok(
+    await db.from("form_details").upsert({
+      case_id: c.id,
+      organization_id: org,
+      data: c.formDetails,
+      updated_at: c.updatedAt,
     }),
   );
 

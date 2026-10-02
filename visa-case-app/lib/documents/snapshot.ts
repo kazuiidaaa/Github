@@ -121,7 +121,7 @@ export function buildContent(c: CaseRecord, type: InternalDocumentType, now: Dat
     case "transcription_aid":
       return {
         ...base,
-        transcription: buildTranscription(a, e, { procedureType: c.procedureType, currentStatus: c.currentStatus }),
+        transcription: buildTranscription(a, e, c.formDetails, { procedureType: c.procedureType, currentStatus: c.currentStatus }),
         notices: [...TRANSCRIPTION_NOTICES, ...base.notices],
       };
     case "case_summary":

@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { applyFilter, DEFAULT_FILTER, expiryLevel, expiryMessage, summarize } from "../lib/caseMetrics";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
@@ -29,6 +30,7 @@ function make(over: Partial<CaseRecord> & { expiry?: string; name?: string; conf
       confirmationStatus: over.confirmed ? "confirmed" : "draft",
     },
     employment: { ...EMPTY_EMPLOYMENT },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     documents: [],
     checks: [],

@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { evaluate } from "../lib/requirements/evaluate";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
@@ -15,6 +16,7 @@ function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withho
     updatedAt: "",
     applicant: { ...EMPTY_APPLICANT },
     employment: { ...EMPTY_EMPLOYMENT, category, withholdingSpecial },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
     plannedApplicationDate: "",

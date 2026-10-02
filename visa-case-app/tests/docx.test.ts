@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 import { buildDocx } from "../lib/documents/docx";
@@ -17,6 +18,7 @@ const record: CaseRecord = {
   updatedAt: "2026-10-01T00:00:00.000Z",
   applicant: { ...EMPTY_APPLICANT, legalName: "LI MING" },
   employment: { ...EMPTY_EMPLOYMENT, category: "3", companyName: "株式会社A" },
+  formDetails: { ...EMPTY_FORM_DETAILS },
   requirementStates: {},
   customRequirements: [],
   plannedApplicationDate: "",

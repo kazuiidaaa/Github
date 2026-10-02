@@ -1,5 +1,6 @@
 "use client";
 
+import { EMPTY_FORM_DETAILS } from "@/lib/formDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -43,6 +44,7 @@ export default function NewCasePage() {
       updatedAt: now,
       applicant: { ...EMPTY_APPLICANT },
       employment: { ...EMPTY_EMPLOYMENT },
+      formDetails: { ...EMPTY_FORM_DETAILS },
       requirementStates: {},
       customRequirements: [],
       plannedApplicationDate: "",

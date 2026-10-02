@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { sanitizeAuditDetail, type AuditOutcome } from "./auditDetail";
 import { messageOf } from "./errors";
+import { normalizeFormDetails } from "./formDetails";
 import { isSupabaseEnabled } from "./supabase";
 import * as remote from "./supabaseBackend";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type CaseRecord, type DocumentRecord } from "./types";
@@ -56,6 +57,7 @@ function migrateLocal(c: LegacyCase): CaseRecord {
       confirmationStatus: legacyApplicant.confirmationStatus === "confirmed" ? "confirmed" : "draft",
     },
     employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
+    formDetails: normalizeFormDetails((c as { formDetails?: unknown }).formDetails),
     requirementStates: migrateStates(c.requirementStates),
     customRequirements: c.customRequirements ?? [],
     plannedApplicationDate: c.plannedApplicationDate ?? "",

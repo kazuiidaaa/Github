@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { buildContent } from "../lib/documents/snapshot";
 import { buildBlocks } from "../lib/documents/model";
@@ -25,6 +26,7 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
       confirmationStatus: "confirmed",
     },
     employment: { ...EMPTY_EMPLOYMENT, companyName: "株式会社A", monthlySalary: "300000" },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
     plannedApplicationDate: "",
