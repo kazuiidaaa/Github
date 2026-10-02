@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
@@ -75,6 +76,8 @@ export default function CaseDetailPage() {
   const record = useCase(id);
   const loaded = useStoreLoaded();
   const [tab, setTab] = useState<Tab>("overview");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (!record && !loaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
 
@@ -94,7 +97,7 @@ export default function CaseDetailPage() {
   function removeDocument(d: DocumentRecord) {
     if (!confirm(`「${d.fileName}」を削除します。よろしいですか。`)) return;
     updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
-    logAudit(record!.id, "document_deleted", { fileName: d.fileName });
+    logAudit(record!.id, "document_deleted", { documentType: d.documentType });
   }
   const a = record.applicant;
   const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
@@ -121,19 +124,25 @@ export default function CaseDetailPage() {
         >
           申請書類作成
         </Link>
-        <Button
-          variant="danger"
-          onClick={() => {
-            if (confirm("この案件を削除します。よろしいですか。")) {
-              deleteCase(record.id);
-              router.push("/cases");
-            }
-          }}
-        >
+        <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
           削除
         </Button>
         </div>
       </div>
+      {confirmingDelete && (
+        <ConfirmDeleteDialog
+          caseName={record.caseName}
+          busy={deleting}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={async () => {
+            setDeleting(true);
+            const ok = await deleteCase(record.id);
+            setDeleting(false);
+            if (ok) router.push("/cases");
+            else setConfirmingDelete(false);
+          }}
+        />
+      )}
 
       <div className="mb-6 flex gap-1 border-b border-slate-200">
         {TABS.map((t) => (

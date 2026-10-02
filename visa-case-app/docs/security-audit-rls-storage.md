@@ -1,7 +1,7 @@
-# フェーズ7-2・7-3：RLS・Storage 監査結果（提案・未適用）
+# フェーズ7-2・7-3：RLS・Storage 監査結果
 
 対象：`supabase/migrations/0001`〜`0008`（9＋4テーブル、`documents` バケット）。
-この文書は調査結果と修正案であり、**SQLはまだ適用していません**。適用はご承認後に、`0009_security_hardening.sql` として追加します。
+この文書は調査結果と修正案です。R1〜R3 は `supabase/migrations/0009_security_hardening.sql` として追加し、S1 はコードへ反映済みです（いずれも **Supabase へは未適用**）。R7（`document_extractions`）は、ご判断待ちのため未対応です。
 
 ## 1. RLS 監査
 

@@ -53,9 +53,10 @@ export function UploadBox({
         uploadedAt: new Date().toISOString(),
       };
       updateCase(caseId, (c) => ({ ...c, documents: [record] }));
-      logAudit(caseId, "document_uploaded", { fileName: file.name });
+      logAudit(caseId, "document_uploaded", { documentType: "residence_card" });
       onUploaded();
     } catch (e) {
+      logAudit(caseId, "document_upload_failed", undefined, "failure");
       setError(`アップロードに失敗しました：${messageOf(e)}`);
       setFailed(file);
     } finally {
