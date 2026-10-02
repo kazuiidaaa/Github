@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import { changePassword, signOut, useSession } from "@/lib/auth";
 import { auditLabel } from "@/lib/auditLabels";
@@ -25,6 +25,8 @@ export default function AccountPage() {
 
 function AccountContent() {
   const session = useSession();
+  const userId = session?.user.id;
+  const initialized = useRef(false);
   const cases = useCases();
   const [info, setInfo] = useState<AccountInfo | null>(null);
   const [audit, setAudit] = useState<AuditEntry[] | null>(null);
@@ -35,25 +37,30 @@ function AccountContent() {
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // 再認証などでセッション情報が更新されても、入力途中の内容を上書きしないよう、ユーザーIDの変化でのみ読み込む
   useEffect(() => {
-    if (!session) return;
+    if (!userId) return;
     let active = true;
     Promise.all([getAccount(), listAudit()])
       .then(([a, l]) => {
         if (!active) return;
         setInfo(a);
-        setOrgName(a.organizationName);
+        if (!initialized.current) {
+          initialized.current = true;
+          setOrgName(a.organizationName);
+        }
         setAudit(l);
       })
       .catch((e) => active && setError(e instanceof Error ? e.message : "読み込みに失敗しました。"));
     return () => {
       active = false;
     };
-  }, [session]);
+  }, [userId]);
 
   async function saveOrg() {
     const name = orgName.trim();
     if (!name) return setOrgMsg("事務所名を入力してください。");
+    if (name === info?.organizationName) return setOrgMsg("変更はありません。");
     setBusy(true);
     try {
       await renameOrganization(name);
