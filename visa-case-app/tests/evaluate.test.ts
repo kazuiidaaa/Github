@@ -54,12 +54,28 @@ describe("evaluate", () => {
     expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card"]);
   });
 
-  it("カテゴリー1・2は、共通の書類のみ必要", () => {
-    for (const cat of ["1", "2"] as const) {
+  it("カテゴリー1は、共通の書類のみ必要", () => {
+    const e = evaluate(make({}, "1"));
+    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card"]);
+    expect(e.items.find((i) => i.rule.id === "employment_contract")?.effective).toBe("not_required");
+  });
+
+  it("カテゴリー2は、共通の書類と法定調書合計表が必要", () => {
+    expect(ids(evaluate(make({}, "2")), "required")).toEqual([
+      "application_form",
+      "photo",
+      "passport_card",
+      "statutory_report_total",
+    ]);
+  });
+
+  it("カテゴリー3・4は代表者の申告書が必要で、言語能力と派遣の資料は確認対象", () => {
+    for (const cat of ["3", "4"] as const) {
       const e = evaluate(make({}, cat));
-      expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card"]);
-      expect(e.items.find((i) => i.rule.id === "employment_contract")?.effective).toBe("not_required");
+      expect(ids(e, "required")).toContain("representative_declaration");
+      expect(ids(e, "check")).toEqual(expect.arrayContaining(["language_ability", "dispatch_documents"]));
     }
+    expect(ids(evaluate(make({}, "1")), "check")).toEqual(["dispatch_documents"]);
   });
 
   it("カテゴリー3は、法定調書合計表が必要で、開設届出書は不要", () => {
