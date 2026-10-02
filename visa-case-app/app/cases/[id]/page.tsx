@@ -94,7 +94,7 @@ export default function CaseDetailPage() {
   function removeDocument(d: DocumentRecord) {
     if (!confirm(`「${d.fileName}」を削除します。よろしいですか。`)) return;
     updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
-    logAudit(record!.id, "document_deleted", { fileName: d.fileName });
+    logAudit(record!.id, "document_deleted", { documentType: d.documentType });
   }
   const a = record.applicant;
   const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;

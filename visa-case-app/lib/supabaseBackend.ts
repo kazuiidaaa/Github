@@ -1,3 +1,4 @@
+import type { AuditOutcome } from "./auditDetail";
 import { AppError, toAppError } from "./errors";
 import { storageExtension } from "./documentValidation";
 import { supabase } from "./supabase";
@@ -419,9 +420,9 @@ export async function persistCase(c: CaseRecord): Promise<void> {
   const keep = new Set(c.documents.map((d) => d.id));
   const removed = existing.filter((d) => !keep.has(d.id));
   if (removed.length > 0) {
-    ok(await db.from("documents").delete().in("id", removed.map((d) => d.id)));
     const paths = removed.map((d) => d.storage_path).filter((p): p is string => Boolean(p));
-    if (paths.length > 0) await db.storage.from(BUCKET).remove(paths);
+    await removeFiles(db, paths);
+    ok(await db.from("documents").delete().in("id", removed.map((d) => d.id)));
   }
 
   for (const d of c.documents) {
@@ -443,17 +444,29 @@ export async function persistCase(c: CaseRecord): Promise<void> {
   }
 }
 
+async function removeFiles(db: ReturnType<typeof client>, paths: string[]): Promise<void> {
+  if (paths.length === 0) return;
+  const { error } = await db.storage.from(BUCKET).remove(paths);
+  if (error) throw toAppError(error, "ファイルを削除できませんでした。データは削除していません。時間をおいて再度お試しください。");
+}
+
 export async function deleteCase(id: string): Promise<void> {
   const db = client();
   const docs = ok(await db.from("documents").select("storage_path").eq("case_id", id)) as {
     storage_path: string | null;
   }[];
   const paths = docs.map((d) => d.storage_path).filter((p): p is string => Boolean(p));
-  if (paths.length > 0) await db.storage.from(BUCKET).remove(paths);
+  // ファイルを削除できなかった場合は、DB の行を残す（保存先が分からなくなり、ファイルが残り続けることを防ぐ）
+  await removeFiles(db, paths);
   ok(await db.from("cases").delete().eq("id", id));
 }
 
-export async function audit(caseId: string | null, action: string, detail?: Record<string, unknown>) {
+export async function audit(
+  caseId: string | null,
+  action: string,
+  detail?: Record<string, unknown>,
+  outcome: AuditOutcome = "success",
+) {
   const db = client();
   ok(
     await db.from("audit_logs").insert({
@@ -462,6 +475,7 @@ export async function audit(caseId: string | null, action: string, detail?: Reco
       user_id: await getUserId(),
       action,
       detail: detail ?? null,
+      outcome,
     }),
   );
 }
@@ -493,6 +507,7 @@ export interface AuditEntry {
   id: string;
   action: string;
   caseId: string | null;
+  outcome: AuditOutcome;
   createdAt: string;
 }
 
@@ -529,9 +544,9 @@ export async function listAudit(limit = 100): Promise<AuditEntry[]> {
   const rows = ok(
     await client()
       .from("audit_logs")
-      .select("id, action, case_id, created_at")
+      .select("id, action, case_id, outcome, created_at")
       .order("created_at", { ascending: false })
       .limit(limit),
-  ) as { id: string; action: string; case_id: string | null; created_at: string }[];
-  return rows.map((r) => ({ id: r.id, action: r.action, caseId: r.case_id, createdAt: r.created_at }));
+  ) as { id: string; action: string; case_id: string | null; outcome: AuditOutcome; created_at: string }[];
+  return rows.map((r) => ({ id: r.id, action: r.action, caseId: r.case_id, outcome: r.outcome, createdAt: r.created_at }));
 }

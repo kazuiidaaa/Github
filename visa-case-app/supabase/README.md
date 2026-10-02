@@ -11,6 +11,8 @@
 2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）も、同様に順番に実行します。さらに `0004_document_upload.sql`（書類のファイルサイズ、ストレージの20MB・形式制限、select/insert/delete の分割）も実行します。続けて `0005_applicant_manual_entry.sql`（申請人情報の手入力化。OCRの廃止に伴う状態名の変更を含む）、`0006_requirement_tracking.sql`（必要書類の状態・期限と追加書類）も実行します。最後に `0007_case_checks.sql`（申請前チェック）も実行します。`0006` は `requirement_states.submitted` 列を削除するため、実行前にファイル冒頭の確認用 SQL で件数を確認してください。
 3. エラーが出ないことを確認します。
 
+**重要**：`0009_security_hardening.sql` は、アプリの更新（監査ログの成否の記録）と対になっています。0009 を実行する前に、ファイル冒頭のコメントにある確認クエリがすべて 0 であることを確認してください。0009 を実行せずに最新のアプリを使うと、監査ログの記録が失敗します。
+
 ## 3. ご自身のログイン用ユーザーを作成する
 1. 左メニューの **Authentication > Users** で **Add user** を選び、メールアドレスとパスワードを登録します（**Auto Confirm User** を有効にします）。
 2. **Authentication > Sign In / Providers**（または Settings）で、**新規ユーザーの登録（Allow new users to sign up）を無効**にします。自分専用で使う間は、他の人が登録できないようにしてください。

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { sanitizeAuditDetail, type AuditOutcome } from "./auditDetail";
 import { messageOf } from "./errors";
 import { isSupabaseEnabled } from "./supabase";
 import * as remote from "./supabaseBackend";
@@ -173,8 +174,14 @@ export function deleteCase(id: string) {
 }
 
 /** 誰がいつ何をしたかを記録する（Supabase 利用時のみ） */
-export function logAudit(caseId: string | null, action: string, detail?: Record<string, unknown>) {
-  if (isSupabaseEnabled) enqueue(() => remote.audit(caseId, action, detail));
+// detail は sanitizeAuditDetail で、項目名・ID・列挙値のみに絞る（氏名・住所・メモ本文などを残さない）
+export function logAudit(
+  caseId: string | null,
+  action: string,
+  detail?: Record<string, unknown>,
+  outcome: AuditOutcome = "success",
+) {
+  if (isSupabaseEnabled) enqueue(() => remote.audit(caseId, action, sanitizeAuditDetail(detail), outcome));
 }
 
 /** 非公開ストレージへ保存し、保存先を返す。仮データ方式では何もしない。 */

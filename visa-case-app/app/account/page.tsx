@@ -188,7 +188,7 @@ function AccountContent() {
             {audit?.map((a) => (
               <tr key={a.id} className="border-t border-slate-100">
                 <td className="px-6 py-2 whitespace-nowrap text-slate-600">{formatDateTime(a.createdAt)}</td>
-                <td className="px-6 py-2">{auditLabel(a.action)}</td>
+                <td className="px-6 py-2">{auditLabel(a.action)}{a.outcome === "failure" ? "（失敗）" : ""}</td>
                 <td className="px-6 py-2">{caseName(a.caseId)}</td>
               </tr>
             ))}
