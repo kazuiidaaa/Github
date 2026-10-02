@@ -133,6 +133,9 @@ revoke all on function public.is_member(uuid) from public;
 revoke all on function public.bootstrap_organization(text) from public;
 grant execute on function public.is_member(uuid) to authenticated;
 grant execute on function public.bootstrap_organization(text) to authenticated;
+-- Supabase は anon にも既定で実行権限を付与するため、明示的に取り消す
+revoke execute on function public.is_member(uuid) from anon;
+revoke execute on function public.bootstrap_organization(text) from anon;
 
 -- ============================================================
 -- 行単位のアクセス制御（Row Level Security）
