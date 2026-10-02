@@ -10,6 +10,7 @@ import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
   INTERNAL_DOCUMENT_TYPES,
+  OUTPUT_FORMAT_LABELS,
   type InternalDocumentType,
 } from "@/lib/documents/types";
 import { unresolvedCount } from "@/lib/checks/definitions";
@@ -118,6 +119,9 @@ export default function DocumentsPage() {
               <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
                 {DOCUMENT_TYPE_LABELS[d.documentType]} v{d.version}
               </Link>
+              {d.outputFormat !== "html" && (
+                <span className="ml-2 text-xs text-slate-500">（{OUTPUT_FORMAT_LABELS[d.outputFormat]}）</span>
+              )}
             </span>
             <span className="flex items-center gap-3">
               <Badge tone={d.status === "draft" ? "yellow" : d.status === "archived" ? "gray" : "green"}>

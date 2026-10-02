@@ -55,3 +55,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 
 ## 7. 申請書類作成（フェーズ6-A）を使う場合
 `supabase/migrations/0008_generated_documents.sql` を、0001〜0007 の実行後に SQL Editor で実行します。生成した内部確認シートの保存と、版の管理に使います。
+
+## 8. Word出力（フェーズ6-B）を使う場合
+`supabase/migrations/0010_generated_documents_word.sql` を、0008 の実行後に SQL Editor で実行します（0009 の有無には依存しません）。Word ファイルを保存する非公開バケット `generated-documents`（10MB・.docx のみ・更新と削除は不可）と、Word 版を新しい版として登録する関数を作成します。
