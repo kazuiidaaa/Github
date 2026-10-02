@@ -6,6 +6,7 @@ import { changePassword, signOut, useSession } from "@/lib/auth";
 import { auditLabel } from "@/lib/auditLabels";
 import { formatDateTime } from "@/lib/format";
 import { getAccount, listAudit, renameOrganization, useCases } from "@/lib/store";
+import { messageOf } from "@/lib/errors";
 import { isSupabaseEnabled } from "@/lib/supabase";
 import type { AccountInfo, AuditEntry } from "@/lib/supabaseBackend";
 
@@ -51,7 +52,7 @@ function AccountContent() {
         }
         setAudit(l);
       })
-      .catch((e) => active && setError(e instanceof Error ? e.message : "読み込みに失敗しました。"));
+      .catch((e) => active && setError(messageOf(e)));
     return () => {
       active = false;
     };
@@ -68,7 +69,7 @@ function AccountContent() {
       setOrgMsg("保存しました。");
       setAudit(await listAudit());
     } catch (e) {
-      setOrgMsg(e instanceof Error ? e.message : "保存に失敗しました。");
+      setOrgMsg(messageOf(e));
     }
     setBusy(false);
   }

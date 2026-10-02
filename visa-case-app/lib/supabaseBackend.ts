@@ -1,3 +1,4 @@
+import { AppError, toAppError } from "./errors";
 import { supabase } from "./supabase";
 import {
   EMPTY_EMPLOYMENT,
@@ -80,12 +81,12 @@ interface CaseRow {
 }
 
 function client() {
-  if (!supabase) throw new Error("Supabase の接続情報が設定されていません。");
+  if (!supabase) throw new AppError("接続情報が設定されていません。管理者にご確認ください。");
   return supabase;
 }
 
-function ok<T>(res: { data: T; error: { message: string } | null }): T {
-  if (res.error) throw new Error(res.error.message);
+function ok<T>(res: { data: T; error: { message: string; code?: string } | null }): T {
+  if (res.error) throw toAppError(res.error);
   return res.data;
 }
 
@@ -364,13 +365,13 @@ export async function uploadFile(caseId: string, docId: string, file: File): Pro
   const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
   const path = `${await getOrgId()}/${caseId}/${docId}${ext ? "." + ext : ""}`;
   const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type });
-  if (error) throw new Error(error.message);
+  if (error) throw toAppError(error, "ファイルを保存できませんでした。");
   return path;
 }
 
 export async function signedUrl(path: string): Promise<string> {
   const { data, error } = await client().storage.from(BUCKET).createSignedUrl(path, 300);
-  if (error || !data) throw new Error(error?.message ?? "署名付きURLを取得できません。");
+  if (error || !data) throw toAppError(error ?? {}, "ファイルを表示できませんでした。");
   return data.signedUrl;
 }
 

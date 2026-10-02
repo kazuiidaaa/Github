@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { runMockOcr } from "@/lib/ocr";
+import { messageOf } from "@/lib/errors";
 import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
 import type { DocumentRecord } from "@/lib/types";
 
@@ -35,7 +36,7 @@ export function UploadBox({ caseId, onUploaded }: { caseId: string; onUploaded: 
     try {
       storagePath = await uploadDocumentFile(caseId, docId, file);
     } catch (e) {
-      setError(`ファイルの保存に失敗しました：${e instanceof Error ? e.message : ""}`);
+      setError(`ファイルの保存に失敗しました：${messageOf(e)}`);
       return;
     }
     const base: DocumentRecord = {

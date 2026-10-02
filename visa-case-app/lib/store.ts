@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { messageOf } from "./errors";
 import { isSupabaseEnabled } from "./supabase";
 import * as remote from "./supabaseBackend";
 import { EMPTY_EMPLOYMENT, type CaseRecord } from "./types";
@@ -26,10 +27,6 @@ function subscribe(listener: () => void) {
   return () => {
     listeners.delete(listener);
   };
-}
-
-function messageOf(e: unknown): string {
-  return e instanceof Error ? e.message : "不明なエラーが発生しました。";
 }
 
 function readLocal(): CaseRecord[] {

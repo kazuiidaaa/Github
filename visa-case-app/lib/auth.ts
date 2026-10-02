@@ -55,7 +55,7 @@ export async function changePassword(email: string, current: string, next: strin
     const re = await supabase.auth.signInWithPassword({ email, password: current });
     if (re.error) return "現在のパスワードが正しくありません。";
     const { error } = await supabase.auth.updateUser({ password: next });
-    if (error) return `パスワードを変更できませんでした：${error.message}`;
+    if (error) return "パスワードを変更できませんでした。条件を満たしているかご確認ください。";
     logAudit(null, "password_changed");
     return null;
   } catch {

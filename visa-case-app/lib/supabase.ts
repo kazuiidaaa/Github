@@ -1,9 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import { hasSecretKey, isMisconfigured, supabaseKey, supabaseUrl } from "./env";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+/** 接続情報が設定されている場合のみ有効。開発時に未設定なら、ブラウザ内の仮データで動作する。 */
+export const isSupabaseEnabled = Boolean(supabaseUrl && supabaseKey) && !hasSecretKey;
 
-/** 接続情報が設定されている場合のみ有効。未設定時はブラウザ内の仮データで動作する。 */
-export const isSupabaseEnabled = Boolean(url && key);
+export const supabase = isSupabaseEnabled ? createClient(supabaseUrl!, supabaseKey!) : null;
 
-export const supabase = url && key ? createClient(url, key) : null;
+export { isMisconfigured };
