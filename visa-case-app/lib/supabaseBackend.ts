@@ -346,7 +346,7 @@ export async function deleteCase(id: string): Promise<void> {
   ok(await db.from("cases").delete().eq("id", id));
 }
 
-export async function audit(caseId: string, action: string, detail?: Record<string, unknown>) {
+export async function audit(caseId: string | null, action: string, detail?: Record<string, unknown>) {
   const db = client();
   ok(
     await db.from("audit_logs").insert({
@@ -372,4 +372,60 @@ export async function signedUrl(path: string): Promise<string> {
   const { data, error } = await client().storage.from(BUCKET).createSignedUrl(path, 300);
   if (error || !data) throw new Error(error?.message ?? "署名付きURLを取得できません。");
   return data.signedUrl;
+}
+
+export interface AccountInfo {
+  email: string;
+  userId: string;
+  lastSignInAt: string | null;
+  organizationId: string;
+  organizationName: string;
+  role: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  action: string;
+  caseId: string | null;
+  createdAt: string;
+}
+
+export async function getAccount(): Promise<AccountInfo> {
+  const db = client();
+  const { data } = await db.auth.getSession();
+  const user = data.session?.user;
+  if (!user) throw new Error("ログインしていません。");
+  await getOrgId();
+  const rows = ok(await db.from("members").select("role, organizations(name, id)").limit(1)) as unknown as {
+    role: string;
+    organizations: { id: string; name: string } | { id: string; name: string }[] | null;
+  }[];
+  const org = Array.isArray(rows[0]?.organizations) ? rows[0].organizations[0] : rows[0]?.organizations;
+  return {
+    email: user.email ?? "",
+    userId: user.id,
+    lastSignInAt: user.last_sign_in_at ?? null,
+    organizationId: org?.id ?? "",
+    organizationName: org?.name ?? "",
+    role: rows[0]?.role ?? "",
+  };
+}
+
+/** 所有者のみ変更できる（データベース側の規則でも制限している） */
+export async function renameOrganization(name: string): Promise<void> {
+  const db = client();
+  const org = await getOrgId();
+  const updated = ok(await db.from("organizations").update({ name }).eq("id", org).select("id")) as { id: string }[];
+  if (updated.length === 0) throw new Error("事務所名を変更する権限がありません。");
+}
+
+export async function listAudit(limit = 100): Promise<AuditEntry[]> {
+  const rows = ok(
+    await client()
+      .from("audit_logs")
+      .select("id, action, case_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit),
+  ) as { id: string; action: string; case_id: string | null; created_at: string }[];
+  return rows.map((r) => ({ id: r.id, action: r.action, caseId: r.case_id, createdAt: r.created_at }));
 }

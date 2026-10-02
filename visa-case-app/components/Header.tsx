@@ -19,7 +19,9 @@ export function Header() {
         ) : (
           session && (
             <span className="flex items-center gap-3 text-sm text-slate-600">
-              {session.user.email}
+              <Link href="/account" className="text-blue-700 hover:underline">
+                {session.user.email}
+              </Link>
               <button
                 onClick={() => void signOut()}
                 className="rounded-md border border-slate-300 bg-white px-3 py-1 hover:bg-slate-50"

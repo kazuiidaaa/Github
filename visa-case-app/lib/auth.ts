@@ -2,7 +2,7 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { resetStore } from "./store";
+import { logAudit, resetStore } from "./store";
 import { supabase } from "./supabase";
 
 /** undefined：確認中、null：未ログイン */
@@ -44,4 +44,21 @@ export async function signIn(email: string, password: string): Promise<string | 
 
 export async function signOut() {
   await supabase?.auth.signOut();
+}
+
+/** 現在のパスワードで再認証したうえで、パスワードを変更する。失敗時は表示用の文言を返す。 */
+export async function changePassword(email: string, current: string, next: string): Promise<string | null> {
+  if (!supabase) return "Supabase の接続情報が設定されていません。";
+  if (next.length < 8) return "新しいパスワードは8文字以上で入力してください。";
+  if (next === current) return "新しいパスワードは、現在のパスワードと異なるものにしてください。";
+  try {
+    const re = await supabase.auth.signInWithPassword({ email, password: current });
+    if (re.error) return "現在のパスワードが正しくありません。";
+    const { error } = await supabase.auth.updateUser({ password: next });
+    if (error) return `パスワードを変更できませんでした：${error.message}`;
+    logAudit(null, "password_changed");
+    return null;
+  } catch {
+    return "サーバーに接続できません。時間をおいて再度お試しください。";
+  }
 }

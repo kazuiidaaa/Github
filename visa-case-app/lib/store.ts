@@ -141,7 +141,7 @@ export function deleteCase(id: string) {
 }
 
 /** 誰がいつ何をしたかを記録する（Supabase 利用時のみ） */
-export function logAudit(caseId: string, action: string, detail?: Record<string, unknown>) {
+export function logAudit(caseId: string | null, action: string, detail?: Record<string, unknown>) {
   if (isSupabaseEnabled) enqueue(() => remote.audit(caseId, action, detail));
 }
 
@@ -149,6 +149,15 @@ export function logAudit(caseId: string, action: string, detail?: Record<string,
 export async function uploadDocumentFile(caseId: string, docId: string, file: File): Promise<string | undefined> {
   if (!isSupabaseEnabled) return undefined;
   return remote.uploadFile(caseId, docId, file);
+}
+
+export const getAccount = remote.getAccount;
+export const listAudit = remote.listAudit;
+
+export async function renameOrganization(name: string): Promise<void> {
+  await chain; // 直前の保存を待ってから実行する
+  await remote.renameOrganization(name);
+  logAudit(null, "organization_renamed");
 }
 
 export async function getDocumentSignedUrl(path: string): Promise<string> {
