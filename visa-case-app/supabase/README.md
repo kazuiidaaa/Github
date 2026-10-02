@@ -8,7 +8,7 @@
 
 ## 2. テーブルを作成する
 1. 左メニューの **SQL Editor** を開きます。
-2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）、`0004_applicant_manual_entry.sql`（申請人情報の手入力化。OCRの廃止に伴う状態名の変更を含む）も、同様に順番に実行します。
+2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）も、同様に順番に実行します。さらに `0004_document_upload.sql`（書類のファイルサイズ、ストレージの20MB・形式制限、select/insert/delete の分割）も実行します。続けて `0005_applicant_manual_entry.sql`（申請人情報の手入力化。OCRの廃止に伴う状態名の変更を含む）も実行します。
 3. エラーが出ないことを確認します。
 
 ## 3. ご自身のログイン用ユーザーを作成する
@@ -32,7 +32,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 ## 5. 動作確認の観点
 - 案件を作成し、在留カードを登録して、「申請人情報」タブで手入力・下書き保存・確認済み化・再編集ができること。
 - Supabase の **Table Editor** で `cases` / `applicants` / `documents` / `document_extractions` / `audit_logs` に記録されること。
-- **Storage > documents** に、ファイルが「事務所ID/案件ID/書類ID.拡張子」で保存され、公開されていないこと。
+- **Storage > documents** に、ファイルが「事務所ID/案件ID/書類ID.拡張子」で保存され（JPG/PNG/PDF、20MBまで）、公開されていないこと。
 - ログアウト後、案件画面を開くとログイン画面へ移動すること。
 
 ## 6. 本番利用の前に

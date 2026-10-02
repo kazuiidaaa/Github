@@ -38,6 +38,7 @@ export interface DocumentRecord {
   documentType: "residence_card";
   fileName: string;
   mimeType: string;
+  fileSize?: number;
   /** 仮データ方式のみ。容量の都合上、小さいファイルだけ保持する */
   dataUrl?: string;
   /** Supabase の非公開ストレージ上の保存先 */
