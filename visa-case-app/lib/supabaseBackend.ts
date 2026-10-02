@@ -1,3 +1,4 @@
+import { storageExtension } from "./documentValidation";
 import { supabase } from "./supabase";
 import {
   EMPTY_EMPLOYMENT,
@@ -28,6 +29,7 @@ interface DocumentRow {
   document_type: "residence_card";
   file_name: string;
   mime_type: string | null;
+  file_size: number | null;
   storage_path: string | null;
   status: DocumentStatus;
   uploaded_at: string;
@@ -169,6 +171,7 @@ function toDocument(row: DocumentRow): DocumentRecord {
     documentType: row.document_type,
     fileName: row.file_name,
     mimeType: row.mime_type ?? "",
+    fileSize: row.file_size ?? undefined,
     storagePath: row.storage_path ?? undefined,
     status: row.status,
     uploadedAt: row.uploaded_at,
@@ -312,9 +315,11 @@ export async function persistCase(c: CaseRecord): Promise<void> {
         document_type: d.documentType,
         file_name: d.fileName,
         mime_type: d.mimeType || null,
+        file_size: d.fileSize ?? null,
         storage_path: d.storagePath ?? null,
         status: d.status,
         uploaded_at: d.uploadedAt,
+        updated_at: c.updatedAt,
       }),
     );
     if (d.extractions.length > 0) {
@@ -361,9 +366,8 @@ export async function audit(caseId: string | null, action: string, detail?: Reco
 
 export async function uploadFile(caseId: string, docId: string, file: File): Promise<string> {
   const db = client();
-  const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
-  const path = `${await getOrgId()}/${caseId}/${docId}${ext ? "." + ext : ""}`;
-  const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type });
+  const path = `${await getOrgId()}/${caseId}/${docId}.${storageExtension(file.type)}`;
+  const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (error) throw new Error(error.message);
   return path;
 }

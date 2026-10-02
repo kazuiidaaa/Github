@@ -22,7 +22,7 @@ export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 
 export const WORKFLOW_LABELS = {
   preparing: "準備中",
-  processing: "OCR処理中",
+  processing: "入力待ち",
   review: "確認待ち",
   confirmed: "確定済み",
 } as const;
@@ -34,7 +34,7 @@ export type DocumentStatus = "uploaded" | "processing" | "processed" | "failed";
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   uploaded: "アップロード済み",
   processing: "処理中",
-  processed: "処理完了",
+  processed: "入力済み",
   failed: "失敗",
 };
 
@@ -55,7 +55,7 @@ export const REQUIRED_FIELDS: { key: FieldKey; label: string; placeholder: strin
 
 export interface Extraction {
   field: FieldKey;
-  /** OCRが抽出した値（変更しない） */
+  /** 原本から読み取った値（OCRは行わないため、手入力方式では空） */
   extractedValue: string;
   /** 行政書士が確認・修正した値 */
   value: string;
@@ -68,6 +68,7 @@ export interface DocumentRecord {
   documentType: "residence_card";
   fileName: string;
   mimeType: string;
+  fileSize?: number;
   /** 仮データ方式のみ。容量の都合上、小さいファイルだけ保持する */
   dataUrl?: string;
   /** Supabase の非公開ストレージ上の保存先 */

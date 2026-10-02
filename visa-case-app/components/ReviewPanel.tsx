@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, inputClass } from "@/components/ui";
+import { Button, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
 import { logAudit, updateCase } from "@/lib/store";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
@@ -19,7 +19,18 @@ export function ReviewPanel({
   doc: DocumentRecord;
   fields: { key: FieldKey; label: string; placeholder: string }[];
 }) {
-  const [rows, setRows] = useState<Extraction[]>(doc.extractions);
+  const [rows, setRows] = useState<Extraction[]>(() =>
+    fields.map(
+      (f) =>
+        doc.extractions.find((e) => e.field === f.key) ?? {
+          field: f.key,
+          extractedValue: "",
+          value: "",
+          confidence: 0,
+          reviewStatus: "pending",
+        },
+    ),
+  );
   const confirmedAlready = record.workflowStatus === "confirmed";
   const [saved, setSaved] = useState(false);
   const previewUrl = useDocumentUrl(doc);
@@ -40,7 +51,7 @@ export function ReviewPanel({
       return {
         ...c,
         workflowStatus: confirm ? "confirmed" : "review",
-        documents: c.documents.map((d) => (d.id === doc.id ? { ...d, extractions: rows } : d)),
+        documents: c.documents.map((d) => (d.id === doc.id ? { ...d, status: "processed", extractions: rows } : d)),
         applicant: confirm
           ? {
               legalName: value("legalName"),
@@ -56,7 +67,7 @@ export function ReviewPanel({
       };
     });
     logAudit(record.id, confirm ? "applicant_confirmed" : "extraction_saved", {
-      corrected: rows.filter((r) => r.value !== r.extractedValue).map((r) => r.field),
+      filled: rows.filter((r) => r.value.trim()).map((r) => r.field),
     });
     setSaved(true);
   }
@@ -76,21 +87,17 @@ export function ReviewPanel({
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="mb-1 font-semibold">抽出結果（候補）</h2>
-        <p className="mb-4 text-xs text-slate-500">原本と照合し、各項目を確認してください。確認するまで正式なデータにはなりません。</p>
+        <h2 className="mb-1 font-semibold">申請人情報の入力</h2>
+        <p className="mb-4 text-xs text-slate-500">原本を見ながら各項目を入力し、「確認済み」にしてください。確認するまで正式なデータにはなりません。</p>
         <div className="space-y-4">
           {fields.map((f) => {
             const r = rows.find((x) => x.field === f.key);
             if (!r) return null;
-            const lowConfidence = r.confidence < 0.9;
-            const dateError = DATE_FIELDS.includes(f.key) && !isValidDate(r.value);
+            const dateError = DATE_FIELDS.includes(f.key) && r.value !== "" && !isValidDate(r.value);
             return (
               <div key={f.key}>
-                <div className="mb-1 flex items-center justify-between text-sm">
+                <div className="mb-1 text-sm">
                   <span className="font-medium">{f.label}</span>
-                  <Badge tone={lowConfidence ? "yellow" : "green"}>
-                    {lowConfidence ? "要確認" : "高信頼"}（{Math.round(r.confidence * 100)}%）
-                  </Badge>
                 </div>
                 <div className="flex items-center gap-3">
                   <input
@@ -111,7 +118,6 @@ export function ReviewPanel({
                   </label>
                 </div>
                 {dateError && <p className="mt-1 text-xs text-red-600">YYYY-MM-DD の形式で入力してください。</p>}
-                {r.value !== r.extractedValue && <p className="mt-1 text-xs text-slate-500">抽出値：{r.extractedValue}（修正あり）</p>}
               </div>
             );
           })}

@@ -10,22 +10,62 @@ import { ReviewPanel } from "@/components/ReviewPanel";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { deleteCase, useCase, useStoreLoaded } from "@/lib/store";
+import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
   REQUIRED_FIELDS,
   WORKFLOW_LABELS,
+  type DocumentRecord,
 } from "@/lib/types";
 
 type Tab = "overview" | "documents" | "extractions" | "employment" | "requirements";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
-  { key: "extractions", label: "抽出結果" },
+  { key: "extractions", label: "申請人情報" },
   { key: "employment", label: "雇用・会社" },
   { key: "requirements", label: "必要書類" },
 ];
+
+function DocumentRow({ doc, locked, onDelete }: { doc: DocumentRecord; locked: boolean; onDelete: () => void }) {
+  const [error, setError] = useState("");
+
+  async function open() {
+    setError("");
+    try {
+      let url: string;
+      if (doc.dataUrl) url = URL.createObjectURL(await (await fetch(doc.dataUrl)).blob());
+      else if (doc.storagePath) url = await getDocumentSignedUrl(doc.storagePath);
+      else throw new Error("ファイルを保持していません。");
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(`表示できません：${e instanceof Error ? e.message : ""}`);
+    }
+  }
+
+  return (
+    <div className="px-6 py-3 text-sm">
+      <div className="flex items-center justify-between">
+        <span>在留カード：{doc.fileName}</span>
+        <span className="flex items-center gap-3">
+          <Badge tone={doc.status === "processed" ? "green" : doc.status === "failed" ? "red" : "blue"}>
+            {DOCUMENT_STATUS_LABELS[doc.status]}
+          </Badge>
+          <span className="text-slate-500">{formatDateTime(doc.uploadedAt)}</span>
+          <Button variant="secondary" onClick={() => void open()}>
+            表示
+          </Button>
+          <Button variant="danger" disabled={locked} onClick={onDelete}>
+            削除
+          </Button>
+        </span>
+      </div>
+      {locked && <p className="mt-1 text-xs text-slate-500">申請人情報が確定済みのため、削除できません。</p>}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,6 +88,12 @@ export default function CaseDetailPage() {
   }
 
   const doc = record.documents[0];
+
+  function removeDocument(d: DocumentRecord) {
+    if (!confirm(`「${d.fileName}」を削除します。入力中の内容も失われます。よろしいですか。`)) return;
+    updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
+    logAudit(record!.id, "document_deleted", { fileName: d.fileName });
+  }
   const a = record.applicant;
   const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
 
@@ -142,20 +188,12 @@ export default function CaseDetailPage() {
 
       {tab === "documents" && (
         <div className="space-y-6">
-          <UploadBox caseId={record.id} onUploaded={() => setTab("extractions")} />
+          <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("extractions")} />
           <section className="rounded-lg border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
             {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
             {record.documents.map((d) => (
-              <div key={d.id} className="flex items-center justify-between px-6 py-3 text-sm">
-                <span>在留カード：{d.fileName}</span>
-                <span className="flex items-center gap-3">
-                  <Badge tone={d.status === "processed" ? "green" : d.status === "failed" ? "red" : "blue"}>
-                    {DOCUMENT_STATUS_LABELS[d.status]}
-                  </Badge>
-                  <span className="text-slate-500">{formatDateTime(d.uploadedAt)}</span>
-                </span>
-              </div>
+              <DocumentRow key={d.id} doc={d} locked={record.workflowStatus === "confirmed"} onDelete={() => removeDocument(d)} />
             ))}
           </section>
         </div>
@@ -164,9 +202,7 @@ export default function CaseDetailPage() {
       {tab === "extractions" && (
         <>
           {!doc && <p className="text-sm text-slate-500">在留カードが未登録です。「書類」タブからアップロードしてください。</p>}
-          {doc && doc.status === "processing" && <p className="text-sm text-slate-600">OCR処理中です。しばらくお待ちください……</p>}
-          {doc && doc.status === "failed" && <p className="text-sm text-red-700">OCR処理に失敗しました。再度アップロードしてください。</p>}
-          {doc && doc.status === "processed" && <ReviewPanel record={record} doc={doc} fields={REQUIRED_FIELDS} />}
+          {doc && <ReviewPanel record={record} doc={doc} fields={REQUIRED_FIELDS} />}
         </>
       )}
 
