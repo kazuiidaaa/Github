@@ -35,7 +35,9 @@ function normalize(s: string): string {
 }
 
 function findRuleSet(c: CaseRecord): RuleSet | null {
-  const status = normalize(c.applicant.residenceStatus || c.currentStatus);
+  // 下書きの入力は正式なデータではないため、確認済みの場合のみ優先する
+  const confirmed = c.applicant.confirmationStatus === "confirmed";
+  const status = normalize((confirmed && c.applicant.residenceStatus) || c.currentStatus);
   return (
     RULE_SETS.find((r) => r.procedureType === c.procedureType && status.includes(normalize(r.residenceStatus))) ?? null
   );

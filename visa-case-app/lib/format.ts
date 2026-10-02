@@ -8,7 +8,7 @@ export function daysUntil(date: string): number | null {
 }
 
 export function formatDate(date: string): string {
-  return date ? date.replaceAll("-", "/") : "未確認";
+  return date ? date.replaceAll("-", "/") : "未入力";
 }
 
 export function formatDateTime(iso?: string): string {
@@ -19,7 +19,10 @@ export function formatDateTime(iso?: string): string {
 }
 
 export function isValidDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const d = new Date(value + "T00:00:00Z");
+  // 2月30日のような、存在しない日付を除く
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
 
 /** 端末の現地日付を YYYY-MM-DD で返す */

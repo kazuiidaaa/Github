@@ -1,5 +1,7 @@
+import { storageExtension } from "./documentValidation";
 import { supabase } from "./supabase";
 import {
+  EMPTY_APPLICANT,
   EMPTY_EMPLOYMENT,
   type Applicant,
   type CustomRequirement,
@@ -10,38 +12,33 @@ import {
   type CaseRecord,
   type DocumentRecord,
   type DocumentStatus,
-  type Extraction,
-  type FieldKey,
   type ProcedureType,
   type WorkflowStatus,
 } from "./types";
 
 const BUCKET = "documents";
 
-interface ExtractionRow {
-  field_name: string;
-  extracted_value: string | null;
-  reviewed_value: string | null;
-  confidence: number | null;
-  review_status: "pending" | "confirmed";
-}
 interface DocumentRow {
   id: string;
   document_type: "residence_card";
   file_name: string;
   mime_type: string | null;
+  file_size: number | null;
   storage_path: string | null;
   status: DocumentStatus;
   uploaded_at: string;
-  document_extractions: ExtractionRow[];
 }
 interface ApplicantRow {
   legal_name: string | null;
   nationality: string | null;
   date_of_birth: string | null;
+  gender: string | null;
+  address: string | null;
   residence_status: string | null;
   residence_expiry_date: string | null;
-  confirmation_status: "unconfirmed" | "confirmed";
+  residence_card_number: string | null;
+  work_restriction: string | null;
+  confirmation_status: "draft" | "confirmed";
   confirmed_at: string | null;
   confirmed_by: string | null;
 }
@@ -128,6 +125,12 @@ async function getUserId(): Promise<string> {
   return id;
 }
 
+/** 確認者として記録する、ログイン中のユーザーのメールアドレス */
+export async function currentUserEmail(): Promise<string> {
+  const { data } = await client().auth.getSession();
+  return data.session?.user.email ?? "";
+}
+
 export function reset() {
   orgIdPromise = null;
 }
@@ -138,9 +141,13 @@ function toApplicant(row: ApplicantRow | ApplicantRow[] | null): Applicant {
     legalName: a?.legal_name ?? "",
     nationality: a?.nationality ?? "",
     dateOfBirth: a?.date_of_birth ?? "",
+    gender: a?.gender ?? "",
+    address: a?.address ?? "",
     residenceStatus: a?.residence_status ?? "",
     residenceExpiryDate: a?.residence_expiry_date ?? "",
-    confirmationStatus: a?.confirmation_status ?? "unconfirmed",
+    residenceCardNumber: a?.residence_card_number ?? "",
+    workRestriction: a?.work_restriction ?? "",
+    confirmationStatus: a?.confirmation_status ?? EMPTY_APPLICANT.confirmationStatus,
     confirmedAt: a?.confirmed_at ?? undefined,
     confirmedBy: a?.confirmed_by ?? undefined,
   };
@@ -198,18 +205,10 @@ function toDocument(row: DocumentRow): DocumentRecord {
     documentType: row.document_type,
     fileName: row.file_name,
     mimeType: row.mime_type ?? "",
+    fileSize: row.file_size ?? undefined,
     storagePath: row.storage_path ?? undefined,
     status: row.status,
     uploadedAt: row.uploaded_at,
-    extractions: row.document_extractions.map(
-      (e): Extraction => ({
-        field: e.field_name as FieldKey,
-        extractedValue: e.extracted_value ?? "",
-        value: e.reviewed_value ?? "",
-        confidence: Number(e.confidence ?? 0),
-        reviewStatus: e.review_status,
-      }),
-    ),
   };
 }
 
@@ -218,7 +217,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), documents(*, document_extractions(*))")
+      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), documents(*)")
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -268,11 +267,16 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       legal_name: a.legalName || null,
       nationality: a.nationality || null,
       date_of_birth: a.dateOfBirth || null,
+      gender: a.gender || null,
+      address: a.address || null,
       residence_status: a.residenceStatus || null,
       residence_expiry_date: a.residenceExpiryDate || null,
+      residence_card_number: a.residenceCardNumber || null,
+      work_restriction: a.workRestriction || null,
       confirmation_status: a.confirmationStatus,
       confirmed_at: a.confirmedAt ?? null,
       confirmed_by: a.confirmedBy ?? null,
+      updated_at: c.updatedAt,
     }),
   );
 
@@ -345,7 +349,7 @@ export async function persistCase(c: CaseRecord): Promise<void> {
     );
   }
 
-  // 差し替えられた書類を削除する（関連する抽出結果と保存ファイルも対象）
+  // 差し替えられた書類を削除する（保存ファイルも対象）
   const existing = ok(await db.from("documents").select("id, storage_path").eq("case_id", c.id)) as {
     id: string;
     storage_path: string | null;
@@ -367,27 +371,13 @@ export async function persistCase(c: CaseRecord): Promise<void> {
         document_type: d.documentType,
         file_name: d.fileName,
         mime_type: d.mimeType || null,
+        file_size: d.fileSize ?? null,
         storage_path: d.storagePath ?? null,
         status: d.status,
         uploaded_at: d.uploadedAt,
+        updated_at: c.updatedAt,
       }),
     );
-    if (d.extractions.length > 0) {
-      ok(
-        await db.from("document_extractions").upsert(
-          d.extractions.map((e) => ({
-            document_id: d.id,
-            organization_id: org,
-            field_name: e.field,
-            extracted_value: e.extractedValue,
-            reviewed_value: e.value,
-            confidence: e.confidence,
-            review_status: e.reviewStatus,
-          })),
-          { onConflict: "document_id,field_name" },
-        ),
-      );
-    }
   }
 }
 
@@ -416,9 +406,8 @@ export async function audit(caseId: string | null, action: string, detail?: Reco
 
 export async function uploadFile(caseId: string, docId: string, file: File): Promise<string> {
   const db = client();
-  const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
-  const path = `${await getOrgId()}/${caseId}/${docId}${ext ? "." + ext : ""}`;
-  const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type });
+  const path = `${await getOrgId()}/${caseId}/${docId}.${storageExtension(file.type)}`;
+  const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (error) throw new Error(error.message);
   return path;
 }

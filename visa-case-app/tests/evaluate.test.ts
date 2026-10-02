@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "../lib/requirements/evaluate";
-import { EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withholdingSpecial = false): CaseRecord {
   return {
@@ -13,14 +13,7 @@ function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withho
     workflowStatus: "preparing",
     createdAt: "",
     updatedAt: "",
-    applicant: {
-      legalName: "",
-      nationality: "",
-      dateOfBirth: "",
-      residenceStatus: "",
-      residenceExpiryDate: "",
-      confirmationStatus: "unconfirmed",
-    },
+    applicant: { ...EMPTY_APPLICANT },
     employment: { ...EMPTY_EMPLOYMENT, category, withholdingSpecial },
     requirementStates: {},
     customRequirements: [],
@@ -40,7 +33,14 @@ describe("evaluate", () => {
   it("確認済みの申請人情報の在留資格を、案件の入力より優先する", () => {
     const c = make({ currentStatus: "留学" });
     c.applicant.residenceStatus = "技術・人文知識・国際業務";
+    c.applicant.confirmationStatus = "confirmed";
     expect(evaluate(c).ruleSet).not.toBeNull();
+  });
+
+  it("下書きの申請人情報は、判定に使わない", () => {
+    const c = make({ currentStatus: "留学" });
+    c.applicant.residenceStatus = "技術・人文知識・国際業務";
+    expect(evaluate(c).ruleSet).toBeNull();
   });
 
   it("カテゴリー未入力の間は、共通の書類のみ判定する", () => {

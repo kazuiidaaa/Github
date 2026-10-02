@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "../lib/requirements/evaluate";
 import { isCollected, isOverdue, progressOf } from "../lib/requirements/progress";
-import { EMPTY_EMPLOYMENT, type CaseRecord, type CustomRequirement } from "../lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type CustomRequirement } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}): CaseRecord {
   return {
@@ -14,14 +14,7 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
     workflowStatus: "preparing",
     createdAt: "",
     updatedAt: "",
-    applicant: {
-      legalName: "",
-      nationality: "",
-      dateOfBirth: "",
-      residenceStatus: "",
-      residenceExpiryDate: "",
-      confirmationStatus: "unconfirmed",
-    },
+    applicant: { ...EMPTY_APPLICANT },
     employment: { ...EMPTY_EMPLOYMENT, category: "3" },
     requirementStates: {},
     customRequirements: [],
