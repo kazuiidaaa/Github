@@ -3,29 +3,71 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppError, messageOf } from "@/lib/errors";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
-import { ReviewPanel } from "@/components/ReviewPanel";
+import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { deleteCase, useCase, useStoreLoaded } from "@/lib/store";
+import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
-  REQUIRED_FIELDS,
   WORKFLOW_LABELS,
+  type DocumentRecord,
 } from "@/lib/types";
 
-type Tab = "overview" | "documents" | "extractions" | "employment" | "requirements";
+type Tab = "overview" | "documents" | "applicant" | "employment" | "requirements" | "checks";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
-  { key: "extractions", label: "抽出結果" },
+  { key: "applicant", label: "申請人情報" },
   { key: "employment", label: "雇用・会社" },
   { key: "requirements", label: "必要書類" },
+  { key: "checks", label: "申請前チェック" },
 ];
+
+function DocumentRow({ doc, locked, onDelete }: { doc: DocumentRecord; locked: boolean; onDelete: () => void }) {
+  const [error, setError] = useState("");
+
+  async function open() {
+    setError("");
+    try {
+      let url: string;
+      if (doc.dataUrl) url = URL.createObjectURL(await (await fetch(doc.dataUrl)).blob());
+      else if (doc.storagePath) url = await getDocumentSignedUrl(doc.storagePath);
+      else throw new AppError("ファイルを保持していません。");
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(`表示できません：${messageOf(e)}`);
+    }
+  }
+
+  return (
+    <div className="px-6 py-3 text-sm">
+      <div className="flex items-center justify-between">
+        <span>在留カード：{doc.fileName}</span>
+        <span className="flex items-center gap-3">
+          <Badge tone="blue">
+            {DOCUMENT_STATUS_LABELS[doc.status]}
+          </Badge>
+          <span className="text-slate-500">{formatDateTime(doc.uploadedAt)}</span>
+          <Button variant="secondary" onClick={() => void open()}>
+            表示
+          </Button>
+          <Button variant="danger" disabled={locked} onClick={onDelete}>
+            削除
+          </Button>
+        </span>
+      </div>
+      {locked && <p className="mt-1 text-xs text-slate-500">申請人情報が確定済みのため、削除できません。</p>}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,6 +90,12 @@ export default function CaseDetailPage() {
   }
 
   const doc = record.documents[0];
+
+  function removeDocument(d: DocumentRecord) {
+    if (!confirm(`「${d.fileName}」を削除します。よろしいですか。`)) return;
+    updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
+    logAudit(record!.id, "document_deleted", { fileName: d.fileName });
+  }
   const a = record.applicant;
   const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
 
@@ -61,11 +109,18 @@ export default function CaseDetailPage() {
           <h1 className="text-2xl font-semibold">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
-            <Badge tone={record.workflowStatus === "confirmed" ? "green" : "gray"}>
+            <Badge tone={record.workflowStatus === "applicant_confirmed" || record.workflowStatus === "application_ready" ? "green" : "gray"}>
               {WORKFLOW_LABELS[record.workflowStatus]}
             </Badge>
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <Link
+          href={`/cases/${record.id}/documents`}
+          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+        >
+          申請書類作成
+        </Link>
         <Button
           variant="danger"
           onClick={() => {
@@ -77,6 +132,7 @@ export default function CaseDetailPage() {
         >
           削除
         </Button>
+        </div>
       </div>
 
       <div className="mb-6 flex gap-1 border-b border-slate-200">
@@ -96,20 +152,33 @@ export default function CaseDetailPage() {
       {tab === "overview" && (
         <div className="space-y-6">
           <section className="rounded-lg border border-slate-200 bg-white p-6">
-            <h2 className="mb-4 font-semibold">申請人情報</h2>
+            <h2 className="mb-4 flex items-center gap-2 font-semibold">
+              申請人情報
+              <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
+                {a.confirmationStatus === "confirmed" ? "確認済み" : "下書き"}
+              </Badge>
+            </h2>
             <dl className="grid grid-cols-[10rem_1fr] gap-y-3 text-sm">
               <dt className="text-slate-500">氏名</dt>
-              <dd>{a.legalName || <span className="text-slate-400">未確認</span>}</dd>
+              <dd>{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">国籍・地域</dt>
-              <dd>{a.nationality || <span className="text-slate-400">未確認</span>}</dd>
+              <dd>{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">生年月日</dt>
               <dd>{formatDate(a.dateOfBirth)}</dd>
+              <dt className="text-slate-500">性別</dt>
+              <dd>{a.gender || <span className="text-slate-400">未入力</span>}</dd>
+              <dt className="text-slate-500">住居地</dt>
+              <dd>{a.address || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留資格</dt>
-              <dd>{a.residenceStatus || <span className="text-slate-400">未確認</span>}</dd>
+              <dd>{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留期間の満了日</dt>
               <dd>
                 <ExpiryBadge date={a.residenceExpiryDate} />
               </dd>
+              <dt className="text-slate-500">在留カード番号</dt>
+              <dd>{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
+              <dt className="text-slate-500">就労制限</dt>
+              <dd>{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
               <p className="mt-4 text-sm text-green-700">
@@ -134,7 +203,7 @@ export default function CaseDetailPage() {
           </section>
           {!doc && (
             <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
-              次に行うこと：「書類」タブから在留カードをアップロードしてください。
+              次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。
             </p>
           )}
         </div>
@@ -142,37 +211,24 @@ export default function CaseDetailPage() {
 
       {tab === "documents" && (
         <div className="space-y-6">
-          <UploadBox caseId={record.id} onUploaded={() => setTab("extractions")} />
+          <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("applicant")} />
           <section className="rounded-lg border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
             {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
             {record.documents.map((d) => (
-              <div key={d.id} className="flex items-center justify-between px-6 py-3 text-sm">
-                <span>在留カード：{d.fileName}</span>
-                <span className="flex items-center gap-3">
-                  <Badge tone={d.status === "processed" ? "green" : d.status === "failed" ? "red" : "blue"}>
-                    {DOCUMENT_STATUS_LABELS[d.status]}
-                  </Badge>
-                  <span className="text-slate-500">{formatDateTime(d.uploadedAt)}</span>
-                </span>
-              </div>
+              <DocumentRow key={d.id} doc={d} locked={record.workflowStatus === "applicant_confirmed"} onDelete={() => removeDocument(d)} />
             ))}
           </section>
         </div>
       )}
 
-      {tab === "extractions" && (
-        <>
-          {!doc && <p className="text-sm text-slate-500">在留カードが未登録です。「書類」タブからアップロードしてください。</p>}
-          {doc && doc.status === "processing" && <p className="text-sm text-slate-600">OCR処理中です。しばらくお待ちください……</p>}
-          {doc && doc.status === "failed" && <p className="text-sm text-red-700">OCR処理に失敗しました。再度アップロードしてください。</p>}
-          {doc && doc.status === "processed" && <ReviewPanel record={record} doc={doc} fields={REQUIRED_FIELDS} />}
-        </>
-      )}
+      {tab === "applicant" && <ApplicantForm record={record} onGoDocuments={() => setTab("documents")} />}
 
       {tab === "employment" && <EmploymentForm record={record} />}
 
       {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
+
+      {tab === "checks" && <ChecksPanel record={record} />}
     </div>
   );
 }

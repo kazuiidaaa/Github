@@ -1,4 +1,5 @@
 import type { CaseRecord, RequirementState } from "../types";
+import { isCollected } from "./progress";
 import { RULE_SETS, type RequirementRule, type RuleSet } from "./rules";
 
 export type Result = "required" | "not_required" | "check";
@@ -19,22 +20,24 @@ export interface Evaluation {
   /** カテゴリー未入力のため、共通の書類のみを判定している */
   needsCategory: boolean;
   items: EvaluatedItem[];
-  /** 必要だが未提出の書類 */
+  /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
-  /** 提出要否の確認が必要な書類（未提出のもの） */
+  /** 提出要否の確認が必要な書類（未受領のもの） */
   toCheck: EvaluatedItem[];
   requiredCount: number;
-  submittedCount: number;
+  receivedCount: number;
 }
 
-const NO_STATE: RequirementState = { submitted: false };
+const NO_STATE: RequirementState = { status: "not_received" };
 
 function normalize(s: string): string {
   return s.replace(/[\s・･]/g, "");
 }
 
 function findRuleSet(c: CaseRecord): RuleSet | null {
-  const status = normalize(c.applicant.residenceStatus || c.currentStatus);
+  // 下書きの入力は正式なデータではないため、確認済みの場合のみ優先する
+  const confirmed = c.applicant.confirmationStatus === "confirmed";
+  const status = normalize((confirmed && c.applicant.residenceStatus) || c.currentStatus);
   return (
     RULE_SETS.find((r) => r.procedureType === c.procedureType && status.includes(normalize(r.residenceStatus))) ?? null
   );
@@ -52,7 +55,7 @@ export function evaluate(c: CaseRecord): Evaluation {
     missing: [],
     toCheck: [],
     requiredCount: 0,
-    submittedCount: 0,
+    receivedCount: 0,
   };
   const ruleSet = findRuleSet(c);
   if (!ruleSet) {
@@ -93,9 +96,9 @@ export function evaluate(c: CaseRecord): Evaluation {
     ruleSet,
     needsCategory,
     items,
-    missing: required.filter((i) => !i.state.submitted),
-    toCheck: items.filter((i) => i.effective === "check" && !i.state.submitted),
+    missing: required.filter((i) => !isCollected(i.state.status)),
+    toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),
     requiredCount: required.length,
-    submittedCount: required.filter((i) => i.state.submitted).length,
+    receivedCount: required.filter((i) => isCollected(i.state.status)).length,
   };
 }

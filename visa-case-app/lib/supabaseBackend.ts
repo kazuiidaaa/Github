@@ -1,46 +1,48 @@
 import { AppError, toAppError } from "./errors";
+import { storageExtension } from "./documentValidation";
 import { supabase } from "./supabase";
 import {
+  EMPTY_APPLICANT,
   EMPTY_EMPLOYMENT,
   type Applicant,
+  type CustomRequirement,
   type EmploymentInfo,
   type OrgCategory,
   type RequirementState,
+  type RequirementStatus,
   type CaseRecord,
+  type CheckRecord,
+  type CheckStatus,
+  type CheckType,
   type DocumentRecord,
   type DocumentStatus,
-  type Extraction,
-  type FieldKey,
   type ProcedureType,
   type WorkflowStatus,
 } from "./types";
 
 const BUCKET = "documents";
 
-interface ExtractionRow {
-  field_name: string;
-  extracted_value: string | null;
-  reviewed_value: string | null;
-  confidence: number | null;
-  review_status: "pending" | "confirmed";
-}
 interface DocumentRow {
   id: string;
   document_type: "residence_card";
   file_name: string;
   mime_type: string | null;
+  file_size: number | null;
   storage_path: string | null;
   status: DocumentStatus;
   uploaded_at: string;
-  document_extractions: ExtractionRow[];
 }
 interface ApplicantRow {
   legal_name: string | null;
   nationality: string | null;
   date_of_birth: string | null;
+  gender: string | null;
+  address: string | null;
   residence_status: string | null;
   residence_expiry_date: string | null;
-  confirmation_status: "unconfirmed" | "confirmed";
+  residence_card_number: string | null;
+  work_restriction: string | null;
+  confirmation_status: "draft" | "confirmed";
   confirmed_at: string | null;
   confirmed_by: string | null;
 }
@@ -60,9 +62,30 @@ interface EmploymentRow {
 }
 interface RequirementRow {
   requirement_id: string;
-  submitted: boolean;
+  status: RequirementStatus;
+  due_date: string | null;
   override: "required" | "not_required" | null;
   note: string | null;
+}
+interface CustomRequirementRow {
+  id: string;
+  name: string;
+  party: "applicant" | "organization";
+  is_required: boolean;
+  status: RequirementStatus;
+  due_date: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+interface CheckRow {
+  check_key: string;
+  check_type: CheckType;
+  check_name: string;
+  check_status: CheckStatus;
+  note: string | null;
+  checked_at: string | null;
+  checked_by: string | null;
 }
 interface CaseRow {
   id: string;
@@ -72,11 +95,15 @@ interface CaseRow {
   target_status: string | null;
   memo: string | null;
   workflow_status: WorkflowStatus;
+  planned_application_date: string | null;
+  check_memo: string | null;
   created_at: string;
   updated_at: string;
+  case_checks: CheckRow[] | null;
   applicants: ApplicantRow | ApplicantRow[] | null;
   employment_details: EmploymentRow | EmploymentRow[] | null;
   requirement_states: RequirementRow[] | null;
+  custom_requirements: CustomRequirementRow[] | null;
   documents: DocumentRow[] | null;
 }
 
@@ -111,8 +138,14 @@ function getOrgId(): Promise<string> {
 async function getUserId(): Promise<string> {
   const { data } = await client().auth.getSession();
   const id = data.session?.user.id;
-  if (!id) throw new Error("ログインしていません。");
+  if (!id) throw new AppError("ログインしていません。");
   return id;
+}
+
+/** 確認者として記録する、ログイン中のユーザーのメールアドレス */
+export async function currentUserEmail(): Promise<string> {
+  const { data } = await client().auth.getSession();
+  return data.session?.user.email ?? "";
 }
 
 export function reset() {
@@ -125,9 +158,13 @@ function toApplicant(row: ApplicantRow | ApplicantRow[] | null): Applicant {
     legalName: a?.legal_name ?? "",
     nationality: a?.nationality ?? "",
     dateOfBirth: a?.date_of_birth ?? "",
+    gender: a?.gender ?? "",
+    address: a?.address ?? "",
     residenceStatus: a?.residence_status ?? "",
     residenceExpiryDate: a?.residence_expiry_date ?? "",
-    confirmationStatus: a?.confirmation_status ?? "unconfirmed",
+    residenceCardNumber: a?.residence_card_number ?? "",
+    workRestriction: a?.work_restriction ?? "",
+    confirmationStatus: a?.confirmation_status ?? EMPTY_APPLICANT.confirmationStatus,
     confirmedAt: a?.confirmed_at ?? undefined,
     confirmedBy: a?.confirmed_by ?? undefined,
   };
@@ -156,12 +193,39 @@ function toRequirementStates(rows: RequirementRow[] | null): Record<string, Requ
   const out: Record<string, RequirementState> = {};
   for (const r of rows ?? []) {
     out[r.requirement_id] = {
-      submitted: r.submitted,
+      status: r.status,
+      dueDate: r.due_date ?? undefined,
       override: r.override ?? undefined,
       note: r.note ?? undefined,
     };
   }
   return out;
+}
+
+function toCustomRequirements(rows: CustomRequirementRow[] | null): CustomRequirement[] {
+  return [...(rows ?? [])]
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      party: r.party,
+      isRequired: r.is_required,
+      status: r.status,
+      dueDate: r.due_date ?? undefined,
+      note: r.note ?? undefined,
+    }));
+}
+
+function toChecks(rows: CheckRow[] | null): CheckRecord[] {
+  return (rows ?? []).map((r) => ({
+    key: r.check_key,
+    type: r.check_type,
+    name: r.check_name,
+    status: r.check_status,
+    note: r.note ?? "",
+    checkedAt: r.checked_at ?? undefined,
+    checkedBy: r.checked_by ?? undefined,
+  }));
 }
 
 function toDocument(row: DocumentRow): DocumentRecord {
@@ -170,18 +234,10 @@ function toDocument(row: DocumentRow): DocumentRecord {
     documentType: row.document_type,
     fileName: row.file_name,
     mimeType: row.mime_type ?? "",
+    fileSize: row.file_size ?? undefined,
     storagePath: row.storage_path ?? undefined,
     status: row.status,
     uploadedAt: row.uploaded_at,
-    extractions: row.document_extractions.map(
-      (e): Extraction => ({
-        field: e.field_name as FieldKey,
-        extractedValue: e.extracted_value ?? "",
-        value: e.reviewed_value ?? "",
-        confidence: Number(e.confidence ?? 0),
-        reviewStatus: e.review_status,
-      }),
-    ),
   };
 }
 
@@ -190,7 +246,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), requirement_states(*), documents(*, document_extractions(*))")
+      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), case_checks(*), documents(*)")
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -206,6 +262,10 @@ export async function loadAll(): Promise<CaseRecord[]> {
     applicant: toApplicant(r.applicants),
     employment: toEmployment(r.employment_details),
     requirementStates: toRequirementStates(r.requirement_states),
+    customRequirements: toCustomRequirements(r.custom_requirements),
+    plannedApplicationDate: r.planned_application_date ?? "",
+    checkMemo: r.check_memo ?? "",
+    checks: toChecks(r.case_checks),
     documents: (r.documents ?? []).map(toDocument),
   }));
 }
@@ -225,6 +285,8 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       target_status: c.targetStatus || null,
       memo: c.memo || null,
       workflow_status: c.workflowStatus,
+      planned_application_date: c.plannedApplicationDate || null,
+      check_memo: c.checkMemo || null,
       created_by: uid,
       created_at: c.createdAt,
       updated_at: c.updatedAt,
@@ -239,11 +301,16 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       legal_name: a.legalName || null,
       nationality: a.nationality || null,
       date_of_birth: a.dateOfBirth || null,
+      gender: a.gender || null,
+      address: a.address || null,
       residence_status: a.residenceStatus || null,
       residence_expiry_date: a.residenceExpiryDate || null,
+      residence_card_number: a.residenceCardNumber || null,
+      work_restriction: a.workRestriction || null,
       confirmation_status: a.confirmationStatus,
       confirmed_at: a.confirmedAt ?? null,
       confirmed_by: a.confirmedBy ?? null,
+      updated_at: c.updatedAt,
     }),
   );
 
@@ -282,7 +349,8 @@ export async function persistCase(c: CaseRecord): Promise<void> {
           case_id: c.id,
           organization_id: org,
           requirement_id: rid,
-          submitted: c.requirementStates[rid].submitted,
+          status: c.requirementStates[rid].status,
+          due_date: c.requirementStates[rid].dueDate || null,
           override: c.requirementStates[rid].override ?? null,
           note: c.requirementStates[rid].note || null,
           updated_at: c.updatedAt,
@@ -291,7 +359,59 @@ export async function persistCase(c: CaseRecord): Promise<void> {
     );
   }
 
-  // 差し替えられた書類を削除する（関連する抽出結果と保存ファイルも対象）
+  const customIds = c.customRequirements.map((r) => r.id);
+  const existingCustom = ok(await db.from("custom_requirements").select("id").eq("case_id", c.id)) as { id: string }[];
+  const staleCustom = existingCustom.map((r) => r.id).filter((id) => !customIds.includes(id));
+  if (staleCustom.length > 0) {
+    ok(await db.from("custom_requirements").delete().eq("case_id", c.id).in("id", staleCustom));
+  }
+  if (c.customRequirements.length > 0) {
+    ok(
+      await db.from("custom_requirements").upsert(
+        c.customRequirements.map((r) => ({
+          id: r.id,
+          case_id: c.id,
+          organization_id: org,
+          name: r.name,
+          party: r.party,
+          is_required: r.isRequired,
+          status: r.status,
+          due_date: r.dueDate || null,
+          note: r.note || null,
+        })),
+      ),
+    );
+  }
+
+  const checkKeys = c.checks.map((k) => k.key);
+  const existingChecks = ok(await db.from("case_checks").select("check_key").eq("case_id", c.id)) as {
+    check_key: string;
+  }[];
+  const staleChecks = existingChecks.map((r) => r.check_key).filter((k) => !checkKeys.includes(k));
+  if (staleChecks.length > 0) {
+    ok(await db.from("case_checks").delete().eq("case_id", c.id).in("check_key", staleChecks));
+  }
+  if (c.checks.length > 0) {
+    ok(
+      await db.from("case_checks").upsert(
+        c.checks.map((k) => ({
+          case_id: c.id,
+          organization_id: org,
+          check_type: k.type,
+          check_key: k.key,
+          check_name: k.name,
+          check_status: k.status,
+          note: k.note || null,
+          checked_at: k.checkedAt ?? null,
+          checked_by: k.checkedBy === "self" ? uid : (k.checkedBy ?? null),
+          updated_at: c.updatedAt,
+        })),
+        { onConflict: "case_id,check_key" },
+      ),
+    );
+  }
+
+  // 差し替えられた書類を削除する（保存ファイルも対象）
   const existing = ok(await db.from("documents").select("id, storage_path").eq("case_id", c.id)) as {
     id: string;
     storage_path: string | null;
@@ -313,27 +433,13 @@ export async function persistCase(c: CaseRecord): Promise<void> {
         document_type: d.documentType,
         file_name: d.fileName,
         mime_type: d.mimeType || null,
+        file_size: d.fileSize ?? null,
         storage_path: d.storagePath ?? null,
         status: d.status,
         uploaded_at: d.uploadedAt,
+        updated_at: c.updatedAt,
       }),
     );
-    if (d.extractions.length > 0) {
-      ok(
-        await db.from("document_extractions").upsert(
-          d.extractions.map((e) => ({
-            document_id: d.id,
-            organization_id: org,
-            field_name: e.field,
-            extracted_value: e.extractedValue,
-            reviewed_value: e.value,
-            confidence: e.confidence,
-            review_status: e.reviewStatus,
-          })),
-          { onConflict: "document_id,field_name" },
-        ),
-      );
-    }
   }
 }
 
@@ -362,9 +468,8 @@ export async function audit(caseId: string | null, action: string, detail?: Reco
 
 export async function uploadFile(caseId: string, docId: string, file: File): Promise<string> {
   const db = client();
-  const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
-  const path = `${await getOrgId()}/${caseId}/${docId}${ext ? "." + ext : ""}`;
-  const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type });
+  const path = `${await getOrgId()}/${caseId}/${docId}.${storageExtension(file.type)}`;
+  const { error } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (error) throw toAppError(error, "ファイルを保存できませんでした。");
   return path;
 }
@@ -395,7 +500,7 @@ export async function getAccount(): Promise<AccountInfo> {
   const db = client();
   const { data } = await db.auth.getSession();
   const user = data.session?.user;
-  if (!user) throw new Error("ログインしていません。");
+  if (!user) throw new AppError("ログインしていません。");
   await getOrgId();
   const rows = ok(await db.from("members").select("role, organizations(name, id)").limit(1)) as unknown as {
     role: string;
@@ -417,7 +522,7 @@ export async function renameOrganization(name: string): Promise<void> {
   const db = client();
   const org = await getOrgId();
   const updated = ok(await db.from("organizations").update({ name }).eq("id", org).select("id")) as { id: string }[];
-  if (updated.length === 0) throw new Error("事務所名を変更する権限がありません。");
+  if (updated.length === 0) throw new AppError("事務所名を変更する権限がありません。");
 }
 
 export async function listAudit(limit = 100): Promise<AuditEntry[]> {
