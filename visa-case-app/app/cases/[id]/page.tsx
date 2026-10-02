@@ -8,7 +8,7 @@ import { ReviewPanel } from "@/components/ReviewPanel";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { deleteCase, useCase } from "@/lib/store";
+import { deleteCase, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
@@ -27,7 +27,10 @@ export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const record = useCase(id);
+  const loaded = useStoreLoaded();
   const [tab, setTab] = useState<Tab>("overview");
+
+  if (!record && !loaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
 
   if (!record) {
     return (

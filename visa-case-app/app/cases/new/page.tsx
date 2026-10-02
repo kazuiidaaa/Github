@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
-import { newId, saveCase } from "@/lib/store";
+import { logAudit, newId, saveCase } from "@/lib/store";
 import { PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
@@ -51,6 +51,7 @@ export default function NewCasePage() {
       },
       documents: [],
     });
+    logAudit(id, "case_created");
     router.push(`/cases/${id}`);
   }
 

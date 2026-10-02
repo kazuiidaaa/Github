@@ -5,11 +5,12 @@ import { useState } from "react";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { Badge } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
-import { useCases } from "@/lib/store";
+import { useCases, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type WorkflowStatus } from "@/lib/types";
 
 export default function CasesPage() {
   const cases = useCases();
+  const loaded = useStoreLoaded();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | WorkflowStatus>("all");
 
@@ -63,7 +64,7 @@ export default function CasesPage() {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
-                  {cases.length === 0 ? "案件がありません。「新規案件」から作成してください。" : "該当する案件がありません。"}
+                  {!loaded ? "読み込み中……" : cases.length === 0 ? "案件がありません。「新規案件」から作成してください。" : "該当する案件がありません。"}
                 </td>
               </tr>
             )}

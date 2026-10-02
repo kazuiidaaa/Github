@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { runMockOcr } from "@/lib/ocr";
-import { newId, updateCase } from "@/lib/store";
+import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
 import type { DocumentRecord } from "@/lib/types";
 
 const MAX_INLINE_BYTES = 1_000_000;
@@ -31,17 +31,26 @@ export function UploadBox({ caseId, onUploaded }: { caseId: string; onUploaded: 
     }
     setError("");
     const docId = newId();
+    let storagePath: string | undefined;
+    try {
+      storagePath = await uploadDocumentFile(caseId, docId, file);
+    } catch (e) {
+      setError(`ファイルの保存に失敗しました：${e instanceof Error ? e.message : ""}`);
+      return;
+    }
     const base: DocumentRecord = {
       id: docId,
       documentType: "residence_card",
       fileName: file.name,
       mimeType: file.type,
-      dataUrl: await readAsDataUrl(file),
+      dataUrl: storagePath ? undefined : await readAsDataUrl(file),
+      storagePath,
       status: "processing",
       uploadedAt: new Date().toISOString(),
       extractions: [],
     };
     updateCase(caseId, (c) => ({ ...c, workflowStatus: "processing", documents: [base] }));
+    logAudit(caseId, "document_uploaded", { fileName: file.name });
     onUploaded();
     try {
       const extractions = await runMockOcr(file);

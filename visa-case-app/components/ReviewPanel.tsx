@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
-import { updateCase } from "@/lib/store";
+import { logAudit, updateCase } from "@/lib/store";
+import { useDocumentUrl } from "@/lib/useDocumentUrl";
 import type { CaseRecord, DocumentRecord, Extraction, FieldKey } from "@/lib/types";
 
 const CONFIRMER = "自分";
@@ -21,6 +22,7 @@ export function ReviewPanel({
   const [rows, setRows] = useState<Extraction[]>(doc.extractions);
   const confirmedAlready = record.workflowStatus === "confirmed";
   const [saved, setSaved] = useState(false);
+  const previewUrl = useDocumentUrl(doc);
 
   const confirmedCount = rows.filter((r) => r.reviewStatus === "confirmed").length;
   const invalidDates = rows.filter((r) => DATE_FIELDS.includes(r.field) && !isValidDate(r.value));
@@ -53,6 +55,9 @@ export function ReviewPanel({
           : c.applicant,
       };
     });
+    logAudit(record.id, confirm ? "applicant_confirmed" : "extraction_saved", {
+      corrected: rows.filter((r) => r.value !== r.extractedValue).map((r) => r.field),
+    });
     setSaved(true);
   }
 
@@ -60,14 +65,14 @@ export function ReviewPanel({
     <div className="grid gap-6 lg:grid-cols-2">
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="mb-3 font-semibold">原本：{doc.fileName}</h2>
-        {doc.dataUrl && doc.mimeType.startsWith("image/") && (
+        {previewUrl && doc.mimeType.startsWith("image/") && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={doc.dataUrl} alt="在留カード" className="max-h-[32rem] w-full rounded border border-slate-200 object-contain" />
+          <img src={previewUrl} alt="在留カード" className="max-h-[32rem] w-full rounded border border-slate-200 object-contain" />
         )}
-        {doc.dataUrl && doc.mimeType === "application/pdf" && (
-          <iframe src={doc.dataUrl} title="在留カード" className="h-[32rem] w-full rounded border border-slate-200" />
+        {previewUrl && doc.mimeType === "application/pdf" && (
+          <iframe src={previewUrl} title="在留カード" className="h-[32rem] w-full rounded border border-slate-200" />
         )}
-        {!doc.dataUrl && <p className="rounded bg-slate-50 p-8 text-center text-sm text-slate-500">プレビューを保持していません（ファイル容量が大きいか、再読み込みにより破棄されました）。</p>}
+        {!previewUrl && <p className="rounded bg-slate-50 p-8 text-center text-sm text-slate-500">プレビューを表示できません（読み込み中、またはファイル容量が大きいため保持していません）。</p>}
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
