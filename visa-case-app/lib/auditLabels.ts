@@ -20,6 +20,10 @@ export const AUDIT_LABELS: Record<string, string> = {
   check_removed: "申請前チェックの手動項目を削除",
   application_ready_marked: "申請準備完了にした",
   application_ready_reset: "申請準備完了を取り消した（チェック変更のため）",
+  document_generated: "申請書類（内部確認シート）を生成",
+  document_reviewed: "生成文書を行政書士確認済みにした",
+  document_final: "生成文書を最終版にした",
+  document_archived: "生成文書を保管にした",
   organization_renamed: "事務所名を変更",
   password_changed: "パスワードを変更",
 };

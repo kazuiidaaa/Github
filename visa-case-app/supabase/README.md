@@ -52,3 +52,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 | requirement_states | 必要書類ごとの、提出済み・判定の上書き・理由の記録 |
 | case_checks | 申請前チェックの項目ごとの状態・メモ・確認日時（行政書士が付ける管理状態） |
 | audit_logs | 案件作成・書類登録・確定などの記録（追記のみ） |
+
+## 7. 申請書類作成（フェーズ6-A）を使う場合
+`supabase/migrations/0008_generated_documents.sql` を、0001〜0007 の実行後に SQL Editor で実行します。生成した内部確認シートの保存と、版の管理に使います。
