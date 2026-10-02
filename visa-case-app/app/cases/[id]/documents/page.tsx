@@ -23,7 +23,7 @@ export default function DocumentsPage() {
   const record = useCase(id);
   const storeLoaded = useStoreLoaded();
   const { documents, loaded, error } = useGeneratedDocuments(id);
-  const [selected, setSelected] = useState<InternalDocumentType[]>([...INTERNAL_DOCUMENT_TYPES]);
+  const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => t !== "transcription_aid"));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 

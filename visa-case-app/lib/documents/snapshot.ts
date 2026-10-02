@@ -1,10 +1,12 @@
 import { evaluate } from "../requirements/evaluate";
 import { progressOf } from "../requirements/progress";
 import { sortChecks } from "../checks/definitions";
+import { buildTranscription } from "./formMapping";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type CaseRecord } from "../types";
 import {
   DOCUMENT_TYPE_LABELS,
   NOTICES,
+  TRANSCRIPTION_NOTICES,
   type ContentJson,
   type InternalDocumentType,
   type SnapshotRequirement,
@@ -116,6 +118,12 @@ export function buildContent(c: CaseRecord, type: InternalDocumentType, now: Dat
   };
 
   switch (type) {
+    case "transcription_aid":
+      return {
+        ...base,
+        transcription: buildTranscription(a, e, { procedureType: c.procedureType, currentStatus: c.currentStatus }),
+        notices: [...TRANSCRIPTION_NOTICES, ...base.notices],
+      };
     case "case_summary":
       return { ...base, applicant, employment, requirements: requirementsOf(c), preApplicationChecks: checks };
     case "applicant_summary":

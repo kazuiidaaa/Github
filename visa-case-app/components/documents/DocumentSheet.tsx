@@ -2,6 +2,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
+  TRANSCRIPTION_MODE_LABELS,
   type ContentJson,
   type GeneratedDocument,
 } from "@/lib/documents/types";
@@ -53,6 +54,53 @@ function ApplicantSection({ a }: { a: NonNullable<ContentJson["applicant"]> }) {
   );
 }
 
+function TranscriptionSections({ t }: { t: NonNullable<ContentJson["transcription"]> }) {
+  return (
+    <>
+      <Section title="対象の公式様式">
+        <dl className="grid grid-cols-[10rem_1fr] gap-y-1.5 text-sm">
+          <Row label="様式" value={t.form.formName} />
+          <Row label="ファイル識別番号" value={t.form.fileId} />
+          <Row label="対応表の確認日" value={formatDate(t.form.confirmedOn)} />
+          <Row label="申請人情報" value={t.applicantConfirmed ? "確認済み" : "下書き（未確認）"} />
+        </dl>
+        {t.warnings.map((w) => (
+          <p key={w} className="mt-2 text-sm font-medium text-amber-800">注意：{w}</p>
+        ))}
+        <p className="mt-2 text-xs text-slate-600">
+          区分：「差し込み」は確定済みの案件データ、「要確認」は保存値を原本と照合してから使う項目、「手入力」は案件DBに項目がない項目です。
+        </p>
+      </Section>
+      {t.sheets.map((sheet) => (
+        <Section key={sheet.title} title={sheet.title}>
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-100 text-left">
+                <th className="w-12 border border-slate-300 p-1.5">項番</th>
+                <th className="border border-slate-300 p-1.5">公式の項目</th>
+                <th className="border border-slate-300 p-1.5">値</th>
+                <th className="w-16 border border-slate-300 p-1.5">区分</th>
+                <th className="border border-slate-300 p-1.5">備考</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sheet.items.map((i, idx) => (
+                <tr key={`${i.no}-${idx}`}>
+                  <td className="border border-slate-300 p-1.5">{i.no}</td>
+                  <td className="border border-slate-300 p-1.5">{i.label}</td>
+                  <td className="border border-slate-300 p-1.5 whitespace-pre-wrap">{i.value}</td>
+                  <td className="border border-slate-300 p-1.5">{TRANSCRIPTION_MODE_LABELS[i.mode]}</td>
+                  <td className="border border-slate-300 p-1.5 whitespace-pre-wrap">{i.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Section>
+      ))}
+    </>
+  );
+}
+
 /** 保存済みの content_json だけを描画する。現在の案件情報は参照しない */
 export function DocumentSheet({ doc }: { doc: GeneratedDocument }) {
   const c = doc.content;
@@ -61,7 +109,9 @@ export function DocumentSheet({ doc }: { doc: GeneratedDocument }) {
   return (
     <article className="mx-auto max-w-[210mm] bg-white p-8 text-slate-900 shadow-sm print:shadow-none">
       <header className="mb-6 border-b-2 border-slate-800 pb-3">
-        <p className="text-xs text-slate-500">内部確認用（公式様式ではありません）</p>
+        <p className="text-xs text-slate-500">
+          {type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）"}
+        </p>
         <h1 className="mt-1 text-xl font-semibold">{DOCUMENT_TYPE_LABELS[type]}</h1>
         <p className="mt-1 text-sm">{c.case.caseName}（{c.case.procedureLabel}）</p>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
@@ -90,6 +140,8 @@ export function DocumentSheet({ doc }: { doc: GeneratedDocument }) {
           <Row label="案件の状態" value={c.case.workflowLabel} />
         </dl>
       </Section>
+
+      {c.transcription && <TranscriptionSections t={c.transcription} />}
 
       {c.applicant && <ApplicantSection a={c.applicant} />}
 
