@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { DocumentSheet } from "@/components/documents/DocumentSheet";
 import { Button } from "@/components/ui";
-import { changeStatus, useGeneratedDocuments } from "@/lib/documents/store";
+import { changeStatus, downloadWord, exportWord, useGeneratedDocuments } from "@/lib/documents/store";
+import { OUTPUT_FORMAT_LABELS } from "@/lib/documents/types";
 import { getConfirmerName, useCase } from "@/lib/store";
 
 export default function DocumentPreviewPage() {
@@ -15,6 +16,8 @@ export default function DocumentPreviewPage() {
   const { documents, loaded } = useGeneratedDocuments(id);
   const doc = documents.find((d) => d.id === docId);
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   if (!doc) {
     return loaded ? (
@@ -31,6 +34,26 @@ export default function DocumentPreviewPage() {
 
   const stale = !!record && record.updatedAt > doc.content.source.caseUpdatedAt;
   const latest = documents.filter((d) => d.documentType === doc.documentType).reduce((m, d) => Math.max(m, d.version), 0);
+
+  async function word(mode: "export" | "download") {
+    if (!doc) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      if (mode === "download") {
+        await downloadWord(doc);
+      } else {
+        // 保存済みの内容から、新しい版としてWordを出力する。元の版は変更しない
+        const created = await exportWord(doc);
+        await downloadWord(created);
+        router.push(`/cases/${id}/documents/${created.id}`);
+      }
+    } catch (e) {
+      setMessage(`Word出力に失敗しました：${messageOf(e)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function run(status: "reviewed" | "final" | "archived", ask: string) {
     if (!doc || !confirm(ask)) return;
@@ -55,6 +78,11 @@ export default function DocumentPreviewPage() {
             生成後に案件情報が更新されています。この版は生成時点の内容です。最新の内容で確認する場合は、再生成してください。
           </p>
         )}
+        {doc.outputFormat !== "html" && (
+          <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">
+            この版は{OUTPUT_FORMAT_LABELS[doc.outputFormat]}出力用に保存されたものです。Wordを出力すると、行政書士確認前の新しい版として保存されます。
+          </p>
+        )}
         {doc.version < latest && (
           <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
         )}
@@ -70,6 +98,15 @@ export default function DocumentPreviewPage() {
           {doc.status !== "archived" && (
             <Button variant="secondary" onClick={() => void run("archived", "この版を保管にします。よろしいですか。")}>
               保管にする
+            </Button>
+          )}
+          {doc.outputFormat === "docx" ? (
+            <Button variant="secondary" disabled={busy} onClick={() => void word("download")}>
+              Wordをダウンロード
+            </Button>
+          ) : (
+            <Button variant="secondary" disabled={busy} onClick={() => void word("export")}>
+              {busy ? "出力中……" : "Word出力（新しい版として保存）"}
             </Button>
           )}
           <Button variant="secondary" onClick={() => window.print()}>

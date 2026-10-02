@@ -111,9 +111,18 @@ export interface SnapshotRequirement {
   note?: string;
 }
 
+export type OutputFormat = "html" | "docx" | "pdf";
+
+export const OUTPUT_FORMAT_LABELS: Record<OutputFormat, string> = { html: "画面", docx: "Word", pdf: "PDF" };
+
 export interface GeneratedDocument {
   id: string;
   caseId: string;
+  /** Supabase 利用時のみ。Wordの保存先の組み立てに使う */
+  organizationId?: string;
+  outputFormat: OutputFormat;
+  /** 非公開ストレージ上の保存先（Word・PDFの出力時のみ） */
+  storagePath?: string;
   documentType: GeneratedDocumentType;
   title: string;
   version: number;

@@ -12,6 +12,7 @@ import type {
   GeneratedDocumentStatus,
   GeneratedDocumentType,
   InternalDocumentType,
+  OutputFormat,
 } from "./types";
 
 // 生成文書の保存。案件のストアとは独立させ、接続情報の有無で保存先だけを切り替える。
@@ -43,6 +44,9 @@ interface Row {
   document_status: GeneratedDocumentStatus;
   created_at: string;
   created_by: string | null;
+  organization_id: string;
+  output_format: OutputFormat | null;
+  storage_path: string | null;
   reviewed_at: string | null;
   reviewed_by_name: string | null;
 }
@@ -51,6 +55,9 @@ function fromRow(r: Row): GeneratedDocument {
   return {
     id: r.id,
     caseId: r.case_id,
+    organizationId: r.organization_id,
+    outputFormat: r.output_format ?? "html",
+    storagePath: r.storage_path ?? undefined,
     documentType: r.document_type,
     title: r.title,
     version: r.version,
@@ -72,7 +79,8 @@ function sorted(list: GeneratedDocument[]): GeneratedDocument[] {
 function readLocal(): GeneratedDocument[] {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as GeneratedDocument[]) : [];
+    // 6-A の保存データには出力形式がないため、画面（html）として補う
+    return raw ? (JSON.parse(raw) as GeneratedDocument[]).map((d) => ({ ...d, outputFormat: d.outputFormat ?? "html" })) : [];
   } catch {
     return [];
   }
@@ -155,6 +163,7 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
       doc = {
         id: newId(),
         caseId: record.id,
+        outputFormat: "html",
         documentType: type,
         title,
         version,
@@ -206,4 +215,91 @@ if (typeof window !== "undefined" && supabase) {
   supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") resetDocuments();
   });
+}
+
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const WORD_BUCKET = "generated-documents";
+
+export function wordFileName(doc: GeneratedDocument): string {
+  return `${doc.title}_v${doc.version}.docx`.replace(/[\\/:*?"<>|]/g, "_");
+}
+
+function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/**
+ * 保存済みの内容（content_json）から、Wordファイルを新しい版として出力する。
+ * 元の版は変更しない。出力した版は「行政書士確認前」から始まる。
+ */
+export async function exportWord(source: GeneratedDocument): Promise<GeneratedDocument> {
+  const { buildDocx } = await import("./docx");
+  const id = newId();
+  let created: GeneratedDocument;
+  if (isSupabaseEnabled) {
+    if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
+    const path = `${source.organizationId}/${source.caseId}/${id}.docx`;
+    const blob = await buildDocx({ ...source, status: "draft", reviewedAt: undefined, reviewedByName: undefined });
+    const up = await db().storage.from(WORD_BUCKET).upload(path, blob, { contentType: DOCX_MIME });
+    if (up.error) throw toAppError(up.error);
+    const { data, error: e } = await db().rpc("register_generated_file", {
+      p_source_id: source.id,
+      p_new_id: id,
+      p_output_format: "docx",
+      p_storage_path: path,
+    });
+    if (e) throw toAppError(e);
+    created = fromRow(data as Row);
+  } else {
+    const all = readLocal();
+    const version =
+      Math.max(0, ...all.filter((d) => d.caseId === source.caseId && d.documentType === source.documentType).map((d) => d.version)) + 1;
+    created = {
+      ...source,
+      id,
+      version,
+      outputFormat: "docx",
+      storagePath: undefined,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      reviewedAt: undefined,
+      reviewedByName: undefined,
+    };
+    writeLocal([...all, created]);
+  }
+  byCase = {
+    ...byCase,
+    [source.caseId]: sorted([...(byCase[source.caseId] ?? []), created]),
+  };
+  logAudit(source.caseId, "document_word_exported", { type: source.documentType, version: created.version });
+  emit();
+  return created;
+}
+
+/** Wordファイルをダウンロードする。Supabase 利用時は短時間有効な署名付きURLを使う */
+export async function downloadWord(doc: GeneratedDocument): Promise<void> {
+  if (isSupabaseEnabled) {
+    if (!doc.storagePath) throw new AppError("ファイルの保存先が見つかりません。");
+    const { data, error: e } = await db()
+      .storage.from(WORD_BUCKET)
+      .createSignedUrl(doc.storagePath, 60, { download: wordFileName(doc) });
+    if (e || !data) throw toAppError(e ?? {});
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } else {
+    const { buildDocx } = await import("./docx");
+    saveBlob(await buildDocx(doc), wordFileName(doc));
+  }
+  logAudit(doc.caseId, "document_word_downloaded", { type: doc.documentType, version: doc.version });
 }
