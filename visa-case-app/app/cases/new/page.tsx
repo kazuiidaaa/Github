@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, newId, saveCase } from "@/lib/store";
-import { EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -41,14 +41,7 @@ export default function NewCasePage() {
       workflowStatus: "preparing",
       createdAt: now,
       updatedAt: now,
-      applicant: {
-        legalName: "",
-        nationality: "",
-        dateOfBirth: "",
-        residenceStatus: "",
-        residenceExpiryDate: "",
-        confirmationStatus: "unconfirmed",
-      },
+      applicant: { ...EMPTY_APPLICANT },
       employment: { ...EMPTY_EMPLOYMENT },
       requirementStates: {},
       documents: [],
@@ -64,7 +57,7 @@ export default function NewCasePage() {
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">新規案件作成</h1>
       <p className="mb-6 text-sm text-slate-600">
-        案件の入口情報のみ登録します。氏名・生年月日・在留期限などの正式情報は、次の在留カード登録で取得します。
+        案件の入口情報のみ登録します。氏名・生年月日・在留期限などの正式情報は、案件作成後に「申請人情報」タブで、原本を確認しながら入力します。
       </p>
       <form onSubmit={submit} className="space-y-5 rounded-lg border border-slate-200 bg-white p-6">
         <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">

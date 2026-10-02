@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { runMockOcr } from "@/lib/ocr";
 import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
 import type { DocumentRecord } from "@/lib/types";
 
@@ -45,34 +44,19 @@ export function UploadBox({ caseId, onUploaded }: { caseId: string; onUploaded: 
       mimeType: file.type,
       dataUrl: storagePath ? undefined : await readAsDataUrl(file),
       storagePath,
-      status: "processing",
+      status: "uploaded",
       uploadedAt: new Date().toISOString(),
-      extractions: [],
     };
-    updateCase(caseId, (c) => ({ ...c, workflowStatus: "processing", documents: [base] }));
+    updateCase(caseId, (c) => ({ ...c, documents: [base] }));
     logAudit(caseId, "document_uploaded", { fileName: file.name });
     onUploaded();
-    try {
-      const extractions = await runMockOcr(file);
-      updateCase(caseId, (c) => ({
-        ...c,
-        workflowStatus: "review",
-        documents: c.documents.map((d) => (d.id === docId ? { ...d, status: "processed", extractions } : d)),
-      }));
-    } catch {
-      updateCase(caseId, (c) => ({
-        ...c,
-        workflowStatus: "preparing",
-        documents: c.documents.map((d) => (d.id === docId ? { ...d, status: "failed" } : d)),
-      }));
-    }
   }
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6">
       <h2 className="mb-1 font-semibold">在留カードをアップロード</h2>
       <p className="mb-4 text-xs text-slate-500">
-        試作版のため、実際のOCRは行わず仮の抽出結果を表示します。実在の個人情報はアップロードしないでください。
+        原本の照合用に保存します。内容の自動読み取りは行いません。「申請人情報」タブで、原本を見ながら入力してください。
       </p>
       <div
         onDragOver={(e) => {

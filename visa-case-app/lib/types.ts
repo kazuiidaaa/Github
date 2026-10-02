@@ -22,46 +22,16 @@ export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 
 export const WORKFLOW_LABELS = {
   preparing: "準備中",
-  processing: "OCR処理中",
-  review: "確認待ち",
-  confirmed: "確定済み",
+  applicant_confirmed: "申請人情報 確認済み",
 } as const;
 
 export type WorkflowStatus = keyof typeof WORKFLOW_LABELS;
 
-export type DocumentStatus = "uploaded" | "processing" | "processed" | "failed";
+export type DocumentStatus = "uploaded";
 
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   uploaded: "アップロード済み",
-  processing: "処理中",
-  processed: "処理完了",
-  failed: "失敗",
 };
-
-export type FieldKey =
-  | "legalName"
-  | "nationality"
-  | "dateOfBirth"
-  | "residenceStatus"
-  | "residenceExpiryDate";
-
-export const REQUIRED_FIELDS: { key: FieldKey; label: string; placeholder: string }[] = [
-  { key: "legalName", label: "氏名", placeholder: "LI MING" },
-  { key: "nationality", label: "国籍・地域", placeholder: "中国" },
-  { key: "dateOfBirth", label: "生年月日", placeholder: "YYYY-MM-DD" },
-  { key: "residenceStatus", label: "在留資格", placeholder: "技術・人文知識・国際業務" },
-  { key: "residenceExpiryDate", label: "在留期間の満了日", placeholder: "YYYY-MM-DD" },
-];
-
-export interface Extraction {
-  field: FieldKey;
-  /** OCRが抽出した値（変更しない） */
-  extractedValue: string;
-  /** 行政書士が確認・修正した値 */
-  value: string;
-  confidence: number;
-  reviewStatus: "pending" | "confirmed";
-}
 
 export interface DocumentRecord {
   id: string;
@@ -74,24 +44,40 @@ export interface DocumentRecord {
   storagePath?: string;
   status: DocumentStatus;
   uploadedAt: string;
-  extractions: Extraction[];
 }
 
-/** 案件名とは別に保持する、確認済みの正式な申請人情報 */
+/** 案件名とは別に保持する、行政書士が手入力した申請人情報 */
 export interface Applicant {
   legalName: string;
   nationality: string;
   dateOfBirth: string;
+  gender: string;
+  address: string;
   residenceStatus: string;
   residenceExpiryDate: string;
-  confirmationStatus: "unconfirmed" | "confirmed";
+  residenceCardNumber: string;
+  workRestriction: string;
+  confirmationStatus: "draft" | "confirmed";
   confirmedAt?: string;
   confirmedBy?: string;
 }
 
+export const EMPTY_APPLICANT: Applicant = {
+  legalName: "",
+  nationality: "",
+  dateOfBirth: "",
+  gender: "",
+  address: "",
+  residenceStatus: "",
+  residenceExpiryDate: "",
+  residenceCardNumber: "",
+  workRestriction: "",
+  confirmationStatus: "draft",
+};
+
 export type OrgCategory = "" | "1" | "2" | "3" | "4";
 
-/** 雇用・会社情報（確認済みの申請人情報とは別に保持する） */
+/** 雇用・会社情報（申請人情報とは別に保持する） */
 export interface EmploymentInfo {
   companyName: string;
   companyAddress: string;

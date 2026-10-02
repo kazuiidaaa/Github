@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { EmploymentForm } from "@/components/EmploymentForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
-import { ReviewPanel } from "@/components/ReviewPanel";
+import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -14,15 +14,14 @@ import { deleteCase, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
-  REQUIRED_FIELDS,
   WORKFLOW_LABELS,
 } from "@/lib/types";
 
-type Tab = "overview" | "documents" | "extractions" | "employment" | "requirements";
+type Tab = "overview" | "documents" | "applicant" | "employment" | "requirements";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
-  { key: "extractions", label: "抽出結果" },
+  { key: "applicant", label: "申請人情報" },
   { key: "employment", label: "雇用・会社" },
   { key: "requirements", label: "必要書類" },
 ];
@@ -61,7 +60,7 @@ export default function CaseDetailPage() {
           <h1 className="text-2xl font-semibold">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
-            <Badge tone={record.workflowStatus === "confirmed" ? "green" : "gray"}>
+            <Badge tone={record.workflowStatus === "applicant_confirmed" ? "green" : "gray"}>
               {WORKFLOW_LABELS[record.workflowStatus]}
             </Badge>
           </p>
@@ -96,20 +95,33 @@ export default function CaseDetailPage() {
       {tab === "overview" && (
         <div className="space-y-6">
           <section className="rounded-lg border border-slate-200 bg-white p-6">
-            <h2 className="mb-4 font-semibold">申請人情報</h2>
+            <h2 className="mb-4 flex items-center gap-2 font-semibold">
+              申請人情報
+              <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
+                {a.confirmationStatus === "confirmed" ? "確認済み" : "下書き"}
+              </Badge>
+            </h2>
             <dl className="grid grid-cols-[10rem_1fr] gap-y-3 text-sm">
               <dt className="text-slate-500">氏名</dt>
-              <dd>{a.legalName || <span className="text-slate-400">未確認</span>}</dd>
+              <dd>{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">国籍・地域</dt>
-              <dd>{a.nationality || <span className="text-slate-400">未確認</span>}</dd>
+              <dd>{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">生年月日</dt>
               <dd>{formatDate(a.dateOfBirth)}</dd>
+              <dt className="text-slate-500">性別</dt>
+              <dd>{a.gender || <span className="text-slate-400">未入力</span>}</dd>
+              <dt className="text-slate-500">住居地</dt>
+              <dd>{a.address || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留資格</dt>
-              <dd>{a.residenceStatus || <span className="text-slate-400">未確認</span>}</dd>
+              <dd>{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留期間の満了日</dt>
               <dd>
                 <ExpiryBadge date={a.residenceExpiryDate} />
               </dd>
+              <dt className="text-slate-500">在留カード番号</dt>
+              <dd>{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
+              <dt className="text-slate-500">就労制限</dt>
+              <dd>{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
               <p className="mt-4 text-sm text-green-700">
@@ -134,7 +146,7 @@ export default function CaseDetailPage() {
           </section>
           {!doc && (
             <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
-              次に行うこと：「書類」タブから在留カードをアップロードしてください。
+              次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。
             </p>
           )}
         </div>
@@ -142,7 +154,7 @@ export default function CaseDetailPage() {
 
       {tab === "documents" && (
         <div className="space-y-6">
-          <UploadBox caseId={record.id} onUploaded={() => setTab("extractions")} />
+          <UploadBox caseId={record.id} onUploaded={() => setTab("applicant")} />
           <section className="rounded-lg border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
             {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
@@ -150,9 +162,7 @@ export default function CaseDetailPage() {
               <div key={d.id} className="flex items-center justify-between px-6 py-3 text-sm">
                 <span>在留カード：{d.fileName}</span>
                 <span className="flex items-center gap-3">
-                  <Badge tone={d.status === "processed" ? "green" : d.status === "failed" ? "red" : "blue"}>
-                    {DOCUMENT_STATUS_LABELS[d.status]}
-                  </Badge>
+                  <Badge tone="blue">{DOCUMENT_STATUS_LABELS[d.status]}</Badge>
                   <span className="text-slate-500">{formatDateTime(d.uploadedAt)}</span>
                 </span>
               </div>
@@ -161,14 +171,7 @@ export default function CaseDetailPage() {
         </div>
       )}
 
-      {tab === "extractions" && (
-        <>
-          {!doc && <p className="text-sm text-slate-500">在留カードが未登録です。「書類」タブからアップロードしてください。</p>}
-          {doc && doc.status === "processing" && <p className="text-sm text-slate-600">OCR処理中です。しばらくお待ちください……</p>}
-          {doc && doc.status === "failed" && <p className="text-sm text-red-700">OCR処理に失敗しました。再度アップロードしてください。</p>}
-          {doc && doc.status === "processed" && <ReviewPanel record={record} doc={doc} fields={REQUIRED_FIELDS} />}
-        </>
-      )}
+      {tab === "applicant" && <ApplicantForm record={record} onGoDocuments={() => setTab("documents")} />}
 
       {tab === "employment" && <EmploymentForm record={record} />}
 

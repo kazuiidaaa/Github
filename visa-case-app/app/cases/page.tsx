@@ -75,14 +75,14 @@ export default function CasesPage() {
                     {c.caseName}
                   </Link>
                 </td>
-                <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">未確認</span>}</td>
+                <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</td>
                 <td className="px-4 py-3">{PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label}</td>
                 <td className="px-4 py-3">{c.applicant.residenceStatus || c.currentStatus || "-"}</td>
                 <td className="px-4 py-3">
                   <ExpiryBadge date={c.applicant.residenceExpiryDate} />
                 </td>
                 <td className="px-4 py-3">
-                  <Badge tone={c.workflowStatus === "confirmed" ? "green" : c.workflowStatus === "review" ? "yellow" : "gray"}>
+                  <Badge tone={c.workflowStatus === "applicant_confirmed" ? "green" : "gray"}>
                     {WORKFLOW_LABELS[c.workflowStatus]}
                   </Badge>
                 </td>

@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { isSupabaseEnabled } from "./supabase";
 import * as remote from "./supabaseBackend";
-import { EMPTY_EMPLOYMENT, type CaseRecord } from "./types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type CaseRecord, type DocumentRecord } from "./types";
 
 // 接続情報が設定されていれば Supabase、未設定ならブラウザ内の仮データを使う。
 // 画面側は、どちらの場合も同じ関数・フックで読み書きする。
@@ -32,16 +32,37 @@ function messageOf(e: unknown): string {
   return e instanceof Error ? e.message : "不明なエラーが発生しました。";
 }
 
+type LegacyCase = Omit<CaseRecord, "workflowStatus" | "documents"> & {
+  workflowStatus: string;
+  documents: (Omit<DocumentRecord, "status"> & { status: string; extractions?: unknown })[];
+};
+
+function migrateLocal(c: LegacyCase): CaseRecord {
+  const legacyApplicant = c.applicant as Omit<Applicant, "confirmationStatus"> & { confirmationStatus: string };
+  return {
+    ...c,
+    workflowStatus: c.workflowStatus === "confirmed" || c.workflowStatus === "applicant_confirmed" ? "applicant_confirmed" : "preparing",
+    applicant: {
+      ...EMPTY_APPLICANT,
+      ...legacyApplicant,
+      confirmationStatus: legacyApplicant.confirmationStatus === "confirmed" ? "confirmed" : "draft",
+    },
+    employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
+    requirementStates: c.requirementStates ?? {},
+    documents: c.documents.map((d) => {
+      const rest = { ...d };
+      delete rest.extractions; // OCR廃止前のデータに残る抽出結果は破棄する
+      return { ...rest, status: "uploaded" as const };
+    }),
+  };
+}
+
 function readLocal(): CaseRecord[] {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return EMPTY;
-    // 雇用・必要書類の追加前に保存されたデータにも、既定値を補う
-    return (JSON.parse(raw) as CaseRecord[]).map((c) => ({
-      ...c,
-      employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
-      requirementStates: c.requirementStates ?? {},
-    }));
+    // 項目の追加・状態名の変更前に保存されたデータにも、現行の形式を補う
+    return (JSON.parse(raw) as LegacyCase[]).map(migrateLocal);
   } catch {
     return EMPTY;
   }
@@ -149,6 +170,12 @@ export function logAudit(caseId: string | null, action: string, detail?: Record<
 export async function uploadDocumentFile(caseId: string, docId: string, file: File): Promise<string | undefined> {
   if (!isSupabaseEnabled) return undefined;
   return remote.uploadFile(caseId, docId, file);
+}
+
+/** 確認者の表示名。仮データ方式ではログインがないため「自分」とする。 */
+export async function getConfirmerName(): Promise<string> {
+  if (!isSupabaseEnabled) return "自分";
+  return (await remote.currentUserEmail()) || "自分";
 }
 
 export const getAccount = remote.getAccount;
