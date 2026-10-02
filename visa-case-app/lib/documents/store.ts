@@ -217,11 +217,17 @@ if (typeof window !== "undefined" && supabase) {
   });
 }
 
-const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const WORD_BUCKET = "generated-documents";
+const MIME = {
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pdf: "application/pdf",
+} as const;
+const FILE_BUCKET = "generated-documents";
 
-export function wordFileName(doc: GeneratedDocument): string {
-  return `${doc.title}_v${doc.version}.docx`.replace(/[\\/:*?"<>|]/g, "_");
+export type FileFormat = keyof typeof MIME;
+
+export function fileNameOf(doc: GeneratedDocument): string {
+  const ext = doc.outputFormat === "pdf" ? "pdf" : "docx";
+  return `${doc.title}_v${doc.version}.${ext}`.replace(/[\\/:*?"<>|]/g, "_");
 }
 
 function saveBlob(blob: Blob, fileName: string) {
@@ -235,24 +241,42 @@ function saveBlob(blob: Blob, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
+/** 保存済みの内容から、出力形式に応じたファイルを作る。現在の案件情報は参照しない */
+async function buildFile(doc: GeneratedDocument): Promise<Blob> {
+  if (doc.outputFormat === "pdf") {
+    const { buildPdf, loadJapaneseFont } = await import("./pdf");
+    return buildPdf(doc, await loadJapaneseFont());
+  }
+  const { buildDocx } = await import("./docx");
+  return buildDocx(doc);
+}
+
 /**
- * 保存済みの内容（content_json）から、Wordファイルを新しい版として出力する。
+ * 保存済みの内容（content_json）から、WordまたはPDFを新しい版として出力する。
  * 元の版は変更しない。出力した版は「行政書士確認前」から始まる。
  */
-export async function exportWord(source: GeneratedDocument): Promise<GeneratedDocument> {
-  const { buildDocx } = await import("./docx");
+export async function exportFile(source: GeneratedDocument, format: FileFormat): Promise<GeneratedDocument> {
   const id = newId();
+  const fresh: GeneratedDocument = {
+    ...source,
+    id,
+    outputFormat: format,
+    storagePath: undefined,
+    status: "draft",
+    reviewedAt: undefined,
+    reviewedByName: undefined,
+  };
   let created: GeneratedDocument;
   if (isSupabaseEnabled) {
     if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
-    const path = `${source.organizationId}/${source.caseId}/${id}.docx`;
-    const blob = await buildDocx({ ...source, status: "draft", reviewedAt: undefined, reviewedByName: undefined });
-    const up = await db().storage.from(WORD_BUCKET).upload(path, blob, { contentType: DOCX_MIME });
+    const path = `${source.organizationId}/${source.caseId}/${id}.${format}`;
+    const blob = await buildFile(fresh);
+    const up = await db().storage.from(FILE_BUCKET).upload(path, blob, { contentType: MIME[format] });
     if (up.error) throw toAppError(up.error);
     const { data, error: e } = await db().rpc("register_generated_file", {
       p_source_id: source.id,
       p_new_id: id,
-      p_output_format: "docx",
+      p_output_format: format,
       p_storage_path: path,
     });
     if (e) throw toAppError(e);
@@ -261,35 +285,25 @@ export async function exportWord(source: GeneratedDocument): Promise<GeneratedDo
     const all = readLocal();
     const version =
       Math.max(0, ...all.filter((d) => d.caseId === source.caseId && d.documentType === source.documentType).map((d) => d.version)) + 1;
-    created = {
-      ...source,
-      id,
-      version,
-      outputFormat: "docx",
-      storagePath: undefined,
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      reviewedAt: undefined,
-      reviewedByName: undefined,
-    };
+    created = { ...fresh, version, createdAt: new Date().toISOString() };
     writeLocal([...all, created]);
   }
   byCase = {
     ...byCase,
     [source.caseId]: sorted([...(byCase[source.caseId] ?? []), created]),
   };
-  logAudit(source.caseId, "document_word_exported", { type: source.documentType, version: created.version });
+  logAudit(source.caseId, `document_${format}_exported`, { type: source.documentType, version: created.version });
   emit();
   return created;
 }
 
-/** Wordファイルをダウンロードする。Supabase 利用時は短時間有効な署名付きURLを使う */
-export async function downloadWord(doc: GeneratedDocument): Promise<void> {
+/** ファイルをダウンロードする。Supabase 利用時は短時間有効な署名付きURLを使う */
+export async function downloadFile(doc: GeneratedDocument): Promise<void> {
   if (isSupabaseEnabled) {
     if (!doc.storagePath) throw new AppError("ファイルの保存先が見つかりません。");
     const { data, error: e } = await db()
-      .storage.from(WORD_BUCKET)
-      .createSignedUrl(doc.storagePath, 60, { download: wordFileName(doc) });
+      .storage.from(FILE_BUCKET)
+      .createSignedUrl(doc.storagePath, 60, { download: fileNameOf(doc) });
     if (e || !data) throw toAppError(e ?? {});
     const a = document.createElement("a");
     a.href = data.signedUrl;
@@ -298,8 +312,7 @@ export async function downloadWord(doc: GeneratedDocument): Promise<void> {
     a.click();
     a.remove();
   } else {
-    const { buildDocx } = await import("./docx");
-    saveBlob(await buildDocx(doc), wordFileName(doc));
+    saveBlob(await buildFile(doc), fileNameOf(doc));
   }
-  logAudit(doc.caseId, "document_word_downloaded", { type: doc.documentType, version: doc.version });
+  logAudit(doc.caseId, `document_${doc.outputFormat}_downloaded`, { type: doc.documentType, version: doc.version });
 }

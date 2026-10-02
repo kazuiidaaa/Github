@@ -60,3 +60,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 
 ## 8. Word出力（フェーズ6-B）を使う場合
 `supabase/migrations/0010_generated_documents_word.sql` を、0008 の実行後に SQL Editor で実行します（0009 の有無には依存しません）。Word ファイルを保存する非公開バケット `generated-documents`（10MB・.docx のみ・更新と削除は不可）と、Word 版を新しい版として登録する関数を作成します。
+
+## 9. PDF出力（フェーズ6-C）を使う場合
+`supabase/migrations/0011_generated_documents_pdf.sql` を、0010 の実行後に SQL Editor で実行します。バケット `generated-documents` に PDF を追加し、登録関数を Word と PDF の両方に対応させます。日本語フォント（Noto Sans JP、SIL Open Font License）は `public/fonts/` に同梱しており、PDF の出力時のみ読み込みます。
