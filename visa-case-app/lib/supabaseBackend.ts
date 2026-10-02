@@ -23,6 +23,7 @@ import {
 } from "./types";
 
 const BUCKET = "documents";
+const GENERATED_BUCKET = "generated-documents";
 
 interface DocumentRow {
   id: string;
@@ -457,9 +458,9 @@ export async function persistCase(c: CaseRecord): Promise<void> {
   }
 }
 
-async function removeFiles(db: ReturnType<typeof client>, paths: string[]): Promise<void> {
+async function removeFiles(db: ReturnType<typeof client>, paths: string[], bucket = BUCKET): Promise<void> {
   if (paths.length === 0) return;
-  const { error } = await db.storage.from(BUCKET).remove(paths);
+  const { error } = await db.storage.from(bucket).remove(paths);
   if (error) throw toAppError(error, "ファイルを削除できませんでした。データは削除していません。時間をおいて再度お試しください。");
 }
 
@@ -471,6 +472,15 @@ export async function deleteCase(id: string): Promise<void> {
   const paths = docs.map((d) => d.storage_path).filter((p): p is string => Boolean(p));
   // ファイルを削除できなかった場合は、DB の行を残す（保存先が分からなくなり、ファイルが残り続けることを防ぐ）
   await removeFiles(db, paths);
+  // 生成したWord・PDFにも個人情報が含まれるため、案件の削除と一緒に削除する（行は案件の削除で連鎖して消える）
+  const generated = ok(await db.from("generated_documents").select("storage_path").eq("case_id", id)) as {
+    storage_path: string | null;
+  }[];
+  await removeFiles(
+    db,
+    generated.map((d) => d.storage_path).filter((p): p is string => Boolean(p)),
+    GENERATED_BUCKET,
+  );
   ok(await db.from("cases").delete().eq("id", id));
 }
 
