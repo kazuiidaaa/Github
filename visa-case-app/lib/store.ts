@@ -164,13 +164,35 @@ export function updateCase(id: string, fn: (c: CaseRecord) => CaseRecord) {
   saveCase({ ...fn(target), updatedAt: new Date().toISOString() });
 }
 
-export function deleteCase(id: string) {
-  cases = cases.filter((c) => c.id !== id);
-  if (isSupabaseEnabled) {
-    enqueue(() => remote.deleteCase(id));
-    logAudit(id, "case_deleted");
-  } else writeLocal(cases);
-  emit();
+/**
+ * 案件と関連ファイルを削除する。削除に失敗した場合は案件を残し、false を返す。
+ * 監査ログは案件への外部キーを持たないため、削除後も残る。
+ */
+export async function deleteCase(id: string): Promise<boolean> {
+  if (!isSupabaseEnabled) {
+    cases = cases.filter((c) => c.id !== id);
+    writeLocal(cases);
+    emit();
+    return true;
+  }
+  let done = false;
+  // 直前までの保存が終わってから、操作した順に実行する
+  chain = chain
+    .then(async () => {
+      try {
+        await remote.deleteCase(id);
+        cases = cases.filter((c) => c.id !== id);
+        done = true;
+        error = "";
+      } catch (e) {
+        error = `削除に失敗しました。案件は残っています：${messageOf(e)}`;
+      }
+      emit();
+    })
+    .catch(() => {});
+  await chain;
+  if (done) logAudit(id, "case_deleted");
+  return done;
 }
 
 /** 誰がいつ何をしたかを記録する（Supabase 利用時のみ） */
