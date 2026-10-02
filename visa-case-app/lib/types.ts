@@ -23,6 +23,8 @@ export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 export const WORKFLOW_LABELS = {
   preparing: "準備中",
   applicant_confirmed: "申請人情報 確認済み",
+  review_required: "要確認",
+  application_ready: "申請準備完了",
 } as const;
 
 export type WorkflowStatus = keyof typeof WORKFLOW_LABELS;
@@ -144,6 +146,37 @@ export interface CustomRequirement {
   note?: string;
 }
 
+export type CheckStatus = "pending" | "passed" | "warning" | "failed" | "not_applicable";
+export type CheckType = "applicant" | "document" | "deadline" | "manual";
+
+export const CHECK_STATUS_LABELS: Record<CheckStatus, string> = {
+  pending: "未確認",
+  passed: "確認済み",
+  warning: "注意あり",
+  failed: "要対応",
+  not_applicable: "対象外",
+};
+
+export const CHECK_TYPE_LABELS: Record<CheckType, string> = {
+  applicant: "申請人情報",
+  document: "必要書類",
+  deadline: "期限",
+  manual: "手動項目",
+};
+
+/** 申請前チェックの1項目。システムの判定ではなく、行政書士が付ける管理状態 */
+export interface CheckRecord {
+  /** 項目の固定ID（手動項目は "manual.<uuid>"） */
+  key: string;
+  type: CheckType;
+  name: string;
+  status: CheckStatus;
+  note: string;
+  checkedAt?: string;
+  /** 確認したユーザーID。画面での変更直後のみ "self"（保存時に置き換える） */
+  checkedBy?: string;
+}
+
 export interface CaseRecord {
   id: string;
   caseName: string;
@@ -158,5 +191,10 @@ export interface CaseRecord {
   employment: EmploymentInfo;
   requirementStates: Record<string, RequirementState>;
   customRequirements: CustomRequirement[];
+  /** 申請予定日（YYYY-MM-DD）。未定なら空 */
+  plannedApplicationDate: string;
+  /** 申請前チェック全体に対する行政書士メモ */
+  checkMemo: string;
+  checks: CheckRecord[];
   documents: DocumentRecord[];
 }

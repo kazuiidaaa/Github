@@ -18,6 +18,9 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
     employment: { ...EMPTY_EMPLOYMENT, category: "3" },
     requirementStates: {},
     customRequirements: [],
+    plannedApplicationDate: "",
+    checkMemo: "",
+    checks: [],
     documents: [],
     ...over,
   };

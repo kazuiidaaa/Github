@@ -45,6 +45,9 @@ export default function NewCasePage() {
       employment: { ...EMPTY_EMPLOYMENT },
       requirementStates: {},
       customRequirements: [],
+      plannedApplicationDate: "",
+      checkMemo: "",
+      checks: [],
       documents: [],
     });
     logAudit(id, "case_created");

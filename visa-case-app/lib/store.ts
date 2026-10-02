@@ -60,6 +60,9 @@ function migrateLocal(c: LegacyCase): CaseRecord {
     employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
     requirementStates: migrateStates(c.requirementStates),
     customRequirements: c.customRequirements ?? [],
+    plannedApplicationDate: c.plannedApplicationDate ?? "",
+    checkMemo: c.checkMemo ?? "",
+    checks: c.checks ?? [],
     documents: c.documents.map((d) => {
       const rest = { ...d };
       delete rest.extractions; // OCR廃止前のデータに残る抽出結果は破棄する

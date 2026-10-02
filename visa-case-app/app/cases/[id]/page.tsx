@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
@@ -18,13 +19,14 @@ import {
   type DocumentRecord,
 } from "@/lib/types";
 
-type Tab = "overview" | "documents" | "applicant" | "employment" | "requirements";
+type Tab = "overview" | "documents" | "applicant" | "employment" | "requirements" | "checks";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
   { key: "applicant", label: "申請人情報" },
   { key: "employment", label: "雇用・会社" },
   { key: "requirements", label: "必要書類" },
+  { key: "checks", label: "申請前チェック" },
 ];
 
 function DocumentRow({ doc, locked, onDelete }: { doc: DocumentRecord; locked: boolean; onDelete: () => void }) {
@@ -106,7 +108,7 @@ export default function CaseDetailPage() {
           <h1 className="text-2xl font-semibold">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
-            <Badge tone={record.workflowStatus === "applicant_confirmed" ? "green" : "gray"}>
+            <Badge tone={record.workflowStatus === "applicant_confirmed" || record.workflowStatus === "application_ready" ? "green" : "gray"}>
               {WORKFLOW_LABELS[record.workflowStatus]}
             </Badge>
           </p>
@@ -216,6 +218,8 @@ export default function CaseDetailPage() {
       {tab === "employment" && <EmploymentForm record={record} />}
 
       {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
+
+      {tab === "checks" && <ChecksPanel record={record} />}
     </div>
   );
 }

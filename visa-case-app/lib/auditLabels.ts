@@ -15,6 +15,11 @@ export const AUDIT_LABELS: Record<string, string> = {
   custom_requirement_deleted: "追加した必要書類を削除",
   requirement_overridden: "必要書類の判定を上書き",
   requirement_note: "必要書類の理由を記録",
+  check_updated: "申請前チェックを更新",
+  check_added: "申請前チェックの手動項目を追加",
+  check_removed: "申請前チェックの手動項目を削除",
+  application_ready_marked: "申請準備完了にした",
+  application_ready_reset: "申請準備完了を取り消した（チェック変更のため）",
   organization_renamed: "事務所名を変更",
   password_changed: "パスワードを変更",
 };

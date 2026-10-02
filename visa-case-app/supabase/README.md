@@ -8,7 +8,7 @@
 
 ## 2. テーブルを作成する
 1. 左メニューの **SQL Editor** を開きます。
-2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）も、同様に順番に実行します。さらに `0004_document_upload.sql`（書類のファイルサイズ、ストレージの20MB・形式制限、select/insert/delete の分割）も実行します。続けて `0005_applicant_manual_entry.sql`（申請人情報の手入力化。OCRの廃止に伴う状態名の変更を含む）、`0006_requirement_tracking.sql`（必要書類の状態・期限と追加書類）も実行します。`0006` は `requirement_states.submitted` 列を削除するため、実行前にファイル冒頭の確認用 SQL で件数を確認してください。
+2. `supabase/migrations/0001_init.sql` の内容をすべて貼り付け、**Run** を実行します。続けて `0002_employment_requirements.sql`（雇用・会社情報と必要書類の記録用）、`0003_account.sql`（事務所名の変更を所有者のみに許可）も、同様に順番に実行します。さらに `0004_document_upload.sql`（書類のファイルサイズ、ストレージの20MB・形式制限、select/insert/delete の分割）も実行します。続けて `0005_applicant_manual_entry.sql`（申請人情報の手入力化。OCRの廃止に伴う状態名の変更を含む）、`0006_requirement_tracking.sql`（必要書類の状態・期限と追加書類）も実行します。最後に `0007_case_checks.sql`（申請前チェック）も実行します。`0006` は `requirement_states.submitted` 列を削除するため、実行前にファイル冒頭の確認用 SQL で件数を確認してください。
 3. エラーが出ないことを確認します。
 
 ## 3. ご自身のログイン用ユーザーを作成する
@@ -50,4 +50,5 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 | document_extractions | （廃止済み・未使用。OCRの抽出候補。後続の移行で削除予定） |
 | employment_details | 雇用・会社情報（所属機関のカテゴリーを含む） |
 | requirement_states | 必要書類ごとの、提出済み・判定の上書き・理由の記録 |
+| case_checks | 申請前チェックの項目ごとの状態・メモ・確認日時（行政書士が付ける管理状態） |
 | audit_logs | 案件作成・書類登録・確定などの記録（追記のみ） |

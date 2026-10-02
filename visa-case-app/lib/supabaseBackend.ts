@@ -10,6 +10,9 @@ import {
   type RequirementState,
   type RequirementStatus,
   type CaseRecord,
+  type CheckRecord,
+  type CheckStatus,
+  type CheckType,
   type DocumentRecord,
   type DocumentStatus,
   type ProcedureType,
@@ -73,6 +76,16 @@ interface CustomRequirementRow {
   note: string | null;
   created_at: string;
 }
+
+interface CheckRow {
+  check_key: string;
+  check_type: CheckType;
+  check_name: string;
+  check_status: CheckStatus;
+  note: string | null;
+  checked_at: string | null;
+  checked_by: string | null;
+}
 interface CaseRow {
   id: string;
   case_name: string;
@@ -81,8 +94,11 @@ interface CaseRow {
   target_status: string | null;
   memo: string | null;
   workflow_status: WorkflowStatus;
+  planned_application_date: string | null;
+  check_memo: string | null;
   created_at: string;
   updated_at: string;
+  case_checks: CheckRow[] | null;
   applicants: ApplicantRow | ApplicantRow[] | null;
   employment_details: EmploymentRow | EmploymentRow[] | null;
   requirement_states: RequirementRow[] | null;
@@ -199,6 +215,18 @@ function toCustomRequirements(rows: CustomRequirementRow[] | null): CustomRequir
     }));
 }
 
+function toChecks(rows: CheckRow[] | null): CheckRecord[] {
+  return (rows ?? []).map((r) => ({
+    key: r.check_key,
+    type: r.check_type,
+    name: r.check_name,
+    status: r.check_status,
+    note: r.note ?? "",
+    checkedAt: r.checked_at ?? undefined,
+    checkedBy: r.checked_by ?? undefined,
+  }));
+}
+
 function toDocument(row: DocumentRow): DocumentRecord {
   return {
     id: row.id,
@@ -217,7 +245,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), documents(*)")
+      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), case_checks(*), documents(*)")
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -234,6 +262,9 @@ export async function loadAll(): Promise<CaseRecord[]> {
     employment: toEmployment(r.employment_details),
     requirementStates: toRequirementStates(r.requirement_states),
     customRequirements: toCustomRequirements(r.custom_requirements),
+    plannedApplicationDate: r.planned_application_date ?? "",
+    checkMemo: r.check_memo ?? "",
+    checks: toChecks(r.case_checks),
     documents: (r.documents ?? []).map(toDocument),
   }));
 }
@@ -253,6 +284,8 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       target_status: c.targetStatus || null,
       memo: c.memo || null,
       workflow_status: c.workflowStatus,
+      planned_application_date: c.plannedApplicationDate || null,
+      check_memo: c.checkMemo || null,
       created_by: uid,
       created_at: c.createdAt,
       updated_at: c.updatedAt,
@@ -345,6 +378,34 @@ export async function persistCase(c: CaseRecord): Promise<void> {
           due_date: r.dueDate || null,
           note: r.note || null,
         })),
+      ),
+    );
+  }
+
+  const checkKeys = c.checks.map((k) => k.key);
+  const existingChecks = ok(await db.from("case_checks").select("check_key").eq("case_id", c.id)) as {
+    check_key: string;
+  }[];
+  const staleChecks = existingChecks.map((r) => r.check_key).filter((k) => !checkKeys.includes(k));
+  if (staleChecks.length > 0) {
+    ok(await db.from("case_checks").delete().eq("case_id", c.id).in("check_key", staleChecks));
+  }
+  if (c.checks.length > 0) {
+    ok(
+      await db.from("case_checks").upsert(
+        c.checks.map((k) => ({
+          case_id: c.id,
+          organization_id: org,
+          check_type: k.type,
+          check_key: k.key,
+          check_name: k.name,
+          check_status: k.status,
+          note: k.note || null,
+          checked_at: k.checkedAt ?? null,
+          checked_by: k.checkedBy === "self" ? uid : (k.checkedBy ?? null),
+          updated_at: c.updatedAt,
+        })),
+        { onConflict: "case_id,check_key" },
       ),
     );
   }
