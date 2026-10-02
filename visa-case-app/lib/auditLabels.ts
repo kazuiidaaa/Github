@@ -29,6 +29,9 @@ export const AUDIT_LABELS: Record<string, string> = {
   document_reviewed: "生成文書を行政書士確認済みにした",
   document_final: "生成文書を最終版にした",
   document_archived: "生成文書を保管にした",
+  member_added: "メンバーを追加",
+  member_role_changed: "メンバーの役割を変更",
+  member_removed: "メンバーを削除",
   organization_renamed: "事務所名を変更",
   password_changed: "パスワードを変更",
 };

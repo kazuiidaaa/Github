@@ -125,7 +125,8 @@ function getOrgId(): Promise<string> {
   if (!orgIdPromise) {
     orgIdPromise = (async () => {
       const db = client();
-      const members = ok(await db.from("members").select("organization_id").limit(1));
+      const uid = await getUserId();
+      const members = ok(await db.from("members").select("organization_id").eq("user_id", uid).limit(1));
       if (members && members.length > 0) return members[0].organization_id as string;
       return ok(await db.rpc("bootstrap_organization", { org_name: "自分の事務所" })) as string;
     })().catch((e) => {
@@ -517,7 +518,9 @@ export async function getAccount(): Promise<AccountInfo> {
   const user = data.session?.user;
   if (!user) throw new AppError("ログインしていません。");
   await getOrgId();
-  const rows = ok(await db.from("members").select("role, organizations(name, id)").limit(1)) as unknown as {
+  const rows = ok(
+    await db.from("members").select("role, organizations(name, id)").eq("user_id", user.id).limit(1),
+  ) as unknown as {
     role: string;
     organizations: { id: string; name: string } | { id: string; name: string }[] | null;
   }[];
@@ -549,4 +552,50 @@ export async function listAudit(limit = 100): Promise<AuditEntry[]> {
       .limit(limit),
   ) as { id: string; action: string; case_id: string | null; outcome: AuditOutcome; created_at: string }[];
   return rows.map((r) => ({ id: r.id, action: r.action, caseId: r.case_id, outcome: r.outcome, createdAt: r.created_at }));
+}
+
+export interface MemberInfo {
+  userId: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+// メンバー管理の関数が返す内部メッセージは画面に出さず、原因ごとの文言に置き換える
+function memberError(e: { message?: string; code?: string }): AppError {
+  const m = e.message ?? "";
+  if (/last owner/i.test(m)) return new AppError("最後の所有者は、降格または削除できません。");
+  if (/forbidden/i.test(m)) return new AppError("この操作を行う権限がありません。");
+  if (/cannot add member/i.test(m)) {
+    return new AppError("追加できません。メールアドレスと、相手のアカウントの状態をご確認ください。");
+  }
+  if (/not found/i.test(m)) return new AppError("対象のメンバーが見つかりません。");
+  return toAppError(e);
+}
+
+/** owner / admin のみ。メールアドレスを含むため、権限のない場合は拒否される */
+export async function listMembers(): Promise<MemberInfo[]> {
+  const res = await client().rpc("list_members", { p_org: await getOrgId() });
+  if (res.error) throw memberError(res.error);
+  return ((res.data ?? []) as { user_id: string; email: string; role: string; created_at: string }[]).map((r) => ({
+    userId: r.user_id,
+    email: r.email,
+    role: r.role,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function addMember(email: string, role: string): Promise<void> {
+  const res = await client().rpc("add_member_by_email", { p_org: await getOrgId(), p_email: email, p_role: role });
+  if (res.error) throw memberError(res.error);
+}
+
+export async function setMemberRole(userId: string, role: string): Promise<void> {
+  const res = await client().rpc("set_member_role", { p_org: await getOrgId(), p_user: userId, p_role: role });
+  if (res.error) throw memberError(res.error);
+}
+
+export async function removeMember(userId: string): Promise<void> {
+  const res = await client().rpc("remove_member", { p_org: await getOrgId(), p_user: userId });
+  if (res.error) throw memberError(res.error);
 }

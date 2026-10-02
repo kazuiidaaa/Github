@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
-import { logAudit, newId, saveCase } from "@/lib/store";
+import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
+  const canEdit = useCan("edit");
   const [caseName, setCaseName] = useState("");
   const [procedureType, setProcedureType] = useState<ProcedureType | "">("");
   const [currentStatus, setCurrentStatus] = useState("");
@@ -52,6 +53,17 @@ export default function NewCasePage() {
     });
     logAudit(id, "case_created");
     router.push(`/cases/${id}`);
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="max-w-xl rounded-lg border border-slate-200 bg-white p-6 text-sm">
+        <p className="mb-3">案件を作成する権限がありません。事務所の所有者または管理者にご確認ください。</p>
+        <Link href="/cases" className="text-blue-700 hover:underline">
+          ← 案件一覧
+        </Link>
+      </div>
+    );
   }
 
   return (

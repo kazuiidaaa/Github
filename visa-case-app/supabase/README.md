@@ -63,3 +63,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 
 ## 9. PDF出力（フェーズ6-C）を使う場合
 `supabase/migrations/0011_generated_documents_pdf.sql` を、0010 の実行後に SQL Editor で実行します。バケット `generated-documents` に PDF を追加し、登録関数を Word と PDF の両方に対応させます。日本語フォント（Noto Sans JP、SIL Open Font License）は `public/fonts/` に同梱しており、PDF の出力時のみ読み込みます。
+
+## フェーズ10：複数ユーザーと役割
+
+`supabase/migrations/0013_roles.sql` を、0012 の実行後に SQL Editor で実行します。役割（owner / admin / staff / viewer）ごとに、案件・子テーブル・生成文書・ファイル保存先の規則を置き換え、メンバー管理の関数（`list_members`、`add_member_by_email`、`set_member_role`、`remove_member`）を追加します。実行前にバックアップを取り、ファイル冒頭の確認クエリを実行してください。アプリの更新と対になっています。0013 を実行せずに最新のアプリを使うと、アカウント画面のメンバー管理が失敗します（他の機能は従来どおり動作します）。詳細は `docs/production.md` の「9. 複数ユーザーと役割」を参照してください。
