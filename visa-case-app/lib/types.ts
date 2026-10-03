@@ -22,6 +22,39 @@ export const PROCEDURE_TYPES = [
 
 export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 
+/** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
+export const RESIDENCE_STATUSES = [
+  "外交",
+  "公用",
+  "教授",
+  "芸術",
+  "宗教",
+  "報道",
+  "高度専門職",
+  "経営・管理",
+  "法律・会計業務",
+  "医療",
+  "研究",
+  "教育",
+  "技術・人文知識・国際業務",
+  "企業内転勤",
+  "介護",
+  "興行",
+  "技能",
+  "特定技能",
+  "技能実習",
+  "文化活動",
+  "短期滞在",
+  "留学",
+  "研修",
+  "家族滞在",
+  "特定活動",
+  "永住者",
+  "日本人の配偶者等",
+  "永住者の配偶者等",
+  "定住者",
+] as const;
+
 export const WORKFLOW_LABELS = {
   preparing: "準備中",
   applicant_confirmed: "申請人情報 確認済み",
