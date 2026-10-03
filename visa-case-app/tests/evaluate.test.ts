@@ -130,7 +130,8 @@ describe("証明写真の登録と写真の行の状態（#52）", () => {
 });
 
 const CHANGE_RULE_SET = { ...RULE_SETS[0], id: "test-change", procedureType: "change", residenceStatus: "技術・人文知識・国際業務" } as unknown as RuleSet;
-const TEST_SETS = [...RULE_SETS, CHANGE_RULE_SET];
+// 実際の RULE_SETS は手続種別の規則が増えるため、判定基準のテストは「更新の実規則＋テスト用の変更規則」だけに固定する
+const TEST_SETS = [...RULE_SETS.filter((r) => r.procedureType === "renewal"), CHANGE_RULE_SET];
 
 describe("案件作成画面向けの規則判定", () => {
   it("対応する手続・在留資格の組み合わせでは true", () => {
