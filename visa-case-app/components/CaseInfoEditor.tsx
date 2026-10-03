@@ -15,7 +15,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   const [memo, setMemo] = useState(record.memo);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const needsTarget = procedureType === "change" || procedureType === "coe";
+  const needsTarget = procedureType === "change" || procedureType === "coe" || procedureType === "acquisition";
 
   function start() {
     setCaseName(record.caseName);

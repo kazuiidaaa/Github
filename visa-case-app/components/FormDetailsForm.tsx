@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import {
+  ACQUISITION_LABELS,
   EDUCATION_LEVELS,
   FORM_DETAILS_FIELD_LABELS,
   validateFormDetails,
@@ -32,6 +33,8 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 export function FormDetailsForm({ record }: { record: CaseRecord }) {
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
+  const isAcquisition = record.procedureType === "acquisition";
+  const L = ACQUISITION_LABELS;
   const errors = validateFormDetails(form);
   const hasError = Object.keys(errors).length > 0;
   const errorFields = (Object.keys(errors) as (keyof FormDetails)[]).filter((k) => errors[k]);
@@ -68,7 +71,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     );
   }
 
-  function select<K extends "maritalStatus" | "criminalRecord" | "relativesPresent" | "educationPlace">(
+  function select<K extends "maritalStatus" | "criminalRecord" | "relativesPresent" | "educationPlace" | "acquisitionCause">(
     key: K,
     label: string,
     options: [FormDetails[K], string][],
@@ -110,13 +113,63 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     if (persist(form)) markSaved(form);
   }
 
+  // 在留資格取得許可申請（別記第三十六号様式）。更新様式と項目番号が異なるため、別に組む
+  const acquisitionFirst = (
+    <Section title="在留資格取得許可申請書（項番5〜14）">
+      {text("placeOfBirth", L.placeOfBirth)}
+      {select("maritalStatus", L.maritalStatus, [["married", "有"], ["single", "無"]])}
+      {text("occupation", L.occupation)}
+      {text("homeAddress", L.homeAddress, { wide: true })}
+      {text("phone", L.phone)}
+      {text("mobilePhone", L.mobilePhone)}
+      {text("passportNumber", L.passportNumber)}
+      {text("passportExpiry", L.passportExpiry, { date: true })}
+      {select("acquisitionCause", L.acquisitionCause, [["birth", "出生"], ["nationalityLoss", "国籍離脱・喪失"], ["other", "その他"]])}
+      {form.acquisitionCause === "other" && text("acquisitionCauseOther", L.acquisitionCauseOther)}
+      {text("stayPurpose", L.stayPurpose, { area: true })}
+      <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-600 md:col-span-2">
+        13 希望する在留資格は、案件情報の「希望する在留資格」（{record.targetStatus || "未設定"}）です。変更は案件情報の編集で行います。
+      </div>
+      {text("desiredPeriod", L.desiredPeriod, { placeholder: "例：1年" })}
+      {select("criminalRecord", L.criminalRecord, [["none", "無"], ["yes", "有"]])}
+      {form.criminalRecord === "yes" &&
+        text("criminalDetail", L.criminalDetail, { area: true, hint: "日本国外におけるもの、交通違反等による処分を含みます。" })}
+    </Section>
+  );
+  const acquisitionSecond = (
+    <Section title="在留資格取得許可申請書（項番16・17、取次者）" hint="出生による取得の場合など、申請人に雇用情報がなくても入力できます。「雇用・会社」タブの入力は不要です。">
+      {text("guarantorName", L.guarantorName)}
+      {text("guarantorRelationship", L.guarantorRelationship)}
+      {text("guarantorAddress", L.guarantorAddress, { wide: true })}
+      {text("guarantorPhone", L.guarantorPhone)}
+      {text("guarantorMobilePhone", L.guarantorMobilePhone)}
+      {text("legalRepName", L.legalRepName)}
+      {text("legalRepRelationship", L.legalRepRelationship)}
+      {text("legalRepAddress", L.legalRepAddress, { wide: true })}
+      {text("legalRepPhone", L.legalRepPhone)}
+      {text("agentName", "取次者 氏名")}
+      {text("agentAddress", "取次者 住所", { wide: true })}
+      {text("agentAffiliation", "取次者 所属機関等")}
+      {text("agentPhone", "取次者 電話番号")}
+    </Section>
+  );
+
   return (
     <div className="max-w-4xl space-y-6">
+      {isAcquisition && (
+        <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-900">
+          公式の在留資格取得許可申請書（別記第三十六号様式）の項目のうち、他の画面にない項目です。
+          旅券番号、犯罪を理由とする処分の内容、親族の情報などの個人情報を含むため、必要な項目のみ入力してください。
+          項目名の番号は、公式様式の項番です。なお、「転記補助シート」は、現在は更新許可申請の様式のみに対応しています。
+        </p>
+      )}
+      {!isAcquisition && (
       <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-900">
         公式の在留期間更新許可申請書の項目のうち、他の画面にない項目です。入力した内容は「転記補助シート」に載ります。
         旅券番号、犯罪を理由とする処分の内容、親族の情報などの個人情報を含むため、必要な項目のみ入力してください。
         項目名の番号は、公式様式の項番です。
       </p>
+      )}
 
       {errorFields.length > 0 && (
         <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -131,6 +184,9 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         </div>
       )}
 
+      {isAcquisition && acquisitionFirst}
+
+      {!isAcquisition && (
       <Section title="申請人等作成用1（項番5〜15）">
         {select("maritalStatus", "5 配偶者の有無", [["married", "有"], ["single", "無"]])}
         {text("occupation", "6 職業")}
@@ -146,9 +202,10 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         {form.criminalRecord === "yes" &&
           text("criminalDetail", "15 具体的内容", { area: true, hint: "日本国外におけるもの、交通違反等による処分を含みます。" })}
       </Section>
+      )}
 
       <section className="rounded-lg border border-slate-200 bg-white p-6">
-        <h2 className="font-semibold">16 在日親族及び同居者</h2>
+        <h2 className="font-semibold">{isAcquisition ? L.relatives : "16 在日親族及び同居者"}</h2>
         <div className="mt-4 max-w-xs">{select("relativesPresent", "有無", [["yes", "有"], ["no", "無"]])}</div>
         {form.relativesPresent === "yes" && (
           <div className="mt-4 space-y-4">
@@ -202,6 +259,10 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         )}
       </section>
 
+      {isAcquisition && acquisitionSecond}
+
+      {!isAcquisition && (
+      <>
       <Section title="申請人等作成用2（N）（項番17〜22）">
         {text("branchName", "17 勤務先 支店・事業所名")}
         {text("workPhone", "17 (3) 勤務先 電話番号")}
@@ -276,6 +337,8 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         {text("dispatchAnnualSales", "11 (8) 年間売上高")}
         {text("dispatchPeriod", "11 (9) 派遣予定期間")}
       </Section>
+      </>
+      )}
 
       <div className="flex items-center gap-3">
         <Button disabled={hasError} onClick={save}>

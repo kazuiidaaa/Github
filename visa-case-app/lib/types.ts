@@ -17,6 +17,12 @@ export const PROCEDURE_TYPES = [
     label: "在留資格認定証明書交付申請",
     description: "海外から呼び寄せる外国人について、認定証明書の交付を申請する案件です。",
   },
+  {
+    value: "acquisition",
+    label: "在留資格取得許可申請",
+    description:
+      "出生や日本国籍の離脱・喪失などにより、上陸の手続を経ずに在留資格を取得する案件です。",
+  },
   { value: "other", label: "その他", description: "上記以外の案件です。" },
 ] as const;
 

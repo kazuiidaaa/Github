@@ -26,7 +26,7 @@ export default function NewCasePage() {
   const [groupName, setGroupName] = useState("");
   const [names, setNames] = useState<string[]>(["", "", ""]);
 
-  const needsTarget = procedureType === "change" || procedureType === "coe";
+  const needsTarget = procedureType === "change" || procedureType === "coe" || procedureType === "acquisition";
   const description = PROCEDURE_TYPES.find((p) => p.value === procedureType)?.description;
 
   function submit(e: React.FormEvent) {

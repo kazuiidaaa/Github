@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildContent } from "../lib/documents/snapshot";
-import { EMPTY_FORM_DETAILS, FORM_DETAILS_FIELD_LABELS, normalizeFormDetails, validateFormDetails } from "../lib/formDetails";
+import { ACQUISITION_LABELS, EMPTY_FORM_DETAILS, FORM_DETAILS_FIELD_LABELS, normalizeFormDetails, validateFormDetails } from "../lib/formDetails";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}): CaseRecord {
@@ -87,5 +87,29 @@ describe("FORM_DETAILS_FIELD_LABELS", () => {
     for (const k of Object.keys(errors) as (keyof typeof errors)[]) {
       expect(FORM_DETAILS_FIELD_LABELS[k]).toBeTruthy();
     }
+  });
+});
+
+describe("在留資格取得許可申請の項目", () => {
+  it("既存の保存データに取得固有の項目がなくても、空で補われる", () => {
+    const n = normalizeFormDetails({ passportNumber: "TK1234567" });
+    expect(n.acquisitionCause).toBe("");
+    expect(n.guarantorName).toBe("");
+    expect(n.placeOfBirth).toBe("");
+    expect(n.passportNumber).toBe("TK1234567");
+  });
+
+  it("取得固有の項目は保存した値のまま再表示できる", () => {
+    const n = normalizeFormDetails({ acquisitionCause: "birth", stayPurpose: "家族との同居", guarantorName: "テスト 太郎" });
+    expect(n.acquisitionCause).toBe("birth");
+    expect(n.stayPurpose).toBe("家族との同居");
+    expect(n.guarantorName).toBe("テスト 太郎");
+  });
+});
+
+describe("手続種別", () => {
+  it("取得許可申請の項目番号は、公式様式（別記第三十六号）のとおり", () => {
+    expect(ACQUISITION_LABELS.occupation).toBe("7 職業");
+    expect(ACQUISITION_LABELS.legalRepName.startsWith("17 ")).toBe(true);
   });
 });
