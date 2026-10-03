@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
+import { DeadlineBanner } from "@/components/DeadlineBanner";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { CaseInfoEditor } from "@/components/CaseInfoEditor";
 import { ChecksPanel } from "@/components/ChecksPanel";
@@ -17,8 +18,9 @@ import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { UPLOADED_DOCUMENT_LABELS, findDocumentOfType, removeDocumentOfType } from "@/lib/documentKinds";
+import { expiryLevel } from "@/lib/caseMetrics";
 import { unresolvedCount } from "@/lib/checks/definitions";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
 import { evaluate } from "@/lib/requirements/evaluate";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import {
@@ -208,6 +210,12 @@ export default function CaseDetailPage() {
 
       {tab === "overview" && (
         <div className="space-y-6">
+          {(() => {
+            const level = expiryLevel(daysUntil(a.residenceExpiryDate));
+            return level === "urgent" || level === "overdue" ? (
+              <DeadlineBanner date={a.residenceExpiryDate} />
+            ) : null;
+          })()}
           <section className="rounded-lg border border-slate-200 bg-white p-6">
             <h2 className="mb-4 flex items-center gap-2 font-semibold">
               申請人情報
