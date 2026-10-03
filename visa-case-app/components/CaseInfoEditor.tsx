@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { StatusSelect } from "@/components/StatusSelect";
+import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, updateCase } from "@/lib/store";
 import { PROCEDURE_TYPES, type CaseRecord, type ProcedureType } from "@/lib/types";
@@ -94,11 +94,11 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
           ))}
         </select>
       </Field>
-      <Field label="現在の在留資格">
+      <Field label="現在の在留資格" hint={STATUS_HINTS.current}>
         <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
       </Field>
       {needsTarget && (
-        <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus}>
+        <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
           <StatusSelect value={targetStatus} onChange={setTargetStatus} />
         </Field>
       )}
