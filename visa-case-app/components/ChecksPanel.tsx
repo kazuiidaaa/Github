@@ -7,6 +7,7 @@ import { missingChecks, sortChecks, unresolvedCount } from "@/lib/checks/definit
 import { referenceFor, validPlannedDate } from "@/lib/checks/reference";
 import { formatDateTime } from "@/lib/format";
 import { logAudit, newId, updateCase } from "@/lib/store";
+import { useAutoSave } from "@/lib/useAutoSave";
 import {
   CHECK_STATUS_LABELS,
   CHECK_TYPE_LABELS,
@@ -91,6 +92,10 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
     logAudit(record.id, "application_ready_marked", { unresolved });
   }
 
+  const saveMemo = useAutoSave(memo, record.checkMemo, (v) =>
+    change((c) => ({ ...c, checkMemo: v }), "check_updated", { memo: true }),
+  );
+
   const sorted = sortChecks(record.checks);
   const plannedOk = validPlannedDate(planned);
 
@@ -170,7 +175,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
           rows={4}
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
-          onBlur={() => memo !== record.checkMemo && change((c) => ({ ...c, checkMemo: memo }), "check_updated", { memo: true })}
+          onBlur={() => saveMemo(memo)}
         />
       </section>
 
@@ -199,6 +204,7 @@ function CheckRow({
   onRemove: () => void;
 }) {
   const [note, setNote] = useState(check.note);
+  const saveNote = useAutoSave(note, check.note, (v) => onPatch(check.key, { note: v }));
   const ref = referenceFor(record, check.key);
   return (
     <li className="grid gap-2 px-6 py-3 text-sm md:grid-cols-[1fr_11rem]">
@@ -213,7 +219,7 @@ function CheckRow({
           aria-label={`${check.name} メモ`}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          onBlur={() => note !== check.note && onPatch(check.key, { note })}
+          onBlur={() => saveNote(note)}
         />
         {check.checkedAt && <p className="mt-1 text-xs text-slate-400">最終確認：{formatDateTime(check.checkedAt)}</p>}
       </div>
