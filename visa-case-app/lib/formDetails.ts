@@ -157,6 +157,12 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
 
 export type FormDetailsErrors = Partial<Record<keyof FormDetails, string>>;
 
+/** 入力エラーの要約に表示する、項目名（画面のラベル文言と同じ） */
+export const FORM_DETAILS_FIELD_LABELS: Partial<Record<keyof FormDetails, string>> = {
+  passportExpiry: "10 (2) 旅券の有効期限",
+  graduationDate: "18 (4) 卒業年月日",
+};
+
 const DATE_MESSAGE = "YYYY-MM-DD の形式で、実在する日付を入力してください。";
 
 /** 日付の形式のみ確認する（公式様式の項目は、確定の前提としない） */

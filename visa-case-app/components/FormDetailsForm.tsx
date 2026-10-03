@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import {
   EDUCATION_LEVELS,
+  FORM_DETAILS_FIELD_LABELS,
   validateFormDetails,
   type FormDetails,
   type Relative,
@@ -32,6 +33,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form);
   const hasError = Object.keys(errors).length > 0;
+  const errorFields = (Object.keys(errors) as (keyof FormDetails)[]).filter((k) => errors[k]);
 
   function set<K extends keyof FormDetails>(key: K, value: FormDetails[K]) {
     setSaved(false);
@@ -104,6 +106,19 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         旅券番号、犯罪を理由とする処分の内容、親族の情報などの個人情報を含むため、必要な項目のみ入力してください。
         項目名の番号は、公式様式の項番です。
       </p>
+
+      {errorFields.length > 0 && (
+        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <p className="font-medium">入力内容に {errorFields.length} 件の誤りがあります。修正するまで保存できません。</p>
+          <ul className="mt-1 list-disc pl-5">
+            {errorFields.map((k) => (
+              <li key={k}>
+                {FORM_DETAILS_FIELD_LABELS[k] ?? k}：{errors[k]}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <Section title="申請人等作成用1（項番5〜15）">
         {select("maritalStatus", "5 配偶者の有無", [["married", "有"], ["single", "無"]])}
