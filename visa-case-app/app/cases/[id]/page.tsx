@@ -289,7 +289,7 @@ export default function CaseDetailPage() {
 
         {tab === "formDetails" && <FormDetailsForm record={record} />}
 
-        {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
+        {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} onGoDocuments={() => setTab("documents")} />}
 
         {tab === "checks" && <ChecksPanel record={record} />}
       </fieldset>
