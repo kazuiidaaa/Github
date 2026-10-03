@@ -5,12 +5,14 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { Badge, Button } from "@/components/ui";
-import { generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
+import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
+import { splitHistory } from "@/lib/documents/history";
 import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
   INTERNAL_DOCUMENT_TYPES,
   OUTPUT_FORMAT_LABELS,
+  type GeneratedDocument,
   type InternalDocumentType,
 } from "@/lib/documents/types";
 import { unresolvedCount } from "@/lib/checks/definitions";
@@ -27,6 +29,7 @@ export default function DocumentsPage() {
   const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => t !== "transcription_aid"));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [newIds, setNewIds] = useState<string[]>([]);
   const historyRef = useRef<HTMLElement>(null);
   const knownIds = useRef<Set<string> | null>(null);
@@ -79,6 +82,19 @@ export default function DocumentsPage() {
       setBusy(false);
     }
   }
+
+  async function archive(d: GeneratedDocument) {
+    if (!confirm(`${DOCUMENT_TYPE_LABELS[d.documentType]} v${d.version} を保管にします。よろしいですか。`)) return;
+    setMessage("");
+    try {
+      await changeStatus(d, "archived", "");
+    } catch (e) {
+      setMessage(`保管への変更に失敗しました：${messageOf(e)}`);
+    }
+  }
+
+  const { active, archived } = splitHistory(documents);
+  const visible = showArchived ? documents : active;
 
   return (
     <div className="space-y-6">
@@ -135,10 +151,21 @@ export default function DocumentsPage() {
       </section>
 
       <section ref={historyRef} className="scroll-mt-4 rounded-lg border border-slate-200 bg-white">
-        <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">生成履歴</h2>
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-3">
+          <h2 className="font-semibold">生成履歴</h2>
+          {archived.length > 0 && (
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+              保管済みを表示（{archived.length}件）
+            </label>
+          )}
+        </div>
         {error && <p className="px-6 py-3 text-sm text-red-700">{error}</p>}
         {loaded && documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">生成された文書はありません。</p>}
-        {documents.map((d) => (
+        {loaded && documents.length > 0 && visible.length === 0 && (
+          <p className="px-6 py-6 text-sm text-slate-500">表示する版はありません。保管済みの版は、上の選択で表示できます。</p>
+        )}
+        {visible.map((d) => (
           <div
             key={d.id}
             className={`flex items-center justify-between border-b border-slate-100 px-6 py-3 text-sm transition-colors last:border-b-0 ${
@@ -159,6 +186,11 @@ export default function DocumentsPage() {
                 {GENERATED_STATUS_LABELS[d.status]}
               </Badge>
               <span className="text-slate-500">{formatDateTime(d.createdAt)}</span>
+              {canEdit && d.status !== "archived" && (
+                <Button variant="secondary" onClick={() => void archive(d)}>
+                  保管にする
+                </Button>
+              )}
             </span>
           </div>
         ))}
