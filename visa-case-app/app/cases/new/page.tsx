@@ -4,22 +4,10 @@ import { EMPTY_FORM_DETAILS } from "@/lib/formDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, RESIDENCE_STATUSES, type ProcedureType } from "@/lib/types";
-
-function StatusSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">選択してください</option>
-      {RESIDENCE_STATUSES.map((s) => (
-        <option key={s} value={s}>
-          {s}
-        </option>
-      ))}
-    </select>
-  );
-}
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();

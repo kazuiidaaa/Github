@@ -1,5 +1,6 @@
 export const AUDIT_LABELS: Record<string, string> = {
   case_created: "案件を作成",
+  case_info_saved: "案件情報を変更",
   case_deleted: "案件を削除",
   document_uploaded: "書類を登録",
   document_upload_failed: "書類の登録に失敗",

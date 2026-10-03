@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { CaseInfoEditor } from "@/components/CaseInfoEditor";
 import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
 import { FormDetailsForm } from "@/components/FormDetailsForm";
@@ -211,21 +212,7 @@ export default function CaseDetailPage() {
               </p>
             )}
           </section>
-          <section className="rounded-lg border border-slate-200 bg-white p-6 text-sm">
-            <h2 className="mb-4 font-semibold">案件情報</h2>
-            <dl className="grid grid-cols-[10rem_1fr] gap-y-3">
-              <dt className="text-slate-500">現在の在留資格</dt>
-              <dd>{record.currentStatus || "-"}</dd>
-              {record.targetStatus && (
-                <>
-                  <dt className="text-slate-500">希望する在留資格</dt>
-                  <dd>{record.targetStatus}</dd>
-                </>
-              )}
-              <dt className="text-slate-500">メモ</dt>
-              <dd className="whitespace-pre-wrap">{record.memo || "-"}</dd>
-            </dl>
-          </section>
+          <CaseInfoEditor record={record} canEdit={canEdit} />
           {!doc && (
             <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
               次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。
