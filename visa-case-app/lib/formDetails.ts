@@ -86,6 +86,33 @@ export interface FormDetails {
   dispatchCapital: string;
   dispatchAnnualSales: string;
   dispatchPeriod: string;
+  // 在留資格認定証明書交付申請（別記第六号の三様式）に固有の項目（Issue #85）。
+  // 根拠：docs/phase13-coe-forms-research.md
+  /** 9 日本における連絡先 */
+  contactInJapan: string;
+  /** 12 入国予定年月日 */
+  plannedEntryDate: string;
+  /** 13 上陸予定港 */
+  portOfEntry: string;
+  /** 14 滞在予定期間 */
+  plannedStay: string;
+  /** 15 同伴者の有無 */
+  accompanied: "" | "yes" | "no";
+  /** 16 査証申請予定地 */
+  visaApplicationPlace: string;
+  /** 17 過去の出入国歴（有無・回数・直近の出入国の年月日） */
+  entryHistory: "" | "yes" | "no";
+  entryHistoryCount: string;
+  entryHistoryLastFrom: string;
+  entryHistoryLastTo: string;
+  /** 18 過去の在留資格認定証明書交付申請歴（有無・回数・うち不交付となった回数） */
+  coeHistory: "" | "yes" | "no";
+  coeHistoryCount: string;
+  coeHistoryNonIssuedCount: string;
+  /** 20 退去強制又は出国命令による出国の有無（有無・回数・直近の送還歴） */
+  deportationHistory: "" | "yes" | "no";
+  deportationCount: string;
+  deportationLastDate: string;
 }
 
 export const EMPTY_FORM_DETAILS: FormDetails = {
@@ -139,6 +166,22 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   dispatchCapital: "",
   dispatchAnnualSales: "",
   dispatchPeriod: "",
+  contactInJapan: "",
+  plannedEntryDate: "",
+  portOfEntry: "",
+  plannedStay: "",
+  accompanied: "",
+  visaApplicationPlace: "",
+  entryHistory: "",
+  entryHistoryCount: "",
+  entryHistoryLastFrom: "",
+  entryHistoryLastTo: "",
+  coeHistory: "",
+  coeHistoryCount: "",
+  coeHistoryNonIssuedCount: "",
+  deportationHistory: "",
+  deportationCount: "",
+  deportationLastDate: "",
 };
 
 export const EDUCATION_LEVELS = [
@@ -172,8 +215,8 @@ export type FormDetailsErrors = Partial<Record<keyof FormDetails, string>>;
 // 以降が更新様式より1つ繰り下がる）。画面（FormDetailsForm）は、番号・名称を直接書かず、
 // ここの FormLayout から取得する。FormLayout に項目名がないフィールドは、その手続では表示しない。
 //
-// 認定（Issue #85）・取得（Issue #87）は、FORM_LAYOUTS に自分の手続種別の1エントリを
-// 追加するだけでよい。追加の手順は docs/phase12-change-forms-research.md の「項目番号表の仕組み」。
+// 取得（Issue #87・#99）は、FORM_LAYOUTS に自分の手続種別の1エントリを追加するだけでよい。
+// 追加の手順は docs/phase12-change-forms-research.md の「項目番号表の仕組み」。
 // ---------------------------------------------------------------------------
 
 export type FormFieldKey = keyof FormDetails;
@@ -181,12 +224,18 @@ export type FormFieldKey = keyof FormDetails;
 /** 画面の区切り（見出し）。様式ごとに項番の範囲が異なりうるため、表で持つ */
 export type FormSectionKey = "applicant1" | "relatives" | "applicant2" | "workHistory" | "organization";
 
+// 様式にない項目・セクションを表示しない仕組み（取得 #99 など、今後の様式が使う）:
+// - labels に項目名がないフィールドは描画しない。
+// - sectionTitles に見出しがないセクションは、セクションごと描画しない。
+// - 学歴の区分（educationLevel）は、labels に項目名がなければ描画しない。
+
 export interface FormLayout {
   /** 様式名（画面の説明文に表示） */
   formName: string;
   /** 様式の識別（出典・調査報告との対応用） */
   formId: string;
-  sectionTitles: Record<FormSectionKey, string>;
+  /** 見出し。ここにないセクションは、この手続の画面に表示しない（職歴・所属機関等を持たない様式など） */
+  sectionTitles: Partial<Record<FormSectionKey, string>>;
   /** 項目名（番号付き）。ここにないフィールドは、この手続の画面に表示しない */
   labels: Partial<Record<FormFieldKey, string>>;
   /**
@@ -194,10 +243,29 @@ export interface FormLayout {
    * 指定した手続では、入力欄を設けず、案件情報の値を表示する（二重入力を避ける）
    */
   desiredStatusLabel?: string;
+  /** 在日親族・同居者の「同居の有無」の列名。様式により「同居予定の有無」となる。省略時は「同居の有無」 */
+  livesTogetherLabel?: string;
 }
 
-/** 更新・変更で番号・名称が共通の項目（項目10以降、および所属機関等作成用・申請人等作成用2） */
+/**
+ * 番号を含まない項目名。どの様式でも項目名が同じ（所属機関等作成用の「3 (x)」は様式間で共通の番号）。
+ * 番号が様式ごとに異なる項目は、ここではなく、各様式の FormLayout.labels に書く。
+ */
+const UNNUMBERED_LABELS: Partial<Record<FormFieldKey, string>> = {
+  agentName: "取次者 氏名",
+  agentAddress: "取次者 住所",
+  agentAffiliation: "取次者 所属機関等",
+  agentPhone: "取次者 電話番号",
+  corporateNumber: "3 (2) 法人番号（13桁）",
+  employmentInsuranceNumber: "3 (4) 雇用保険適用事業所番号（11桁）",
+  orgPhone: "3 (6) 電話番号",
+  annualSales: "3 (8) 年間売上高（直近年度）",
+  foreignStaffCount: "3 (9) 外国人職員数",
+};
+
+/** 更新・変更で番号・名称が共通の項目（項目10以降、および所属機関等作成用・申請人等作成用2）。認定は番号が異なるため使わない */
 const COMMON_LABELS: Partial<Record<FormFieldKey, string>> = {
+  ...UNNUMBERED_LABELS,
   passportNumber: "10 (1) 旅券番号",
   passportExpiry: "10 (2) 旅券の有効期限",
   periodOfStay: "11 現に有する在留期間",
@@ -216,15 +284,6 @@ const COMMON_LABELS: Partial<Record<FormFieldKey, string>> = {
   legalRepRelationship: "22 本人との関係",
   legalRepAddress: "22 代理人 住所",
   legalRepPhone: "22 代理人 電話番号",
-  agentName: "取次者 氏名",
-  agentAddress: "取次者 住所",
-  agentAffiliation: "取次者 所属機関等",
-  agentPhone: "取次者 電話番号",
-  corporateNumber: "3 (2) 法人番号（13桁）",
-  employmentInsuranceNumber: "3 (4) 雇用保険適用事業所番号（11桁）",
-  orgPhone: "3 (6) 電話番号",
-  annualSales: "3 (8) 年間売上高（直近年度）",
-  foreignStaffCount: "3 (9) 外国人職員数",
   experienceYears: "7 実務経験年数",
   positionTitle: "8 職務上の地位（役職名）",
   occupationCode: "9 職種（別紙「職種一覧」の番号）",
@@ -280,33 +339,128 @@ const CHANGE_LAYOUT: FormLayout = {
 };
 
 /**
- * 手続種別ごとの項目番号表。未対応の手続種別（認定・その他）は、従来どおり更新様式の表記で表示する
- * （認定は #85、取得は #87 で追加する）。
+ * 別記第六号の三様式（Issue #85）。海外から呼び寄せる申請のため、更新・変更と項番が大きく異なる
+ * （申請人等作成用2は22〜27、所属機関等作成用の実務経験年数以降は8・9・10・12）。
+ * COMMON_LABELS は展開せず、原本（docs/official/coe-application-form_930004030.xlsx）の項番を直接書く。
+ */
+const COE_LAYOUT: FormLayout = {
+  formName: "在留資格認定証明書交付申請書",
+  formId: "930004030",
+  sectionTitles: {
+    applicant1: "申請人等作成用1（項番5〜20）",
+    relatives: "21 在日親族（父・母・配偶者・子・兄弟姉妹・祖父母・叔(伯)父・叔(伯)母など）及び同居者",
+    applicant2: "申請人等作成用2（N）（項番22〜27）",
+    workHistory: "26 職歴（外国におけるものを含む）",
+    organization: "所属機関等作成用1・2（N）",
+  },
+  labels: {
+    ...UNNUMBERED_LABELS,
+    placeOfBirth: "5 出生地",
+    maritalStatus: "6 配偶者の有無",
+    occupation: "7 職業",
+    homeAddress: "8 本国における居住地",
+    contactInJapan: "9 日本における連絡先",
+    phone: "9 電話番号（連絡先の欄）",
+    mobilePhone: "9 携帯電話番号（連絡先の欄）",
+    passportNumber: "10 (1) 旅券番号",
+    passportExpiry: "10 (2) 旅券の有効期限",
+    plannedEntryDate: "12 入国予定年月日",
+    portOfEntry: "13 上陸予定港",
+    plannedStay: "14 滞在予定期間",
+    accompanied: "15 同伴者の有無",
+    visaApplicationPlace: "16 査証申請予定地",
+    entryHistory: "17 過去の出入国歴",
+    entryHistoryCount: "17 回数",
+    entryHistoryLastFrom: "17 直近の出入国歴（入国年月日）",
+    entryHistoryLastTo: "17 直近の出入国歴（出国年月日）",
+    coeHistory: "18 過去の在留資格認定証明書交付申請歴",
+    coeHistoryCount: "18 回数",
+    coeHistoryNonIssuedCount: "18 うち不交付となった回数",
+    criminalRecord: "19 犯罪を理由とする処分を受けたことの有無",
+    criminalDetail: "19 具体的内容",
+    deportationHistory: "20 退去強制又は出国命令による出国の有無",
+    deportationCount: "20 回数",
+    deportationLastDate: "20 直近の送還歴（年月日）",
+    branchName: "22 勤務先 支店・事業所名",
+    workPhone: "22 (3) 勤務先 電話番号",
+    educationPlace: "23 (1) 最終学歴の所在",
+    educationLevel: "23 (2) 学歴の区分",
+    schoolName: "23 (3) 学校名",
+    graduationDate: "23 (4) 卒業年月日",
+    majorField: "24 専攻・専門分野",
+    itQualification: "25 情報処理技術者資格又は試験合格",
+    legalRepName: "27 申請人、法定代理人、法第7条の2第2項に規定する代理人 (1) 氏名",
+    legalRepRelationship: "27 (2) 本人との関係",
+    legalRepAddress: "27 (3) 住所",
+    legalRepPhone: "27 電話番号",
+    experienceYears: "8 実務経験年数",
+    positionTitle: "9 職務上の地位（役職名）",
+    occupationCode: "10 職種（別紙「職種一覧」の番号）",
+    dispatchName: "12 派遣先等 (1) 名称",
+    dispatchCorporateNumber: "12 (2) 法人番号",
+    dispatchBranchName: "12 (3) 支店・事業所名",
+    dispatchInsuranceNumber: "12 (4) 雇用保険適用事業所番号",
+    dispatchAddress: "12 (6) 所在地",
+    dispatchPhone: "12 (6) 電話番号",
+    dispatchCapital: "12 (7) 資本金",
+    dispatchAnnualSales: "12 (8) 年間売上高",
+    dispatchPeriod: "12 (9) 派遣予定期間",
+  },
+  desiredStatusLabel: "11 入国目的",
+  livesTogetherLabel: "同居予定の有無",
+};
+
+/**
+ * 手続種別ごとの項目番号表。未対応の手続種別（取得・その他）は、従来どおり更新様式の表記で表示する
+ * （取得は #87・#99 で追加する）。
  */
 export const FORM_LAYOUTS: Partial<Record<ProcedureType, FormLayout>> = {
   renewal: RENEWAL_LAYOUT,
   change: CHANGE_LAYOUT,
+  coe: COE_LAYOUT,
 };
 
 export function getFormLayout(procedureType: ProcedureType): FormLayout {
   return FORM_LAYOUTS[procedureType] ?? RENEWAL_LAYOUT;
 }
 
-/** 入力エラーの要約に表示する、項目名（画面のラベル文言と同じ）。検証対象の項目は様式間で共通 */
-export const FORM_DETAILS_FIELD_LABELS: Partial<Record<FormFieldKey, string>> = {
-  passportExpiry: COMMON_LABELS.passportExpiry,
-  graduationDate: COMMON_LABELS.graduationDate,
-};
+/** 日付の形式を確認する項目。入力エラーの要約には、画面と同じ様式別の項目名（FormLayout.labels）を使う */
+export const DATE_FIELD_KEYS = [
+  "passportExpiry",
+  "graduationDate",
+  "plannedEntryDate",
+  "entryHistoryLastFrom",
+  "entryHistoryLastTo",
+  "deportationLastDate",
+] as const satisfies readonly FormFieldKey[];
 
 const DATE_MESSAGE = "日付をカレンダーから選び直してください。";
 
-/** 日付の形式のみ確認する（公式様式の項目は、確定の前提としない） */
-export function validateFormDetails(f: FormDetails): FormDetailsErrors {
+/**
+ * 日付の形式のみ確認する（公式様式の項目は、確定の前提としない）。
+ * layout を渡すと、その様式で表示しない項目（labels にないもの）は確認しない
+ * （画面にない項目の誤りで、保存できなくなることを避ける）。
+ */
+export function validateFormDetails(f: FormDetails, layout?: FormLayout): FormDetailsErrors {
   const errors: FormDetailsErrors = {};
-  for (const k of ["passportExpiry", "graduationDate"] as const) {
+  for (const k of DATE_FIELD_KEYS) {
+    if (layout && !layout.labels[k]) continue;
     if (f[k] && !isValidDate(f[k])) errors[k] = DATE_MESSAGE;
   }
   return errors;
+}
+
+/**
+ * 保存は妨げないが、確認を促す注意（エラーではない）。
+ * 直近の出入国歴で、入国年月日が出国年月日より後になっている場合。
+ */
+export function getFormDetailsWarnings(f: FormDetails): string[] {
+  const warnings: string[] = [];
+  const { entryHistoryLastFrom: from, entryHistoryLastTo: to } = f;
+  if (from && to && isValidDate(from) && isValidDate(to) && from > to) {
+    warnings.push("直近の出入国歴で、入国年月日が出国年月日より後になっています。日付を確認してください（保存はできます）。");
+  }
+  return warnings;
 }
 
 export function isYearMonthOrDate(v: string): boolean {

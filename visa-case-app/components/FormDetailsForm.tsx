@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import {
   EDUCATION_LEVELS,
+  getFormDetailsWarnings,
   getFormLayout,
   validateFormDetails,
   type FormDetails,
@@ -34,7 +35,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const layout = getFormLayout(record.procedureType);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
-  const errors = validateFormDetails(form);
+  const errors = validateFormDetails(form, layout);
+  const warnings = getFormDetailsWarnings(form);
   const hasError = Object.keys(errors).length > 0;
   const errorFields = (Object.keys(errors) as (keyof FormDetails)[]).filter((k) => errors[k]);
 
@@ -72,7 +74,17 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
     );
   }
 
-  function select<K extends "maritalStatus" | "criminalRecord" | "relativesPresent" | "educationPlace">(
+  function select<
+    K extends
+      | "maritalStatus"
+      | "criminalRecord"
+      | "relativesPresent"
+      | "educationPlace"
+      | "accompanied"
+      | "entryHistory"
+      | "coeHistory"
+      | "deportationHistory",
+  >(
     key: K,
     options: [FormDetails[K], string][],
     fallbackLabel?: string,
@@ -102,7 +114,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
 
   function persist(f: FormDetails): boolean {
     // 誤りのある内容は保存しない（自動保存でも同じ）
-    if (Object.keys(validateFormDetails(f)).length > 0) return false;
+    if (Object.keys(validateFormDetails(f, layout)).length > 0) return false;
     updateCase(record.id, (c) => ({ ...c, formDetails: f }));
     logAudit(record.id, "form_details_saved");
     setSaved(true);
@@ -137,11 +149,23 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         </div>
       )}
 
+      {warnings.length > 0 && (
+        <div role="status" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <ul className="list-disc pl-5">
+            {warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {layout.sectionTitles.applicant1 && (
       <Section title={layout.sectionTitles.applicant1}>
         {text("placeOfBirth")}
         {select("maritalStatus", [["married", "有"], ["single", "無"]])}
         {text("occupation")}
         {text("homeAddress", { wide: true })}
+        {text("contactInJapan", { wide: true })}
         {text("phone")}
         {text("mobilePhone")}
         {text("passportNumber")}
@@ -150,7 +174,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {layout.desiredStatusLabel && (
           // 希望する在留資格は、案件情報の targetStatus を表示するのみ（二重入力を避ける）
           <div>
-            <Field label={layout.desiredStatusLabel} hint="案件情報の「変更後の在留資格」です。この画面では入力しません。">
+            <Field label={layout.desiredStatusLabel} hint={`案件情報の「${record.procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"}」です。この画面では入力しません。`}>
               <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                 <span className="font-medium">{record.targetStatus || "未設定"}</span>
                 {onGoOverview && (
@@ -162,14 +186,43 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
             </Field>
           </div>
         )}
+        {text("plannedEntryDate", { date: true })}
+        {text("portOfEntry")}
+        {text("plannedStay", { placeholder: "例：1年" })}
+        {select("accompanied", [["yes", "有"], ["no", "無"]])}
+        {text("visaApplicationPlace", { wide: true, placeholder: "例：在外日本国大使館・総領事館の所在地" })}
+        {select("entryHistory", [["yes", "有"], ["no", "無"]])}
+        {form.entryHistory === "yes" && (
+          <>
+            {text("entryHistoryCount", { placeholder: "回" })}
+            {text("entryHistoryLastFrom", { date: true })}
+            {text("entryHistoryLastTo", { date: true })}
+          </>
+        )}
+        {select("coeHistory", [["yes", "有"], ["no", "無"]])}
+        {form.coeHistory === "yes" && (
+          <>
+            {text("coeHistoryCount", { placeholder: "回" })}
+            {text("coeHistoryNonIssuedCount", { placeholder: "回" })}
+          </>
+        )}
         {text("desiredPeriod", { placeholder: "例：3年" })}
         {text("renewalReason", { area: true })}
         {text("changeReason", { area: true })}
         {select("criminalRecord", [["none", "無"], ["yes", "有"]])}
         {form.criminalRecord === "yes" &&
           text("criminalDetail", { area: true, hint: "日本国外におけるもの、交通違反等による処分を含みます。" })}
+        {select("deportationHistory", [["yes", "有"], ["no", "無"]])}
+        {form.deportationHistory === "yes" && (
+          <>
+            {text("deportationCount", { placeholder: "回" })}
+            {text("deportationLastDate", { date: true })}
+          </>
+        )}
       </Section>
+      )}
 
+      {layout.sectionTitles.relatives && (
       <section className="rounded-lg border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">{layout.sectionTitles.relatives}</h2>
         <div className="mt-4 max-w-xs">{select("relativesPresent", [["yes", "有"], ["no", "無"]], "有無")}</div>
@@ -193,7 +246,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
                 <Field label="勤務先名称・通学先名称">
                   <input className={inputClass} value={r.workplace} onChange={(e) => updateRelative(r.id, { workplace: e.target.value })} />
                 </Field>
-                <Field label="同居の有無">
+                <Field label={layout.livesTogetherLabel ?? "同居の有無"}>
                   <select className={inputClass} value={r.livesTogether} onChange={(e) => updateRelative(r.id, { livesTogether: e.target.value as Relative["livesTogether"] })}>
                     <option value="">未選択</option>
                     <option value="yes">有</option>
@@ -224,21 +277,25 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
           </div>
         )}
       </section>
+      )}
 
+      {layout.sectionTitles.applicant2 && (
       <Section title={layout.sectionTitles.applicant2}>
         {text("branchName")}
         {text("workPhone")}
         {select("educationPlace", [["japan", "本邦"], ["foreign", "外国"]])}
-        <Field label={layout.labels.educationLevel ?? "学歴の区分"} hint="最終学歴として卒業（修了）した課程を選びます。">
-          <select className={inputClass} value={form.educationLevel} onChange={(e) => set("educationLevel", e.target.value)}>
-            <option value="">未選択</option>
-            {EDUCATION_LEVELS.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {layout.labels.educationLevel && (
+          <Field label={layout.labels.educationLevel} hint="最終学歴として卒業（修了）した課程を選びます。">
+            <select className={inputClass} value={form.educationLevel} onChange={(e) => set("educationLevel", e.target.value)}>
+              <option value="">未選択</option>
+              {EDUCATION_LEVELS.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
         {text("schoolName")}
         {text("graduationDate", { date: true })}
         {text("majorField", { placeholder: "例：工学" })}
@@ -252,7 +309,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("agentAffiliation")}
         {text("agentPhone")}
       </Section>
+      )}
 
+      {layout.sectionTitles.workHistory && (
       <section className="rounded-lg border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">{layout.sectionTitles.workHistory}</h2>
         <div className="mt-4 space-y-3">
@@ -279,7 +338,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
           </Button>
         </div>
       </section>
+      )}
 
+      {layout.sectionTitles.organization && (
       <Section title={layout.sectionTitles.organization}>
         {text("corporateNumber")}
         {text("employmentInsuranceNumber", { hint: "非該当の事業所は空欄。" })}
@@ -299,6 +360,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("dispatchAnnualSales")}
         {text("dispatchPeriod")}
       </Section>
+      )}
 
       <div className="flex items-center gap-3">
         <Button disabled={hasError} onClick={save}>
