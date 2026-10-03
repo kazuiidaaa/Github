@@ -6,7 +6,20 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, RESIDENCE_STATUSES, type ProcedureType } from "@/lib/types";
+
+function StatusSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">選択してください</option>
+      {RESIDENCE_STATUSES.map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -27,7 +40,7 @@ export default function NewCasePage() {
     if (!caseName.trim()) next.caseName = "案件名を入力してください。";
     if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
     if (!procedureType) next.procedureType = "手続種別を選択してください。";
-    if (needsTarget && !targetStatus.trim()) next.targetStatus = "変更後の在留資格を入力してください。";
+    if (needsTarget && !targetStatus.trim()) next.targetStatus = "変更後の在留資格を選択してください。";
     setErrors(next);
     if (Object.keys(next).length > 0 || !procedureType) return;
 
@@ -92,11 +105,11 @@ export default function NewCasePage() {
           </select>
         </Field>
         <Field label="現在の在留資格">
-          <input className={inputClass} value={currentStatus} onChange={(e) => setCurrentStatus(e.target.value)} placeholder="例：技術・人文知識・国際業務" />
+          <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
         </Field>
         {needsTarget && (
           <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus}>
-            <input className={inputClass} value={targetStatus} onChange={(e) => setTargetStatus(e.target.value)} />
+            <StatusSelect value={targetStatus} onChange={setTargetStatus} />
           </Field>
         )}
         <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
