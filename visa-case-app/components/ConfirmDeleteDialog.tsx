@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { useDialogA11y } from "@/lib/useDialogA11y";
 import { Button } from "./ui";
 
 /** 案件削除の確認。削除される範囲を明示する。 */
@@ -14,9 +16,12 @@ export function ConfirmDeleteDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // 削除の処理中は、Escape で閉じない
+  useDialogA11y(dialogRef, () => !busy && onCancel());
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="del-title" className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="del-title" className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
         <h2 id="del-title" className="text-lg font-semibold">
           案件の削除
         </h2>
@@ -29,7 +34,7 @@ export function ConfirmDeleteDialog({
         </ul>
         <p className="mt-3 text-xs text-slate-500">操作の記録（監査ログ）は、個人情報を含まない形で残ります。</p>
         <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" onClick={onCancel} disabled={busy}>
+          <Button variant="secondary" onClick={onCancel} disabled={busy} data-autofocus>
             キャンセル
           </Button>
           <Button variant="danger" onClick={onConfirm} disabled={busy}>
