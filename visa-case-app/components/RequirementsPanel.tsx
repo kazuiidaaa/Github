@@ -7,6 +7,7 @@ import { todayString } from "@/lib/format";
 import { evaluate, type EvaluatedItem, type Result } from "@/lib/requirements/evaluate";
 import { isOverdue, progressOf } from "@/lib/requirements/progress";
 import { logAudit, newId, updateCase } from "@/lib/store";
+import { useAutoSave } from "@/lib/useAutoSave";
 import {
   REQUIREMENT_STATUSES,
   REQUIREMENT_STATUS_LABELS,
@@ -270,6 +271,7 @@ function Row({
 }) {
   const { rule, state } = item;
   const [note, setNote] = useState(state.note ?? "");
+  const flushNote = useAutoSave(note, state.note ?? "", (v) => onPatch(rule.id, { note: v }, "requirement_note"));
   return (
     <tr className="border-t border-slate-100 align-top">
       <td className="px-4 py-3">
@@ -316,7 +318,7 @@ function Row({
             placeholder="理由を記録"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            onBlur={() => note !== (state.note ?? "") && onPatch(rule.id, { note }, "requirement_note")}
+            onBlur={flushNote}
           />
         )}
       </td>
