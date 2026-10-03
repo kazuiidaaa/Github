@@ -1,6 +1,8 @@
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo, ProcedureType } from "../../types";
 import { officialFormScopeWarnings } from "../officialForms";
+import { fillCoeExcel } from "./coe";
+import { fillChangeExcel } from "./change";
 import { fillAcquisitionExcel } from "./acquisition";
 import { fillRenewalExcel } from "./renewal";
 
@@ -13,14 +15,18 @@ export interface FillInput {
   applicant: Applicant;
   employment: EmploymentInfo;
   formDetails: FormDetails;
+  /** 案件の「変更後（希望）の在留資格」。変更様式の項目13に使う。省略時は空 */
+  targetStatus?: string;
 }
 
-type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails) => Promise<{ buffer: Buffer; warnings: string[] }>;
+type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails, targetStatus: string) => Promise<{ buffer: Buffer; warnings: string[] }>;
 
 export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
   renewal: fillRenewalExcel,
-  // 取得様式は雇用情報を使わない。希望する在留資格（targetStatus）は、現状の入力に含まれないため渡さない
-  acquisition: (a, _e, f) => fillAcquisitionExcel(a, f),
+  coe: fillCoeExcel,
+  change: fillChangeExcel,
+  // 取得様式は雇用情報を使わない。希望する在留資格（targetStatus）は案件の値を渡す
+  acquisition: (a, _e, f, targetStatus) => fillAcquisitionExcel(a, f, targetStatus),
 };
 
 /**
@@ -29,7 +35,7 @@ export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
  */
 export async function fillOfficialExcel(input: FillInput): Promise<{ buffer: Buffer; warnings: string[] }> {
   const fill = FILLERS[input.procedureType] ?? fillRenewalExcel;
-  const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails);
+  const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails, input.targetStatus ?? "");
   const scope = officialFormScopeWarnings({
     procedureType: input.procedureType,
     currentStatus: input.currentStatus,

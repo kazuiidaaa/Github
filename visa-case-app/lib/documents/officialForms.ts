@@ -46,6 +46,33 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
   outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_TARGET_STATUS}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
 };
 
+export const COE_SPEC: OfficialFormSpec = {
+  procedureType: "coe",
+  label: "在留資格認定証明書交付申請書",
+  form: {
+    formName: "別記第六号の三様式（第六条の二関係）在留資格認定証明書交付申請書（Excel）",
+    fileId: "930004030",
+    sourceUrl: "https://www.moj.go.jp/isa/content/930004030.xlsx",
+    confirmedOn: "2026-10-03",
+  },
+  // 認定の案件は、現に有する在留資格がない（海外からの呼び寄せ）ため、在留資格による対象外の判定はしない。
+  isInScope: (s) => s.procedureType === "coe",
+  outOfScopeWarning: "この様式は、在留資格認定証明書交付申請を対象としています。この案件は対象外の可能性があります。",
+};
+
+export const CHANGE_SPEC: OfficialFormSpec = {
+  procedureType: "change",
+  label: "在留資格変更許可申請書（技術・人文知識・国際業務）",
+  form: {
+    formName: "別記第三十号様式（第二十条関係）在留資格変更許可申請書（Excel）",
+    fileId: "930004065",
+    sourceUrl: "https://www.moj.go.jp/isa/content/930004065.xlsx",
+    confirmedOn: "2026-10-03",
+  },
+  isInScope: (s) => s.procedureType === "change",
+  outOfScopeWarning: "この様式は、在留資格変更許可申請を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。",
+};
+
 export const ACQUISITION_SPEC: OfficialFormSpec = {
   procedureType: "acquisition",
   label: "在留資格取得許可申請書",
@@ -63,6 +90,8 @@ export const ACQUISITION_SPEC: OfficialFormSpec = {
 /** 手続種別ごとの様式。未対応の手続種別は、現時点では更新の様式を、注意を付けて使う */
 export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec>> = {
   renewal: RENEWAL_SPEC,
+  coe: COE_SPEC,
+  change: CHANGE_SPEC,
   acquisition: ACQUISITION_SPEC,
 };
 
@@ -80,6 +109,6 @@ export function officialFormScopeWarnings(s: OfficialFormScope): string[] {
 /** 案件の現在の内容から、差し込みの入力値の写しを作る（値はすべて複製し、案件への参照は持たない） */
 export function officialFormInputOf(c: CaseRecord): OfficialFormContent["input"] {
   return JSON.parse(
-    JSON.stringify({ applicant: c.applicant, employment: c.employment, formDetails: c.formDetails, currentStatus: c.currentStatus }),
+    JSON.stringify({ applicant: c.applicant, employment: c.employment, formDetails: c.formDetails, currentStatus: c.currentStatus, targetStatus: c.targetStatus }),
   ) as OfficialFormContent["input"];
 }

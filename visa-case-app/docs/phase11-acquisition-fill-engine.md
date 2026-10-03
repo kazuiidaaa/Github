@@ -51,7 +51,7 @@
 * **有無の○は対象外**:14 犯罪の有無、15 在日親族の有無・同居(はい・いいえ)。ただし14の具体的内容、15の各欄は書く。親族は4行までで、あふれた分は書かず `warnings` に出す。
 * 性別・配偶者の有無は、#79 と同じ「選択肢の文字を書き換える」方式(`PickItem` 相当)。取得様式の配偶者欄は3つの別セル(AH21・AI21・AJ21)で、更新様式(結合セル Y21)と異なる。
 * **11 その他の内容(Z36)** は、`acquisitionCause === "other"` のときだけ書く。**13 その他(Q44)** は、`targetStatus` が4つの在留資格(チェックボックスのあるもの)以外のときだけ、その在留資格名を書く。
-* **`targetStatus` は、現状の画面・API の経路では渡されない。** `FILLERS` の関数型は `(a, e, f)` で、`OfficialFormContent["input"]`・`officialFormInputOf`・`parseFillInput` に `targetStatus` がない。これらは #84・#86 が同じ箇所を編集するため、本Issueでは拡張していない。そのため、画面から生成した取得様式では、13 の「その他」欄と13の warning は出ない(関数単体では対応済み)。経路に `targetStatus` を通すのは、#84・#86 のマージ後の別作業(下記の引き継ぎ)。
+* **`targetStatus` は、#84(変更の差し込み)で差し込み経路(`OfficialFormContent["input"]`・`officialFormInputOf`・`parseFillInput`・`FillInput`・`Filler` の第4引数)に通された。** `FILLERS` の取得の関数は、その `targetStatus` をそのまま `fillAcquisitionExcel(a, f, targetStatus)` に渡す。そのため、画面から生成した取得様式でも、13 の「その他」欄と13の warning が出る。ただし、#84 より前に保存した版には `targetStatus` がないので、再生成すると13は空欄になる。
 * **17 代理人の携帯電話番号(Y79)** は、案件DBに項目がないため対応表に含めない(別Issue。`docs/phase14-acquisition-forms-research.md` の3章)。
 * 差し込み値は文字列。入力のない項目は、テンプレートの元の状態のまま。`warnings` は、申請人情報が未確定、親族のあふれ、取得の事由・希望する在留資格のチェックの案内。
 * 取得様式の対象判定(`ACQUISITION_SPEC.isInScope`)は、手続種別が `acquisition` であれば対象とする(様式は在留資格を限定しない)。
@@ -63,6 +63,6 @@ Excel／LibreOffice での目視確認は、本Issueの作業でも未実施(作
 
 ## 引き継ぎ
 
-* `targetStatus` を差し込み経路へ通す(`OfficialFormContent["input"]`・`officialFormInputOf`・`parseFillInput`・`FillInput`・`Filler` の拡張)。#84・#86 のマージ後に、1か所の変更として行うのがよい。
+* (対応済み)`targetStatus` の差し込み経路への追加は、#84 で行われた。
 * `docs/official/README.md` の「現在、実行時に読み込むのは renewal のみ」の記述は、#84・#86・#88 のマージ後にまとめて更新する(並行PRとの衝突を避け、本Issueでは変更していない)。
 * 代理人の携帯電話番号(全様式の代理人欄)、チェックボックス・有無の○の差し込みは別Issue。
