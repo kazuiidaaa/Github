@@ -46,9 +46,23 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
   outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_TARGET_STATUS}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
 };
 
+export const CHANGE_SPEC: OfficialFormSpec = {
+  procedureType: "change",
+  label: "在留資格変更許可申請書（技術・人文知識・国際業務）",
+  form: {
+    formName: "別記第三十号様式（第二十条関係）在留資格変更許可申請書（Excel）",
+    fileId: "930004065",
+    sourceUrl: "https://www.moj.go.jp/isa/content/930004065.xlsx",
+    confirmedOn: "2026-10-03",
+  },
+  isInScope: (s) => s.procedureType === "change",
+  outOfScopeWarning: "この様式は、在留資格変更許可申請を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。",
+};
+
 /** 手続種別ごとの様式。未対応の手続種別は、現時点では更新の様式を、注意を付けて使う */
 export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec>> = {
   renewal: RENEWAL_SPEC,
+  change: CHANGE_SPEC,
 };
 
 /** 差し込みに使う様式。手続種別に専用の様式がなければ、更新の様式（対象外の注意が付く） */
@@ -65,6 +79,6 @@ export function officialFormScopeWarnings(s: OfficialFormScope): string[] {
 /** 案件の現在の内容から、差し込みの入力値の写しを作る（値はすべて複製し、案件への参照は持たない） */
 export function officialFormInputOf(c: CaseRecord): OfficialFormContent["input"] {
   return JSON.parse(
-    JSON.stringify({ applicant: c.applicant, employment: c.employment, formDetails: c.formDetails, currentStatus: c.currentStatus }),
+    JSON.stringify({ applicant: c.applicant, employment: c.employment, formDetails: c.formDetails, currentStatus: c.currentStatus, targetStatus: c.targetStatus }),
   ) as OfficialFormContent["input"];
 }

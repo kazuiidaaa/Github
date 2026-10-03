@@ -1,6 +1,7 @@
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo, ProcedureType } from "../../types";
 import { officialFormScopeWarnings } from "../officialForms";
+import { fillChangeExcel } from "./change";
 import { fillRenewalExcel } from "./renewal";
 
 // 手続種別から差し込み関数を選ぶ入口（サーバー専用。node:fs を使うため、画面のコードから import しない）。
@@ -12,12 +13,15 @@ export interface FillInput {
   applicant: Applicant;
   employment: EmploymentInfo;
   formDetails: FormDetails;
+  /** 案件の「変更後（希望）の在留資格」。変更様式の項目13に使う。省略時は空 */
+  targetStatus?: string;
 }
 
-type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails) => Promise<{ buffer: Buffer; warnings: string[] }>;
+type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails, targetStatus: string) => Promise<{ buffer: Buffer; warnings: string[] }>;
 
 export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
   renewal: fillRenewalExcel,
+  change: fillChangeExcel,
 };
 
 /**
@@ -26,7 +30,7 @@ export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
  */
 export async function fillOfficialExcel(input: FillInput): Promise<{ buffer: Buffer; warnings: string[] }> {
   const fill = FILLERS[input.procedureType] ?? fillRenewalExcel;
-  const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails);
+  const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails, input.targetStatus ?? "");
   const scope = officialFormScopeWarnings({
     procedureType: input.procedureType,
     currentStatus: input.currentStatus,
