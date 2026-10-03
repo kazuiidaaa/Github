@@ -27,3 +27,11 @@ export function validateDraft(a: Applicant): Partial<Record<ApplicantField, stri
   }
   return errors;
 }
+
+/**
+ * 申請人情報の在留資格を確認済みにしたとき、案件側の「現在の在留資格」を補う値を返す。
+ * 案件側に既に入力がある場合は、手動入力を尊重して変更しない。
+ */
+export function fillCurrentStatus(currentStatus: string, residenceStatus: string): string {
+  return currentStatus.trim() ? currentStatus : residenceStatus;
+}

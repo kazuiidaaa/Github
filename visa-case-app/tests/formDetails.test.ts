@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildContent } from "../lib/documents/snapshot";
-import { EMPTY_FORM_DETAILS, normalizeFormDetails, validateFormDetails } from "../lib/formDetails";
+import { EMPTY_FORM_DETAILS, FORM_DETAILS_FIELD_LABELS, normalizeFormDetails, validateFormDetails } from "../lib/formDetails";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}): CaseRecord {
@@ -78,5 +78,14 @@ describe("公式様式項目", () => {
   it("日付の形式を検証する", () => {
     expect(validateFormDetails({ ...EMPTY_FORM_DETAILS, passportExpiry: "2030-13-40" }).passportExpiry).toBeTruthy();
     expect(validateFormDetails({ ...EMPTY_FORM_DETAILS, passportExpiry: "2030-01-31" })).toEqual({});
+  });
+});
+
+describe("FORM_DETAILS_FIELD_LABELS", () => {
+  it("検証でエラーになりうる項目すべてに、項目名がある", () => {
+    const errors = validateFormDetails({ ...EMPTY_FORM_DETAILS, passportExpiry: "x", graduationDate: "x" });
+    for (const k of Object.keys(errors) as (keyof typeof errors)[]) {
+      expect(FORM_DETAILS_FIELD_LABELS[k]).toBeTruthy();
+    }
   });
 });

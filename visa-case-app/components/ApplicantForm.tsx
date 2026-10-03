@@ -1,9 +1,10 @@
 "use client";
 
+import { ImageZoom } from "@/components/ImageZoom";
 import { useState } from "react";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
-import { validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
+import { fillCurrentStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
@@ -24,10 +25,7 @@ function Original({ doc }: { doc: DocumentRecord }) {
   return (
     <>
       <h2 className="mb-3 font-semibold">原本：{doc.fileName}</h2>
-      {url && doc.mimeType.startsWith("image/") && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="在留カード" className="max-h-[32rem] w-full rounded border border-slate-200 object-contain" />
-      )}
+      {url && doc.mimeType.startsWith("image/") && <ImageZoom src={url} alt="在留カード" />}
       {url && doc.mimeType === "application/pdf" && (
         <iframe src={url} title="在留カード" className="h-[32rem] w-full rounded border border-slate-200" />
       )}
@@ -104,6 +102,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     const confirmedBy = await getConfirmerName();
     updateCase(record.id, (c) => ({
       ...c,
+      currentStatus: fillCurrentStatus(c.currentStatus, form.residenceStatus),
       workflowStatus: "applicant_confirmed",
       applicant: { ...form, confirmationStatus: "confirmed", confirmedAt: new Date().toISOString(), confirmedBy },
     }));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateApplicant, validateDraft } from "../lib/applicant";
+import { fillCurrentStatus, validateApplicant, validateDraft } from "../lib/applicant";
 import { isValidDate } from "../lib/format";
 import { EMPTY_APPLICANT, type Applicant } from "../lib/types";
 
@@ -45,5 +45,16 @@ describe("isValidDate", () => {
   it("うるう年を正しく扱う", () => {
     expect(isValidDate("2024-02-29")).toBe(true);
     expect(isValidDate("2025-02-29")).toBe(false);
+  });
+});
+
+describe("fillCurrentStatus", () => {
+  it("案件側が未入力（空・空白のみ）なら、申請人情報の在留資格で補う", () => {
+    expect(fillCurrentStatus("", "留学")).toBe("留学");
+    expect(fillCurrentStatus("  ", "留学")).toBe("留学");
+  });
+
+  it("案件側に入力済みなら、上書きしない", () => {
+    expect(fillCurrentStatus("技術・人文知識・国際業務", "留学")).toBe("技術・人文知識・国際業務");
   });
 });

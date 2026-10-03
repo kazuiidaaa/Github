@@ -11,7 +11,8 @@ import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
-import { PROCEDURE_TYPES } from "@/lib/types";
+import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
+import type { CaseMetrics } from "@/lib/caseMetrics";
 
 function readFilter(p: URLSearchParams): CaseFilter {
   return {
@@ -59,6 +60,19 @@ function activeCard(f: CaseFilter): CardKey | null {
   return keys.find((k) => toQuery(cardFilter(k)) === toQuery(f)) ?? null;
 }
 
+const procedureLabel = (c: CaseRecord) => PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
+
+function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: CaseMetrics }) {
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <WorkflowBadge status={c.workflowStatus} />
+      {m.missingCount > 0 && <Badge tone="yellow">未受領書類 {m.missingCount}件</Badge>}
+      {m.unconfirmed && <Badge tone="gray">申請人情報 確認未了</Badge>}
+      {m.checksPending && <Badge tone="gray">申請前チェック未完了</Badge>}
+    </div>
+  );
+}
+
 function CasesView() {
   const cases = useCases();
   const loaded = useStoreLoaded();
@@ -96,7 +110,7 @@ function CasesView() {
       <p className="mb-2 text-xs text-slate-500">
         期限の表示は業務上の注意喚起です。申請の可否や許可の見込みを示すものではありません。
       </p>
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
@@ -130,18 +144,13 @@ function CasesView() {
                   </Link>
                 </td>
                 <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</td>
-                <td className="px-4 py-3">{PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label}</td>
+                <td className="px-4 py-3">{procedureLabel(c)}</td>
                 <td className="px-4 py-3">{c.applicant.residenceStatus || c.currentStatus || "-"}</td>
                 <td className="px-4 py-3">
                   <ExpiryBadge date={c.applicant.residenceExpiryDate} />
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-col items-start gap-1">
-                    <WorkflowBadge status={c.workflowStatus} />
-                    {m.missingCount > 0 && <Badge tone="yellow">未受領書類 {m.missingCount}件</Badge>}
-                    {m.unconfirmed && <Badge tone="gray">申請人情報 確認未了</Badge>}
-                    {m.checksPending && <Badge tone="gray">申請前チェック未完了</Badge>}
-                  </div>
+                  <StatusBadges record={c} metrics={m} />
                 </td>
                 <td className="px-4 py-3 text-slate-500">{formatDateTime(c.updatedAt)}</td>
               </tr>
@@ -149,6 +158,45 @@ function CasesView() {
           </tbody>
         </table>
       </div>
+
+      {/* 狭い画面幅（md 未満）では、表に代えてカード形式で表示する */}
+      <ul className="space-y-3 md:hidden">
+        {empty && (
+          <li className="rounded-lg border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+            {empty}
+            {loaded && cases.length > 0 && active && (
+              <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
+                条件をリセット
+              </button>
+            )}
+          </li>
+        )}
+        {rows.map(({ record: c, metrics: m }) => (
+          <li key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+            <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
+              {c.caseName}
+            </Link>
+            <dl className="mt-3 grid grid-cols-[6rem_1fr] gap-y-2">
+              <dt className="text-slate-500">申請人氏名</dt>
+              <dd>{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</dd>
+              <dt className="text-slate-500">手続種別</dt>
+              <dd>{procedureLabel(c)}</dd>
+              <dt className="text-slate-500">在留資格</dt>
+              <dd>{c.applicant.residenceStatus || c.currentStatus || "-"}</dd>
+              <dt className="text-slate-500">在留期限</dt>
+              <dd>
+                <ExpiryBadge date={c.applicant.residenceExpiryDate} />
+              </dd>
+              <dt className="text-slate-500">状況</dt>
+              <dd>
+                <StatusBadges record={c} metrics={m} />
+              </dd>
+              <dt className="text-slate-500">最終更新</dt>
+              <dd className="text-slate-500">{formatDateTime(c.updatedAt)}</dd>
+            </dl>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

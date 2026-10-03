@@ -244,7 +244,13 @@ export default function CaseDetailPage() {
             </p>
           )}
           {canEdit && (
-            <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("applicant")} />
+            <UploadBox
+              caseId={record.id}
+              currentFileName={doc?.fileName}
+              onUploaded={(replaced) => {
+                if (!replaced) setTab("applicant");
+              }}
+            />
           )}
           <section className="rounded-lg border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>

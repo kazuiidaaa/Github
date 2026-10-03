@@ -4,10 +4,11 @@ import { EMPTY_FORM_DETAILS } from "@/lib/formDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { EmploymentFields, hasEmploymentDateError } from "@/components/EmploymentForm";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -18,6 +19,10 @@ export default function NewCasePage() {
   const [targetStatus, setTargetStatus] = useState("");
   const [memo, setMemo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // まとめて登録：雇用・会社情報を1回入力し、申請人（案件名）を複数人分入力する
+  const [bulk, setBulk] = useState(false);
+  const [employment, setEmployment] = useState<EmploymentInfo>({ ...EMPTY_EMPLOYMENT });
+  const [names, setNames] = useState<string[]>(["", "", ""]);
 
   const needsTarget = procedureType === "change" || procedureType === "coe";
   const description = PROCEDURE_TYPES.find((p) => p.value === procedureType)?.description;
@@ -25,36 +30,54 @@ export default function NewCasePage() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
-    if (!caseName.trim()) next.caseName = "案件名を入力してください。";
-    if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
+    const trimmedNames = names.map((n) => n.trim()).filter(Boolean);
+    if (bulk) {
+      if (trimmedNames.length === 0) next.names = "案件名を1件以上入力してください。";
+      else if (names.some((n) => n.length > 100)) next.names = "案件名は100文字以内で入力してください。";
+      if (hasEmploymentDateError(employment)) next.employment = "雇用開始日は YYYY-MM-DD の形式で入力してください。";
+    } else {
+      if (!caseName.trim()) next.caseName = "案件名を入力してください。";
+      if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
+    }
     if (!procedureType) next.procedureType = "手続種別を選択してください。";
     if (needsTarget && !targetStatus.trim()) next.targetStatus = "変更後の在留資格を選択してください。";
     setErrors(next);
     if (Object.keys(next).length > 0 || !procedureType) return;
 
-    const now = new Date().toISOString();
-    const id = newId();
-    saveCase({
-      id,
-      caseName: caseName.trim(),
-      procedureType,
-      currentStatus: currentStatus.trim(),
-      targetStatus: needsTarget ? targetStatus.trim() : "",
-      memo,
-      workflowStatus: "preparing",
-      createdAt: now,
-      updatedAt: now,
-      applicant: { ...EMPTY_APPLICANT },
-      employment: { ...EMPTY_EMPLOYMENT },
-      formDetails: { ...EMPTY_FORM_DETAILS },
-      requirementStates: {},
-      customRequirements: [],
-      plannedApplicationDate: "",
-      checkMemo: "",
-      checks: [],
-      documents: [],
-    });
-    logAudit(id, "case_created");
+    const create = (name: string) => {
+      const now = new Date().toISOString();
+      const id = newId();
+      saveCase({
+        id,
+        caseName: name,
+        procedureType,
+        currentStatus: currentStatus.trim(),
+        targetStatus: needsTarget ? targetStatus.trim() : "",
+        memo,
+        workflowStatus: "preparing",
+        createdAt: now,
+        updatedAt: now,
+        applicant: { ...EMPTY_APPLICANT },
+        // 案件ごとに独立したレコードとするため、複製して保存する（作成後の同期は行わない）
+        employment: bulk ? { ...employment } : { ...EMPTY_EMPLOYMENT },
+        formDetails: { ...EMPTY_FORM_DETAILS },
+        requirementStates: {},
+        customRequirements: [],
+        plannedApplicationDate: "",
+        checkMemo: "",
+        checks: [],
+        documents: [],
+      });
+      logAudit(id, "case_created", bulk ? { bulk: trimmedNames.length } : undefined);
+      return id;
+    };
+
+    if (bulk) {
+      trimmedNames.forEach(create);
+      router.push("/cases");
+      return;
+    }
+    const id = create(caseName.trim());
     // 作成直後は、次に行う書類の登録へ誘導するため「書類」タブを開く
     router.push(`/cases/${id}?tab=documents`);
   }
@@ -79,10 +102,33 @@ export default function NewCasePage() {
       <p className="mb-6 text-sm text-slate-600">
         案件の入口情報のみ登録します。氏名・生年月日・在留期限などの正式情報は、案件作成後に「申請人情報」タブで、原本を確認しながら入力します。
       </p>
+      <div className="mb-4 flex gap-1 text-sm" role="group" aria-label="登録方法">
+        {[
+          { v: false, label: "1件ずつ登録" },
+          { v: true, label: "複数人をまとめて登録" },
+        ].map((m) => (
+          <button
+            key={m.label}
+            type="button"
+            aria-pressed={bulk === m.v}
+            onClick={() => setBulk(m.v)}
+            className={`rounded-md border px-3 py-1.5 ${bulk === m.v ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white hover:bg-slate-50"}`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+      {bulk && (
+        <p className="mb-4 rounded-md bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+          同じ所属機関の複数の申請人について、手続種別と雇用・会社情報を1回入力し、人数分の案件をまとめて作成します。入管への申請は、申請人お一人につき1件の申請書が必要です。作成後の各案件は独立しており、以後は個別に編集します（案件間で情報は同期されません）。
+        </p>
+      )}
       <form onSubmit={submit} className="space-y-5 rounded-lg border border-slate-200 bg-white p-6">
-        <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">
-          <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
-        </Field>
+        {!bulk && (
+          <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">
+            <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
+          </Field>
+        )}
         <Field label="手続種別" required error={errors.procedureType} hint={description}>
           <select className={inputClass} value={procedureType} onChange={(e) => setProcedureType(e.target.value as ProcedureType | "")}>
             <option value="">選択してください</option>
@@ -104,11 +150,42 @@ export default function NewCasePage() {
         <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
           <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} />
         </Field>
+        {bulk && (
+          <>
+            <div>
+              <h2 className="mb-1 text-sm font-semibold">雇用・会社情報（全員に共通）</h2>
+              <p className="mb-3 text-xs text-slate-500">入力した内容が、作成する各案件にそれぞれ設定されます。</p>
+              <EmploymentFields form={employment} set={(k, v) => setEmployment((f) => ({ ...f, [k]: v }))} />
+              {errors.employment && <p className="mt-2 text-sm text-red-600">{errors.employment}</p>}
+            </div>
+            <Field label="申請人（案件名）" required error={errors.names} hint="空欄の行は無視します。案件名は内部管理用で、正式な氏名としては扱いません。">
+              <div className="space-y-2">
+                {names.map((n, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      className={inputClass}
+                      aria-label={`案件名 ${i + 1}`}
+                      placeholder="例：李明さん 在留期間更新"
+                      value={n}
+                      onChange={(e) => setNames((l) => l.map((x, j) => (j === i ? e.target.value : x)))}
+                    />
+                    <Button type="button" variant="secondary" disabled={names.length <= 1} onClick={() => setNames((l) => l.filter((_, j) => j !== i))}>
+                      削除
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="secondary" onClick={() => setNames((l) => [...l, ""])}>
+                  行を追加
+                </Button>
+              </div>
+            </Field>
+          </>
+        )}
         <div className="flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={() => router.push("/cases")}>
             キャンセル
           </Button>
-          <Button type="submit">作成</Button>
+          <Button type="submit">{bulk ? `${names.filter((n) => n.trim()).length}件を作成` : "作成"}</Button>
         </div>
       </form>
     </div>
