@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { CaseInfoEditor } from "@/components/CaseInfoEditor";
 import { ChecksPanel } from "@/components/ChecksPanel";
@@ -14,12 +15,12 @@ import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
+import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
-  WORKFLOW_LABELS,
   type DocumentRecord,
 } from "@/lib/types";
 
@@ -90,9 +91,11 @@ export default function CaseDetailPage() {
   const loaded = useStoreLoaded();
   const canEdit = useCan("edit");
   const canDelete = useCan("deleteCase");
-  const [tab, setTab] = useState<Tab>("overview");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => (searchParams.get("tab") === "documents" ? "documents" : "overview"));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
 
   if (!record && !loaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
 
@@ -110,7 +113,6 @@ export default function CaseDetailPage() {
   const doc = record.documents[0];
 
   function removeDocument(d: DocumentRecord) {
-    if (!confirm(`「${d.fileName}」を削除します。よろしいですか。`)) return;
     updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
   }
@@ -127,9 +129,7 @@ export default function CaseDetailPage() {
           <h1 className="text-2xl font-semibold">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
-            <Badge tone={record.workflowStatus === "applicant_confirmed" || record.workflowStatus === "application_ready" ? "green" : "gray"}>
-              {WORKFLOW_LABELS[record.workflowStatus]}
-            </Badge>
+            <WorkflowBadge status={record.workflowStatus} />
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -157,6 +157,16 @@ export default function CaseDetailPage() {
             setDeleting(false);
             if (ok) router.push("/cases");
             else setConfirmingDelete(false);
+          }}
+        />
+      )}
+      {docToDelete && (
+        <ConfirmDocumentDeleteDialog
+          fileName={docToDelete.fileName}
+          onCancel={() => setDocToDelete(null)}
+          onConfirm={() => {
+            removeDocument(docToDelete);
+            setDocToDelete(null);
           }}
         />
       )}
@@ -214,15 +224,25 @@ export default function CaseDetailPage() {
           </section>
           <CaseInfoEditor record={record} canEdit={canEdit} />
           {!doc && (
-            <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
-              次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <p>次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。</p>
+              {canEdit && (
+                <Button type="button" onClick={() => setTab("documents")}>
+                  書類を登録する
+                </Button>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {tab === "documents" && (
         <div className="space-y-6">
+          {canEdit && record.documents.length === 0 && (
+            <p className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              最初に、在留カードを登録してください。登録後に、「申請人情報」タブで、原本を見ながら内容を入力します。
+            </p>
+          )}
           {canEdit && (
             <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("applicant")} />
           )}
@@ -235,7 +255,7 @@ export default function CaseDetailPage() {
                 doc={d}
                 locked={record.workflowStatus === "applicant_confirmed"}
                 readOnly={!canEdit}
-                onDelete={() => removeDocument(d)}
+                onDelete={() => setDocToDelete(d)}
               />
             ))}
           </section>

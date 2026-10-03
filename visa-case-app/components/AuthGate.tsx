@@ -1,15 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { useSession } from "@/lib/auth";
+import { useSessionState } from "@/lib/auth";
 import { useDemo } from "@/lib/demo";
 import { configIssues } from "@/lib/env";
 import { isMisconfigured, isSupabaseEnabled } from "@/lib/supabase";
 
 /** Supabase 利用時、未ログインの場合はログイン画面へ移動する（データ自体は行単位の保護で守られる） */
 export function AuthGate({ children }: { children: ReactNode }) {
-  const session = useSession();
+  const { session, failed } = useSessionState();
   const demo = useDemo();
   const pathname = usePathname();
   const router = useRouter();
@@ -36,6 +37,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   if (!isSupabaseEnabled || demo) return <>{children}</>;
+  if (session === undefined && failed && !onLogin) {
+    return (
+      <div role="alert" className="mx-auto max-w-lg rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+        <p className="mb-2 font-semibold">ログイン状態を確認できませんでした</p>
+        <p>通信に問題がある可能性があります。再読み込みするか、ログイン画面からやり直してください。</p>
+        <div className="mt-3 flex gap-3">
+          <button type="button" onClick={() => window.location.reload()} className="rounded border border-red-300 px-3 py-1">
+            再読み込み
+          </button>
+          <Link href="/login" className="rounded bg-red-700 px-3 py-1 text-white">
+            ログイン画面へ
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  if (session === undefined && failed) return <>{children}</>;
   if (session === undefined) return <p className="text-sm text-slate-500">読み込み中……</p>;
   if (!session && !onLogin) return null;
   return <>{children}</>;

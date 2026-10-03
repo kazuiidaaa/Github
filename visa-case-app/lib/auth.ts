@@ -7,18 +7,27 @@ import { resetDocuments, DOCUMENTS_KEY } from "./documents/store";
 import { CASES_KEY, logAudit, resetStore } from "./store";
 import { supabase } from "./supabase";
 
-/** undefined：確認中、null：未ログイン */
-export function useSession(): Session | null | undefined {
+/** undefined：確認中、null：未ログイン。取得に失敗した場合は failed が true になる */
+export function useSessionState(): { session: Session | null | undefined; failed: boolean } {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
     let active = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (active) setSession(data.session);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        setFailed(false);
+        setSession(data.session);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === "SIGNED_OUT") resetStore();
+      setFailed(false);
       setSession(s);
     });
     return () => {
@@ -27,7 +36,12 @@ export function useSession(): Session | null | undefined {
     };
   }, []);
 
-  return session;
+  return { session, failed };
+}
+
+/** undefined：確認中、null：未ログイン */
+export function useSession(): Session | null | undefined {
+  return useSessionState().session;
 }
 
 export async function signIn(email: string, password: string): Promise<string | null> {

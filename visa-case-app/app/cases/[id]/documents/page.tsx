@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { Badge, Button } from "@/components/ui";
 import { generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
@@ -27,6 +27,27 @@ export default function DocumentsPage() {
   const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => t !== "transcription_aid"));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [newIds, setNewIds] = useState<string[]>([]);
+  const historyRef = useRef<HTMLElement>(null);
+  const knownIds = useRef<Set<string> | null>(null);
+
+  // 生成で追加された版（生成前に存在しなかった版）を特定する。
+  useEffect(() => {
+    const before = knownIds.current;
+    if (!before) return;
+    const added = documents.filter((d) => !before.has(d.id)).map((d) => d.id);
+    if (added.length === 0) return;
+    knownIds.current = null;
+    setNewIds(added);
+  }, [documents]);
+
+  // 生成直後に、追加された版を強調して生成履歴へスクロールする。数秒後に強調を外す。
+  useEffect(() => {
+    if (newIds.length === 0) return;
+    historyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const timer = setTimeout(() => setNewIds([]), 6000);
+    return () => clearTimeout(timer);
+  }, [newIds]);
 
   if (!record && !storeLoaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
   if (!record) {
@@ -47,10 +68,12 @@ export default function DocumentsPage() {
     if (!record || selected.length === 0) return;
     setBusy(true);
     setMessage("");
+    knownIds.current = new Set(documents.map((d) => d.id));
     try {
       await generateDocuments(record, selected);
       setMessage("新しい版として生成しました。内容を確認してください。");
     } catch (e) {
+      knownIds.current = null;
       setMessage(`生成に失敗しました：${messageOf(e)}`);
     } finally {
       setBusy(false);
@@ -111,12 +134,17 @@ export default function DocumentsPage() {
         <p className="mt-3 text-xs text-slate-500">再生成しても過去の版は上書きされず、新しい版として保存されます。</p>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white">
+      <section ref={historyRef} className="scroll-mt-4 rounded-lg border border-slate-200 bg-white">
         <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">生成履歴</h2>
         {error && <p className="px-6 py-3 text-sm text-red-700">{error}</p>}
         {loaded && documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">生成された文書はありません。</p>}
         {documents.map((d) => (
-          <div key={d.id} className="flex items-center justify-between border-b border-slate-100 px-6 py-3 text-sm last:border-b-0">
+          <div
+            key={d.id}
+            className={`flex items-center justify-between border-b border-slate-100 px-6 py-3 text-sm transition-colors last:border-b-0 ${
+              newIds.includes(d.id) ? "bg-yellow-50" : ""
+            }`}
+          >
             <span>
               <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
                 {DOCUMENT_TYPE_LABELS[d.documentType]} v{d.version}
@@ -126,6 +154,7 @@ export default function DocumentsPage() {
               )}
             </span>
             <span className="flex items-center gap-3">
+              {newIds.includes(d.id) && <Badge tone="green">新規</Badge>}
               <Badge tone={d.status === "draft" ? "yellow" : d.status === "archived" ? "gray" : "green"}>
                 {GENERATED_STATUS_LABELS[d.status]}
               </Badge>
