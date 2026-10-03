@@ -4,7 +4,7 @@ import { ImageZoom } from "@/components/ImageZoom";
 import { useState } from "react";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
-import { validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
+import { fillCurrentStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
@@ -102,6 +102,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     const confirmedBy = await getConfirmerName();
     updateCase(record.id, (c) => ({
       ...c,
+      currentStatus: fillCurrentStatus(c.currentStatus, form.residenceStatus),
       workflowStatus: "applicant_confirmed",
       applicant: { ...form, confirmationStatus: "confirmed", confirmedAt: new Date().toISOString(), confirmedBy },
     }));
