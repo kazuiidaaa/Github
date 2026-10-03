@@ -182,6 +182,13 @@ function CasesView() {
                       条件をリセット
                     </button>
                   )}
+                  {loaded && cases.length === 0 && canEdit && (
+                    <div className="mt-4">
+                      <Link href="/cases/new" className="inline-block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+                        新規案件
+                      </Link>
+                    </div>
+                  )}
                 </td>
               </tr>
             )}
@@ -217,6 +224,13 @@ function CasesView() {
               <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
                 条件をリセット
               </button>
+            )}
+            {loaded && cases.length === 0 && canEdit && (
+              <div className="mt-4">
+                <Link href="/cases/new" className="inline-block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+                  新規案件
+                </Link>
+              </div>
             )}
           </li>
         )}
