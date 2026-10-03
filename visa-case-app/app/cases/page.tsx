@@ -13,7 +13,7 @@ import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
-import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
+import { needsTargetStatus, PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
 import type { CaseMetrics } from "@/lib/caseMetrics";
 
 function readFilter(p: URLSearchParams): CaseFilter {
@@ -77,6 +77,11 @@ function ResidenceStatusCell({ record: c }: { record: CaseRecord }) {
       {c.applicant.confirmationStatus !== "confirmed" && <Badge tone="gray">未確認</Badge>}
     </span>
   );
+}
+
+/** 在留資格変更・認定証明書交付の案件で、変更後（希望）の在留資格を表示する。未入力は「未入力」と表示する。 */
+function TargetStatusCell({ record: c }: { record: CaseRecord }) {
+  return <>{c.targetStatus || <span className="text-slate-400">未入力</span>}</>;
 }
 
 function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: CaseMetrics }) {
@@ -201,7 +206,15 @@ function CasesView() {
                 </td>
                 <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</td>
                 <td className="px-4 py-3">{procedureLabel(c)}</td>
-                <td className="px-4 py-3"><ResidenceStatusCell record={c} /></td>
+                <td className="px-4 py-3">
+                  <ResidenceStatusCell record={c} />
+                  {needsTargetStatus(c.procedureType) && (
+                    <p className="mt-1 text-xs text-slate-600">
+                      <span className="text-slate-500">変更後：</span>
+                      <TargetStatusCell record={c} />
+                    </p>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <ExpiryBadge date={c.applicant.residenceExpiryDate} />
                 </td>
@@ -246,6 +259,14 @@ function CasesView() {
               <dd>{procedureLabel(c)}</dd>
               <dt className="text-slate-500">在留資格</dt>
               <dd><ResidenceStatusCell record={c} /></dd>
+              {needsTargetStatus(c.procedureType) && (
+                <>
+                  <dt className="text-slate-500">変更後の在留資格</dt>
+                  <dd>
+                    <TargetStatusCell record={c} />
+                  </dd>
+                </>
+              )}
               <dt className="text-slate-500">在留期限</dt>
               <dd>
                 <ExpiryBadge date={c.applicant.residenceExpiryDate} />

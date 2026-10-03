@@ -22,6 +22,11 @@ export const PROCEDURE_TYPES = [
 
 export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 
+/** 「変更後（希望）の在留資格」を入力・表示する手続種別か（新規案件の入力欄の判定と一致させる） */
+export function needsTargetStatus(procedureType: string): boolean {
+  return procedureType === "change" || procedureType === "coe";
+}
+
 /** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
 export const RESIDENCE_STATUSES = [
   "外交",
