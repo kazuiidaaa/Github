@@ -251,7 +251,10 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), form_details(*), requirement_states(*), custom_requirements(*), case_checks(*), documents(*)")
+      // 0009 で (case_id, organization_id) の外部キーが加わり、結びつきが2通りになったため、case_id のものを明示する
+      .select(
+        "*, applicants!applicants_case_id_fkey(*), employment_details!employment_details_case_id_fkey(*), form_details(*), requirement_states!requirement_states_case_id_fkey(*), custom_requirements!custom_requirements_case_id_fkey(*), case_checks!case_checks_case_id_fkey(*), documents!documents_case_id_fkey(*)",
+      )
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
