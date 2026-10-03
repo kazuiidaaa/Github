@@ -4,7 +4,7 @@ import { useState } from "react";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, updateCase } from "@/lib/store";
-import { PROCEDURE_TYPES, type CaseRecord, type ProcedureType } from "@/lib/types";
+import { PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type CaseRecord, type ProcedureType } from "@/lib/types";
 
 export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdit: boolean }) {
   const [editing, setEditing] = useState(false);
@@ -15,7 +15,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   const [memo, setMemo] = useState(record.memo);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const needsTarget = procedureType === "change" || procedureType === "coe" || procedureType === "acquisition";
+  const needsTarget = procedureNeedsTarget(procedureType);
 
   function start() {
     setCaseName(record.caseName);
@@ -31,7 +31,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
     const next: Record<string, string> = {};
     if (!caseName.trim()) next.caseName = "案件名を入力してください。";
     else if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
-    if (needsTarget && !targetStatus.trim()) next.targetStatus = "変更後の在留資格を選択してください。";
+    if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
@@ -98,7 +98,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
         <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
       </Field>
       {needsTarget && (
-        <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
+        <Field label={targetStatusLabel(procedureType)} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
           <StatusSelect value={targetStatus} onChange={setTargetStatus} />
         </Field>
       )}

@@ -96,7 +96,7 @@
 
 画面の項目番号・項目名・見出しは、コンポーネントに直接書かず、`lib/formDetails.ts` の**手続種別ごとの項目番号表**から取得します。
 
-- `FORM_LAYOUTS: Partial<Record<ProcedureType, FormLayout>>` が表です。`getFormLayout(procedureType)` で取得します。表にない手続種別(取得・その他)は、従来どおり更新様式の表記になります(#87・#99が自分の手続種別を追加するまでの既定動作)。現在の登録は、更新(`renewal`)・変更(`change`)・認定(`coe`、#85)です。
+- `FORM_LAYOUTS: Partial<Record<ProcedureType, FormLayout>>` が表です。`getFormLayout(procedureType)` で取得します。表にない手続種別(その他)は、従来どおり更新様式の表記になります。現在の登録は、更新(`renewal`)・変更(`change`)・認定(`coe`、#85)・取得(`acquisition`、#87。`docs/phase14-acquisition-forms-research.md`)です。
 - `FormLayout` の内容:
   - `formName`・`formId`:様式名と識別番号(見出しの文言、出典の対応)。
   - `sectionTitles`:5つの見出し(申請人等作成用1・在日親族・申請人等作成用2・職歴・所属機関等)。`Partial` であり、**見出しを定義しないセクションは、セクションごと描画しません**(下記「様式にない項目・セクションを表示しない仕組み」)。

@@ -73,6 +73,16 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 - `supabase/migrations/0012_transcription_aid.sql`:生成文書の種類に「転記補助シート」を追加します(0011 の実行後)。
 - `supabase/migrations/0014_form_fields.sql`:公式申請書の追加入力項目(旅券番号、犯罪を理由とする処分、在日親族、職歴など)の保存先 `form_details` を追加します。0013(役割)の実行後に実行してください。個人情報を含むため、実行前にバックアップを取得してください。実行せずに最新のアプリを使うと、案件の読み込みが失敗します。
 
-## 0016(手続種別「在留資格取得許可申請」)
+## 0017(手続種別「在留資格取得許可申請」)
 
-- `supabase/migrations/0016_procedure_type_acquisition.sql`:`cases.procedure_type` の許可する値に `acquisition` を追加します。既存データへの影響はありません。実行せずに最新のアプリを使うと、手続種別「在留資格取得許可申請」の案件を保存できません。
+- `supabase/migrations/0017_procedure_type_acquisition.sql`:`cases.procedure_type` の許可する値に `acquisition` を追加します。既存データへの影響はありません。実行せずに最新のアプリを使うと、手続種別「在留資格取得許可申請」の案件を保存できません(他の手続種別は従来どおり動作します)。
+- 適用順は、0016(`0016_generated_documents_xlsx.sql`、差し込み済みエクセル)の次に 0017 です(番号は、PR #97 の 0016 と重ならないよう 0017 にしました)。0016 が未適用の環境でも、0017 の内容は 0016 に依存しません(適用順は番号順を保つこと)。
+- 実行前に、バックアップを取得し、本番の制約名を確認してください。ファイルは `cases_procedure_type_check` を drop して付け直します。制約名が異なる環境では、`drop constraint if exists` が何もせず、古い制約が残ったまま新しい制約が追加され、`acquisition` を保存できません。
+
+  ```sql
+  select conname, pg_get_constraintdef(oid)
+  from pg_constraint
+  where conrelid = 'public.cases'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%procedure_type%';
+  ```
+
+  `cases_procedure_type_check` 以外の名前が返った場合は、その名前に合わせてファイルを読み替えてください。

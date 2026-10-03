@@ -83,7 +83,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "accompanied"
       | "entryHistory"
       | "coeHistory"
-      | "deportationHistory",
+      | "deportationHistory"
+      | "acquisitionCause",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -170,11 +171,14 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("mobilePhone")}
         {text("passportNumber")}
         {text("passportExpiry", { date: true })}
+        {select("acquisitionCause", [["birth", "出生"], ["nationalityLoss", "国籍離脱・喪失"], ["other", "その他"]])}
+        {form.acquisitionCause === "other" && text("acquisitionCauseOther")}
+        {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: "例：3年" })}
         {layout.desiredStatusLabel && (
           // 希望する在留資格は、案件情報の targetStatus を表示するのみ（二重入力を避ける）
           <div>
-            <Field label={layout.desiredStatusLabel} hint={`案件情報の「${record.procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"}」です。この画面では入力しません。`}>
+            <Field label={layout.desiredStatusLabel} hint={`案件情報の「${layout.desiredStatusCaseLabel ?? "希望する在留資格"}」です。この画面では入力しません。`}>
               <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                 <span className="font-medium">{record.targetStatus || "未設定"}</span>
                 {onGoOverview && (
@@ -304,6 +308,11 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("legalRepRelationship")}
         {text("legalRepAddress", { wide: true })}
         {text("legalRepPhone")}
+        {text("guarantorName")}
+        {text("guarantorRelationship")}
+        {text("guarantorAddress", { wide: true })}
+        {text("guarantorPhone")}
+        {text("guarantorMobilePhone")}
         {text("agentName")}
         {text("agentAddress", { wide: true })}
         {text("agentAffiliation")}

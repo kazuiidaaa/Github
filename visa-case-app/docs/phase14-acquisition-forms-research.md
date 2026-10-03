@@ -61,7 +61,7 @@
 | 17 代理人 | `FormDetails.legalRepName`・`legalRepRelationship`・`legalRepAddress`・`legalRepPhone` | 既存を流用(項目の意味が同じ) |
 | 取次者 | `FormDetails.agentName` 等 | 既存を流用 |
 
-代理人(17)は、更新様式の「22 代理人」と同じ意味(法定代理人による申請の場合)なので、既存項目を流用し、新規項目を増やさない。携帯電話番号(17の欄にある)は、既存に項目がなく、更新様式の22にもないため、追加しない(必要になれば別Issueで対応)。
+代理人(17)は、更新様式の「22 代理人」と同じ意味(法定代理人による申請の場合)なので、既存項目を流用し、新規項目を増やさない。携帯電話番号(17の欄にある)は、既存に項目がなく、更新様式の22にもないため、追加しない(別Issue扱い。6章の整合も参照)。
 
 ## 4. 自動差し込みの可否と手動確認
 
@@ -73,22 +73,28 @@
 
 - 手続種別 `acquisition`(ラベル「在留資格取得許可申請」)を `PROCEDURE_TYPES` に追加した。`needsTarget`(新規案件作成・案件情報編集)に含め、「希望する在留資格」を必須の入力とした。
 - 希望する在留資格の選択肢は、既存の全在留資格のままとした(Issueが許容)。様式の4種+その他に限定すると、`RESIDENCE_STATUSES`・`STATUS_HINTS`・規則との整合の確認が必要になるため、見送った。
-- 「公式様式項目」タブは、`procedureType === "acquisition"` のとき、更新様式向けのセクション(申請人等作成用1・2、職歴、所属機関等)を表示せず、取得様式の項目番号どおりのセクションを表示する。更新様式の表示・動作は変えない。項目番号つきのラベルは、`lib/formDetails.ts` の `ACQUISITION_LABELS` に持つ。
+- 「公式様式項目」タブは、手続種別ごとの項目番号表(`lib/formDetails.ts` の `FORM_LAYOUTS`)に、取得の `ACQUISITION_LAYOUT` を登録して表示する。画面(`FormDetailsForm`)に取得専用の分岐は置かない。取得様式にない職歴・所属機関等・学歴区分は、`sectionTitles`・`labels` に書かないことで隠す(仕組みは `docs/phase12-change-forms-research.md` の7章)。取得固有の項目(11・12・16)は、`text()`・`select()` の1行ずつで足している。更新・変更・認定・その他の表示は変えず、`tests/formDetails.test.ts` と `tests/formDetailsForm.test.tsx`(画面の描画)で固定している。
+- 「9 電話番号」は、変更・認定と同じく、住居地の欄にあることを示す表記(「9 電話番号(住居地の欄)」)にした。
+- 手続種別の「希望する在留資格」の入力要否は、`procedureNeedsTarget`(`lib/types.ts`)に切り出し、新規案件作成と案件情報編集の2画面で共用する(従来は同じ式を2か所に複製していた)。
 - 「雇用・会社」タブは、取得案件でも従来どおり開けるが、入力は必須ではない。必要書類の判定は、取得の規則が未整備のため「対象外」の案内を表示し、「雇用・会社」の入力を求めない(`lib/requirements/evaluate.ts`、変更なし)。他タブ・書類作成は、`EmploymentInfo` が空でも動作する。
-- データベースの手続種別の制約(`cases.procedure_type` の check)に `acquisition` を加える移行 `supabase/migrations/0016_procedure_type_acquisition.sql` を追加した。本番では、アプリの更新前または同時に実行する(未実行だと、取得案件の保存が失敗する)。
+- データベースの手続種別の制約(`cases.procedure_type` の check)に `acquisition` を加える移行 `supabase/migrations/0017_procedure_type_acquisition.sql` を追加した。番号は、PR #97 の `0016_generated_documents_xlsx.sql` と重ならないよう 0017 とし、適用順は 0016 の次に 0017 とする。本番では、実行前に制約名(`cases_procedure_type_check`)を確認し(手順は `supabase/README.md`)、アプリの更新前または同時に実行する(未実行だと、取得案件の保存が失敗する)。
 
-## 6. #83(変更許可申請)・#85(認定)との衝突が想定される箇所
+## 6. #83(変更)・#85(認定)・#100・#101 との関係
 
-#83 は、`FormDetailsForm.tsx` に手続種別ごとの項目番号表を導入する。本Issueは、これに依存せず、追加中心で実装した。マージ時は次を調整する。
+#83 は #100 としてマージ済みで、手続種別ごとの項目番号表(`FORM_LAYOUTS`)と、変更様式の項目(`placeOfBirth` など)を導入した。#85 の PR #101(認定)は、様式にない項目・セクションを表示しない仕組み(`sectionTitles` の `Partial` 化、`labels` にない項目の非表示、`validateFormDetails(f, layout)` の様式別検査)を追加している。本Issue(#87、PR #99)は、当初は追加中心の実装だったが、これらに合わせて作り直した。
 
-- `lib/formDetails.ts`:`FormDetails`・`EMPTY_FORM_DETAILS` の末尾に追加した(`placeOfBirth` は #83 と同名。重複した場合は一方を残す)。`ACQUISITION_LABELS` は、#83 の項目番号表に統合できる(キーは `FormDetails` のキー)。
-- `components/FormDetailsForm.tsx`:`isAcquisition` による分岐(取得用の2つのセクション、更新用セクションの条件表示)と、親族の見出し1行。#83 が項目番号をハードコードから表引きに書き換えた場合、取得用セクションのラベルを、その表へ移すのが望ましい。
-- `lib/types.ts`:`PROCEDURE_TYPES` に1要素を追加(#85 が `coe` を変更する場合、近接した行で競合しうる)。
-- `app/cases/new/page.tsx`・`components/CaseInfoEditor.tsx`:`needsTarget` の1行(#85 と同じ行を変更しうる)。
-- 移行ファイル番号:0016 を使用した。他のIssueが同番号を使う場合は、番号を振り直す。
+- PR #99 のブランチは、最新の `main` と、PR #101 のブランチ(`claude/issue-85-coe-form-fields`)をマージして作っている。PR #101 は未マージのため、PR #99 の差分には #101 の変更も含まれる。#101 がマージされると、PR #99 の差分は取得の分のみに縮む。
+- `lib/formDetails.ts`:`placeOfBirth` は #100 の1項目を共用する(重複して追加しない)。`ACQUISITION_LABELS` は廃止し、`FORM_LAYOUTS.acquisition`(`ACQUISITION_LAYOUT`)に統合した。取得は項番が異なるため `COMMON_LABELS` を展開せず、`UNNUMBERED_LABELS`(取次者、番号を含まない項目名)のみを展開している。
+- `components/FormDetailsForm.tsx`:`isAcquisition` の分岐は廃止した。取得固有の項目(11 取得の事由、12 在留の理由、16 身元保証人)を `text()`・`select()` で足した。
+- `lib/types.ts`:`PROCEDURE_TYPES` に `acquisition` を追加し、`needsTarget` の複製(新規案件作成・案件情報編集)を `procedureNeedsTarget` に切り出した。
+- 移行ファイル番号:0017(5章)。
+
+### 追加した項目・追加しない項目の判断
+- 身元保証人(16)は、様式にあり、更新・変更・認定の既存項目に対応するものがないため、`guarantor*` の5項目を追加した。
+- 代理人(17)は、更新様式の「22 代理人」と同じ意味のため、既存項目を流用した。その携帯電話番号は、様式の17の欄にはあるが、更新(22)・変更・認定の代理人欄の既存項目に携帯電話番号がなく、取得のためだけに項目を足すと様式間の整合が崩れる。このため追加せず、別Issueで、代理人の携帯電話番号を全様式でまとめて扱う(判断の根拠は、既存項目の流用を優先し、様式固有で既存にない項目のみ追加するという方針。身元保証人は後者に当たる)。
 
 ## 7. 未対応(別Issue)
 
 - 取得様式のExcel差し込み・転記補助シート。
 - 取得の必要書類の規則。
-- 17 代理人の携帯電話番号。
+- 17 代理人の携帯電話番号(全様式の代理人欄の項目として、まとめて別Issueで扱う)。

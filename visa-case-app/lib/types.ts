@@ -28,6 +28,16 @@ export const PROCEDURE_TYPES = [
 
 export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 
+/** 変更後・希望する在留資格を案件情報で入力する手続か（更新・その他は現在の在留資格のまま） */
+export function procedureNeedsTarget(type: ProcedureType | ""): boolean {
+  return type === "change" || type === "coe" || type === "acquisition";
+}
+
+/** 案件情報の「変更後／希望する在留資格」の入力欄の名称 */
+export function targetStatusLabel(type: ProcedureType | ""): string {
+  return type === "change" ? "変更後の在留資格" : "希望する在留資格";
+}
+
 /** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
 export const RESIDENCE_STATUSES = [
   "外交",
