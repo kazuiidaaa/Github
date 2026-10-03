@@ -146,9 +146,11 @@ export function UploadBox({
                 e.target.value = "";
               }}
             />
-            <p className={`${compact ? "mt-2" : "mt-3"} text-xs text-slate-500`}>
-              対応形式：{FORMAT_LABEL_BY_DOCUMENT_TYPE[documentType]}　最大サイズ：{MAX_FILE_BYTES / 1024 / 1024}MB
-            </p>
+            {!compact && (
+              <p className="mt-3 text-xs text-slate-500">
+                対応形式：{FORMAT_LABEL_BY_DOCUMENT_TYPE[documentType]}　最大サイズ：{MAX_FILE_BYTES / 1024 / 1024}MB
+              </p>
+            )}
           </>
         )}
       </div>
