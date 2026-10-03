@@ -1,4 +1,7 @@
-import type { CaseFilter, SortKey } from "@/lib/caseMetrics";
+"use client";
+
+import { useState } from "react";
+import { countActiveFilters, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS } from "@/lib/types";
 
 const select = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm";
@@ -14,16 +17,32 @@ export function CaseFilters({
   onChange: (patch: Partial<CaseFilter>) => void;
   onReset: () => void;
 }) {
+  // スマートフォン幅では既定で折りたたみ、条件が有効なときは展開して開始する。md 以上は常時展開。
+  const [open, setOpen] = useState(() => active || countActiveFilters(filter) > 0);
+  const count = countActiveFilters(filter);
   return (
     <div className="mb-4 space-y-3">
       <div className="flex flex-wrap gap-3">
         <input
-          className="w-72 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm md:w-72"
           placeholder="氏名・案件名で検索"
           aria-label="氏名・案件名で検索"
           value={filter.query}
           onChange={(e) => onChange({ query: e.target.value })}
         />
+        <button
+          type="button"
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm md:hidden"
+          aria-expanded={open}
+          aria-controls="case-filter-panel"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? "絞り込みを閉じる" : "絞り込み"}
+          {count > 0 && `（${count}件有効）`}
+        </button>
+      </div>
+      <div id="case-filter-panel" className={`space-y-3 ${open ? "block" : "hidden md:block"}`}>
+      <div className="flex flex-wrap gap-3">
         <select className={select} aria-label="手続種別" value={filter.procedure} onChange={(e) => onChange({ procedure: e.target.value })}>
           <option value="all">手続種別：すべて</option>
           {PROCEDURE_TYPES.map((p) => (
@@ -71,6 +90,7 @@ export function CaseFilters({
             条件をリセット
           </button>
         )}
+      </div>
       </div>
     </div>
   );

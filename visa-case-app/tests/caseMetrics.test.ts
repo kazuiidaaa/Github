@@ -1,6 +1,6 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { applyFilter, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, summarize } from "../lib/caseMetrics";
+import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, summarize } from "../lib/caseMetrics";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function dateIn(days: number): string {
@@ -104,6 +104,19 @@ describe("在留カード未登録の絞り込み", () => {
     none2.documents = [];
     const rows = applyFilter([withDoc, none1, none2], { ...DEFAULT_FILTER, noCard: true });
     expect(rows.map((r) => r.record.id).sort()).toEqual(["b", "c"]);
+  });
+});
+
+describe("countActiveFilters", () => {
+  it("既定値では 0、並び順は数えない", () => {
+    expect(countActiveFilters(DEFAULT_FILTER)).toBe(0);
+    expect(countActiveFilters({ ...DEFAULT_FILTER, sort: "expiry" })).toBe(0);
+  });
+  it("有効な条件の数を返す（空白のみの検索語は数えない）", () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTER, query: "  " })).toBe(0);
+    expect(
+      countActiveFilters({ ...DEFAULT_FILTER, query: "a", status: "x", within30: true, checksPending: true }),
+    ).toBe(4);
   });
 });
 
