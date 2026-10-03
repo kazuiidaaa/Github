@@ -104,7 +104,7 @@ export interface OfficialFormContent {
   applicantConfirmed: boolean;
   /** 差し込みエンジンの warnings と、対象外の案件の注意 */
   warnings: string[];
-  input: { applicant: Applicant; employment: EmploymentInfo; formDetails: FormDetails; currentStatus: string };
+  input: { applicant: Applicant; employment: EmploymentInfo; formDetails: FormDetails; currentStatus: string; targetStatus?: string };
 }
 
 /** 生成時点の案件情報の写し。生成後に案件が変わっても、この内容は変わらない */
