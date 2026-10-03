@@ -16,6 +16,7 @@ import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
+import { UPLOADED_DOCUMENT_LABELS, findDocumentOfType, removeDocumentOfType } from "@/lib/documentKinds";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import {
@@ -64,7 +65,7 @@ function DocumentRow({
   return (
     <div className="px-6 py-3 text-sm">
       <div className="flex items-center justify-between">
-        <span>在留カード：{doc.fileName}</span>
+        <span>{UPLOADED_DOCUMENT_LABELS[doc.documentType]}：{doc.fileName}</span>
         <span className="flex items-center gap-3">
           <Badge tone="blue">
             {DOCUMENT_STATUS_LABELS[doc.status]}
@@ -110,10 +111,16 @@ export default function CaseDetailPage() {
     );
   }
 
-  const doc = record.documents[0];
+  const doc = findDocumentOfType(record.documents, "residence_card");
+  const photo = findDocumentOfType(record.documents, "photo");
 
   function removeDocument(d: DocumentRecord) {
-    updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
+    updateCase(record!.id, (c) => ({
+      ...c,
+      // 証明写真の削除は、申請人情報の進行状況に影響しない
+      workflowStatus: d.documentType === "photo" ? c.workflowStatus : "preparing",
+      documents: removeDocumentOfType(c.documents, d.documentType),
+    }));
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
   }
   const a = record.applicant;
@@ -238,7 +245,7 @@ export default function CaseDetailPage() {
 
       {tab === "documents" && (
         <div className="space-y-6">
-          {canEdit && record.documents.length === 0 && (
+          {canEdit && !doc && (
             <p className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
               最初に、在留カードを登録してください。登録後に、「申請人情報」タブで、原本を見ながら内容を入力します。
             </p>
@@ -252,6 +259,9 @@ export default function CaseDetailPage() {
               }}
             />
           )}
+          {canEdit && (
+            <UploadBox caseId={record.id} documentType="photo" currentFileName={photo?.fileName} onUploaded={() => {}} />
+          )}
           <section className="rounded-lg border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
             {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
@@ -259,7 +269,7 @@ export default function CaseDetailPage() {
               <DocumentRow
                 key={d.id}
                 doc={d}
-                locked={record.workflowStatus === "applicant_confirmed"}
+                locked={d.documentType === "residence_card" && record.workflowStatus === "applicant_confirmed"}
                 readOnly={!canEdit}
                 onDelete={() => setDocToDelete(d)}
               />

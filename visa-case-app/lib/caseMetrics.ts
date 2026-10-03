@@ -1,5 +1,6 @@
 import { unresolvedCount } from "./checks/definitions";
 import { evaluate } from "./requirements/evaluate";
+import { hasResidenceCard } from "./documentKinds";
 import { daysUntil } from "./format";
 import type { CaseRecord } from "./types";
 
@@ -125,7 +126,7 @@ export function applyFilter(cases: CaseRecord[], f: CaseFilter): CaseRow[] {
       if (f.status !== "all" && c.workflowStatus !== f.status) return false;
       if (f.within30 && !m.within30) return false;
       if (f.missingDocs && m.missingCount === 0) return false;
-      if (f.noCard && c.documents.length > 0) return false;
+      if (f.noCard && hasResidenceCard(c)) return false;
       if (f.unconfirmed && !m.unconfirmed) return false;
       if (f.checksPending && !m.checksPending) return false;
       return true;
