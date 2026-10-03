@@ -4,15 +4,18 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
+import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
 import { Badge, Button } from "@/components/ui";
 import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
 import { splitHistory } from "@/lib/documents/history";
+import { officialFormScopeWarnings } from "@/lib/documents/officialForms";
 import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
   INTERNAL_DOCUMENT_TYPES,
   OUTPUT_FORMAT_LABELS,
   type GeneratedDocument,
+  isOfficialForm,
   type InternalDocumentType,
 } from "@/lib/documents/types";
 import { unresolvedCount } from "@/lib/checks/definitions";
@@ -26,7 +29,7 @@ export default function DocumentsPage() {
   const storeLoaded = useStoreLoaded();
   const canEdit = useCan("edit");
   const { documents, loaded, error } = useGeneratedDocuments(id);
-  const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => t !== "transcription_aid"));
+  const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => !isOfficialForm(t)));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -65,6 +68,12 @@ export default function DocumentsPage() {
   }
 
   const ev = evaluate(record);
+  const officialSelected = selected.some(isOfficialForm);
+  const scopeWarnings = officialFormScopeWarnings({
+    procedureType: record.procedureType,
+    currentStatus: record.currentStatus,
+    residenceStatus: record.applicant.residenceStatus,
+  });
   const checksDone = record.checks.length > 0 ? `${unresolvedCount(record.checks)}件が未解決` : "未実施";
 
   async function generate() {
@@ -105,7 +114,7 @@ export default function DocumentsPage() {
 
       <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
         この文書は、現在保存されている案件情報から生成されます。出力後、行政書士が内容を確認してください。
-        生成した文書は内部確認用であり、公式の申請様式ではありません。
+        生成した文書は内部確認用であり、公式の申請様式ではありません（「公式申請様式」は、公式のエクセル様式へ案件情報を差し込んだ下書きです）。
       </p>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 text-sm">
@@ -133,6 +142,7 @@ export default function DocumentsPage() {
                 onChange={(e) => setSelected((s) => (e.target.checked ? [...s, t] : s.filter((x) => x !== t)))}
               />
               {DOCUMENT_TYPE_LABELS[t]}
+              {isOfficialForm(t) && <span className="text-xs text-slate-500">（エクセル）</span>}
             </label>
           ))}
           <label className="flex items-center gap-2 text-slate-400">
@@ -140,6 +150,16 @@ export default function DocumentsPage() {
             {DOCUMENT_TYPE_LABELS.reason_statement}（今後対応）
           </label>
         </div>
+        {officialSelected && (
+          <div className="mt-4 space-y-2">
+            {scopeWarnings.map((w) => (
+              <p key={w} role="alert" className="rounded-md bg-amber-50 p-3 text-sm font-medium text-amber-900">
+                注意：{w}（生成はできます）
+              </p>
+            ))}
+            <OfficialFormNotice />
+          </div>
+        )}
         <div className="mt-4 flex items-center gap-3">
           <Button onClick={() => void generate()} disabled={busy || selected.length === 0 || !canEdit}>
             {busy ? "生成中……" : "生成して保存"}

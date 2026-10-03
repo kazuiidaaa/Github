@@ -6,7 +6,10 @@ import { logAudit, newId } from "../store";
 import { localKey } from "../demo";
 import { supabase, usesSupabase } from "../supabase";
 import type { CaseRecord } from "../types";
+import { mergeCreated, sortDocuments } from "./merge";
 import { buildContent, titleOf } from "./snapshot";
+import { XLSX_MIME, requestOfficialXlsx } from "./officialFormClient";
+import { officialFormInputOf } from "./officialForms";
 import type {
   ContentJson,
   GeneratedDocument,
@@ -15,6 +18,7 @@ import type {
   InternalDocumentType,
   OutputFormat,
 } from "./types";
+import { isOfficialForm } from "./types";
 
 // 生成文書の保存。案件のストアとは独立させ、接続情報の有無で保存先だけを切り替える。
 
@@ -71,11 +75,7 @@ function fromRow(r: Row): GeneratedDocument {
   };
 }
 
-function sorted(list: GeneratedDocument[]): GeneratedDocument[] {
-  return [...list].sort(
-    (a, b) => a.documentType.localeCompare(b.documentType) || b.version - a.version,
-  );
-}
+const sorted = sortDocuments;
 
 function readLocal(): GeneratedDocument[] {
   try {
@@ -127,6 +127,11 @@ export function resetDocuments() {
   emit();
 }
 
+/** 画面状態の現在値（テスト用。画面は useGeneratedDocuments を使う） */
+export function getGeneratedDocuments(caseId: string): GeneratedDocument[] {
+  return byCase[caseId] ?? EMPTY;
+}
+
 export function useGeneratedDocuments(caseId: string): {
   documents: GeneratedDocument[];
   loaded: boolean;
@@ -144,41 +149,55 @@ export function useGeneratedDocuments(caseId: string): {
 /** 選択した種類の文書を、現在の案件情報から新しい版として生成する。上書きはしない */
 export async function generateDocuments(record: CaseRecord, types: InternalDocumentType[]): Promise<void> {
   const created: GeneratedDocument[] = [];
-  for (const type of types) {
-    const content = buildContent(record, type);
-    const title = titleOf(record, type);
-    let doc: GeneratedDocument;
-    if (usesSupabase()) {
-      const { data, error: e } = await db().rpc("create_generated_document", {
-        p_case_id: record.id,
-        p_document_type: type,
-        p_title: title,
-        p_content: content,
-      });
-      if (e) throw toAppError(e);
-      doc = fromRow(data as Row);
-    } else {
-      const all = readLocal();
-      const version =
-        Math.max(0, ...all.filter((d) => d.caseId === record.id && d.documentType === type).map((d) => d.version)) + 1;
-      doc = {
-        id: newId(),
-        caseId: record.id,
-        outputFormat: "html",
-        documentType: type,
-        title,
-        version,
-        content,
-        status: "draft",
-        createdAt: new Date().toISOString(),
-      };
-      writeLocal([...all, doc]);
+  try {
+    for (const type of types) {
+      // 公式様式（Excel）は、先にエクセルを作る（失敗した場合は、版を作らない）。
+      // 差し込みの warnings は、生成時点の注意として content_json に保存する
+      const official = isOfficialForm(type) ? await requestOfficialXlsx(record.procedureType, officialFormInputOf(record)) : undefined;
+      const content = buildContent(record, type, new Date(), official?.warnings);
+      const title = titleOf(record, type);
+      let doc: GeneratedDocument;
+      if (usesSupabase()) {
+        const { data, error: e } = await db().rpc("create_generated_document", {
+          p_case_id: record.id,
+          p_document_type: type,
+          p_title: title,
+          p_content: content,
+        });
+        if (e) throw toAppError(e);
+        doc = fromRow(data as Row);
+      } else {
+        const all = readLocal();
+        const version =
+          Math.max(0, ...all.filter((d) => d.caseId === record.id && d.documentType === type).map((d) => d.version)) + 1;
+        doc = {
+          id: newId(),
+          caseId: record.id,
+          outputFormat: "html",
+          documentType: type,
+          title,
+          version,
+          content,
+          status: "draft",
+          createdAt: new Date().toISOString(),
+        };
+        writeLocal([...all, doc]);
+      }
+      created.push(doc);
+      logAudit(record.id, "document_generated", { type, version: doc.version });
+      if (official) {
+        // 保存した版（画面）から、エクセルを新しい版として保存する。画面の版には、注意と出典が残る
+        const xlsx = await exportFile(doc, "xlsx", official.blob);
+        created.push(xlsx);
+      }
     }
-    created.push(doc);
-    logAudit(record.id, "document_generated", { type, version: doc.version });
+  } finally {
+    // 途中で失敗しても、保存済みの版は画面へ反映する（例外はそのまま呼び出し元へ伝わる）
+    if (created.length > 0) {
+      byCase = { ...byCase, [record.id]: mergeCreated(byCase[record.id] ?? [], created) };
+      emit();
+    }
   }
-  byCase = { ...byCase, [record.id]: sorted([...(byCase[record.id] ?? []), ...created]) };
-  emit();
 }
 
 /** 状態を変更する。内容（content_json）は変更しない */
@@ -221,13 +240,14 @@ if (typeof window !== "undefined" && supabase) {
 const MIME = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
+  xlsx: XLSX_MIME,
 } as const;
 const FILE_BUCKET = "generated-documents";
 
 export type FileFormat = keyof typeof MIME;
 
 export function fileNameOf(doc: GeneratedDocument): string {
-  const ext = doc.outputFormat === "pdf" ? "pdf" : "docx";
+  const ext = doc.outputFormat === "pdf" ? "pdf" : doc.outputFormat === "xlsx" ? "xlsx" : "docx";
   return `${doc.title}_v${doc.version}.${ext}`.replace(/[\\/:*?"<>|]/g, "_");
 }
 
@@ -244,6 +264,12 @@ function saveBlob(blob: Blob, fileName: string) {
 
 /** 保存済みの内容から、出力形式に応じたファイルを作る。現在の案件情報は参照しない */
 async function buildFile(doc: GeneratedDocument): Promise<Blob> {
+  if (doc.outputFormat === "xlsx") {
+    // 保存した入力値の写しから作る（現在の案件情報は参照しない）
+    const o = doc.content.officialForm;
+    if (!o) throw new AppError("この版には、エクセルを作るための情報がありません。");
+    return (await requestOfficialXlsx(doc.content.case.procedureType, o.input)).blob;
+  }
   if (doc.outputFormat === "pdf") {
     const { buildPdf, loadJapaneseFont } = await import("./pdf");
     return buildPdf(doc, await loadJapaneseFont());
@@ -253,10 +279,15 @@ async function buildFile(doc: GeneratedDocument): Promise<Blob> {
 }
 
 /**
- * 保存済みの内容（content_json）から、WordまたはPDFを新しい版として出力する。
+ * 保存済みの内容（content_json）から、Word・PDF・エクセルを新しい版として出力する。
  * 元の版は変更しない。出力した版は「行政書士確認前」から始まる。
  */
-export async function exportFile(source: GeneratedDocument, format: FileFormat): Promise<GeneratedDocument> {
+export async function exportFile(
+  source: GeneratedDocument,
+  format: FileFormat,
+  /** すでに作ったファイルがあれば渡す（エクセルを二重に作らないため） */
+  prebuilt?: Blob,
+): Promise<GeneratedDocument> {
   const id = newId();
   const fresh: GeneratedDocument = {
     ...source,
@@ -271,7 +302,7 @@ export async function exportFile(source: GeneratedDocument, format: FileFormat):
   if (usesSupabase()) {
     if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
     const path = `${source.organizationId}/${source.caseId}/${id}.${format}`;
-    const blob = await buildFile(fresh);
+    const blob = prebuilt ?? (await buildFile(fresh));
     const up = await db().storage.from(FILE_BUCKET).upload(path, blob, { contentType: MIME[format] });
     if (up.error) throw toAppError(up.error);
     const { data, error: e } = await db().rpc("register_generated_file", {

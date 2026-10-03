@@ -1,0 +1,70 @@
+import type { CaseRecord, ProcedureType } from "../types";
+import type { OfficialFormContent } from "./types";
+
+// 公式様式（Excel）の、手続種別ごとの定義。画面とサーバーの両方から使う（node:fs は使わない）。
+//
+// 【後続の #84（変更）・#86（認定）・#88（取得）の追加方法】
+//  1. このファイルの OFFICIAL_FORM_SPECS に、手続種別の定義（様式の出典・対象範囲の判定）を足す。
+//  2. lib/documents/excelFill/index.ts の FILLERS に、その手続種別の差し込み関数を足す。
+//  3. 画面（app/cases/[id]/documents/page.tsx）・生成履歴・API は、手続種別を意識せず、この2か所だけで切り替わる。
+// 詳細は docs/phase11-official-form-ui.md。
+
+export interface OfficialFormScope {
+  procedureType: ProcedureType;
+  /** 案件の「現在の在留資格」 */
+  currentStatus: string;
+  /** 申請人情報の在留資格 */
+  residenceStatus: string;
+}
+
+export interface OfficialFormSpec {
+  /** この様式が対象とする手続種別 */
+  procedureType: ProcedureType;
+  /** 例：「在留期間更新許可申請書（技術・人文知識・国際業務）」 */
+  label: string;
+  form: OfficialFormContent["form"];
+  /** 案件が、この様式の対象範囲か */
+  isInScope(s: OfficialFormScope): boolean;
+  /** 対象外の案件のときの注意 */
+  outOfScopeWarning: string;
+}
+
+const RENEWAL_TARGET_STATUS = "技術・人文知識・国際業務";
+
+export const RENEWAL_SPEC: OfficialFormSpec = {
+  procedureType: "renewal",
+  label: `在留期間更新許可申請書（${RENEWAL_TARGET_STATUS}）`,
+  form: {
+    formName: "別記第三十号の二様式（第二十一条関係）在留期間更新許可申請書（Excel）",
+    fileId: "930004095",
+    sourceUrl: "https://www.moj.go.jp/isa/content/930004095.xlsx",
+    confirmedOn: "2026-10-02",
+  },
+  isInScope: (s) =>
+    s.procedureType === "renewal" &&
+    (s.currentStatus.includes(RENEWAL_TARGET_STATUS) || s.residenceStatus.includes(RENEWAL_TARGET_STATUS)),
+  outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_TARGET_STATUS}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
+};
+
+/** 手続種別ごとの様式。未対応の手続種別は、現時点では更新の様式を、注意を付けて使う */
+export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec>> = {
+  renewal: RENEWAL_SPEC,
+};
+
+/** 差し込みに使う様式。手続種別に専用の様式がなければ、更新の様式（対象外の注意が付く） */
+export function officialFormSpecFor(procedureType: ProcedureType): OfficialFormSpec {
+  return OFFICIAL_FORM_SPECS[procedureType] ?? RENEWAL_SPEC;
+}
+
+/** 対象外の案件の注意（なければ空）。画面の事前表示と、生成時の warnings の両方で同じ文言を使う */
+export function officialFormScopeWarnings(s: OfficialFormScope): string[] {
+  const spec = officialFormSpecFor(s.procedureType);
+  return spec.procedureType === s.procedureType && spec.isInScope(s) ? [] : [spec.outOfScopeWarning];
+}
+
+/** 案件の現在の内容から、差し込みの入力値の写しを作る（値はすべて複製し、案件への参照は持たない） */
+export function officialFormInputOf(c: CaseRecord): OfficialFormContent["input"] {
+  return JSON.parse(
+    JSON.stringify({ applicant: c.applicant, employment: c.employment, formDetails: c.formDetails, currentStatus: c.currentStatus }),
+  ) as OfficialFormContent["input"];
+}

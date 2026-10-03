@@ -5,9 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { DocumentSheet } from "@/components/documents/DocumentSheet";
+import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
 import { Button } from "@/components/ui";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
-import { OUTPUT_FORMAT_LABELS } from "@/lib/documents/types";
+import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
 import { getConfirmerName, useCan, useCase } from "@/lib/store";
 
 export default function DocumentPreviewPage() {
@@ -36,7 +37,7 @@ export default function DocumentPreviewPage() {
   const stale = !!record && record.updatedAt > doc.content.source.caseUpdatedAt;
   const latest = documents.filter((d) => d.documentType === doc.documentType).reduce((m, d) => Math.max(m, d.version), 0);
 
-  async function file(mode: "docx" | "pdf" | "download") {
+  async function file(mode: "docx" | "pdf" | "xlsx" | "download") {
     if (!doc) return;
     setBusy(true);
     setMessage("");
@@ -84,6 +85,7 @@ export default function DocumentPreviewPage() {
             この版は{OUTPUT_FORMAT_LABELS[doc.outputFormat]}として出力・保存された版です。内容は変更できません。
           </p>
         )}
+        {isOfficialForm(doc.documentType) && <OfficialFormNotice />}
         {doc.version < latest && (
           <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
         )}
@@ -104,6 +106,10 @@ export default function DocumentPreviewPage() {
           {doc.outputFormat !== "html" ? (
             <Button variant="secondary" disabled={busy} onClick={() => void file("download")}>
               {OUTPUT_FORMAT_LABELS[doc.outputFormat]}をダウンロード
+            </Button>
+          ) : isOfficialForm(doc.documentType) ? (
+            <Button variant="secondary" disabled={busy || !canEdit} onClick={() => void file("xlsx")}>
+              {busy ? "出力中……" : "エクセル出力"}
             </Button>
           ) : (
             <>
