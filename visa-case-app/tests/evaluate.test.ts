@@ -1,6 +1,6 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { evaluate } from "../lib/requirements/evaluate";
+import { evaluate, hasRuleSetFor, notApplicableMessage } from "../lib/requirements/evaluate";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withholdingSpecial = false): CaseRecord {
@@ -125,5 +125,24 @@ describe("証明写真の登録と写真の行の状態（#52）", () => {
     const states = { photo: { status: "received" as const } };
     expect(stateOf(make({ requirementStates: states }))).toBe("received");
     expect(stateOf(make({ requirementStates: states, documents: [photoDoc] }))).toBe("received");
+  });
+});
+
+describe("案件作成画面向けの規則判定", () => {
+  it("対応する手続・在留資格の組み合わせでは true", () => {
+    expect(hasRuleSetFor("renewal", "技術・人文知識・国際業務")).toBe(true);
+  });
+
+  it("未整備の組み合わせでは false", () => {
+    expect(hasRuleSetFor("change", "技術・人文知識・国際業務")).toBe(false);
+    expect(hasRuleSetFor("coe", "技術・人文知識・国際業務")).toBe(false);
+    expect(hasRuleSetFor("renewal", "留学")).toBe(false);
+    expect(hasRuleSetFor("other", "")).toBe(false);
+  });
+
+  it("案内文は必要書類タブの未整備の案内と同一で、対応する組み合わせを示す", () => {
+    const reason = evaluate(make({ currentStatus: "留学" })).notApplicableReason;
+    expect(reason).toBe(notApplicableMessage());
+    expect(reason).toContain("「技術・人文知識・国際業務」の「在留期間更新許可申請」");
   });
 });

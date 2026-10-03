@@ -1,4 +1,4 @@
-import type { CaseRecord, RequirementState } from "../types";
+import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { isCollected } from "./progress";
 import { RULE_SETS, type RequirementRule, type RuleSet } from "./rules";
 
@@ -34,13 +34,29 @@ function normalize(s: string): string {
   return s.replace(/[\s・･]/g, "");
 }
 
+function matchRuleSet(procedureType: string, residenceStatus: string): RuleSet | null {
+  const status = normalize(residenceStatus);
+  return RULE_SETS.find((r) => r.procedureType === procedureType && status.includes(normalize(r.residenceStatus))) ?? null;
+}
+
 function findRuleSet(c: CaseRecord): RuleSet | null {
   // 下書きの入力は正式なデータではないため、確認済みの場合のみ優先する
   const confirmed = c.applicant.confirmationStatus === "confirmed";
-  const status = normalize((confirmed && c.applicant.residenceStatus) || c.currentStatus);
-  return (
-    RULE_SETS.find((r) => r.procedureType === c.procedureType && status.includes(normalize(r.residenceStatus))) ?? null
-  );
+  return matchRuleSet(c.procedureType, (confirmed && c.applicant.residenceStatus) || c.currentStatus);
+}
+
+/** 手続種別と在留資格（文字列）だけから、対応する規則があるかを判定する（案件作成画面の案内用） */
+export function hasRuleSetFor(procedureType: string, residenceStatus: string): boolean {
+  return matchRuleSet(procedureType, residenceStatus) !== null;
+}
+
+/** 規則が未整備の手続・在留資格に対する案内文。対応する組み合わせは RULE_SETS から生成する */
+export function notApplicableMessage(): string {
+  const supported = RULE_SETS.map((r) => {
+    const label = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label ?? r.procedureType;
+    return `「${r.residenceStatus}」の「${label}」`;
+  }).join("、");
+  return `この手続・在留資格の規則は未整備です。現在は${supported}のみ対応しています。`;
 }
 
 /**
@@ -61,8 +77,7 @@ export function evaluate(c: CaseRecord): Evaluation {
   if (!ruleSet) {
     return {
       ...empty,
-      notApplicableReason:
-        "この手続・在留資格の規則は未整備です。現在は「技術・人文知識・国際業務」の「在留期間更新許可申請」のみ対応しています。",
+      notApplicableReason: notApplicableMessage(),
     };
   }
 
