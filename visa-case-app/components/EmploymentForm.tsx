@@ -40,10 +40,10 @@ export function EmploymentFields({
             />
           </Field>
         ))}
-        <Field label="雇用開始日" error={dateError ? "YYYY-MM-DD の形式で入力してください。" : undefined}>
+        <Field label="雇用開始日" error={dateError ? "日付をカレンダーから選び直してください。" : undefined}>
           <input
+            type="date"
             className={inputClass}
-            placeholder="YYYY-MM-DD"
             value={form.employmentStartDate}
             onChange={(e) => set("employmentStartDate", e.target.value)}
           />
