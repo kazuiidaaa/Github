@@ -6,6 +6,7 @@ import { logAudit, newId } from "../store";
 import { localKey } from "../demo";
 import { supabase, usesSupabase } from "../supabase";
 import type { CaseRecord } from "../types";
+import { mergeCreated, sortDocuments } from "./merge";
 import { buildContent, titleOf } from "./snapshot";
 import { XLSX_MIME, requestOfficialXlsx } from "./officialFormClient";
 import { officialFormInputOf } from "./officialForms";
@@ -74,11 +75,7 @@ function fromRow(r: Row): GeneratedDocument {
   };
 }
 
-function sorted(list: GeneratedDocument[]): GeneratedDocument[] {
-  return [...list].sort(
-    (a, b) => a.documentType.localeCompare(b.documentType) || b.version - a.version,
-  );
-}
+const sorted = sortDocuments;
 
 function readLocal(): GeneratedDocument[] {
   try {
@@ -130,6 +127,11 @@ export function resetDocuments() {
   emit();
 }
 
+/** 画面状態の現在値（テスト用。画面は useGeneratedDocuments を使う） */
+export function getGeneratedDocuments(caseId: string): GeneratedDocument[] {
+  return byCase[caseId] ?? EMPTY;
+}
+
 export function useGeneratedDocuments(caseId: string): {
   documents: GeneratedDocument[];
   loaded: boolean;
@@ -147,50 +149,55 @@ export function useGeneratedDocuments(caseId: string): {
 /** 選択した種類の文書を、現在の案件情報から新しい版として生成する。上書きはしない */
 export async function generateDocuments(record: CaseRecord, types: InternalDocumentType[]): Promise<void> {
   const created: GeneratedDocument[] = [];
-  for (const type of types) {
-    // 公式様式（Excel）は、先にエクセルを作る（失敗した場合は、版を作らない）。
-    // 差し込みの warnings は、生成時点の注意として content_json に保存する
-    const official = isOfficialForm(type) ? await requestOfficialXlsx(record.procedureType, officialFormInputOf(record)) : undefined;
-    const content = buildContent(record, type, new Date(), official?.warnings);
-    const title = titleOf(record, type);
-    let doc: GeneratedDocument;
-    if (usesSupabase()) {
-      const { data, error: e } = await db().rpc("create_generated_document", {
-        p_case_id: record.id,
-        p_document_type: type,
-        p_title: title,
-        p_content: content,
-      });
-      if (e) throw toAppError(e);
-      doc = fromRow(data as Row);
-    } else {
-      const all = readLocal();
-      const version =
-        Math.max(0, ...all.filter((d) => d.caseId === record.id && d.documentType === type).map((d) => d.version)) + 1;
-      doc = {
-        id: newId(),
-        caseId: record.id,
-        outputFormat: "html",
-        documentType: type,
-        title,
-        version,
-        content,
-        status: "draft",
-        createdAt: new Date().toISOString(),
-      };
-      writeLocal([...all, doc]);
+  try {
+    for (const type of types) {
+      // 公式様式（Excel）は、先にエクセルを作る（失敗した場合は、版を作らない）。
+      // 差し込みの warnings は、生成時点の注意として content_json に保存する
+      const official = isOfficialForm(type) ? await requestOfficialXlsx(record.procedureType, officialFormInputOf(record)) : undefined;
+      const content = buildContent(record, type, new Date(), official?.warnings);
+      const title = titleOf(record, type);
+      let doc: GeneratedDocument;
+      if (usesSupabase()) {
+        const { data, error: e } = await db().rpc("create_generated_document", {
+          p_case_id: record.id,
+          p_document_type: type,
+          p_title: title,
+          p_content: content,
+        });
+        if (e) throw toAppError(e);
+        doc = fromRow(data as Row);
+      } else {
+        const all = readLocal();
+        const version =
+          Math.max(0, ...all.filter((d) => d.caseId === record.id && d.documentType === type).map((d) => d.version)) + 1;
+        doc = {
+          id: newId(),
+          caseId: record.id,
+          outputFormat: "html",
+          documentType: type,
+          title,
+          version,
+          content,
+          status: "draft",
+          createdAt: new Date().toISOString(),
+        };
+        writeLocal([...all, doc]);
+      }
+      created.push(doc);
+      logAudit(record.id, "document_generated", { type, version: doc.version });
+      if (official) {
+        // 保存した版（画面）から、エクセルを新しい版として保存する。画面の版には、注意と出典が残る
+        const xlsx = await exportFile(doc, "xlsx", official.blob);
+        created.push(xlsx);
+      }
     }
-    created.push(doc);
-    logAudit(record.id, "document_generated", { type, version: doc.version });
-    if (official) {
-      // 保存した版（画面）から、エクセルを新しい版として保存する。画面の版には、注意と出典が残る
-      const xlsx = await exportFile(doc, "xlsx", official.blob);
-      created.push(xlsx);
+  } finally {
+    // 途中で失敗しても、保存済みの版は画面へ反映する（例外はそのまま呼び出し元へ伝わる）
+    if (created.length > 0) {
+      byCase = { ...byCase, [record.id]: mergeCreated(byCase[record.id] ?? [], created) };
+      emit();
     }
   }
-  const known = new Set((byCase[record.id] ?? []).map((d) => d.id));
-  byCase = { ...byCase, [record.id]: sorted([...(byCase[record.id] ?? []), ...created.filter((d) => !known.has(d.id))]) };
-  emit();
 }
 
 /** 状態を変更する。内容（content_json）は変更しない */

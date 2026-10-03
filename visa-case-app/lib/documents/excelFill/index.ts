@@ -16,7 +16,7 @@ export interface FillInput {
 
 type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails) => Promise<{ buffer: Buffer; warnings: string[] }>;
 
-const FILLERS: Partial<Record<ProcedureType, Filler>> = {
+export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
   renewal: fillRenewalExcel,
 };
 
