@@ -7,6 +7,7 @@ import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { fillCurrentStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
+import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
 import type { Applicant, CaseRecord, DocumentRecord } from "@/lib/types";
 
@@ -79,17 +80,26 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     );
   }
 
-  function saveDraft() {
-    const next = validateDraft(form);
-    setErrors(next);
-    if (Object.keys(next).length > 0) return;
+  function persistDraft(f: Applicant, showErrors: boolean): boolean {
+    const next = validateDraft(f);
+    if (showErrors) setErrors(next);
+    if (Object.keys(next).length > 0) return false;
     updateCase(record.id, (c) => ({
       ...c,
       workflowStatus: "preparing",
-      applicant: { ...form, confirmationStatus: "draft", confirmedAt: undefined, confirmedBy: undefined },
+      applicant: { ...f, confirmationStatus: "draft", confirmedAt: undefined, confirmedBy: undefined },
     }));
     logAudit(record.id, "applicant_saved");
     setMessage("下書きを保存しました。");
+    return true;
+  }
+
+  // 下書きの間は、保存ボタンを押す前に画面が取り除かれても（タブ切替など）、下書きとして保存する。
+  // 確認済みの間は入力欄が無効のため対象外。「確認済みにする」は自動では行わない。
+  const { markSaved } = useAutoSaveForm(form, (f) => persistDraft(f, false), { enabled: !confirmed });
+
+  function saveDraft() {
+    if (persistDraft(form, true)) markSaved(form);
   }
 
   async function confirm() {
@@ -107,6 +117,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
       applicant: { ...form, confirmationStatus: "confirmed", confirmedAt: new Date().toISOString(), confirmedBy },
     }));
     logAudit(record.id, "applicant_confirmed");
+    markSaved(form);
     setMessage("確認済みにしました。");
   }
 

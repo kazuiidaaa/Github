@@ -11,6 +11,7 @@ import {
   type WorkEntry,
 } from "@/lib/formDetails";
 import { logAudit, newId, updateCase } from "@/lib/store";
+import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import type { CaseRecord } from "@/lib/types";
 
 type TextKey = {
@@ -93,11 +94,20 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     set("workHistory", form.workHistory.map((w) => (w.id === id ? { ...w, ...patch } : w)));
   }
 
-  function save() {
-    if (hasError) return;
-    updateCase(record.id, (c) => ({ ...c, formDetails: form }));
+  function persist(f: FormDetails): boolean {
+    // 誤りのある内容は保存しない（自動保存でも同じ）
+    if (Object.keys(validateFormDetails(f)).length > 0) return false;
+    updateCase(record.id, (c) => ({ ...c, formDetails: f }));
     logAudit(record.id, "form_details_saved");
     setSaved(true);
+    return true;
+  }
+
+  // 保存ボタンを押す前に画面が取り除かれても（タブ切替など）、誤りがなければ入力内容を保存する
+  const { markSaved } = useAutoSaveForm(form, persist);
+
+  function save() {
+    if (persist(form)) markSaved(form);
   }
 
   return (

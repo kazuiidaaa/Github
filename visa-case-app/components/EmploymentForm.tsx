@@ -5,6 +5,7 @@ import { Button, Field, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/requirements/rules";
 import { logAudit, updateCase } from "@/lib/store";
+import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import type { CaseRecord, EmploymentInfo, OrgCategory } from "@/lib/types";
 
 const TEXT_FIELDS: { key: keyof EmploymentInfo; label: string; placeholder?: string }[] = [
@@ -82,10 +83,19 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function save() {
-    updateCase(record.id, (c) => ({ ...c, employment: form }));
+  function persist(f: EmploymentInfo): boolean {
+    if (hasEmploymentDateError(f)) return false;
+    updateCase(record.id, (c) => ({ ...c, employment: f }));
     logAudit(record.id, "employment_saved");
     setSaved(true);
+    return true;
+  }
+
+  // 保存ボタンを押す前に画面が取り除かれても（タブ切替など）、入力内容を保存する
+  const { markSaved } = useAutoSaveForm(form, persist);
+
+  function save() {
+    if (persist(form)) markSaved(form);
   }
 
   return (
