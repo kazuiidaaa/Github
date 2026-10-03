@@ -83,7 +83,7 @@ describe("summarize / applyFilter", () => {
     expect(applyFilter(cases, { ...DEFAULT_FILTER, within30: true }).map((r) => r.record.id)).toEqual(["a"]);
   });
 
-  it("期限が近い順では未確認が末尾", () => {
+  it("期限が近い順では未入力が末尾", () => {
     expect(applyFilter(cases, { ...DEFAULT_FILTER, sort: "expiry" }).map((r) => r.record.id)).toEqual(["a", "b", "c"]);
   });
 

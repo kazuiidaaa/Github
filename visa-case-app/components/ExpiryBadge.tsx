@@ -7,7 +7,7 @@ const TONES = { overdue: "red", urgent: "red", caution: "yellow", normal: "green
 /** 在留期限の表示。業務上の注意喚起であり、申請の可否を示すものではない。 */
 export function ExpiryBadge({ date }: { date: string }) {
   const days = daysUntil(date);
-  if (days === null) return <span className="text-slate-400">未確認</span>;
+  if (days === null) return <span className="text-slate-400">未入力</span>;
   const level = expiryLevel(days);
   return (
     <span className="block">
