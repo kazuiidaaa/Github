@@ -19,28 +19,16 @@ const TEXT_FIELDS: { key: keyof EmploymentInfo; label: string; placeholder?: str
   { key: "contractPeriod", label: "契約期間", placeholder: "例：期間の定めなし" },
 ];
 
-export function EmploymentForm({ record }: { record: CaseRecord }) {
-  const [form, setForm] = useState<EmploymentInfo>(record.employment);
-  const [saved, setSaved] = useState(false);
-  const dateError = form.employmentStartDate !== "" && !isValidDate(form.employmentStartDate);
-
-  function set<K extends keyof EmploymentInfo>(key: K, value: EmploymentInfo[K]) {
-    setSaved(false);
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  function save() {
-    updateCase(record.id, (c) => ({ ...c, employment: form }));
-    logAudit(record.id, "employment_saved");
-    setSaved(true);
-  }
-
+/** 雇用・会社情報の入力欄。案件の詳細画面と、まとめて登録する画面で共用する */
+export function EmploymentFields({
+  form,
+  set,
+}: {
+  form: EmploymentInfo;
+  set: <K extends keyof EmploymentInfo>(key: K, value: EmploymentInfo[K]) => void;
+}) {
+  const dateError = hasEmploymentDateError(form);
   return (
-    <section className="max-w-3xl rounded-lg border border-slate-200 bg-white p-6">
-      <h2 className="mb-1 font-semibold">雇用・会社情報</h2>
-      <p className="mb-5 text-xs text-slate-500">
-        必要書類の判定に使用します。申請人の確認済み情報とは別に保存されます。
-      </p>
       <div className="grid gap-4 md:grid-cols-2">
         {TEXT_FIELDS.map((f) => (
           <Field key={f.key} label={f.label}>
@@ -77,6 +65,36 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
           源泉所得税の納期の特例の承認を受けている
         </label>
       </div>
+  );
+}
+
+export function hasEmploymentDateError(form: EmploymentInfo): boolean {
+  return form.employmentStartDate !== "" && !isValidDate(form.employmentStartDate);
+}
+
+export function EmploymentForm({ record }: { record: CaseRecord }) {
+  const [form, setForm] = useState<EmploymentInfo>(record.employment);
+  const [saved, setSaved] = useState(false);
+  const dateError = hasEmploymentDateError(form);
+
+  function set<K extends keyof EmploymentInfo>(key: K, value: EmploymentInfo[K]) {
+    setSaved(false);
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function save() {
+    updateCase(record.id, (c) => ({ ...c, employment: form }));
+    logAudit(record.id, "employment_saved");
+    setSaved(true);
+  }
+
+  return (
+    <section className="max-w-3xl rounded-lg border border-slate-200 bg-white p-6">
+      <h2 className="mb-1 font-semibold">雇用・会社情報</h2>
+      <p className="mb-5 text-xs text-slate-500">
+        必要書類の判定に使用します。申請人の確認済み情報とは別に保存されます。
+      </p>
+      <EmploymentFields form={form} set={set} />
       <div className="mt-6 flex items-center gap-3">
         <Button disabled={dateError} onClick={save}>
           保存
