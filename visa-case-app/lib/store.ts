@@ -3,14 +3,15 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { sanitizeAuditDetail, type AuditOutcome } from "./auditDetail";
 import { messageOf } from "./errors";
-import { isSupabaseEnabled } from "./supabase";
+import { usesSupabase } from "./supabase";
+import { localKey } from "./demo";
 import * as remote from "./supabaseBackend";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type CaseRecord, type DocumentRecord } from "./types";
 
 // 接続情報が設定されていれば Supabase、未設定ならブラウザ内の仮データを使う。
 // 画面側は、どちらの場合も同じ関数・フックで読み書きする。
 
-const KEY = "visa-case-app:cases:v1";
+export const CASES_KEY = "visa-case-app:cases:v1";
 const EMPTY: CaseRecord[] = [];
 
 let cases: CaseRecord[] = EMPTY;
@@ -71,7 +72,7 @@ function migrateLocal(c: LegacyCase): CaseRecord {
 
 function readLocal(): CaseRecord[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(localKey(CASES_KEY));
     if (!raw) return EMPTY;
     // 項目の追加・状態名の変更前に保存されたデータにも、現行の形式を補う
     return (JSON.parse(raw) as LegacyCase[]).map(migrateLocal);
@@ -82,14 +83,14 @@ function readLocal(): CaseRecord[] {
 
 function writeLocal(all: CaseRecord[]) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(all));
+    localStorage.setItem(localKey(CASES_KEY), JSON.stringify(all));
   } catch {
     // 容量超過時は添付画像を除いて保存する
     const slim = all.map((c) => ({
       ...c,
       documents: c.documents.map((d) => ({ ...d, dataUrl: undefined })),
     }));
-    localStorage.setItem(KEY, JSON.stringify(slim));
+    localStorage.setItem(localKey(CASES_KEY), JSON.stringify(slim));
   }
 }
 
@@ -107,7 +108,7 @@ export function ensureLoaded(): Promise<void> {
   if (!loading) {
     loading = (async () => {
       try {
-        cases = isSupabaseEnabled ? await remote.loadAll() : readLocal();
+        cases = usesSupabase() ? await remote.loadAll() : readLocal();
         loaded = true;
         error = "";
       } catch (e) {
@@ -153,7 +154,7 @@ export function useCase(id: string): CaseRecord | undefined {
 export function saveCase(record: CaseRecord) {
   const exists = cases.some((c) => c.id === record.id);
   cases = exists ? cases.map((c) => (c.id === record.id ? record : c)) : [record, ...cases];
-  if (isSupabaseEnabled) enqueue(() => remote.persistCase(record));
+  if (usesSupabase()) enqueue(() => remote.persistCase(record));
   else writeLocal(cases);
   emit();
 }
@@ -169,7 +170,7 @@ export function updateCase(id: string, fn: (c: CaseRecord) => CaseRecord) {
  * 監査ログは案件への外部キーを持たないため、削除後も残る。
  */
 export async function deleteCase(id: string): Promise<boolean> {
-  if (!isSupabaseEnabled) {
+  if (!usesSupabase()) {
     cases = cases.filter((c) => c.id !== id);
     writeLocal(cases);
     emit();
@@ -203,18 +204,18 @@ export function logAudit(
   detail?: Record<string, unknown>,
   outcome: AuditOutcome = "success",
 ) {
-  if (isSupabaseEnabled) enqueue(() => remote.audit(caseId, action, sanitizeAuditDetail(detail), outcome));
+  if (usesSupabase()) enqueue(() => remote.audit(caseId, action, sanitizeAuditDetail(detail), outcome));
 }
 
 /** 非公開ストレージへ保存し、保存先を返す。仮データ方式では何もしない。 */
 export async function uploadDocumentFile(caseId: string, docId: string, file: File): Promise<string | undefined> {
-  if (!isSupabaseEnabled) return undefined;
+  if (!usesSupabase()) return undefined;
   return remote.uploadFile(caseId, docId, file);
 }
 
 /** 確認者の表示名。仮データ方式ではログインがないため「自分」とする。 */
 export async function getConfirmerName(): Promise<string> {
-  if (!isSupabaseEnabled) return "自分";
+  if (!usesSupabase()) return "自分";
   return (await remote.currentUserEmail()) || "自分";
 }
 

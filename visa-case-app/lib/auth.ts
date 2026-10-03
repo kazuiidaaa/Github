@@ -2,7 +2,9 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { logAudit, resetStore } from "./store";
+import { clearDemoData, setDemo } from "./demo";
+import { resetDocuments, DOCUMENTS_KEY } from "./documents/store";
+import { CASES_KEY, logAudit, resetStore } from "./store";
 import { supabase } from "./supabase";
 
 /** undefined：確認中、null：未ログイン */
@@ -40,6 +42,22 @@ export async function signIn(email: string, password: string): Promise<string | 
   } catch {
     return "サーバーに接続できません。時間をおいて再度お試しください。";
   }
+}
+
+/** デモモードを開始する。サーバーには接続せず、ブラウザ内の仮データで動作する。 */
+export function startDemo() {
+  clearDemoData([CASES_KEY, DOCUMENTS_KEY]); // 前回の消去漏れがあれば取り除く
+  resetStore();
+  resetDocuments();
+  setDemo(true);
+}
+
+/** デモモードを終了し、デモで入力したデータを破棄する。 */
+export function exitDemo() {
+  setDemo(false);
+  clearDemoData([CASES_KEY, DOCUMENTS_KEY]);
+  resetStore();
+  resetDocuments();
 }
 
 export async function signOut() {
