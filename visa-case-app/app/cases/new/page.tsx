@@ -10,7 +10,7 @@ import { Button, Field, inputClass } from "@/components/ui";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { notApplicableMessage, shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type EmploymentInfo, type ProcedureType } from "@/lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -27,9 +27,10 @@ export default function NewCasePage() {
   const [groupName, setGroupName] = useState("");
   const [names, setNames] = useState<string[]>(["", "", ""]);
 
-  const needsTarget = procedureType === "change" || procedureType === "coe";
+  const needsTarget = procedureNeedsTarget(procedureType);
   // 必要書類の判定（evaluate）と同じ基準で、規則が未整備かを判定する
   const showNoRuleGuide = shouldShowNoRuleGuide(procedureType, currentStatus, targetStatus);
+
   const description = PROCEDURE_TYPES.find((p) => p.value === procedureType)?.description;
 
   function submit(e: React.FormEvent) {
@@ -47,7 +48,7 @@ export default function NewCasePage() {
       if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
     }
     if (!procedureType) next.procedureType = "手続種別を選択してください。";
-    if (needsTarget && !targetStatus.trim()) next.targetStatus = "変更後の在留資格を選択してください。";
+    if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
     setErrors(next);
     if (Object.keys(next).length > 0 || !procedureType) return;
 
@@ -150,7 +151,7 @@ export default function NewCasePage() {
           <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
         </Field>
         {needsTarget && (
-          <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
+          <Field label={targetStatusLabel(procedureType)} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
             <StatusSelect value={targetStatus} onChange={setTargetStatus} />
           </Field>
         )}

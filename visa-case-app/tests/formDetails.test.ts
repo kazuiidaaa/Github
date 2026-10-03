@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildContent } from "../lib/documents/snapshot";
+import { INTERNAL_DOCUMENT_TYPES } from "../lib/documents/types";
 import {
   EMPTY_FORM_DETAILS,
   DATE_FIELD_KEYS,
@@ -96,9 +97,8 @@ describe("検証対象の項目名", () => {
     const all = Object.fromEntries(DATE_FIELD_KEYS.map((k) => [k, "x"])) as unknown as typeof EMPTY_FORM_DETAILS;
     expect(Object.keys(validateFormDetails(all)).sort()).toEqual([...DATE_FIELD_KEYS].sort());
     for (const layout of Object.values(FORM_LAYOUTS)) {
-      // 旅券の有効期限・卒業年月日は、全様式に共通
+      // 旅券の有効期限は、全様式に共通（卒業年月日は、取得様式にない）
       expect(layout.labels.passportExpiry).toBeTruthy();
-      expect(layout.labels.graduationDate).toBeTruthy();
       for (const k of Object.keys(validateFormDetails(all, layout)) as FormFieldKey[]) {
         expect(layout.labels[k]).toBeTruthy();
       }
@@ -391,6 +391,120 @@ describe("認定証明書交付申請の項目番号表（Issue #85）", () => {
       deportationHistory: "no" as const,
     };
     expect(normalizeFormDetails(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
+  });
+});
+
+describe("在留資格取得許可申請の項目番号表（Issue #87）", () => {
+  const layout = getFormLayout("acquisition");
+  const l = layout.labels;
+
+  it("取得は専用の表を持ち、様式名・識別番号・見出しが取得様式のものになる", () => {
+    expect(FORM_LAYOUTS.acquisition).toBe(layout);
+    expect(layout.formName).toBe("在留資格取得許可申請書");
+    expect(layout.formId).toBe("930004121");
+    expect(layout.desiredStatusLabel).toBe("13 希望する在留資格");
+    expect(layout.sectionTitles.relatives).toBe("15 在日親族及び同居者");
+  });
+
+  it("取得様式にない職歴・所属機関等の見出しを持たない（表示しない）", () => {
+    expect(Object.keys(layout.sectionTitles).sort()).toEqual(["applicant1", "applicant2", "relatives"]);
+    expect(layout.sectionTitles.workHistory).toBeUndefined();
+    expect(layout.sectionTitles.organization).toBeUndefined();
+  });
+
+  it("項番は、原本（別記第三十六号様式）のとおり", () => {
+    expect(l.placeOfBirth).toBe("5 出生地");
+    expect(l.maritalStatus).toBe("6 配偶者の有無");
+    expect(l.occupation).toBe("7 職業");
+    expect(l.homeAddress).toBe("8 本国における居住地");
+    expect(l.phone).toBe("9 電話番号（住居地の欄）");
+    expect(l.mobilePhone).toBe("9 携帯電話番号（住居地の欄）");
+    expect(l.passportNumber).toBe("10 (1) 旅券番号");
+    expect(l.passportExpiry).toBe("10 (2) 旅券の有効期限");
+    expect(l.acquisitionCause).toMatch(/^11 /);
+    expect(l.acquisitionCauseOther).toMatch(/^11 /);
+    expect(l.stayPurpose).toMatch(/^12 /);
+    expect(l.desiredPeriod).toMatch(/^13 /);
+    expect(l.criminalRecord).toMatch(/^14 /);
+    expect(l.criminalDetail).toMatch(/^14 /);
+    for (const k of ["guarantorName", "guarantorRelationship", "guarantorAddress", "guarantorPhone", "guarantorMobilePhone"] as const) {
+      expect(l[k]).toMatch(/^16 /);
+    }
+    for (const k of ["legalRepName", "legalRepRelationship", "legalRepAddress", "legalRepPhone"] as const) {
+      expect(l[k]).toMatch(/^17 /);
+    }
+    expect(l.agentName).toBe("取次者 氏名");
+  });
+
+  it("取得様式にない項目（更新・変更の理由、在留期間、学歴・職歴・派遣先等）は持たない", () => {
+    for (const k of [
+      "renewalReason",
+      "changeReason",
+      "periodOfStay",
+      "branchName",
+      "workPhone",
+      "educationPlace",
+      "educationLevel",
+      "schoolName",
+      "graduationDate",
+      "majorField",
+      "itQualification",
+      "experienceYears",
+      "positionTitle",
+      "occupationCode",
+      "dispatchName",
+      "contactInJapan",
+      "plannedEntryDate",
+    ] as const) {
+      expect(l[k]).toBeUndefined();
+    }
+  });
+
+  it("取得固有の項目は、更新・変更・認定の表に出ない", () => {
+    for (const type of ["renewal", "change", "coe", "other"] as const) {
+      for (const k of ["acquisitionCause", "acquisitionCauseOther", "stayPurpose", "guarantorName", "guarantorMobilePhone"] as const) {
+        expect(getFormLayout(type).labels[k]).toBeUndefined();
+      }
+    }
+  });
+
+  it("項目名は一意", () => {
+    const values = Object.values(l);
+    expect(new Set(values).size).toBe(values.length);
+  });
+
+  it("その様式で表示しない項目の日付の誤りでは、保存を妨げない", () => {
+    const f = { ...EMPTY_FORM_DETAILS, graduationDate: "x", plannedEntryDate: "x", passportExpiry: "x" };
+    expect(Object.keys(validateFormDetails(f, layout))).toEqual(["passportExpiry"]);
+  });
+
+  it("保存値から復元でき、古い保存形式には空で補われる", () => {
+    const old = normalizeFormDetails({ passportNumber: "TK0000000" });
+    expect(old.acquisitionCause).toBe("");
+    expect(old.guarantorName).toBe("");
+    const saved = {
+      ...EMPTY_FORM_DETAILS,
+      placeOfBirth: "ダミー市",
+      acquisitionCause: "other" as const,
+      acquisitionCauseOther: "ダミーの事由",
+      stayPurpose: "家族との同居",
+      guarantorName: "テスト 太郎",
+      guarantorMobilePhone: "090-0000-0000",
+    };
+    expect(normalizeFormDetails(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
+  });
+
+  it("取得案件で、雇用情報が空のままでも、書類の内容を作れる（例外にならない）", () => {
+    const c = make({
+      procedureType: "acquisition",
+      targetStatus: "日本人の配偶者等",
+      currentStatus: "",
+      employment: { ...EMPTY_EMPLOYMENT },
+      formDetails: { ...EMPTY_FORM_DETAILS, acquisitionCause: "birth", stayPurpose: "出生による取得" },
+    });
+    for (const type of INTERNAL_DOCUMENT_TYPES) {
+      expect(() => buildContent(c, type)).not.toThrow();
+    }
   });
 });
 

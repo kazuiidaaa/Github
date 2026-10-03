@@ -17,14 +17,30 @@ export const PROCEDURE_TYPES = [
     label: "在留資格認定証明書交付申請",
     description: "海外から呼び寄せる外国人について、認定証明書の交付を申請する案件です。",
   },
+  {
+    value: "acquisition",
+    label: "在留資格取得許可申請",
+    description:
+      "出生や日本国籍の離脱・喪失などにより、上陸の手続を経ずに在留資格を取得する案件です。",
+  },
   { value: "other", label: "その他", description: "上記以外の案件です。" },
 ] as const;
 
 export type ProcedureType = (typeof PROCEDURE_TYPES)[number]["value"];
 
+/** 変更後・希望する在留資格を案件情報で入力する手続か（更新・その他は現在の在留資格のまま） */
+export function procedureNeedsTarget(type: ProcedureType | ""): boolean {
+  return type === "change" || type === "coe" || type === "acquisition";
+}
+
+/** 案件情報の「変更後／希望する在留資格」の入力欄の名称 */
+export function targetStatusLabel(type: ProcedureType | ""): string {
+  return type === "change" ? "変更後の在留資格" : "希望する在留資格";
+}
+
 /** 「変更後（希望）の在留資格」を入力・表示する手続種別か（新規案件の入力欄の判定と一致させる） */
 export function needsTargetStatus(procedureType: string): boolean {
-  return procedureType === "change" || procedureType === "coe";
+  return procedureNeedsTarget(procedureType as ProcedureType | "");
 }
 
 /** 案件一覧に出す「変更後／希望の在留資格」の表示内容。value が null のときは未入力 */
@@ -43,6 +59,7 @@ export function getTargetStatusDisplay(procedureType: string, targetStatus: stri
   return procedureType === "change"
     ? { tableLabel: "変更後：", cardLabel: "変更後の在留資格", value }
     : { tableLabel: "希望：", cardLabel: "希望する在留資格", value };
+
 }
 
 /** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
