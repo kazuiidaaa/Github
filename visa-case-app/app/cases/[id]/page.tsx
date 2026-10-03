@@ -13,12 +13,12 @@ import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
+import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
-  WORKFLOW_LABELS,
   type DocumentRecord,
 } from "@/lib/types";
 
@@ -126,9 +126,7 @@ export default function CaseDetailPage() {
           <h1 className="text-2xl font-semibold">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
-            <Badge tone={record.workflowStatus === "applicant_confirmed" || record.workflowStatus === "application_ready" ? "green" : "gray"}>
-              {WORKFLOW_LABELS[record.workflowStatus]}
-            </Badge>
+            <WorkflowBadge status={record.workflowStatus} />
           </p>
         </div>
         <div className="flex items-center gap-2">

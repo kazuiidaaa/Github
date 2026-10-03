@@ -7,10 +7,11 @@ import { CaseFilters } from "@/components/CaseFilters";
 import { DashboardCards, type CardKey } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { Badge } from "@/components/ui";
+import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
-import { PROCEDURE_TYPES, WORKFLOW_LABELS } from "@/lib/types";
+import { PROCEDURE_TYPES } from "@/lib/types";
 
 function readFilter(p: URLSearchParams): CaseFilter {
   return {
@@ -136,9 +137,7 @@ function CasesView() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-col items-start gap-1">
-                    <Badge tone={c.workflowStatus === "application_ready" || c.workflowStatus === "applicant_confirmed" ? "green" : c.workflowStatus === "review_required" ? "yellow" : "gray"}>
-                      {WORKFLOW_LABELS[c.workflowStatus]}
-                    </Badge>
+                    <WorkflowBadge status={c.workflowStatus} />
                     {m.missingCount > 0 && <Badge tone="yellow">未受領書類 {m.missingCount}件</Badge>}
                     {m.unconfirmed && <Badge tone="gray">申請人情報 確認未了</Badge>}
                     {m.checksPending && <Badge tone="gray">申請前チェック未完了</Badge>}
