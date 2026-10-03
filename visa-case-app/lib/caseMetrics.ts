@@ -10,7 +10,7 @@ export const URGENT_DAYS = 30;
 export const CAUTION_DAYS = 90;
 
 export const EXPIRY_LEVEL_LABELS: Record<ExpiryLevel, string> = {
-  unknown: "未確認",
+  unknown: "未入力",
   overdue: "期限超過",
   urgent: "緊急",
   caution: "注意",
@@ -26,7 +26,7 @@ export function expiryLevel(days: number | null): ExpiryLevel {
 }
 
 export function expiryMessage(days: number | null): string {
-  if (days === null) return "在留期限は未確認です";
+  if (days === null) return "在留期限は未入力です";
   return days >= 0 ? `在留期限まで${days}日` : `在留期限を${-days}日経過`;
 }
 
@@ -128,7 +128,7 @@ export function applyFilter(cases: CaseRecord[], f: CaseFilter): CaseRow[] {
     });
   rows.sort((a, b) => {
     if (f.sort === "expiry") {
-      // 期限が近い順。期限未確認の案件は末尾に置く
+      // 期限が近い順。期限未入力の案件は末尾に置く
       const da = a.metrics.days ?? Number.POSITIVE_INFINITY;
       const db = b.metrics.days ?? Number.POSITIVE_INFINITY;
       if (da !== db) return da < db ? -1 : 1;

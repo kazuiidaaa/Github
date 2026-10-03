@@ -9,6 +9,14 @@ import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
 import type { Applicant, CaseRecord, DocumentRecord } from "@/lib/types";
 
+const FIELD_LABELS: Record<ApplicantField, string> = {
+  legalName: "氏名",
+  nationality: "国籍・地域",
+  dateOfBirth: "生年月日",
+  residenceStatus: "在留資格",
+  residenceExpiryDate: "在留期間の満了日",
+};
+
 type TextKey = "legalName" | "nationality" | "address" | "residenceCardNumber" | "workRestriction";
 
 function Original({ doc }: { doc: DocumentRecord }) {
@@ -38,6 +46,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
   const [message, setMessage] = useState("");
   const confirmed = record.applicant.confirmationStatus === "confirmed";
   const doc = record.documents[0];
+  const errorFields = (Object.keys(FIELD_LABELS) as ApplicantField[]).filter((k) => errors[k]);
 
   function set<K extends keyof Applicant>(key: K, value: Applicant[K]) {
     setMessage("");
@@ -135,6 +144,18 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
         <p className="mb-5 text-xs text-slate-500">
           原本を確認しながら入力してください。自動読み取りは行いません。確認済みにした値が、正式な申請人情報になります。
         </p>
+        {errorFields.length > 0 && (
+          <div role="alert" className="mb-5 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <p className="font-medium">入力内容に {errorFields.length} 件の誤りまたは未入力があります。</p>
+            <ul className="mt-1 list-disc pl-5">
+              {errorFields.map((k) => (
+                <li key={k}>
+                  {FIELD_LABELS[k]}：{errors[k]}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">{text("legalName", "氏名", { required: true, placeholder: "LI MING" })}</div>
           {text("nationality", "国籍・地域", { required: true, placeholder: "中国" })}
