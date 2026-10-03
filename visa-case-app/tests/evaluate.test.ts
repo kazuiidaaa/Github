@@ -104,3 +104,26 @@ describe("evaluate", () => {
     expect(e.requiredCount).toBe(e.receivedCount + e.missing.length);
   });
 });
+
+describe("証明写真の登録と写真の行の状態（#52）", () => {
+  const photoDoc = {
+    id: "p1",
+    documentType: "photo" as const,
+    fileName: "photo.jpg",
+    mimeType: "image/jpeg",
+    status: "uploaded" as const,
+    uploadedAt: "2026-01-01T00:00:00Z",
+  };
+  const stateOf = (c: CaseRecord) => evaluate(c).items.find((i) => i.rule.id === "photo")?.state.status;
+
+  it("証明写真が登録されても、写真の行の状態は自動で変わらない", () => {
+    expect(stateOf(make())).toBe("not_received");
+    expect(stateOf(make({ documents: [photoDoc] }))).toBe("not_received");
+  });
+
+  it("手動で選んだ状態は、写真の登録有無にかかわらず保たれる", () => {
+    const states = { photo: { status: "received" as const } };
+    expect(stateOf(make({ requirementStates: states }))).toBe("received");
+    expect(stateOf(make({ requirementStates: states, documents: [photoDoc] }))).toBe("received");
+  });
+});

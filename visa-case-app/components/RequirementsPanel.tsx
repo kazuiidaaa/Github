@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Badge, Button } from "@/components/ui";
 import { CustomRequirementForm, type CustomRequirementInput } from "@/components/CustomRequirementForm";
-import { todayString } from "@/lib/format";
+import { findDocumentOfType } from "@/lib/documentKinds";
+import { formatDateTime, todayString } from "@/lib/format";
 import { evaluate, type EvaluatedItem, type Result } from "@/lib/requirements/evaluate";
 import { isOverdue, progressOf } from "@/lib/requirements/progress";
 import { logAudit, newId, updateCase } from "@/lib/store";
@@ -13,6 +14,7 @@ import {
   REQUIREMENT_STATUS_LABELS,
   type CaseRecord,
   type CustomRequirement,
+  type DocumentRecord,
   type RequirementState,
   type RequirementStatus,
 } from "@/lib/types";
@@ -50,7 +52,15 @@ function DueInput({ label, value, overdue, onChange }: { label: string; value?: 
   );
 }
 
-export function RequirementsPanel({ record, onGoEmployment }: { record: CaseRecord; onGoEmployment: () => void }) {
+export function RequirementsPanel({
+  record,
+  onGoEmployment,
+  onGoDocuments,
+}: {
+  record: CaseRecord;
+  onGoEmployment: () => void;
+  onGoDocuments: () => void;
+}) {
   const ev = evaluate(record);
   const today = todayString();
   const progress = progressOf(ev, record.customRequirements, today);
@@ -180,7 +190,14 @@ export function RequirementsPanel({ record, onGoEmployment }: { record: CaseReco
             </thead>
             <tbody>
               {ev.items.map((i) => (
-                <Row key={i.rule.id} item={i} today={today} onPatch={patch} />
+                <Row
+                  key={i.rule.id}
+                  item={i}
+                  today={today}
+                  onPatch={patch}
+                  photo={i.rule.id === "photo" ? findDocumentOfType(record.documents, "photo") : undefined}
+                  onGoDocuments={onGoDocuments}
+                />
               ))}
             </tbody>
           </table>
@@ -264,10 +281,15 @@ function Row({
   item,
   today,
   onPatch,
+  photo,
+  onGoDocuments,
 }: {
   item: EvaluatedItem;
   today: string;
   onPatch: (id: string, change: Partial<RequirementState>, action: string) => void;
+  /** 「書類」タブに登録済みの証明写真（写真の行のみ） */
+  photo?: DocumentRecord;
+  onGoDocuments: () => void;
 }) {
   const { rule, state } = item;
   const [note, setNote] = useState(state.note ?? "");
@@ -281,6 +303,20 @@ function Row({
           {rule.note ? `／${rule.note}` : ""}
         </p>
         {rule.verify && <Badge tone="yellow">内容要確認</Badge>}
+        {rule.id === "photo" && (
+          <div className="mt-2 text-xs">
+            {photo ? (
+              <p className="text-green-700">
+                「書類」タブに登録済み：{photo.fileName}（{formatDateTime(photo.uploadedAt)}）
+              </p>
+            ) : (
+              <p className="text-slate-500">「書類」タブには未登録です。</p>
+            )}
+            <button type="button" onClick={onGoDocuments} className="mt-1 text-blue-700 underline">
+              「書類」タブで確認する
+            </button>
+          </div>
+        )}
       </td>
       <td className="px-4 py-3 whitespace-nowrap">{PARTY_LABEL[rule.party]}</td>
       <td className="px-4 py-3 whitespace-nowrap">
