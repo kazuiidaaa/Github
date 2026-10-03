@@ -1,8 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
-import { signIn } from "@/lib/auth";
+import { signIn, startDemo } from "@/lib/auth";
 import { isSupabaseEnabled } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +49,22 @@ export default function LoginPage() {
       <Button type="submit" disabled={busy} className="w-full">
         {busy ? "確認中……" : "ログイン"}
       </Button>
+      <div className="border-t border-slate-200 pt-4">
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={() => {
+            startDemo();
+            router.push("/cases");
+          }}
+        >
+          デモを試す
+        </Button>
+        <p className="mt-2 text-xs text-slate-500">
+          ログインせず、仮データで操作を試せます。入力した内容はサーバーに保存されず、デモを終了すると消去されます。
+        </p>
+      </div>
     </form>
   );
 }

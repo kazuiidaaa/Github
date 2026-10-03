@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { MembersPanel } from "@/components/MembersPanel";
 import { Button, Field, inputClass } from "@/components/ui";
 import { changePassword, signOut, useSession } from "@/lib/auth";
+import { useDemo } from "@/lib/demo";
 import { auditLabel } from "@/lib/auditLabels";
 import { formatDateTime } from "@/lib/format";
 import { getAccount, listAudit, renameOrganization, useCases } from "@/lib/store";
@@ -13,7 +14,8 @@ import { isSupabaseEnabled } from "@/lib/supabase";
 import type { AccountInfo, AuditEntry } from "@/lib/supabaseBackend";
 
 export default function AccountPage() {
-  if (!isSupabaseEnabled) {
+  const demo = useDemo();
+  if (!isSupabaseEnabled || demo) {
     return (
       <div className="max-w-xl rounded-lg border border-slate-200 bg-white p-6 text-sm">
         <h1 className="mb-2 text-xl font-semibold">アカウント</h1>

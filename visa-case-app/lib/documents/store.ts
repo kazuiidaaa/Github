@@ -3,7 +3,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { AppError, messageOf, toAppError } from "../errors";
 import { logAudit, newId } from "../store";
-import { isSupabaseEnabled, supabase } from "../supabase";
+import { localKey } from "../demo";
+import { supabase, usesSupabase } from "../supabase";
 import type { CaseRecord } from "../types";
 import { buildContent, titleOf } from "./snapshot";
 import type {
@@ -17,7 +18,7 @@ import type {
 
 // 生成文書の保存。案件のストアとは独立させ、接続情報の有無で保存先だけを切り替える。
 
-const KEY = "visa-case-app:generated-documents:v1";
+export const DOCUMENTS_KEY = "visa-case-app:generated-documents:v1";
 const EMPTY: GeneratedDocument[] = [];
 
 let byCase: Record<string, GeneratedDocument[]> = {};
@@ -78,7 +79,7 @@ function sorted(list: GeneratedDocument[]): GeneratedDocument[] {
 
 function readLocal(): GeneratedDocument[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(localKey(DOCUMENTS_KEY));
     // 6-A の保存データには出力形式がないため、画面（html）として補う
     return raw ? (JSON.parse(raw) as GeneratedDocument[]).map((d) => ({ ...d, outputFormat: d.outputFormat ?? "html" })) : [];
   } catch {
@@ -87,7 +88,7 @@ function readLocal(): GeneratedDocument[] {
 }
 function writeLocal(all: GeneratedDocument[]) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(all));
+    localStorage.setItem(localKey(DOCUMENTS_KEY), JSON.stringify(all));
   } catch {
     error = "このブラウザの保存容量が不足しています。";
   }
@@ -100,7 +101,7 @@ function db() {
 
 export async function loadDocuments(caseId: string): Promise<void> {
   try {
-    if (isSupabaseEnabled) {
+    if (usesSupabase()) {
       const { data, error: e } = await db()
         .from("generated_documents")
         .select("*")
@@ -147,7 +148,7 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
     const content = buildContent(record, type);
     const title = titleOf(record, type);
     let doc: GeneratedDocument;
-    if (isSupabaseEnabled) {
+    if (usesSupabase()) {
       const { data, error: e } = await db().rpc("create_generated_document", {
         p_case_id: record.id,
         p_document_type: type,
@@ -188,7 +189,7 @@ export async function changeStatus(
 ): Promise<void> {
   const reviewing = status === "reviewed";
   let next: GeneratedDocument;
-  if (isSupabaseEnabled) {
+  if (usesSupabase()) {
     const patch: Record<string, unknown> = { document_status: status };
     if (reviewing) patch.reviewed_by_name = reviewerName;
     const { data, error: e } = await db().from("generated_documents").update(patch).eq("id", doc.id).select().single();
@@ -267,7 +268,7 @@ export async function exportFile(source: GeneratedDocument, format: FileFormat):
     reviewedByName: undefined,
   };
   let created: GeneratedDocument;
-  if (isSupabaseEnabled) {
+  if (usesSupabase()) {
     if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
     const path = `${source.organizationId}/${source.caseId}/${id}.${format}`;
     const blob = await buildFile(fresh);
@@ -299,7 +300,7 @@ export async function exportFile(source: GeneratedDocument, format: FileFormat):
 
 /** ファイルをダウンロードする。Supabase 利用時は短時間有効な署名付きURLを使う */
 export async function downloadFile(doc: GeneratedDocument): Promise<void> {
-  if (isSupabaseEnabled) {
+  if (usesSupabase()) {
     if (!doc.storagePath) throw new AppError("ファイルの保存先が見つかりません。");
     const { data, error: e } = await db()
       .storage.from(FILE_BUCKET)

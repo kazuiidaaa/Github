@@ -3,21 +3,23 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { useSession } from "@/lib/auth";
+import { useDemo } from "@/lib/demo";
 import { configIssues } from "@/lib/env";
 import { isMisconfigured, isSupabaseEnabled } from "@/lib/supabase";
 
 /** Supabase 利用時、未ログインの場合はログイン画面へ移動する（データ自体は行単位の保護で守られる） */
 export function AuthGate({ children }: { children: ReactNode }) {
   const session = useSession();
+  const demo = useDemo();
   const pathname = usePathname();
   const router = useRouter();
   const onLogin = pathname === "/login";
 
   useEffect(() => {
-    if (!isSupabaseEnabled) return;
+    if (!isSupabaseEnabled || demo) return;
     if (session === null && !onLogin) router.replace("/login");
     if (session && onLogin) router.replace("/cases");
-  }, [session, onLogin, router]);
+  }, [session, onLogin, router, demo]);
 
   if (isMisconfigured) {
     // 本番で設定に問題がある場合は、仮データ方式へ切り替えず、画面全体を停止する
@@ -33,7 +35,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (!isSupabaseEnabled) return <>{children}</>;
+  if (!isSupabaseEnabled || demo) return <>{children}</>;
   if (session === undefined) return <p className="text-sm text-slate-500">読み込み中……</p>;
   if (!session && !onLogin) return null;
   return <>{children}</>;
