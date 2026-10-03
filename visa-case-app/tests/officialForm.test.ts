@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { POST } from "../app/api/documents/official-form/route";
 import { fillOfficialExcel } from "../lib/documents/excelFill";
@@ -72,8 +73,11 @@ describe("対象範囲の注意", () => {
   it("更新×技術・人文知識・国際業務は、注意なし", () => {
     expect(officialFormScopeWarnings(scopeOf(make()))).toEqual([]);
   });
-  it("更新以外は、注意が出る", () => {
-    expect(officialFormScopeWarnings(scopeOf(make({ procedureType: "change" })))).toHaveLength(1);
+  it("専用の様式がない手続種別（その他）は、注意が出る", () => {
+    expect(officialFormScopeWarnings(scopeOf(make({ procedureType: "other" })))).toHaveLength(1);
+  });
+  it("変更は、変更様式の対象として、注意なし（現在の在留資格によらない）", () => {
+    expect(officialFormScopeWarnings(scopeOf(make({ procedureType: "change", currentStatus: "留学" })))).toEqual([]);
   });
   it("技術・人文知識・国際業務以外の在留資格は、注意が出る", () => {
     const c = make({ currentStatus: "留学" });
@@ -145,7 +149,7 @@ describe("API の入力検証", () => {
 
 describe("差し込み（手続種別の入口）", () => {
   it("対象外の案件でも生成でき、対象外の注意が先頭に付く", async () => {
-    const c = make({ procedureType: "change", currentStatus: "留学" });
+    const c = make({ procedureType: "other", currentStatus: "留学" });
     const r = await fillOfficialExcel({ ...officialFormInputOf(c), procedureType: c.procedureType });
     expect(r.buffer.subarray(0, 2).toString()).toBe("PK");
     expect(r.warnings[0]).toContain("対象外");
@@ -154,6 +158,22 @@ describe("差し込み（手続種別の入口）", () => {
     const c = make();
     const r = await fillOfficialExcel({ ...officialFormInputOf(c), procedureType: c.procedureType });
     expect(r.warnings.join("")).not.toContain("対象外");
+  });
+});
+
+describe("差し込み（変更）", () => {
+  it("変更の案件は、変更様式に差し込まれ、変更後の在留資格が項目13に入る", async () => {
+    const c = make({ procedureType: "change", currentStatus: "留学", targetStatus: "技術・人文知識・国際業務" });
+    const r = await fillOfficialExcel({ ...officialFormInputOf(c), procedureType: c.procedureType });
+    expect(r.warnings.join("")).not.toContain("対象外");
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(r.buffer as unknown as ArrayBuffer);
+    const ws = wb.worksheets.find((s) => s.name.startsWith("申請人用（変更）"))!;
+    expect(ws.getCell("I45").value).toBe("技術・人文知識・国際業務");
+  });
+  it("API の入力検証は、変更後の在留資格を受け取る（型が違えば空）", () => {
+    expect(parseFillInput({ procedureType: "change", targetStatus: "経営・管理" })!.targetStatus).toBe("経営・管理");
+    expect(parseFillInput({ procedureType: "change", targetStatus: 1 })!.targetStatus).toBe("");
   });
 });
 
