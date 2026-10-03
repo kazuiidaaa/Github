@@ -8,6 +8,7 @@ import { EmploymentFields, hasEmploymentDateError } from "@/components/Employmen
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
+import { notApplicableMessage, shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 
@@ -27,6 +28,8 @@ export default function NewCasePage() {
   const [names, setNames] = useState<string[]>(["", "", ""]);
 
   const needsTarget = procedureType === "change" || procedureType === "coe";
+  // 必要書類の判定（evaluate）と同じ基準で、規則が未整備かを判定する
+  const showNoRuleGuide = shouldShowNoRuleGuide(procedureType, currentStatus, targetStatus);
   const description = PROCEDURE_TYPES.find((p) => p.value === procedureType)?.description;
 
   function submit(e: React.FormEvent) {
@@ -150,6 +153,11 @@ export default function NewCasePage() {
           <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
             <StatusSelect value={targetStatus} onChange={setTargetStatus} />
           </Field>
+        )}
+        {showNoRuleGuide && (
+          <p role="note" className="rounded-md bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+            {`${notApplicableMessage()}案件は、このまま作成できます。`}
+          </p>
         )}
         <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
           <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} />
