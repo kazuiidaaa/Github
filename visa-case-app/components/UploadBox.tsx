@@ -7,6 +7,7 @@ import { ConfirmDocumentReplaceDialog } from "@/components/ConfirmDocumentReplac
 import { FORMAT_LABEL_BY_DOCUMENT_TYPE, MAX_FILE_BYTES, validateDocumentFile } from "@/lib/documentValidation";
 import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
 import { PHOTO_GUIDANCE, UPLOADED_DOCUMENT_LABELS, replaceDocumentOfType } from "@/lib/documentKinds";
+import { photoAspectWarning } from "@/lib/photoAspect";
 import type { DocumentRecord } from "@/lib/types";
 
 const MAX_INLINE_BYTES = 1_000_000;
@@ -43,6 +44,7 @@ export function UploadBox({
   const [uploading, setUploading] = useState<File | null>(null);
   const [failed, setFailed] = useState<File | null>(null);
   const [replacing, setReplacing] = useState<File | null>(null);
+  const [notice, setNotice] = useState("");
   const hasDocument = currentFileName !== undefined;
   const isPhoto = documentType === "photo";
   const label = UPLOADED_DOCUMENT_LABELS[documentType];
@@ -51,7 +53,10 @@ export function UploadBox({
   async function upload(file: File) {
     setError("");
     setFailed(null);
+    setNotice("");
     setUploading(file);
+    // 証明写真のみ、縦横比を確認する（警告のみで、保存は妨げない）
+    const aspectWarning = isPhoto ? await photoAspectWarning(file) : "";
     const docId = newId();
     try {
       const storagePath = await uploadDocumentFile(caseId, docId, file);
@@ -74,6 +79,7 @@ export function UploadBox({
         workflowStatus: hasDocument && !isPhoto ? "preparing" : c.workflowStatus,
       }));
       logAudit(caseId, hasDocument ? "document_replaced" : "document_uploaded", { documentType });
+      setNotice(aspectWarning);
       onUploaded(hasDocument);
     } catch (e) {
       logAudit(caseId, "document_upload_failed", undefined, "failure");
@@ -153,6 +159,11 @@ export function UploadBox({
         )}
       </div>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {notice && !error && (
+        <p role="status" className="mt-2 text-sm text-amber-700">
+          {notice}
+        </p>
+      )}
       {replacing && currentFileName !== undefined && (
         <ConfirmDocumentReplaceDialog
           currentFileName={currentFileName}
