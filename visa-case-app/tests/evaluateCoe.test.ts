@@ -10,7 +10,8 @@ function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withho
     caseName: "試験",
     procedureType: "coe",
     currentStatus: "技術・人文知識・国際業務",
-    targetStatus: "",
+    // #95 の判定基準（認定は targetStatus）の前後どちらでも通るよう、両方に設定する
+    targetStatus: "技術・人文知識・国際業務",
     memo: "",
     workflowStatus: "preparing",
     createdAt: "",
@@ -28,7 +29,7 @@ function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withho
   };
 }
 
-const ids = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) => i.effective === r).map((i) => i.rule.id);
+const ruleIds = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) => i.effective === r).map((i) => i.rule.id);
 
 describe("evaluate: 在留資格認定証明書交付申請（技術・人文知識・国際業務）", () => {
   it("規則が適用され、未整備の案内にならない", () => {
@@ -38,52 +39,67 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
   });
 
   it("他の手続・在留資格には適用しない", () => {
-    expect(evaluate(make({ currentStatus: "留学" })).ruleSet).toBeNull();
-    expect(evaluate(make({ procedureType: "change" })).ruleSet).toBeNull();
+    expect(evaluate(make({ currentStatus: "留学", targetStatus: "留学" })).ruleSet).toBeNull();
+    // 規則のない手続（other）で確認する。change は別PRで規則が追加されうるため使わない
+    expect(evaluate(make({ procedureType: "other" })).ruleSet).toBeNull();
   });
 
   it("カテゴリー未入力の間は、共通の書類のみ判定する（旅券の提示は含まない）", () => {
     const e = evaluate(make());
     expect(e.needsCategory).toBe(true);
-    expect(ids(e, "required")).toEqual(["application_form", "photo", "return_envelope"]);
+    expect(ruleIds(e, "required")).toEqual(["application_form", "photo", "return_envelope"]);
     expect(e.items.map((i) => i.rule.id)).not.toContain("passport_card");
   });
 
-  it("カテゴリー1は共通の書類とカテゴリーを証明する文書のみ必要", () => {
-    const e = evaluate(make({}, "1"));
-    expect(ids(e, "required")).toEqual(["application_form", "photo", "return_envelope", "category_proof"]);
-  });
+  const COMMON = ["application_form", "photo", "return_envelope"];
+  const CAT34 = ["activity_documents", "career_documents", "registry_certificate", "business_description", "financial_statements", "representative_declaration"];
+  const BASE_CHECK = ["vocational_school_certificate", "dispatch_documents", "passport_copy"];
+  const CAT_CHECK = ["vocational_school_certificate", "dispatch_documents", "language_ability", "passport_copy"];
+  const CAT4_CHECK = ["vocational_school_certificate", "dispatch_documents", "language_ability", "withholding_exemption", "passport_copy"];
+  const MATRIX: { category: OrgCategory; required: string[]; check: string[] }[] = [
+    { category: "", required: COMMON, check: BASE_CHECK },
+    { category: "1", required: [...COMMON, "category_proof"], check: BASE_CHECK },
+    { category: "2", required: [...COMMON, "category_proof"], check: BASE_CHECK },
+    { category: "3", required: [...COMMON, "category_proof", ...CAT34], check: CAT_CHECK },
+    { category: "4", required: [...COMMON, ...CAT34, "payroll_office_notification", "withholding_tax_receipts"], check: CAT4_CHECK },
+  ];
 
-  it("カテゴリー3は、経歴・登記・事業内容・決算等が必要で、開設届出書は不要", () => {
-    const required = ids(evaluate(make({}, "3")), "required");
-    for (const id of ["category_proof", "activity_documents", "career_documents", "registry_certificate", "business_description", "financial_statements", "representative_declaration"]) {
-      expect(required).toContain(id);
+  for (const row of MATRIX) {
+    for (const special of [false, true]) {
+      const label = `カテゴリー${row.category || "未入力"}・納期の特例${special ? "あり" : "なし"}`;
+      // 納期の特例の資料は、カテゴリー4で承認がある場合のみ必要
+      const required = row.category === "4" && special ? [...row.required, "withholding_special_approval"] : row.required;
+
+      it(`${label}: 必要書類と確認対象が過不足なく判定される`, () => {
+        const e = evaluate(make({}, row.category, special));
+        expect(ruleIds(e, "required")).toEqual(required);
+        expect(ruleIds(e, "check")).toEqual(row.check);
+      });
+
+      it(`${label}: 判定対象のうち、共通の3書類以外は要確認（verify）である`, () => {
+        const e = evaluate(make({}, row.category, special));
+        const applicable = e.items.filter((i) => i.effective === "required" || i.effective === "check");
+        expect(applicable.filter((i) => i.rule.verify).map((i) => i.rule.id)).toEqual(
+          applicable.map((i) => i.rule.id).filter((id) => !COMMON.includes(id)),
+        );
+        expect(applicable.filter((i) => COMMON.includes(i.rule.id)).some((i) => i.rule.verify)).toBe(false);
+      });
     }
-    expect(required).not.toContain("payroll_office_notification");
-  });
+  }
 
-  it("カテゴリー4は、カテゴリー証明は不要で、開設届出書と徴収高計算書が必要", () => {
-    const required = ids(evaluate(make({}, "4")), "required");
-    expect(required).not.toContain("category_proof");
-    expect(required).toEqual(expect.arrayContaining(["payroll_office_notification", "withholding_tax_receipts"]));
-  });
-
-  it("納期の特例の資料は、承認がある場合のみ必要", () => {
-    expect(ids(evaluate(make({}, "4", false)), "required")).not.toContain("withholding_special_approval");
-    expect(ids(evaluate(make({}, "4", true)), "required")).toContain("withholding_special_approval");
-  });
-
-  it("言語能力・派遣・免除機関・旅券の写しは確認対象", () => {
-    expect(ids(evaluate(make({}, "4")), "check")).toEqual(
-      expect.arrayContaining(["language_ability", "dispatch_documents", "withholding_exemption", "passport_copy"]),
-    );
+  it("カテゴリー4以外では、開設届出書・徴収高計算書は判定対象にならない", () => {
+    for (const category of ["", "1", "2", "3"] as OrgCategory[]) {
+      const all = [...ruleIds(evaluate(make({}, category, true)), "required"), ...ruleIds(evaluate(make({}, category, true)), "check")];
+      expect(all).not.toContain("payroll_office_notification");
+      expect(all).not.toContain("withholding_tax_receipts");
+    }
   });
 
   it("追加した規則は、出典・確認日を持ち、内容が未確認の項目は要確認とする", () => {
     const set = RULE_SETS.find((r) => r.procedureType === "coe");
     expect(set?.checkedAt).toBe("2026-10-03");
     expect(set?.sources.length).toBeGreaterThan(0);
-    const ids = set!.rules.map((r) => r.id);
-    expect(new Set(ids).size).toBe(ids.length);
+    const setRuleIds = set!.rules.map((r) => r.id);
+    expect(new Set(setRuleIds).size).toBe(setRuleIds.length);
   });
 });
