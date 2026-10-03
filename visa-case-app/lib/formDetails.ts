@@ -80,6 +80,35 @@ export interface FormDetails {
   dispatchCapital: string;
   dispatchAnnualSales: string;
   dispatchPeriod: string;
+  // 在留資格認定証明書交付申請（別記第六号の三様式）に固有の項目（Issue #85）。
+  // 根拠：docs/phase13-coe-forms-research.md
+  /** 5 出生地（変更・認定・取得の各様式にある。更新様式にはない） */
+  placeOfBirth: string;
+  /** 9 日本における連絡先 */
+  contactInJapan: string;
+  /** 12 入国予定年月日 */
+  plannedEntryDate: string;
+  /** 13 上陸予定港 */
+  portOfEntry: string;
+  /** 14 滞在予定期間 */
+  plannedStay: string;
+  /** 15 同伴者の有無 */
+  accompanied: "" | "yes" | "no";
+  /** 16 査証申請予定地 */
+  visaApplicationPlace: string;
+  /** 17 過去の出入国歴（有無・回数・直近の出入国の年月日） */
+  entryHistory: "" | "yes" | "no";
+  entryHistoryCount: string;
+  entryHistoryLastFrom: string;
+  entryHistoryLastTo: string;
+  /** 18 過去の在留資格認定証明書交付申請歴（有無・回数・うち不交付となった回数） */
+  coeHistory: "" | "yes" | "no";
+  coeHistoryCount: string;
+  coeHistoryNonIssuedCount: string;
+  /** 20 退去強制又は出国命令による出国の有無（有無・回数・直近の送還歴） */
+  deportationHistory: "" | "yes" | "no";
+  deportationCount: string;
+  deportationLastDate: string;
 }
 
 export const EMPTY_FORM_DETAILS: FormDetails = {
@@ -131,6 +160,23 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   dispatchCapital: "",
   dispatchAnnualSales: "",
   dispatchPeriod: "",
+  placeOfBirth: "",
+  contactInJapan: "",
+  plannedEntryDate: "",
+  portOfEntry: "",
+  plannedStay: "",
+  accompanied: "",
+  visaApplicationPlace: "",
+  entryHistory: "",
+  entryHistoryCount: "",
+  entryHistoryLastFrom: "",
+  entryHistoryLastTo: "",
+  coeHistory: "",
+  coeHistoryCount: "",
+  coeHistoryNonIssuedCount: "",
+  deportationHistory: "",
+  deportationCount: "",
+  deportationLastDate: "",
 };
 
 export const EDUCATION_LEVELS = [
@@ -163,12 +209,28 @@ export const FORM_DETAILS_FIELD_LABELS: Partial<Record<keyof FormDetails, string
   graduationDate: "18 (4) 卒業年月日",
 };
 
+/** 認定証明書交付申請の項目で、日付の形式を確認するもの（Issue #85） */
+const COE_DATE_FIELDS = ["plannedEntryDate", "entryHistoryLastFrom", "entryHistoryLastTo", "deportationLastDate"] as const;
+
+/** 認定証明書交付申請の入力エラーの要約に表示する、項目名（別記第六号の三様式の項番） */
+export const COE_FORM_DETAILS_FIELD_LABELS: Partial<Record<keyof FormDetails, string>> = {
+  passportExpiry: "10 (2) 旅券の有効期限",
+  plannedEntryDate: "12 入国予定年月日",
+  entryHistoryLastFrom: "17 直近の出入国歴（入国年月日）",
+  entryHistoryLastTo: "17 直近の出入国歴（出国年月日）",
+  deportationLastDate: "20 直近の送還歴",
+  graduationDate: "23 (4) 卒業年月日",
+};
+
 const DATE_MESSAGE = "日付をカレンダーから選び直してください。";
 
 /** 日付の形式のみ確認する（公式様式の項目は、確定の前提としない） */
 export function validateFormDetails(f: FormDetails): FormDetailsErrors {
   const errors: FormDetailsErrors = {};
   for (const k of ["passportExpiry", "graduationDate"] as const) {
+    if (f[k] && !isValidDate(f[k])) errors[k] = DATE_MESSAGE;
+  }
+  for (const k of COE_DATE_FIELDS) {
     if (f[k] && !isValidDate(f[k])) errors[k] = DATE_MESSAGE;
   }
   return errors;
