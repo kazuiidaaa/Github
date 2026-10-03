@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import {
-  ACQUISITION_LABELS,
   EDUCATION_LEVELS,
-  FORM_DETAILS_FIELD_LABELS,
+  getFormLayout,
   validateFormDetails,
   type FormDetails,
   type Relative,
@@ -30,11 +29,11 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 /** 公式の申請書にあって、申請人情報・雇用情報の既存項目にない入力項目 */
-export function FormDetailsForm({ record }: { record: CaseRecord }) {
+export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; onGoOverview?: () => void }) {
+  // 項目番号・項目名・見出しは、手続種別ごとの項目番号表（lib/formDetails.ts の FORM_LAYOUTS）から取得する
+  const layout = getFormLayout(record.procedureType);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
-  const isAcquisition = record.procedureType === "acquisition";
-  const L = ACQUISITION_LABELS;
   const errors = validateFormDetails(form);
   const hasError = Object.keys(errors).length > 0;
   const errorFields = (Object.keys(errors) as (keyof FormDetails)[]).filter((k) => errors[k]);
@@ -44,7 +43,9 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function text(key: TextKey, label: string, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean } = {}) {
+  function text(key: TextKey, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean } = {}) {
+    const label = layout.labels[key];
+    if (!label) return null; // この様式にない項目は表示しない
     const input = opts.area ? (
       <textarea
         className={inputClass}
@@ -71,11 +72,13 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     );
   }
 
-  function select<K extends "maritalStatus" | "criminalRecord" | "relativesPresent" | "educationPlace" | "acquisitionCause">(
+  function select<K extends "maritalStatus" | "criminalRecord" | "relativesPresent" | "educationPlace">(
     key: K,
-    label: string,
     options: [FormDetails[K], string][],
+    fallbackLabel?: string,
   ) {
+    const label = layout.labels[key] ?? fallbackLabel;
+    if (!label) return null;
     return (
       <Field label={label}>
         <select className={inputClass} value={form[key]} onChange={(e) => set(key, e.target.value as FormDetails[K])}>
@@ -113,63 +116,13 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     if (persist(form)) markSaved(form);
   }
 
-  // 在留資格取得許可申請（別記第三十六号様式）。更新様式と項目番号が異なるため、別に組む
-  const acquisitionFirst = (
-    <Section title="在留資格取得許可申請書（項番5〜14）">
-      {text("placeOfBirth", L.placeOfBirth)}
-      {select("maritalStatus", L.maritalStatus, [["married", "有"], ["single", "無"]])}
-      {text("occupation", L.occupation)}
-      {text("homeAddress", L.homeAddress, { wide: true })}
-      {text("phone", L.phone)}
-      {text("mobilePhone", L.mobilePhone)}
-      {text("passportNumber", L.passportNumber)}
-      {text("passportExpiry", L.passportExpiry, { date: true })}
-      {select("acquisitionCause", L.acquisitionCause, [["birth", "出生"], ["nationalityLoss", "国籍離脱・喪失"], ["other", "その他"]])}
-      {form.acquisitionCause === "other" && text("acquisitionCauseOther", L.acquisitionCauseOther)}
-      {text("stayPurpose", L.stayPurpose, { area: true })}
-      <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-600 md:col-span-2">
-        13 希望する在留資格は、案件情報の「希望する在留資格」（{record.targetStatus || "未設定"}）です。変更は案件情報の編集で行います。
-      </div>
-      {text("desiredPeriod", L.desiredPeriod, { placeholder: "例：1年" })}
-      {select("criminalRecord", L.criminalRecord, [["none", "無"], ["yes", "有"]])}
-      {form.criminalRecord === "yes" &&
-        text("criminalDetail", L.criminalDetail, { area: true, hint: "日本国外におけるもの、交通違反等による処分を含みます。" })}
-    </Section>
-  );
-  const acquisitionSecond = (
-    <Section title="在留資格取得許可申請書（項番16・17、取次者）" hint="出生による取得の場合など、申請人に雇用情報がなくても入力できます。「雇用・会社」タブの入力は不要です。">
-      {text("guarantorName", L.guarantorName)}
-      {text("guarantorRelationship", L.guarantorRelationship)}
-      {text("guarantorAddress", L.guarantorAddress, { wide: true })}
-      {text("guarantorPhone", L.guarantorPhone)}
-      {text("guarantorMobilePhone", L.guarantorMobilePhone)}
-      {text("legalRepName", L.legalRepName)}
-      {text("legalRepRelationship", L.legalRepRelationship)}
-      {text("legalRepAddress", L.legalRepAddress, { wide: true })}
-      {text("legalRepPhone", L.legalRepPhone)}
-      {text("agentName", "取次者 氏名")}
-      {text("agentAddress", "取次者 住所", { wide: true })}
-      {text("agentAffiliation", "取次者 所属機関等")}
-      {text("agentPhone", "取次者 電話番号")}
-    </Section>
-  );
-
   return (
     <div className="max-w-4xl space-y-6">
-      {isAcquisition && (
-        <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-900">
-          公式の在留資格取得許可申請書（別記第三十六号様式）の項目のうち、他の画面にない項目です。
-          旅券番号、犯罪を理由とする処分の内容、親族の情報などの個人情報を含むため、必要な項目のみ入力してください。
-          項目名の番号は、公式様式の項番です。なお、「転記補助シート」は、現在は更新許可申請の様式のみに対応しています。
-        </p>
-      )}
-      {!isAcquisition && (
       <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-900">
-        公式の在留期間更新許可申請書の項目のうち、他の画面にない項目です。入力した内容は「転記補助シート」に載ります。
+        公式の{layout.formName}の項目のうち、他の画面にない項目です。入力した内容は「転記補助シート」に載ります。
         旅券番号、犯罪を理由とする処分の内容、親族の情報などの個人情報を含むため、必要な項目のみ入力してください。
         項目名の番号は、公式様式の項番です。
       </p>
-      )}
 
       {errorFields.length > 0 && (
         <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -177,36 +130,49 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
           <ul className="mt-1 list-disc pl-5">
             {errorFields.map((k) => (
               <li key={k}>
-                {FORM_DETAILS_FIELD_LABELS[k] ?? k}：{errors[k]}
+                {layout.labels[k] ?? k}：{errors[k]}
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {isAcquisition && acquisitionFirst}
-
-      {!isAcquisition && (
-      <Section title="申請人等作成用1（項番5〜15）">
-        {select("maritalStatus", "5 配偶者の有無", [["married", "有"], ["single", "無"]])}
-        {text("occupation", "6 職業")}
-        {text("homeAddress", "7 本国における居住地", { wide: true })}
-        {text("phone", "9 電話番号")}
-        {text("mobilePhone", "9 携帯電話番号")}
-        {text("passportNumber", "10 (1) 旅券番号")}
-        {text("passportExpiry", "10 (2) 旅券の有効期限", { date: true })}
-        {text("periodOfStay", "11 現に有する在留期間", { placeholder: "例：3年" })}
-        {text("desiredPeriod", "13 希望する在留期間", { placeholder: "例：3年" })}
-        {text("renewalReason", "14 更新の理由", { area: true })}
-        {select("criminalRecord", "15 犯罪を理由とする処分を受けたことの有無", [["none", "無"], ["yes", "有"]])}
+      <Section title={layout.sectionTitles.applicant1}>
+        {text("placeOfBirth")}
+        {select("maritalStatus", [["married", "有"], ["single", "無"]])}
+        {text("occupation")}
+        {text("homeAddress", { wide: true })}
+        {text("phone")}
+        {text("mobilePhone")}
+        {text("passportNumber")}
+        {text("passportExpiry", { date: true })}
+        {text("periodOfStay", { placeholder: "例：3年" })}
+        {layout.desiredStatusLabel && (
+          // 希望する在留資格は、案件情報の targetStatus を表示するのみ（二重入力を避ける）
+          <div>
+            <Field label={layout.desiredStatusLabel} hint="案件情報の「変更後の在留資格」です。この画面では入力しません。">
+              <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                <span className="font-medium">{record.targetStatus || "未設定"}</span>
+                {onGoOverview && (
+                  <button type="button" onClick={onGoOverview} className="text-xs underline">
+                    案件情報で変更する
+                  </button>
+                )}
+              </div>
+            </Field>
+          </div>
+        )}
+        {text("desiredPeriod", { placeholder: "例：3年" })}
+        {text("renewalReason", { area: true })}
+        {text("changeReason", { area: true })}
+        {select("criminalRecord", [["none", "無"], ["yes", "有"]])}
         {form.criminalRecord === "yes" &&
-          text("criminalDetail", "15 具体的内容", { area: true, hint: "日本国外におけるもの、交通違反等による処分を含みます。" })}
+          text("criminalDetail", { area: true, hint: "日本国外におけるもの、交通違反等による処分を含みます。" })}
       </Section>
-      )}
 
       <section className="rounded-lg border border-slate-200 bg-white p-6">
-        <h2 className="font-semibold">{isAcquisition ? L.relatives : "16 在日親族及び同居者"}</h2>
-        <div className="mt-4 max-w-xs">{select("relativesPresent", "有無", [["yes", "有"], ["no", "無"]])}</div>
+        <h2 className="font-semibold">{layout.sectionTitles.relatives}</h2>
+        <div className="mt-4 max-w-xs">{select("relativesPresent", [["yes", "有"], ["no", "無"]], "有無")}</div>
         {form.relativesPresent === "yes" && (
           <div className="mt-4 space-y-4">
             {form.relatives.map((r, i) => (
@@ -259,15 +225,11 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         )}
       </section>
 
-      {isAcquisition && acquisitionSecond}
-
-      {!isAcquisition && (
-      <>
-      <Section title="申請人等作成用2（N）（項番17〜22）">
-        {text("branchName", "17 勤務先 支店・事業所名")}
-        {text("workPhone", "17 (3) 勤務先 電話番号")}
-        {select("educationPlace", "18 (1) 最終学歴の所在", [["japan", "本邦"], ["foreign", "外国"]])}
-        <Field label="18 (2) 学歴の区分" hint="最終学歴として卒業（修了）した課程を選びます。">
+      <Section title={layout.sectionTitles.applicant2}>
+        {text("branchName")}
+        {text("workPhone")}
+        {select("educationPlace", [["japan", "本邦"], ["foreign", "外国"]])}
+        <Field label={layout.labels.educationLevel ?? "学歴の区分"} hint="最終学歴として卒業（修了）した課程を選びます。">
           <select className={inputClass} value={form.educationLevel} onChange={(e) => set("educationLevel", e.target.value)}>
             <option value="">未選択</option>
             {EDUCATION_LEVELS.map((l) => (
@@ -277,22 +239,22 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
             ))}
           </select>
         </Field>
-        {text("schoolName", "18 (3) 学校名")}
-        {text("graduationDate", "18 (4) 卒業年月日", { date: true })}
-        {text("majorField", "19 専攻・専門分野", { placeholder: "例：工学" })}
-        {text("itQualification", "20 情報処理技術者資格又は試験合格", { hint: "資格名または試験名。ない場合は空欄。" })}
-        {text("legalRepName", "22 代理人 氏名（法定代理人による申請の場合）")}
-        {text("legalRepRelationship", "22 本人との関係")}
-        {text("legalRepAddress", "22 代理人 住所", { wide: true })}
-        {text("legalRepPhone", "22 代理人 電話番号")}
-        {text("agentName", "取次者 氏名")}
-        {text("agentAddress", "取次者 住所", { wide: true })}
-        {text("agentAffiliation", "取次者 所属機関等")}
-        {text("agentPhone", "取次者 電話番号")}
+        {text("schoolName")}
+        {text("graduationDate", { date: true })}
+        {text("majorField", { placeholder: "例：工学" })}
+        {text("itQualification", { hint: "資格名または試験名。ない場合は空欄。" })}
+        {text("legalRepName")}
+        {text("legalRepRelationship")}
+        {text("legalRepAddress", { wide: true })}
+        {text("legalRepPhone")}
+        {text("agentName")}
+        {text("agentAddress", { wide: true })}
+        {text("agentAffiliation")}
+        {text("agentPhone")}
       </Section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6">
-        <h2 className="font-semibold">21 職歴（外国におけるものを含む）</h2>
+        <h2 className="font-semibold">{layout.sectionTitles.workHistory}</h2>
         <div className="mt-4 space-y-3">
           {form.workHistory.map((w) => (
             <div key={w.id} className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-4">
@@ -318,27 +280,25 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         </div>
       </section>
 
-      <Section title="所属機関等作成用1・2（N）">
-        {text("corporateNumber", "3 (2) 法人番号（13桁）")}
-        {text("employmentInsuranceNumber", "3 (4) 雇用保険適用事業所番号（11桁）", { hint: "非該当の事業所は空欄。" })}
-        {text("orgPhone", "3 (6) 電話番号")}
-        {text("annualSales", "3 (8) 年間売上高（直近年度）", { placeholder: "円" })}
-        {text("foreignStaffCount", "3 (9) 外国人職員数", { placeholder: "名" })}
-        {text("experienceYears", "7 実務経験年数", { placeholder: "年" })}
-        {text("positionTitle", "8 職務上の地位（役職名）")}
-        {text("occupationCode", "9 職種（別紙「職種一覧」の番号）", { hint: "技術・人文知識・国際業務は 2〜18、24〜31、51〜54、999 から選択。" })}
-        {text("dispatchName", "11 派遣先等 (1) 名称")}
-        {text("dispatchCorporateNumber", "11 (2) 法人番号")}
-        {text("dispatchBranchName", "11 (3) 支店・事業所名")}
-        {text("dispatchInsuranceNumber", "11 (4) 雇用保険適用事業所番号")}
-        {text("dispatchAddress", "11 (6) 所在地", { wide: true })}
-        {text("dispatchPhone", "11 (6) 電話番号")}
-        {text("dispatchCapital", "11 (7) 資本金")}
-        {text("dispatchAnnualSales", "11 (8) 年間売上高")}
-        {text("dispatchPeriod", "11 (9) 派遣予定期間")}
+      <Section title={layout.sectionTitles.organization}>
+        {text("corporateNumber")}
+        {text("employmentInsuranceNumber", { hint: "非該当の事業所は空欄。" })}
+        {text("orgPhone")}
+        {text("annualSales", { placeholder: "円" })}
+        {text("foreignStaffCount", { placeholder: "名" })}
+        {text("experienceYears", { placeholder: "年" })}
+        {text("positionTitle")}
+        {text("occupationCode", { hint: "技術・人文知識・国際業務は 2〜18、24〜31、51〜54、999 から選択。" })}
+        {text("dispatchName")}
+        {text("dispatchCorporateNumber")}
+        {text("dispatchBranchName")}
+        {text("dispatchInsuranceNumber")}
+        {text("dispatchAddress", { wide: true })}
+        {text("dispatchPhone")}
+        {text("dispatchCapital")}
+        {text("dispatchAnnualSales")}
+        {text("dispatchPeriod")}
       </Section>
-      </>
-      )}
 
       <div className="flex items-center gap-3">
         <Button disabled={hasError} onClick={save}>
