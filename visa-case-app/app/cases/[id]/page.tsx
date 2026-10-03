@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
@@ -90,7 +90,8 @@ export default function CaseDetailPage() {
   const loaded = useStoreLoaded();
   const canEdit = useCan("edit");
   const canDelete = useCan("deleteCase");
-  const [tab, setTab] = useState<Tab>("overview");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => (searchParams.get("tab") === "documents" ? "documents" : "overview"));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
@@ -238,15 +239,25 @@ export default function CaseDetailPage() {
             </dl>
           </section>
           {!doc && (
-            <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
-              次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <p>次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。</p>
+              {canEdit && (
+                <Button type="button" onClick={() => setTab("documents")}>
+                  書類を登録する
+                </Button>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {tab === "documents" && (
         <div className="space-y-6">
+          {canEdit && record.documents.length === 0 && (
+            <p className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              最初に、在留カードを登録してください。登録後に、「申請人情報」タブで、原本を見ながら内容を入力します。
+            </p>
+          )}
           {canEdit && (
             <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("applicant")} />
           )}
