@@ -14,6 +14,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // 公式様式（Excel）の差し込み元テンプレートは、実行時に node:fs で読む。本番のファイル追跡に含める
+  outputFileTracingIncludes: {
+    "/api/documents/official-form": ["./docs/official/**/*.xlsx"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

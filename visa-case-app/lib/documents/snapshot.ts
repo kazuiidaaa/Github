@@ -2,13 +2,15 @@ import { evaluate } from "../requirements/evaluate";
 import { progressOf } from "../requirements/progress";
 import { sortChecks } from "../checks/definitions";
 import { buildTranscription } from "./formMapping";
+import { officialFormInputOf, officialFormSpecFor } from "./officialForms";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type CaseRecord } from "../types";
 import {
   DOCUMENT_TYPE_LABELS,
   NOTICES,
+  OFFICIAL_FORM_NOTICES,
   TRANSCRIPTION_NOTICES,
+  type BuildableDocumentType,
   type ContentJson,
-  type InternalDocumentType,
   type SnapshotRequirement,
 } from "./types";
 
@@ -55,7 +57,13 @@ function requirementsOf(c: CaseRecord): NonNullable<ContentJson["requirements"]>
  * 案件の現在の内容から、生成時点の写し（content_json）を作る。
  * 値はすべて複製し、案件への参照は持たない。
  */
-export function buildContent(c: CaseRecord, type: InternalDocumentType, now: Date = new Date()): ContentJson {
+export function buildContent(
+  c: CaseRecord,
+  type: BuildableDocumentType,
+  now: Date = new Date(),
+  /** 公式様式（Excel）のみ。差し込みエンジン（API）が返した warnings。生成時点の注意として、そのまま保存する */
+  officialFormWarnings: string[] = [],
+): ContentJson {
   const a = c.applicant;
   const e = c.employment;
   const base: ContentJson = {
@@ -118,6 +126,17 @@ export function buildContent(c: CaseRecord, type: InternalDocumentType, now: Dat
   };
 
   switch (type) {
+    case "official_application_form":
+      return {
+        ...base,
+        officialForm: {
+          form: { ...officialFormSpecFor(c.procedureType).form },
+          applicantConfirmed: c.applicant.confirmationStatus === "confirmed",
+          warnings: [...officialFormWarnings],
+          input: officialFormInputOf(c),
+        },
+        notices: [...OFFICIAL_FORM_NOTICES, NOTICES[1]],
+      };
     case "transcription_aid":
       return {
         ...base,
@@ -133,6 +152,6 @@ export function buildContent(c: CaseRecord, type: InternalDocumentType, now: Dat
   }
 }
 
-export function titleOf(c: CaseRecord, type: InternalDocumentType): string {
+export function titleOf(c: CaseRecord, type: BuildableDocumentType): string {
   return `${c.caseName} ${DOCUMENT_TYPE_LABELS[type]}`;
 }
