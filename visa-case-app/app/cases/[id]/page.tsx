@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
@@ -92,6 +93,7 @@ export default function CaseDetailPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
 
   if (!record && !loaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
 
@@ -109,7 +111,6 @@ export default function CaseDetailPage() {
   const doc = record.documents[0];
 
   function removeDocument(d: DocumentRecord) {
-    if (!confirm(`「${d.fileName}」を削除します。よろしいですか。`)) return;
     updateCase(record!.id, (c) => ({ ...c, workflowStatus: "preparing", documents: [] }));
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
   }
@@ -156,6 +157,16 @@ export default function CaseDetailPage() {
             setDeleting(false);
             if (ok) router.push("/cases");
             else setConfirmingDelete(false);
+          }}
+        />
+      )}
+      {docToDelete && (
+        <ConfirmDocumentDeleteDialog
+          fileName={docToDelete.fileName}
+          onCancel={() => setDocToDelete(null)}
+          onConfirm={() => {
+            removeDocument(docToDelete);
+            setDocToDelete(null);
           }}
         />
       )}
@@ -248,7 +259,7 @@ export default function CaseDetailPage() {
                 doc={d}
                 locked={record.workflowStatus === "applicant_confirmed"}
                 readOnly={!canEdit}
-                onDelete={() => removeDocument(d)}
+                onDelete={() => setDocToDelete(d)}
               />
             ))}
           </section>
