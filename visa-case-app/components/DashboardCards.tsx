@@ -1,11 +1,12 @@
 import type { Summary } from "@/lib/caseMetrics";
 
-export type CardKey = "total" | "review" | "missingDocs" | "checksPending" | "ready" | "within30";
+export type CardKey = "total" | "review" | "missingDocs" | "unconfirmed" | "checksPending" | "ready" | "within30";
 
 const CARDS: { key: CardKey; label: string; field: keyof Summary }[] = [
   { key: "total", label: "案件総数", field: "total" },
   { key: "review", label: "確認待ち", field: "review" },
   { key: "missingDocs", label: "書類待ち", field: "missingDocs" },
+  { key: "unconfirmed", label: "確認未了", field: "unconfirmed" },
   { key: "checksPending", label: "申請前チェック待ち", field: "checksPending" },
   { key: "ready", label: "申請準備完了", field: "ready" },
   { key: "within30", label: "期限30日以内", field: "within30" },
@@ -21,7 +22,7 @@ export function DashboardCards({
   onSelect: (key: CardKey) => void;
 }) {
   return (
-    <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-6">
+    <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-7">
       {CARDS.map((c) => (
         <button
           key={c.key}
