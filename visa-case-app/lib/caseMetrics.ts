@@ -88,6 +88,8 @@ export interface CaseFilter {
   status: string; // "all" または状態
   within30: boolean;
   missingDocs: boolean;
+  /** 在留カードが未登録（documents が空）の案件のみ */
+  noCard: boolean;
   unconfirmed: boolean;
   checksPending: boolean;
   sort: SortKey;
@@ -99,6 +101,7 @@ export const DEFAULT_FILTER: CaseFilter = {
   status: "all",
   within30: false,
   missingDocs: false,
+  noCard: false,
   unconfirmed: false,
   checksPending: false,
   sort: "updated",
@@ -122,6 +125,7 @@ export function applyFilter(cases: CaseRecord[], f: CaseFilter): CaseRow[] {
       if (f.status !== "all" && c.workflowStatus !== f.status) return false;
       if (f.within30 && !m.within30) return false;
       if (f.missingDocs && m.missingCount === 0) return false;
+      if (f.noCard && c.documents.length > 0) return false;
       if (f.unconfirmed && !m.unconfirmed) return false;
       if (f.checksPending && !m.checksPending) return false;
       return true;
@@ -145,6 +149,7 @@ export function isFilterActive(f: CaseFilter): boolean {
     f.status !== "all" ||
     f.within30 ||
     f.missingDocs ||
+    f.noCard ||
     f.unconfirmed
   );
 }
