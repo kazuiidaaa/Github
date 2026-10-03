@@ -1,4 +1,5 @@
 import { formatDate, formatDateTime } from "@/lib/format";
+import { eyebrowOf } from "@/lib/documents/model";
 import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
@@ -51,6 +52,28 @@ function ApplicantSection({ a }: { a: NonNullable<ContentJson["applicant"]> }) {
         />
       </dl>
     </Section>
+  );
+}
+
+function OfficialFormSection({ o }: { o: NonNullable<ContentJson["officialForm"]> }) {
+  return (
+    <>
+      <Section title="対象の公式様式">
+        <dl className="grid grid-cols-[10rem_1fr] gap-y-1.5 text-sm">
+          <Row label="様式" value={o.form.formName} />
+          <Row label="ファイル識別番号" value={o.form.fileId} />
+          <Row label="出典" value={o.form.sourceUrl} />
+          <Row label="様式の確認日" value={formatDate(o.form.confirmedOn)} />
+          <Row label="申請人情報" value={o.applicantConfirmed ? "確認済み" : "下書き（未確認）"} />
+        </dl>
+      </Section>
+      <Section title="注意（差し込み時の確認事項）">
+        {o.warnings.length === 0 && <p className="text-sm">なし</p>}
+        {o.warnings.map((w) => (
+          <p key={w} className="text-sm font-medium text-amber-800">注意：{w}</p>
+        ))}
+      </Section>
+    </>
   );
 }
 
@@ -110,7 +133,7 @@ export function DocumentSheet({ doc }: { doc: GeneratedDocument }) {
     <article className="mx-auto max-w-[210mm] bg-white p-8 text-slate-900 shadow-sm print:shadow-none">
       <header className="mb-6 border-b-2 border-slate-800 pb-3">
         <p className="text-xs text-slate-500">
-          {type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）"}
+          {eyebrowOf(type)}
         </p>
         <h1 className="mt-1 text-xl font-semibold">{DOCUMENT_TYPE_LABELS[type]}</h1>
         <p className="mt-1 text-sm">{c.case.caseName}（{c.case.procedureLabel}）</p>
@@ -140,6 +163,8 @@ export function DocumentSheet({ doc }: { doc: GeneratedDocument }) {
           <Row label="案件の状態" value={c.case.workflowLabel} />
         </dl>
       </Section>
+
+      {c.officialForm && <OfficialFormSection o={c.officialForm} />}
 
       {c.transcription && <TranscriptionSections t={c.transcription} />}
 

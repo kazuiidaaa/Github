@@ -7,6 +7,8 @@ import { localKey } from "../demo";
 import { supabase, usesSupabase } from "../supabase";
 import type { CaseRecord } from "../types";
 import { buildContent, titleOf } from "./snapshot";
+import { XLSX_MIME, requestOfficialXlsx } from "./officialFormClient";
+import { officialFormInputOf } from "./officialForms";
 import type {
   ContentJson,
   GeneratedDocument,
@@ -15,6 +17,7 @@ import type {
   InternalDocumentType,
   OutputFormat,
 } from "./types";
+import { isOfficialForm } from "./types";
 
 // 生成文書の保存。案件のストアとは独立させ、接続情報の有無で保存先だけを切り替える。
 
@@ -145,7 +148,10 @@ export function useGeneratedDocuments(caseId: string): {
 export async function generateDocuments(record: CaseRecord, types: InternalDocumentType[]): Promise<void> {
   const created: GeneratedDocument[] = [];
   for (const type of types) {
-    const content = buildContent(record, type);
+    // 公式様式（Excel）は、先にエクセルを作る（失敗した場合は、版を作らない）。
+    // 差し込みの warnings は、生成時点の注意として content_json に保存する
+    const official = isOfficialForm(type) ? await requestOfficialXlsx(record.procedureType, officialFormInputOf(record)) : undefined;
+    const content = buildContent(record, type, new Date(), official?.warnings);
     const title = titleOf(record, type);
     let doc: GeneratedDocument;
     if (usesSupabase()) {
@@ -176,8 +182,14 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
     }
     created.push(doc);
     logAudit(record.id, "document_generated", { type, version: doc.version });
+    if (official) {
+      // 保存した版（画面）から、エクセルを新しい版として保存する。画面の版には、注意と出典が残る
+      const xlsx = await exportFile(doc, "xlsx", official.blob);
+      created.push(xlsx);
+    }
   }
-  byCase = { ...byCase, [record.id]: sorted([...(byCase[record.id] ?? []), ...created]) };
+  const known = new Set((byCase[record.id] ?? []).map((d) => d.id));
+  byCase = { ...byCase, [record.id]: sorted([...(byCase[record.id] ?? []), ...created.filter((d) => !known.has(d.id))]) };
   emit();
 }
 
@@ -221,13 +233,14 @@ if (typeof window !== "undefined" && supabase) {
 const MIME = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
+  xlsx: XLSX_MIME,
 } as const;
 const FILE_BUCKET = "generated-documents";
 
 export type FileFormat = keyof typeof MIME;
 
 export function fileNameOf(doc: GeneratedDocument): string {
-  const ext = doc.outputFormat === "pdf" ? "pdf" : "docx";
+  const ext = doc.outputFormat === "pdf" ? "pdf" : doc.outputFormat === "xlsx" ? "xlsx" : "docx";
   return `${doc.title}_v${doc.version}.${ext}`.replace(/[\\/:*?"<>|]/g, "_");
 }
 
@@ -244,6 +257,12 @@ function saveBlob(blob: Blob, fileName: string) {
 
 /** 保存済みの内容から、出力形式に応じたファイルを作る。現在の案件情報は参照しない */
 async function buildFile(doc: GeneratedDocument): Promise<Blob> {
+  if (doc.outputFormat === "xlsx") {
+    // 保存した入力値の写しから作る（現在の案件情報は参照しない）
+    const o = doc.content.officialForm;
+    if (!o) throw new AppError("この版には、エクセルを作るための情報がありません。");
+    return (await requestOfficialXlsx(doc.content.case.procedureType, o.input)).blob;
+  }
   if (doc.outputFormat === "pdf") {
     const { buildPdf, loadJapaneseFont } = await import("./pdf");
     return buildPdf(doc, await loadJapaneseFont());
@@ -253,10 +272,15 @@ async function buildFile(doc: GeneratedDocument): Promise<Blob> {
 }
 
 /**
- * 保存済みの内容（content_json）から、WordまたはPDFを新しい版として出力する。
+ * 保存済みの内容（content_json）から、Word・PDF・エクセルを新しい版として出力する。
  * 元の版は変更しない。出力した版は「行政書士確認前」から始まる。
  */
-export async function exportFile(source: GeneratedDocument, format: FileFormat): Promise<GeneratedDocument> {
+export async function exportFile(
+  source: GeneratedDocument,
+  format: FileFormat,
+  /** すでに作ったファイルがあれば渡す（エクセルを二重に作らないため） */
+  prebuilt?: Blob,
+): Promise<GeneratedDocument> {
   const id = newId();
   const fresh: GeneratedDocument = {
     ...source,
@@ -271,7 +295,7 @@ export async function exportFile(source: GeneratedDocument, format: FileFormat):
   if (usesSupabase()) {
     if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
     const path = `${source.organizationId}/${source.caseId}/${id}.${format}`;
-    const blob = await buildFile(fresh);
+    const blob = prebuilt ?? (await buildFile(fresh));
     const up = await db().storage.from(FILE_BUCKET).upload(path, blob, { contentType: MIME[format] });
     if (up.error) throw toAppError(up.error);
     const { data, error: e } = await db().rpc("register_generated_file", {

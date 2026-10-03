@@ -28,6 +28,12 @@ function kv(rows: [string, string | undefined][]): Block {
   return { kind: "kv", rows: rows.map(([k, v]) => [k, v || "未入力"]) };
 }
 
+/** 文書の種類ごとの、見出し上の位置づけ */
+export function eyebrowOf(type: GeneratedDocument["documentType"]): string {
+  if (type === "official_application_form") return "公式様式への差し込み（下書き。提出前に原本と照合）";
+  return type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）";
+}
+
 export function buildBlocks(doc: GeneratedDocument): Block[] {
   const c = doc.content;
   const type = doc.documentType;
@@ -35,7 +41,7 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
 
   out.push({
     kind: "eyebrow",
-    text: type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）",
+    text: eyebrowOf(type),
   });
   out.push({ kind: "title", text: DOCUMENT_TYPE_LABELS[type] });
   out.push({ kind: "subtitle", text: `${c.case.caseName}（${c.case.procedureLabel}）` });
@@ -56,6 +62,23 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
       ["案件の状態", c.case.workflowLabel],
     ]),
   );
+
+  if (c.officialForm) {
+    const o = c.officialForm;
+    out.push({ kind: "heading", text: "対象の公式様式" });
+    out.push(
+      kv([
+        ["様式", o.form.formName],
+        ["ファイル識別番号", o.form.fileId],
+        ["出典", o.form.sourceUrl],
+        ["様式の確認日", formatDate(o.form.confirmedOn)],
+        ["申請人情報", o.applicantConfirmed ? "確認済み" : "下書き（未確認）"],
+      ]),
+    );
+    out.push({ kind: "heading", text: "注意（差し込み時の確認事項）" });
+    if (o.warnings.length === 0) out.push({ kind: "paragraph", text: "なし" });
+    for (const w of o.warnings) out.push({ kind: "paragraph", text: `注意：${w}` });
+  }
 
   if (c.transcription) {
     const t = c.transcription;
@@ -176,5 +199,5 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
 
 /** 各ページの下部に表示する文言（ページ番号は出力側で付ける） */
 export function footerLabel(doc: GeneratedDocument): string {
-  return `${GENERATED_STATUS_LABELS[doc.status]}／内部確認用`;
+  return `${GENERATED_STATUS_LABELS[doc.status]}／${doc.documentType === "official_application_form" ? "下書き" : "内部確認用"}`;
 }

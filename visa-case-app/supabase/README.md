@@ -73,3 +73,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 - `supabase/migrations/0012_transcription_aid.sql`:生成文書の種類に「転記補助シート」を追加します(0011 の実行後)。
 - `supabase/migrations/0014_form_fields.sql`:公式申請書の追加入力項目(旅券番号、犯罪を理由とする処分、在日親族、職歴など)の保存先 `form_details` を追加します。0013(役割)の実行後に実行してください。個人情報を含むため、実行前にバックアップを取得してください。実行せずに最新のアプリを使うと、案件の読み込みが失敗します。
 
+
+## 0016(フェーズ11:公式様式のエクセル出力)
+
+`supabase/migrations/0016_generated_documents_xlsx.sql` を、0015 の実行後に SQL Editor で実行します。`generated_documents.output_format` の制約、バケット `generated-documents` の許可形式(.xlsx を追加)、`register_generated_file` 関数の許可形式に、`xlsx` を追加します。実行せずに最新のアプリで「公式申請様式」を生成すると、エクセルの保存に失敗します(画面版の保存までは行われます)。既存のデータは変更しません。
