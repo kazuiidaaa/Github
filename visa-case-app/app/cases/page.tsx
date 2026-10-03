@@ -13,7 +13,7 @@ import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
-import { needsTargetStatus, PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
+import { getTargetStatusDisplay, PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
 import type { CaseMetrics } from "@/lib/caseMetrics";
 
 function readFilter(p: URLSearchParams): CaseFilter {
@@ -79,9 +79,35 @@ function ResidenceStatusCell({ record: c }: { record: CaseRecord }) {
   );
 }
 
-/** 在留資格変更・認定証明書交付の案件で、変更後（希望）の在留資格を表示する。未入力は「未入力」と表示する。 */
-function TargetStatusCell({ record: c }: { record: CaseRecord }) {
-  return <>{c.targetStatus || <span className="text-slate-400">未入力</span>}</>;
+/** 変更後（希望）の在留資格の値。未入力は「未入力」と表示する。 */
+function TargetStatusValue({ value }: { value: string | null }) {
+  return <>{value ?? <span className="text-slate-400">未入力</span>}</>;
+}
+
+/** 表（md 以上）：在留資格セルの2行目。表示対象外の手続種別では何も出さない。 */
+function TargetStatusLine({ record: c }: { record: CaseRecord }) {
+  const target = getTargetStatusDisplay(c.procedureType, c.targetStatus);
+  if (!target) return null;
+  return (
+    <p className="mt-1 text-xs text-slate-600">
+      <span className="text-slate-500">{target.tableLabel}</span>
+      <TargetStatusValue value={target.value} />
+    </p>
+  );
+}
+
+/** カード（md 未満）：dl の1項目。表示対象外の手続種別では何も出さない。 */
+function TargetStatusItem({ record: c }: { record: CaseRecord }) {
+  const target = getTargetStatusDisplay(c.procedureType, c.targetStatus);
+  if (!target) return null;
+  return (
+    <>
+      <dt className="text-slate-500">{target.cardLabel}</dt>
+      <dd>
+        <TargetStatusValue value={target.value} />
+      </dd>
+    </>
+  );
 }
 
 function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: CaseMetrics }) {
@@ -208,12 +234,7 @@ function CasesView() {
                 <td className="px-4 py-3">{procedureLabel(c)}</td>
                 <td className="px-4 py-3">
                   <ResidenceStatusCell record={c} />
-                  {needsTargetStatus(c.procedureType) && (
-                    <p className="mt-1 text-xs text-slate-600">
-                      <span className="text-slate-500">変更後：</span>
-                      <TargetStatusCell record={c} />
-                    </p>
-                  )}
+                  <TargetStatusLine record={c} />
                 </td>
                 <td className="px-4 py-3">
                   <ExpiryBadge date={c.applicant.residenceExpiryDate} />
@@ -259,14 +280,7 @@ function CasesView() {
               <dd>{procedureLabel(c)}</dd>
               <dt className="text-slate-500">在留資格</dt>
               <dd><ResidenceStatusCell record={c} /></dd>
-              {needsTargetStatus(c.procedureType) && (
-                <>
-                  <dt className="text-slate-500">変更後の在留資格</dt>
-                  <dd>
-                    <TargetStatusCell record={c} />
-                  </dd>
-                </>
-              )}
+              <TargetStatusItem record={c} />
               <dt className="text-slate-500">在留期限</dt>
               <dd>
                 <ExpiryBadge date={c.applicant.residenceExpiryDate} />

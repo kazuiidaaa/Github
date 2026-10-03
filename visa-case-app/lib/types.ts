@@ -27,6 +27,24 @@ export function needsTargetStatus(procedureType: string): boolean {
   return procedureType === "change" || procedureType === "coe";
 }
 
+/** 案件一覧に出す「変更後／希望の在留資格」の表示内容。value が null のときは未入力 */
+export interface TargetStatusDisplay {
+  /** 表（md 以上）の接頭辞 */
+  tableLabel: string;
+  /** カード（md 未満）の項目名 */
+  cardLabel: string;
+  value: string | null;
+}
+
+/** 手続種別ごとの表示内容を返す。change=変更後、coe=希望、それ以外は表示なし（null）。空白だけの値は未入力 */
+export function getTargetStatusDisplay(procedureType: string, targetStatus: string | undefined): TargetStatusDisplay | null {
+  if (!needsTargetStatus(procedureType)) return null;
+  const value = (targetStatus ?? "").trim() || null;
+  return procedureType === "change"
+    ? { tableLabel: "変更後：", cardLabel: "変更後の在留資格", value }
+    : { tableLabel: "希望：", cardLabel: "希望する在留資格", value };
+}
+
 /** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
 export const RESIDENCE_STATUSES = [
   "外交",
