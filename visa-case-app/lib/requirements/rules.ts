@@ -1,4 +1,4 @@
-import type { EmploymentInfo, OrgCategory } from "../types";
+import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
 // 必要書類の規則。プログラムから分離したデータとして保持し、改正時はここだけを修正する。
 // 最終的な判断は行政書士が行う前提で、確認が不十分な項目は verify: true とする。
@@ -24,7 +24,7 @@ export interface RequirementRule {
 export interface RuleSet {
   id: string;
   title: string;
-  procedureType: "renewal";
+  procedureType: ProcedureType;
   residenceStatus: string;
   sources: { title: string; url: string }[];
   checkedAt: string;
