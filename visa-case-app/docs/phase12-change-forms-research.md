@@ -92,26 +92,44 @@
 - 項目の過不足の確認結果:更新様式にあって変更様式にない項目は `renewalReason` のみ(変更の画面では非表示)。変更様式にあって現行のデータモデルにない項目は、`placeOfBirth`・`changeReason`・`targetStatus`(既存)のみです。上記以外に、追加・修正が必要な項目はありませんでした。
 - 転記補助シート(`lib/documents/formMapping.ts`)は更新様式専用のままです。変更様式への対応は、Excel差し込みを含め、別Issueとします。
 
-## 7. 項目番号表の仕組み(#85・#87向けの方針)
+## 7. 項目番号表の仕組み(#85・#87・#99向けの方針)
 
 画面の項目番号・項目名・見出しは、コンポーネントに直接書かず、`lib/formDetails.ts` の**手続種別ごとの項目番号表**から取得します。
 
-- `FORM_LAYOUTS: Partial<Record<ProcedureType, FormLayout>>` が表です。`getFormLayout(procedureType)` で取得します。表にない手続種別(認定・その他)は、従来どおり更新様式の表記になります(#85・#87が自分の手続種別を追加するまでの既定動作)。
+- `FORM_LAYOUTS: Partial<Record<ProcedureType, FormLayout>>` が表です。`getFormLayout(procedureType)` で取得します。表にない手続種別(取得・その他)は、従来どおり更新様式の表記になります(#87・#99が自分の手続種別を追加するまでの既定動作)。現在の登録は、更新(`renewal`)・変更(`change`)・認定(`coe`、#85)です。
 - `FormLayout` の内容:
   - `formName`・`formId`:様式名と識別番号(見出しの文言、出典の対応)。
-  - `sectionTitles`:6つの見出し(申請人等作成用1・在日親族・申請人等作成用2・職歴・所属機関等)。項番の範囲が様式で異なる場合に備え、表で持ちます。
-  - `labels`:フィールド名から、番号付きの項目名への対応。**ここにないフィールドは、その手続の画面に表示しません**(例:変更では `renewalReason` を非表示)。
-  - `desiredStatusLabel`:指定した手続では、入力欄を設けず、`CaseRecord.targetStatus` を表示のみにします(変更で使用。画面に「案件情報で変更する」の導線を付けています)。
+  - `sectionTitles`:5つの見出し(申請人等作成用1・在日親族・申請人等作成用2・職歴・所属機関等)。`Partial` であり、**見出しを定義しないセクションは、セクションごと描画しません**(下記「様式にない項目・セクションを表示しない仕組み」)。
+  - `labels`:フィールド名から、番号付きの項目名への対応。**ここにないフィールドは、その手続の画面に表示しません**(例:変更では `renewalReason` を非表示)。入力エラーの要約の項目名にも、これを使います。
+  - `desiredStatusLabel`:指定した手続では、入力欄を設けず、`CaseRecord.targetStatus` を表示のみにします(変更・認定で使用。画面に「案件情報で変更する」の導線を付けています)。
+  - `livesTogetherLabel`:在日親族の「同居の有無」の列名。認定は「同居予定の有無」。省略時は「同居の有無」。
 - `FormDetailsForm` の `text()`・`select()` は、`layout.labels[key]` からラベルを取得し、ない場合は何も描画しません。画面側に、手続種別ごとの分岐は書きません。
-- 共通の項目は `COMMON_LABELS`(更新・変更で番号・名称が同じもの)に集約しています。
+- ラベルの共有は、次の2段です。番号を含まない項目名・様式間で番号が同じ項目は `UNNUMBERED_LABELS`(取次者、所属機関等の「3 (x)」)。更新・変更で番号が共通の項目は `COMMON_LABELS`(`UNNUMBERED_LABELS` を含む)。**認定のように番号がずれる様式は `COMMON_LABELS` を展開せず**、`UNNUMBERED_LABELS` だけを展開し、他の項番を直接書きます(認定は申請人等作成用2が22〜27、所属機関等の実務経験年数以降が8・9・10・12のため)。
+- 日付の検証対象は `DATE_FIELD_KEYS`。`validateFormDetails(f, layout)` は、`layout.labels` にない項目の日付は確認しません(画面にない項目の誤りで保存できなくなることを避ける)。
 
-### 認定(#85)・取得(#87)が追加する手順
-1. 該当様式のExcel(`docs/official/` 配下)で、項目番号・項目名を確認する。
-2. `lib/formDetails.ts` に、手続種別の `FormLayout` を1つ定義し、`FORM_LAYOUTS` に追加する。共通の項目は `COMMON_LABELS` を展開し、番号・名称が違う項目だけを上書きする。様式が `COMMON_LABELS` の番号と合わない項目が多い場合は、`COMMON_LABELS` を共通部分と手続別に分けてよい。
-3. 様式にあって `FormDetails` にない項目があれば、`FormDetails`・`EMPTY_FORM_DETAILS` に追加し(`normalizeFormDetails` が自動で補う)、`FormDetailsForm` に `text("項目名キー")` の1行を追加する。**ラベルは書かない**(表から取得される)。
-4. `tests/formDetails.test.ts` の「手続種別ごとの項目番号表」に、番号の固定テストを追加する。
-5. 同じファイルを3つのIssueが変更するため、マージ時は、`FORM_LAYOUTS` の追加行と `FormDetails` のフィールドの追加が競合しやすい。どちらも、互いの追加を残す形で解消する。
+### 様式にない項目・セクションを表示しない仕組み(取得 #99 が使う)
+様式によっては、画面に出すべきでない項目・セクションがあります(例:様式によっては、職歴や所属機関等作成用が不要な場合がある)。`FormLayout` に、次の規則を持たせています。**画面のコードは変更しません。表に書くだけです。**
+
+| 隠したいもの | 表での書き方 |
+|---|---|
+| 個別の項目(`text`・`select` で描画するもの) | `labels` にそのキーを書かない |
+| セクション全体(申請人等作成用1・在日親族・申請人等作成用2・職歴・所属機関等) | `sectionTitles` にそのキーを書かない(`Partial`) |
+| 学歴の区分(`educationLevel`。選択肢の入力欄) | `labels.educationLevel` を書かない |
+| 希望する在留資格などの「案件情報の表示のみ」の欄 | `desiredStatusLabel` を書かない(書くと表示) |
+
+- 例(職歴と所属機関等を出さない場合):`sectionTitles: { applicant1: "…", relatives: "…", applicant2: "…" }`(`workHistory`・`organization` を書かない)。
+- セクションを残して一部の項目だけ隠す場合は、`labels` に書かない項目を作る。セクション内の項目がすべて隠れても、見出しは残るので、その場合は見出しも書かない。
+- 更新・変更は、5つの見出しと `educationLevel` をすべて持つため、表示は従来と変わりません。テスト(`tests/formDetails.test.ts` の「更新・変更の表示は、従来と同じ」)で、更新・変更の項目名・見出しの全件を固定しています。
+
+### 認定(#85)・取得(#87・#99)が追加する手順
+1. 該当様式のExcel(`docs/official/` 配下)で、項目番号・項目名を確認する(openpyxl で読める)。
+2. `lib/formDetails.ts` に、手続種別の `FormLayout` を1つ定義し、`FORM_LAYOUTS` に追加する。番号が更新・変更と同じ項目が多ければ `COMMON_LABELS` を展開して上書きする。番号がずれる項目が多ければ、認定と同様に `UNNUMBERED_LABELS` だけを展開して、全項番を書く。
+3. 様式にない項目・セクションは、上記の方法で隠す。
+4. 様式にあって `FormDetails` にない項目があれば、`FormDetails`・`EMPTY_FORM_DETAILS` に追加し(`normalizeFormDetails` が自動で補う)、`FormDetailsForm` に `text("項目名キー")` の1行を追加する。**ラベルは書かない**(表から取得される)。`select` を使う場合は、`select` の型のキーの選択肢に追加する。
+5. `tests/formDetails.test.ts` に、番号の固定テストを追加する(認定の「認定証明書交付申請の項目番号表」を参照)。
+6. 同じファイルを複数のIssueが変更するため、マージ時は、`FORM_LAYOUTS` の追加行と `FormDetails` のフィールドの追加が競合しやすい。どちらも、互いの追加を残す形で解消する。
 
 ## 8. 画面の表示(実装上の仕様。実機確認は未実施)
 - 変更の案件:見出しが「在留資格変更許可申請書」になり、「5 出生地」「6 配偶者の有無」「13 希望する在留資格(案件情報の値の表示)」「14 変更の理由」が表示される。「更新の理由」は表示されない。
 - 更新の案件:表示・項目名・保存の動作に変更なし。
+- 認定の案件:`docs/phase13-coe-forms-research.md` を参照。
