@@ -153,3 +153,17 @@ export function isFilterActive(f: CaseFilter): boolean {
     f.unconfirmed
   );
 }
+
+/** 有効な絞り込み条件の件数（並び順は含めない）。折りたたみ時の要約表示に使う。 */
+export function countActiveFilters(f: CaseFilter): number {
+  return [
+    f.query.trim() !== "",
+    f.procedure !== "all",
+    f.status !== "all",
+    f.within30,
+    f.missingDocs,
+    f.noCard,
+    f.unconfirmed,
+    f.checksPending,
+  ].filter(Boolean).length;
+}
