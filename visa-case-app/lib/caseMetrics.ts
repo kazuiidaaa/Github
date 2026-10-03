@@ -151,6 +151,7 @@ export function isFilterActive(f: CaseFilter): boolean {
     f.within30 ||
     f.missingDocs ||
     f.noCard ||
-    f.unconfirmed
+    f.unconfirmed ||
+    f.checksPending
   );
 }

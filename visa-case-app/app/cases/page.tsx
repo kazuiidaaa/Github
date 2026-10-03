@@ -52,6 +52,7 @@ function cardFilter(key: CardKey): CaseFilter {
   if (key === "checksPending") f.checksPending = true;
   if (key === "ready") f.status = "application_ready";
   if (key === "missingDocs") f.missingDocs = true;
+  if (key === "unconfirmed") f.unconfirmed = true;
   if (key === "within30") {
     f.within30 = true;
     f.sort = "expiry";
@@ -60,7 +61,7 @@ function cardFilter(key: CardKey): CaseFilter {
 }
 
 function activeCard(f: CaseFilter): CardKey | null {
-  const keys: CardKey[] = ["total", "review", "missingDocs", "checksPending", "ready", "within30"];
+  const keys: CardKey[] = ["total", "review", "missingDocs", "unconfirmed", "checksPending", "ready", "within30"];
   return keys.find((k) => toQuery(cardFilter(k)) === toQuery(f)) ?? null;
 }
 

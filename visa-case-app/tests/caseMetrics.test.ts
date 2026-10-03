@@ -1,6 +1,6 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { applyFilter, DEFAULT_FILTER, expiryLevel, expiryMessage, summarize } from "../lib/caseMetrics";
+import { applyFilter, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, summarize } from "../lib/caseMetrics";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function dateIn(days: number): string {
@@ -104,5 +104,15 @@ describe("在留カード未登録の絞り込み", () => {
     none2.documents = [];
     const rows = applyFilter([withDoc, none1, none2], { ...DEFAULT_FILTER, noCard: true });
     expect(rows.map((r) => r.record.id).sort()).toEqual(["b", "c"]);
+  });
+});
+
+describe("isFilterActive", () => {
+  it("初期状態では false を返す", () => {
+    expect(isFilterActive(DEFAULT_FILTER)).toBe(false);
+  });
+
+  it("checksPending のみ true の場合は true を返す", () => {
+    expect(isFilterActive({ ...DEFAULT_FILTER, checksPending: true })).toBe(true);
   });
 });
