@@ -61,29 +61,29 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
           {error}
         </p>
       )}
-      <table className="mb-5 w-full text-left text-sm">
-        <thead className="bg-slate-50 text-slate-600">
+      <table className="mb-5 block w-full text-left text-sm md:table">
+        <thead className="hidden bg-slate-50 text-slate-600 md:table-header-group">
           <tr>
             <th className="px-3 py-2">メールアドレス</th>
             <th className="px-3 py-2">役割</th>
             <th className="px-3 py-2" />
           </tr>
         </thead>
-        <tbody>
+        <tbody className="block md:table-row-group">
           {members === null && !error && (
-            <tr>
-              <td colSpan={3} className="px-3 py-4 text-slate-500">
+            <tr className="block md:table-row">
+              <td colSpan={3} className="block px-3 py-4 text-slate-500 md:table-cell">
                 読み込み中……
               </td>
             </tr>
           )}
           {members?.map((m) => (
-            <tr key={m.userId} className="border-t border-slate-100">
-              <td className="px-3 py-2">
+            <tr key={m.userId} className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 px-3 py-2 md:table-row md:p-0">
+              <td className="w-full break-all md:table-cell md:w-auto md:px-3 md:py-2">
                 {m.email}
                 {m.userId === myUserId && <span className="ml-2 text-xs text-slate-500">（あなた）</span>}
               </td>
-              <td className="px-3 py-2">
+              <td className="md:table-cell md:px-3 md:py-2">
                 {myRole === "owner" ? (
                   <select
                     className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
@@ -102,7 +102,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
                   (ROLE_LABELS[m.role as Role] ?? m.role)
                 )}
               </td>
-              <td className="px-3 py-2 text-right">
+              <td className="ml-auto md:table-cell md:px-3 md:py-2 md:text-right">
                 {m.userId !== myUserId && canRemoveMember(myRole, m.role) && (
                   <Button
                     variant="danger"
