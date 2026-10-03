@@ -1,0 +1,151 @@
+import { formatDate } from "../../format";
+import type { FormDetails } from "../../formDetails";
+import type { Applicant } from "../../types";
+
+/**
+ * 公式の在留資格取得許可申請書（別記第三十六号様式・Excel）の「入力欄」のセル座標と、案件DBの対応表。
+ *
+ * 座標は、テンプレート（docs/official/acquisition-application-form_930004121.xlsx）の
+ * ロック解除セルを機械的に列挙して特定した（手順は docs/phase11-renewal-fill-engine.md）。
+ * 項目番号・取得元は docs/phase14-acquisition-forms-research.md の対応表と、FORM_LAYOUTS.acquisition に合わせている。
+ * 対象外の項目・設計判断は docs/phase11-acquisition-fill-engine.md に記録している。
+ * 取得様式は雇用情報を前提にしないため、入力に EmploymentInfo は含めない。
+ */
+
+export interface AcquisitionCtx {
+  a: Applicant;
+  f: FormDetails;
+  /** 案件の「希望する在留資格」（CaseRecord.targetStatus）。未指定なら空文字 */
+  targetStatus: string;
+}
+
+export interface AcquisitionFillItem {
+  /** 公式様式の項目番号 */
+  no: string;
+  label: string;
+  sheet: string;
+  /** 結合セルは左上のセル */
+  cell: string;
+  /** 空文字なら書き込まない（テンプレートの元の状態のまま） */
+  get: (c: AcquisitionCtx) => string;
+}
+
+/** 「該当する選択肢を残す」方式の項目（性別・配偶者の有無）。値が空なら何も変更しない */
+export interface AcquisitionPickItem {
+  no: string;
+  label: string;
+  sheet: string;
+  get: (c: AcquisitionCtx) => string;
+  /** 値 → { セル: 書き込む文字列 }（空文字は、セルを空にする） */
+  writes: Record<string, Record<string, string>>;
+}
+
+/** 実際のシート名は「取得 (反映)」。照合は sheetKey（renewalMapping）で、全角半角・空白を無視する */
+export const SHEET_ACQUISITION = "取得 (反映)";
+const S = SHEET_ACQUISITION;
+
+const date = (v: string) => (v ? formatDate(v) : "");
+
+/** YYYY-MM-DD の、年・月・日の部分。先頭のゼロは除く */
+function datePart(v: string, part: "y" | "m" | "d"): string {
+  const m = /^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$/.exec(v.trim());
+  if (!m) return "";
+  const s = part === "y" ? m[1] : part === "m" ? m[2] : m[3];
+  return s ? String(Number(s)) : "";
+}
+
+const item = (no: string, label: string, cell: string, get: (c: AcquisitionCtx) => string): AcquisitionFillItem => ({
+  no,
+  label,
+  sheet: S,
+  cell,
+  get,
+});
+
+const dateItems = (no: string, label: string, cells: { y: string; m: string; d: string }, get: (c: AcquisitionCtx) => string): AcquisitionFillItem[] => [
+  item(no, `${label}（年）`, cells.y, (c) => datePart(get(c), "y")),
+  item(no, `${label}（月）`, cells.m, (c) => datePart(get(c), "m")),
+  item(no, `${label}（日）`, cells.d, (c) => datePart(get(c), "d")),
+];
+
+/** 15 在日親族及び同居者の欄は4行（2行ずつの結合セル） */
+const RELATIVE_ROWS = [56, 58, 60, 62];
+export const MAX_RELATIVES = RELATIVE_ROWS.length;
+
+const relativeItems: AcquisitionFillItem[] = RELATIVE_ROWS.flatMap((row, i) => {
+  const r = (c: AcquisitionCtx) => (c.f.relativesPresent === "yes" ? c.f.relatives[i] : undefined);
+  const label = `在日親族（${i + 1}人目）`;
+  return [
+    item("15", `${label} 続柄`, `A${row}`, (c) => r(c)?.relationship ?? ""),
+    item("15", `${label} 氏名`, `D${row}`, (c) => r(c)?.name ?? ""),
+    item("15", `${label} 生年月日`, `M${row}`, (c) => date(r(c)?.dateOfBirth ?? "")),
+    item("15", `${label} 国籍・地域`, `Q${row}`, (c) => r(c)?.nationality ?? ""),
+    item("15", `${label} 勤務先・通学先`, `X${row}`, (c) => r(c)?.workplace ?? ""),
+    item("15", `${label} 在留カード番号・特別永住者証明書番号`, `AE${row}`, (c) => r(c)?.cardNumber ?? ""),
+  ];
+});
+
+/** 13 希望する在留資格のうち、チェックボックスがある4つ。これ以外は「その他（ ）」の入力欄へ書く */
+export const ACQUISITION_CHECKBOX_STATUSES = ["永住者の配偶者等", "日本人の配偶者等", "定住者", "家族滞在"];
+
+export const ACQUISITION_FILL_ITEMS: AcquisitionFillItem[] = [
+  item("1", "国籍・地域", "G14", (c) => c.a.nationality),
+  ...dateItems("2", "生年月日", { y: "R14", m: "X14", d: "AB14" }, (c) => c.a.dateOfBirth),
+  item("3", "氏名", "E17", (c) => c.a.legalName),
+  item("5", "出生地", "O21", (c) => c.f.placeOfBirth),
+  item("7", "職業", "E24", (c) => c.f.occupation),
+  item("8", "本国における居住地", "V24", (c) => c.f.homeAddress),
+  item("9", "住居地", "G27", (c) => c.a.address),
+  item("9", "電話番号", "F30", (c) => c.f.phone),
+  item("9", "携帯電話番号", "X30", (c) => c.f.mobilePhone),
+  item("10", "旅券（1）番号", "H33", (c) => c.f.passportNumber),
+  ...dateItems("10", "旅券（2）有効期限", { y: "X33", m: "AD33", d: "AH33" }, (c) => c.f.passportExpiry),
+  item("11", "在留資格取得の事由 その他（内容）", "Z36", (c) => (c.f.acquisitionCause === "other" ? c.f.acquisitionCauseOther : "")),
+  item("12", "在留の理由", "F39", (c) => c.f.stayPurpose),
+  item("13", "希望する在留資格 その他（内容）", "Q44", (c) => {
+    const s = c.targetStatus.trim();
+    return s && !ACQUISITION_CHECKBOX_STATUSES.includes(s) ? s : "";
+  }),
+  item("13", "在留期間", "AF42", (c) => c.f.desiredPeriod),
+  item("14", "犯罪を理由とする処分（具体的内容）", "I47", (c) => (c.f.criminalRecord === "yes" ? c.f.criminalDetail : "")),
+  ...relativeItems,
+  item("16", "在日身元保証人（1）氏名", "F65", (c) => c.f.guarantorName),
+  item("16", "在日身元保証人（2）本人との関係", "AC65", (c) => c.f.guarantorRelationship),
+  item("16", "在日身元保証人（3）住所", "F67", (c) => c.f.guarantorAddress),
+  item("16", "在日身元保証人 電話番号", "G70", (c) => c.f.guarantorPhone),
+  item("16", "在日身元保証人 携帯電話番号", "Y70", (c) => c.f.guarantorMobilePhone),
+  item("17", "代理人（1）氏名", "F74", (c) => c.f.legalRepName),
+  item("17", "代理人（2）本人との関係", "AC74", (c) => c.f.legalRepRelationship),
+  item("17", "代理人（3）住所", "F76", (c) => c.f.legalRepAddress),
+  item("17", "代理人 電話番号", "G79", (c) => c.f.legalRepPhone),
+  // 17 代理人の携帯電話番号（Y79）は、案件DBに項目がないため対象外（別Issue）
+  item("取次者", "取次者（1）氏名", "E96", (c) => c.f.agentName),
+  item("取次者", "取次者（2）住所", "T96", (c) => c.f.agentAddress),
+  item("取次者", "取次者（3）所属機関等", "C101", (c) => c.f.agentAffiliation),
+  item("取次者", "取次者 電話番号", "Z101", (c) => c.f.agentPhone),
+];
+
+export const ACQUISITION_PICK_ITEMS: AcquisitionPickItem[] = [
+  {
+    no: "4",
+    label: "性別",
+    sheet: S,
+    get: (c) => c.a.gender,
+    // E21「男」・F21「・」・G21「女」。選ばれなかった側と「・」を空にする
+    writes: {
+      男: { E21: "男", F21: "", G21: "" },
+      女: { E21: "", F21: "", G21: "女" },
+    },
+  },
+  {
+    no: "6",
+    label: "配偶者の有無",
+    sheet: S,
+    get: (c) => (c.f.maritalStatus === "married" ? "有" : c.f.maritalStatus === "single" ? "無" : ""),
+    // AH21「有」・AI21「・」・AJ21「無」（別々のセル）。選ばれなかった側と「・」を空にする
+    writes: {
+      有: { AH21: "有", AI21: "", AJ21: "" },
+      無: { AH21: "", AI21: "", AJ21: "無" },
+    },
+  },
+];
