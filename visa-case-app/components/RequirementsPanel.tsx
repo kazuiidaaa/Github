@@ -23,6 +23,20 @@ const RESULT_LABEL: Record<Result, string> = { required: "必要", not_required:
 const RESULT_TONE: Record<Result, "red" | "gray" | "yellow"> = { required: "red", not_required: "gray", check: "yellow" };
 const PARTY_LABEL = { applicant: "申請人", organization: "所属機関" } as const;
 
+// 狭い画面幅（md 未満）では、表の行をカード状に縦積みして表示する。
+// 同じ要素を表示用に2重に描画すると、入力欄の状態（理由の自動保存）が二重になるため、
+// 1つの表を CSS だけで切り替える。md 以上は従来の表形式のまま。
+const TABLE_CLASS = "block w-full text-left text-sm md:table";
+const THEAD_CLASS = "hidden bg-slate-50 text-slate-600 md:table-header-group";
+const TBODY_CLASS = "block md:table-row-group";
+const TR_CLASS = "block border-t border-slate-100 px-4 py-3 align-top first:border-t-0 md:table-row md:p-0 md:first:border-t";
+const TD_CLASS = "block py-1.5 md:table-cell md:px-4 md:py-3";
+
+/** 狭い画面幅でのみ表示する、項目名のラベル */
+function CellLabel({ children }: { children: string }) {
+  return <span className="mb-1 block text-xs text-slate-500 md:hidden">{children}</span>;
+}
+
 const selectClass = "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs";
 
 function StatusSelect({ label, value, onChange }: { label: string; value: RequirementStatus; onChange: (v: RequirementStatus) => void }) {
@@ -176,9 +190,9 @@ export function RequirementsPanel({
       </section>
 
       {ev.ruleSet && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white md:overflow-x-auto">
+          <table className={TABLE_CLASS}>
+            <thead className={THEAD_CLASS}>
               <tr>
                 <th className="px-4 py-3">書類</th>
                 <th className="px-4 py-3">提出者</th>
@@ -188,7 +202,7 @@ export function RequirementsPanel({
                 <th className="px-4 py-3">行政書士の判断</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className={TBODY_CLASS}>
               {ev.items.map((i) => (
                 <Row
                   key={i.rule.id}
@@ -218,9 +232,9 @@ export function RequirementsPanel({
           <p className="text-sm text-slate-500">規則にない書類は、「書類を追加」から登録できます。</p>
         )}
         {record.customRequirements.length > 0 && (
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white md:overflow-x-auto">
+            <table className={TABLE_CLASS}>
+              <thead className={THEAD_CLASS}>
                 <tr>
                   <th className="px-4 py-3">書類</th>
                   <th className="px-4 py-3">提出者</th>
@@ -230,26 +244,34 @@ export function RequirementsPanel({
                   <th className="px-4 py-3">操作</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className={TBODY_CLASS}>
                 {record.customRequirements.map((r) =>
                   editingId === r.id ? (
-                    <tr key={r.id} className="border-t border-slate-100">
-                      <td colSpan={6} className="px-4 py-3">
+                    <tr key={r.id} className={TR_CLASS}>
+                      <td colSpan={6} className={TD_CLASS}>
                         <CustomRequirementForm initial={r} onSubmit={(v) => editCustom(r.id, v)} onCancel={() => setEditingId(null)} />
                       </td>
                     </tr>
                   ) : (
-                    <tr key={r.id} className="border-t border-slate-100 align-top">
-                      <td className="px-4 py-3">
+                    <tr key={r.id} className={TR_CLASS}>
+                      <td className={TD_CLASS}>
                         <p>{r.name}</p>
                         {r.note && <p className="mt-1 text-xs text-slate-500">{r.note}</p>}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">{PARTY_LABEL[r.party]}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{r.isRequired ? "必須" : "任意"}</td>
-                      <td className="px-4 py-3">
+                      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+                        <CellLabel>提出者</CellLabel>
+                        {PARTY_LABEL[r.party]}
+                      </td>
+                      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+                        <CellLabel>必須・任意</CellLabel>
+                        {r.isRequired ? "必須" : "任意"}
+                      </td>
+                      <td className={TD_CLASS}>
+                        <CellLabel>状態</CellLabel>
                         <StatusSelect label={r.name} value={r.status} onChange={(v) => patchCustom(r.id, { status: v }, "requirement_status_changed")} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={TD_CLASS}>
+                        <CellLabel>期限</CellLabel>
                         <DueInput
                           label={r.name}
                           value={r.dueDate}
@@ -257,7 +279,8 @@ export function RequirementsPanel({
                           onChange={(v) => patchCustom(r.id, { dueDate: v || undefined }, "requirement_due_changed")}
                         />
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+                        <CellLabel>操作</CellLabel>
                         <button onClick={() => setEditingId(r.id)} className="mr-3 text-blue-700 underline">
                           編集
                         </button>
@@ -295,8 +318,8 @@ function Row({
   const [note, setNote] = useState(state.note ?? "");
   const flushNote = useAutoSave(note, state.note ?? "", (v) => onPatch(rule.id, { note: v }, "requirement_note"));
   return (
-    <tr className="border-t border-slate-100 align-top">
-      <td className="px-4 py-3">
+    <tr className={TR_CLASS}>
+      <td className={TD_CLASS}>
         <p className={item.effective === "not_required" ? "text-slate-400" : ""}>{rule.name}</p>
         <p className="mt-1 text-xs text-slate-500">
           {item.reason}
@@ -318,17 +341,23 @@ function Row({
           </div>
         )}
       </td>
-      <td className="px-4 py-3 whitespace-nowrap">{PARTY_LABEL[rule.party]}</td>
-      <td className="px-4 py-3 whitespace-nowrap">
+      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+        <CellLabel>提出者</CellLabel>
+        {PARTY_LABEL[rule.party]}
+      </td>
+      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+        <CellLabel>判定</CellLabel>
         <Badge tone={RESULT_TONE[item.result]}>{RESULT_LABEL[item.result]}</Badge>
         {state.override && (
           <p className="mt-1 text-xs text-slate-500">→ {RESULT_LABEL[item.effective]}（上書き）</p>
         )}
       </td>
-      <td className="px-4 py-3">
+      <td className={TD_CLASS}>
+        <CellLabel>状態</CellLabel>
         <StatusSelect label={rule.name} value={state.status} onChange={(v) => onPatch(rule.id, { status: v }, "requirement_status_changed")} />
       </td>
-      <td className="px-4 py-3">
+      <td className={TD_CLASS}>
+        <CellLabel>期限</CellLabel>
         <DueInput
           label={rule.name}
           value={state.dueDate}
@@ -336,8 +365,10 @@ function Row({
           onChange={(v) => onPatch(rule.id, { dueDate: v || undefined }, "requirement_due_changed")}
         />
       </td>
-      <td className="px-4 py-3">
+      <td className={TD_CLASS}>
+        <CellLabel>行政書士の判断</CellLabel>
         <select
+          aria-label={`${rule.name} 行政書士の判断`}
           className={selectClass}
           value={state.override ?? ""}
           onChange={(e) =>
