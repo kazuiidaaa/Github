@@ -31,8 +31,12 @@ const ids = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) =>
 
 describe("evaluate", () => {
   it("対象外の手続・在留資格では判定しない", () => {
-    expect(evaluate(make({ procedureType: "coe" })).ruleSet).toBeNull();
-    expect(evaluate(make({ procedureType: "change", currentStatus: "留学" })).ruleSet).toBeNull();
+    // 規則がない手続の検証には、規則が追加される予定のない other を使う（coe は規則が追加され得る）
+    expect(evaluate(make({ procedureType: "other" })).ruleSet).toBeNull();
+    // 変更の必要書類の判定基準は currentStatus から targetStatus へ移り得るため、両方に設定する
+    expect(
+      evaluate(make({ procedureType: "change", currentStatus: "留学", targetStatus: "留学" })).ruleSet,
+    ).toBeNull();
     expect(evaluate(make({ currentStatus: "留学" })).notApplicableReason).toBeTruthy();
   });
 
@@ -130,8 +134,55 @@ describe("証明写真の登録と写真の行の状態（#52）", () => {
 });
 
 describe("在留資格変更許可申請（技術・人文知識・国際業務）の規則", () => {
+  // 判定基準の在留資格が currentStatus でも targetStatus でも通るよう、両方に設定する
   const change = (category: OrgCategory = "", withholdingSpecial = false) =>
-    evaluate(make({ procedureType: "change" }, category, withholdingSpecial));
+    evaluate(
+      make(
+        { procedureType: "change", currentStatus: "技術・人文知識・国際業務", targetStatus: "技術・人文知識・国際業務" },
+        category,
+        withholdingSpecial,
+      ),
+    );
+
+  const COMMON = ["application_form", "photo", "passport_card"];
+  const TABLE2 = [
+    "activity_documents",
+    "career_documents",
+    "registry_certificate",
+    "business_overview",
+    "financial_statements",
+    "representative_declaration",
+  ];
+  const ALWAYS_CHECK = ["vocational_school_certificate", "dispatch_pledge", "dispatch_contract_documents"];
+
+  // docs/phase12-change-requirements-research.md の4章の表と照合した期待値（カテゴリー × 納期の特例）
+  const EXPECTED: Record<string, { required: string[]; check: string[]; special?: string[] }> = {
+    "": { required: COMMON, check: ALWAYS_CHECK },
+    "1": { required: [...COMMON, "category1_proof"], check: ALWAYS_CHECK },
+    "2": {
+      required: [...COMMON, "statutory_report_total"],
+      check: ["online_approval_proof", "omission_statement", ...ALWAYS_CHECK],
+    },
+    "3": {
+      required: [...COMMON, "statutory_report_total", ...TABLE2],
+      check: [...ALWAYS_CHECK, "language_ability"],
+    },
+    "4": {
+      required: [...COMMON, ...TABLE2, "payroll_office_notification"],
+      check: [...ALWAYS_CHECK, "language_ability", "withholding_tax_receipts"],
+      special: ["withholding_special_approval"],
+    },
+  };
+
+  it.each(["", "1", "2", "3", "4"] as const)("カテゴリー「%s」の必要書類と確認対象が、表と完全に一致する", (cat) => {
+    for (const special of [false, true]) {
+      const e = change(cat, special);
+      const x = EXPECTED[cat];
+      // 納期の特例は、カテゴリー4のみ承認申請書の分だけ必要書類が増える（他のカテゴリーでは影響しない）
+      expect(ids(e, "required")).toEqual([...x.required, ...(special ? (x.special ?? []) : [])]);
+      expect(ids(e, "check")).toEqual(x.check);
+    }
+  });
 
   it("変更許可申請では、規則が見つかり、更新の規則とは別である", () => {
     expect(change().ruleSet?.id).toBe("gijinkoku_change");
@@ -177,7 +228,8 @@ describe("在留資格変更許可申請（技術・人文知識・国際業務�
     expect(ids(change("4", true), "required")).toContain("withholding_special_approval");
   });
 
-  it("追加した規則は、共通の3件を除き、すべて要確認として表示する", () => {
+  // 暫定のガード: 行政書士の確認（docs の6章）が済み、要確認の表示を外す際は、このテストも合わせて外す・更新する
+  it("追加した規則は、共通の3件を除き、すべて要確認として表示する（確認前の暫定のガード）", () => {
     const rules = change("4").ruleSet?.rules ?? [];
     for (const r of rules) {
       if (!["application_form", "photo", "passport_card"].includes(r.id)) expect(r.verify).toBe(true);
