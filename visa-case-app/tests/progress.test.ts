@@ -68,7 +68,7 @@ describe("進捗", () => {
   });
 
   it("規則の対象外でも、追加した書類は管理できる", () => {
-    const c = make({ procedureType: "change", customRequirements: [custom({})] });
+    const c = make({ procedureType: "other", customRequirements: [custom({})] });
     const ev = evaluate(c);
     expect(ev.ruleSet).toBeNull();
     expect(progressOf(ev, c.customRequirements, "2026-10-02").missing.map((i) => i.name)).toEqual(["卒業証明書"]);
