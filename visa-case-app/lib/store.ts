@@ -3,8 +3,10 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { sanitizeAuditDetail, type AuditOutcome } from "./auditDetail";
 import { messageOf } from "./errors";
-import { usesSupabase } from "./supabase";
 import { localKey } from "./demo";
+import { normalizeFormDetails } from "./formDetails";
+import { can, type Action } from "./permissions";
+import { usesSupabase } from "./supabase";
 import * as remote from "./supabaseBackend";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type CaseRecord, type DocumentRecord } from "./types";
 
@@ -18,6 +20,8 @@ let cases: CaseRecord[] = EMPTY;
 let loaded = false;
 let loading: Promise<void> | null = null;
 let error = "";
+/** ログイン中の利用者の役割。取得できていない間は null（権限なしとして扱う） */
+let role: string | null = usesSupabase() ? null : "owner";
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -57,6 +61,7 @@ function migrateLocal(c: LegacyCase): CaseRecord {
       confirmationStatus: legacyApplicant.confirmationStatus === "confirmed" ? "confirmed" : "draft",
     },
     employment: { ...EMPTY_EMPLOYMENT, ...c.employment },
+    formDetails: normalizeFormDetails((c as { formDetails?: unknown }).formDetails),
     requirementStates: migrateStates(c.requirementStates),
     customRequirements: c.customRequirements ?? [],
     plannedApplicationDate: c.plannedApplicationDate ?? "",
@@ -109,6 +114,7 @@ export function ensureLoaded(): Promise<void> {
     loading = (async () => {
       try {
         cases = usesSupabase() ? await remote.loadAll() : readLocal();
+        if (usesSupabase()) role = (await remote.getAccount()).role || null;
         loaded = true;
         error = "";
       } catch (e) {
@@ -128,6 +134,7 @@ export function resetStore() {
   loaded = false;
   loading = null;
   error = "";
+  role = usesSupabase() ? null : "owner";
   remote.reset();
   emit();
 }
@@ -137,6 +144,15 @@ export function useCases(): CaseRecord[] {
     void ensureLoaded();
   }, []);
   return useSyncExternalStore(subscribe, () => cases, () => EMPTY);
+}
+
+export function useRole(): string | null {
+  return useSyncExternalStore(subscribe, () => role, () => null);
+}
+
+/** 画面の表示制御用。実際の拒否はデータベース側で行われる */
+export function useCan(action: Action): boolean {
+  return can(useRole(), action);
 }
 
 export function useStoreLoaded(): boolean {
@@ -220,6 +236,10 @@ export async function getConfirmerName(): Promise<string> {
 }
 
 export const getAccount = remote.getAccount;
+export const listMembers = remote.listMembers;
+export const addMember = remote.addMember;
+export const setMemberRole = remote.setMemberRole;
+export const removeMember = remote.removeMember;
 export const listAudit = remote.listAudit;
 
 export async function renameOrganization(name: string): Promise<void> {

@@ -9,7 +9,7 @@ import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { Badge } from "@/components/ui";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
 import { formatDateTime } from "@/lib/format";
-import { useCases, useStoreError, useStoreLoaded } from "@/lib/store";
+import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS } from "@/lib/types";
 
 function readFilter(p: URLSearchParams): CaseFilter {
@@ -63,6 +63,7 @@ function CasesView() {
   const loaded = useStoreLoaded();
   const error = useStoreError();
   const router = useRouter();
+  const canEdit = useCan("edit");
   const params = useSearchParams();
 
   const filter = useMemo(() => readFilter(new URLSearchParams(params.toString())), [params]);
@@ -83,9 +84,11 @@ function CasesView() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">案件一覧</h1>
-        <Link href="/cases/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+        {canEdit && (
+          <Link href="/cases/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
           新規案件
         </Link>
+        )}
       </div>
       {loaded && <DashboardCards summary={summary} active={activeCard(filter)} onSelect={(k) => go(cardFilter(k))} />}
       <CaseFilters filter={filter} active={active} onChange={(patch) => go({ ...filter, ...patch })} onReset={() => go(DEFAULT_FILTER)} />

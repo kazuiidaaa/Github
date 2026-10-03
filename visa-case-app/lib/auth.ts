@@ -47,9 +47,9 @@ export async function signIn(email: string, password: string): Promise<string | 
 /** デモモードを開始する。サーバーには接続せず、ブラウザ内の仮データで動作する。 */
 export function startDemo() {
   clearDemoData([CASES_KEY, DOCUMENTS_KEY]); // 前回の消去漏れがあれば取り除く
+  setDemo(true); // 先に切り替える（resetStore が、切替後の方式で役割を初期化するため）
   resetStore();
   resetDocuments();
-  setDemo(true);
 }
 
 /** デモモードを終了し、デモで入力したデータを破棄する。 */

@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { evaluate } from "../lib/requirements/evaluate";
 import { isCollected, isOverdue, progressOf } from "../lib/requirements/progress";
@@ -16,6 +17,7 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
     updatedAt: "",
     applicant: { ...EMPTY_APPLICANT },
     employment: { ...EMPTY_EMPLOYMENT, category: "3" },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
     plannedApplicationDate: "",

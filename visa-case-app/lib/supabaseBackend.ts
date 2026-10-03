@@ -1,3 +1,4 @@
+import { normalizeFormDetails } from "./formDetails";
 import type { AuditOutcome } from "./auditDetail";
 import { AppError, toAppError } from "./errors";
 import { storageExtension } from "./documentValidation";
@@ -22,6 +23,7 @@ import {
 } from "./types";
 
 const BUCKET = "documents";
+const GENERATED_BUCKET = "generated-documents";
 
 interface DocumentRow {
   id: string;
@@ -103,6 +105,7 @@ interface CaseRow {
   case_checks: CheckRow[] | null;
   applicants: ApplicantRow | ApplicantRow[] | null;
   employment_details: EmploymentRow | EmploymentRow[] | null;
+  form_details: { data: unknown } | { data: unknown }[] | null;
   requirement_states: RequirementRow[] | null;
   custom_requirements: CustomRequirementRow[] | null;
   documents: DocumentRow[] | null;
@@ -125,7 +128,8 @@ function getOrgId(): Promise<string> {
   if (!orgIdPromise) {
     orgIdPromise = (async () => {
       const db = client();
-      const members = ok(await db.from("members").select("organization_id").limit(1));
+      const uid = await getUserId();
+      const members = ok(await db.from("members").select("organization_id").eq("user_id", uid).limit(1));
       if (members && members.length > 0) return members[0].organization_id as string;
       return ok(await db.rpc("bootstrap_organization", { org_name: "自分の事務所" })) as string;
     })().catch((e) => {
@@ -247,7 +251,10 @@ export async function loadAll(): Promise<CaseRecord[]> {
   const rows = ok(
     await client()
       .from("cases")
-      .select("*, applicants(*), employment_details(*), requirement_states(*), custom_requirements(*), case_checks(*), documents(*)")
+      // 0009 で (case_id, organization_id) の外部キーが加わり、結びつきが2通りになったため、case_id のものを明示する
+      .select(
+        "*, applicants!applicants_case_id_fkey(*), employment_details!employment_details_case_id_fkey(*), form_details(*), requirement_states!requirement_states_case_id_fkey(*), custom_requirements!custom_requirements_case_id_fkey(*), case_checks!case_checks_case_id_fkey(*), documents!documents_case_id_fkey(*)",
+      )
       .order("updated_at", { ascending: false }),
   ) as CaseRow[];
   return rows.map((r) => ({
@@ -262,6 +269,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
     updatedAt: r.updated_at,
     applicant: toApplicant(r.applicants),
     employment: toEmployment(r.employment_details),
+    formDetails: normalizeFormDetails((Array.isArray(r.form_details) ? r.form_details[0] : r.form_details)?.data),
     requirementStates: toRequirementStates(r.requirement_states),
     customRequirements: toCustomRequirements(r.custom_requirements),
     plannedApplicationDate: r.planned_application_date ?? "",
@@ -332,6 +340,15 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       monthly_salary: emp.monthlySalary || null,
       employment_start_date: emp.employmentStartDate || null,
       contract_period: emp.contractPeriod || null,
+    }),
+  );
+
+  ok(
+    await db.from("form_details").upsert({
+      case_id: c.id,
+      organization_id: org,
+      data: c.formDetails,
+      updated_at: c.updatedAt,
     }),
   );
 
@@ -444,9 +461,9 @@ export async function persistCase(c: CaseRecord): Promise<void> {
   }
 }
 
-async function removeFiles(db: ReturnType<typeof client>, paths: string[]): Promise<void> {
+async function removeFiles(db: ReturnType<typeof client>, paths: string[], bucket = BUCKET): Promise<void> {
   if (paths.length === 0) return;
-  const { error } = await db.storage.from(BUCKET).remove(paths);
+  const { error } = await db.storage.from(bucket).remove(paths);
   if (error) throw toAppError(error, "ファイルを削除できませんでした。データは削除していません。時間をおいて再度お試しください。");
 }
 
@@ -458,6 +475,15 @@ export async function deleteCase(id: string): Promise<void> {
   const paths = docs.map((d) => d.storage_path).filter((p): p is string => Boolean(p));
   // ファイルを削除できなかった場合は、DB の行を残す（保存先が分からなくなり、ファイルが残り続けることを防ぐ）
   await removeFiles(db, paths);
+  // 生成したWord・PDFにも個人情報が含まれるため、案件の削除と一緒に削除する（行は案件の削除で連鎖して消える）
+  const generated = ok(await db.from("generated_documents").select("storage_path").eq("case_id", id)) as {
+    storage_path: string | null;
+  }[];
+  await removeFiles(
+    db,
+    generated.map((d) => d.storage_path).filter((p): p is string => Boolean(p)),
+    GENERATED_BUCKET,
+  );
   ok(await db.from("cases").delete().eq("id", id));
 }
 
@@ -517,7 +543,9 @@ export async function getAccount(): Promise<AccountInfo> {
   const user = data.session?.user;
   if (!user) throw new AppError("ログインしていません。");
   await getOrgId();
-  const rows = ok(await db.from("members").select("role, organizations(name, id)").limit(1)) as unknown as {
+  const rows = ok(
+    await db.from("members").select("role, organizations(name, id)").eq("user_id", user.id).limit(1),
+  ) as unknown as {
     role: string;
     organizations: { id: string; name: string } | { id: string; name: string }[] | null;
   }[];
@@ -549,4 +577,50 @@ export async function listAudit(limit = 100): Promise<AuditEntry[]> {
       .limit(limit),
   ) as { id: string; action: string; case_id: string | null; outcome: AuditOutcome; created_at: string }[];
   return rows.map((r) => ({ id: r.id, action: r.action, caseId: r.case_id, outcome: r.outcome, createdAt: r.created_at }));
+}
+
+export interface MemberInfo {
+  userId: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+// メンバー管理の関数が返す内部メッセージは画面に出さず、原因ごとの文言に置き換える
+function memberError(e: { message?: string; code?: string }): AppError {
+  const m = e.message ?? "";
+  if (/last owner/i.test(m)) return new AppError("最後の所有者は、降格または削除できません。");
+  if (/forbidden/i.test(m)) return new AppError("この操作を行う権限がありません。");
+  if (/cannot add member/i.test(m)) {
+    return new AppError("追加できません。メールアドレスと、相手のアカウントの状態をご確認ください。");
+  }
+  if (/not found/i.test(m)) return new AppError("対象のメンバーが見つかりません。");
+  return toAppError(e);
+}
+
+/** owner / admin のみ。メールアドレスを含むため、権限のない場合は拒否される */
+export async function listMembers(): Promise<MemberInfo[]> {
+  const res = await client().rpc("list_members", { p_org: await getOrgId() });
+  if (res.error) throw memberError(res.error);
+  return ((res.data ?? []) as { user_id: string; email: string; role: string; created_at: string }[]).map((r) => ({
+    userId: r.user_id,
+    email: r.email,
+    role: r.role,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function addMember(email: string, role: string): Promise<void> {
+  const res = await client().rpc("add_member_by_email", { p_org: await getOrgId(), p_email: email, p_role: role });
+  if (res.error) throw memberError(res.error);
+}
+
+export async function setMemberRole(userId: string, role: string): Promise<void> {
+  const res = await client().rpc("set_member_role", { p_org: await getOrgId(), p_user: userId, p_role: role });
+  if (res.error) throw memberError(res.error);
+}
+
+export async function removeMember(userId: string): Promise<void> {
+  const res = await client().rpc("remove_member", { p_org: await getOrgId(), p_user: userId });
+  if (res.error) throw memberError(res.error);
 }

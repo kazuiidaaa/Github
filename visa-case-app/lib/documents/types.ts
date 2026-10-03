@@ -6,10 +6,16 @@ export type GeneratedDocumentType =
   | "applicant_summary"
   | "application_checklist"
   | "reason_statement"
-  | "official_application_form";
+  | "official_application_form"
+  | "transcription_aid";
 
 /** 6-Aで生成できる内部確認用の文書 */
-export const INTERNAL_DOCUMENT_TYPES = ["case_summary", "applicant_summary", "application_checklist"] as const;
+export const INTERNAL_DOCUMENT_TYPES = [
+  "case_summary",
+  "applicant_summary",
+  "application_checklist",
+  "transcription_aid",
+] as const;
 export type InternalDocumentType = (typeof INTERNAL_DOCUMENT_TYPES)[number];
 
 export const DOCUMENT_TYPE_LABELS: Record<GeneratedDocumentType, string> = {
@@ -18,6 +24,7 @@ export const DOCUMENT_TYPE_LABELS: Record<GeneratedDocumentType, string> = {
   application_checklist: "必要書類チェックリスト",
   reason_statement: "理由書ドラフト",
   official_application_form: "公式申請様式",
+  transcription_aid: "転記補助シート",
 };
 
 export type GeneratedDocumentStatus = "draft" | "reviewed" | "final" | "archived";
@@ -32,6 +39,38 @@ export const GENERATED_STATUS_LABELS: Record<GeneratedDocumentStatus, string> = 
 export const NOTICES = [
   "内部確認用の資料です。公式の申請様式ではありません。",
   "申請の可否、許可の見込み、必要書類の最終判断を示すものではありません。",
+];
+
+export type TranscriptionMode = "auto" | "confirm" | "missing";
+
+export const TRANSCRIPTION_MODE_LABELS: Record<TranscriptionMode, string> = {
+  auto: "差し込み",
+  confirm: "要確認",
+  missing: "手入力",
+};
+
+export interface TranscriptionItem {
+  /** 公式様式の項目番号 */
+  no: string;
+  /** 公式様式の項目名 */
+  label: string;
+  value: string;
+  mode: TranscriptionMode;
+  note: string;
+}
+
+/** 公式様式の項目順に並べた転記補助の内容。公式の申請書そのものではない */
+export interface TranscriptionContent {
+  form: { formName: string; fileId: string; sourceUrl: string; confirmedOn: string; mappingVersion: number };
+  applicantConfirmed: boolean;
+  warnings: string[];
+  sheets: { title: string; items: TranscriptionItem[] }[];
+}
+
+/** 転記補助シートに付ける注意書き。公式様式を利用する際の出典の記載を含む */
+export const TRANSCRIPTION_NOTICES = [
+  "転記補助用の資料です。公式の申請書ではありません。公式の申請書は、行政書士が最新の様式で作成します。",
+  "出典：出入国在留管理庁ホームページ（https://www.moj.go.jp/isa/content/930004094.pdf）の項目名をもとに作成",
 ];
 
 /** 生成時点の案件情報の写し。生成後に案件が変わっても、この内容は変わらない */
@@ -94,6 +133,7 @@ export interface ContentJson {
       checkedAt?: string;
     }[];
   };
+  transcription?: TranscriptionContent;
   memo: string;
   notices: string[];
 }

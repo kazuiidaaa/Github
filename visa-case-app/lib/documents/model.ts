@@ -1,6 +1,11 @@
 import { formatDate, formatDateTime } from "../format";
 import { CHECK_STATUS_LABELS, CHECK_TYPE_LABELS, REQUIREMENT_STATUS_LABELS } from "../types";
-import { DOCUMENT_TYPE_LABELS, GENERATED_STATUS_LABELS, type GeneratedDocument } from "./types";
+import {
+  DOCUMENT_TYPE_LABELS,
+  GENERATED_STATUS_LABELS,
+  TRANSCRIPTION_MODE_LABELS,
+  type GeneratedDocument,
+} from "./types";
 
 // Word と PDF の出力で共通に使う、文書の構成。保存済みの content_json だけから作る。
 // 画面（components/documents/DocumentSheet.tsx）と同じ項目・順序にする。
@@ -28,7 +33,10 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
   const type = doc.documentType;
   const out: Block[] = [];
 
-  out.push({ kind: "eyebrow", text: "内部確認用（公式様式ではありません）" });
+  out.push({
+    kind: "eyebrow",
+    text: type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）",
+  });
   out.push({ kind: "title", text: DOCUMENT_TYPE_LABELS[type] });
   out.push({ kind: "subtitle", text: `${c.case.caseName}（${c.case.procedureLabel}）` });
   out.push({
@@ -48,6 +56,33 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
       ["案件の状態", c.case.workflowLabel],
     ]),
   );
+
+  if (c.transcription) {
+    const t = c.transcription;
+    out.push({ kind: "heading", text: "対象の公式様式" });
+    out.push(
+      kv([
+        ["様式", t.form.formName],
+        ["ファイル識別番号", t.form.fileId],
+        ["対応表の確認日", formatDate(t.form.confirmedOn)],
+        ["申請人情報", t.applicantConfirmed ? "確認済み" : "下書き（未確認）"],
+      ]),
+    );
+    for (const w of t.warnings) out.push({ kind: "paragraph", text: `注意：${w}` });
+    out.push({
+      kind: "note",
+      text: "区分：「差し込み」は確定済みの案件データ、「要確認」は保存値を原本と照合してから使う項目、「手入力」は案件DBに項目がない項目です。",
+    });
+    for (const sheet of t.sheets) {
+      out.push({ kind: "heading", text: sheet.title });
+      out.push({
+        kind: "table",
+        widths: [8, 30, 28, 10, 24],
+        head: ["項番", "公式の項目", "値", "区分", "備考"],
+        rows: sheet.items.map((i) => [i.no, i.label, i.value, TRANSCRIPTION_MODE_LABELS[i.mode], i.note]),
+      });
+    }
+  }
 
   if (c.applicant) {
     const a = c.applicant;

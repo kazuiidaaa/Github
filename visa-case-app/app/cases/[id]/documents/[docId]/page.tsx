@@ -8,11 +8,12 @@ import { DocumentSheet } from "@/components/documents/DocumentSheet";
 import { Button } from "@/components/ui";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
 import { OUTPUT_FORMAT_LABELS } from "@/lib/documents/types";
-import { getConfirmerName, useCase } from "@/lib/store";
+import { getConfirmerName, useCan, useCase } from "@/lib/store";
 
 export default function DocumentPreviewPage() {
   const { id, docId } = useParams<{ id: string; docId: string }>();
   const record = useCase(id);
+  const canEdit = useCan("edit");
   const { documents, loaded } = useGeneratedDocuments(id);
   const doc = documents.find((d) => d.id === docId);
   const [message, setMessage] = useState("");
@@ -87,15 +88,15 @@ export default function DocumentPreviewPage() {
           <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
         )}
         <div className="flex flex-wrap items-center gap-2">
-          {doc.status === "draft" && (
+          {canEdit && doc.status === "draft" && (
             <Button onClick={() => void run("reviewed", "内容を確認し、行政書士確認済みにします。よろしいですか。")}>
               行政書士確認済みにする
             </Button>
           )}
-          {doc.status === "reviewed" && (
+          {canEdit && doc.status === "reviewed" && (
             <Button onClick={() => void run("final", "この版を最終版にします。よろしいですか。")}>最終版にする</Button>
           )}
-          {doc.status !== "archived" && (
+          {canEdit && doc.status !== "archived" && (
             <Button variant="secondary" onClick={() => void run("archived", "この版を保管にします。よろしいですか。")}>
               保管にする
             </Button>
@@ -106,10 +107,10 @@ export default function DocumentPreviewPage() {
             </Button>
           ) : (
             <>
-              <Button variant="secondary" disabled={busy} onClick={() => void file("docx")}>
+              <Button variant="secondary" disabled={busy || !canEdit} onClick={() => void file("docx")}>
                 {busy ? "出力中……" : "Word出力"}
               </Button>
-              <Button variant="secondary" disabled={busy} onClick={() => void file("pdf")}>
+              <Button variant="secondary" disabled={busy || !canEdit} onClick={() => void file("pdf")}>
                 {busy ? "出力中……" : "PDF出力"}
               </Button>
             </>

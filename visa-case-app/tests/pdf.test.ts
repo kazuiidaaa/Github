@@ -1,3 +1,4 @@
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import fontkit from "@pdf-lib/fontkit";
 import { readFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
@@ -23,6 +24,7 @@ function record(extra: Partial<CaseRecord> = {}): CaseRecord {
     updatedAt: "2026-10-01T00:00:00.000Z",
     applicant: { ...EMPTY_APPLICANT, legalName: "LI MING" },
     employment: { ...EMPTY_EMPLOYMENT, category: "3", companyName: "株式会社A" },
+    formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
     plannedApplicationDate: "",

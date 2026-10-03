@@ -8,6 +8,7 @@ export const AUDIT_LABELS: Record<string, string> = {
   applicant_confirmed: "申請人情報を確認済みに変更",
   applicant_reopened: "申請人情報を再編集（下書きへ戻す）",
   employment_saved: "雇用・会社情報を保存",
+  form_details_saved: "公式様式の追加項目を保存",
   requirement_submitted: "必要書類の提出状況を変更",
   requirement_status_changed: "必要書類の状態を変更",
   requirement_due_changed: "必要書類の期限を変更",
@@ -29,6 +30,9 @@ export const AUDIT_LABELS: Record<string, string> = {
   document_reviewed: "生成文書を行政書士確認済みにした",
   document_final: "生成文書を最終版にした",
   document_archived: "生成文書を保管にした",
+  member_added: "メンバーを追加",
+  member_role_changed: "メンバーの役割を変更",
+  member_removed: "メンバーを削除",
   organization_renamed: "事務所名を変更",
   password_changed: "パスワードを変更",
 };
