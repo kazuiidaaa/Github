@@ -1,6 +1,7 @@
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo, ProcedureType } from "../../types";
 import { officialFormScopeWarnings } from "../officialForms";
+import { fillCoeExcel } from "./coe";
 import { fillChangeExcel } from "./change";
 import { fillRenewalExcel } from "./renewal";
 
@@ -21,6 +22,7 @@ type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails, targetStatus: st
 
 export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
   renewal: fillRenewalExcel,
+  coe: fillCoeExcel,
   change: fillChangeExcel,
 };
 
