@@ -40,3 +40,12 @@ export function validateDraft(a: Applicant): Partial<Record<ApplicantField, stri
 export function fillCurrentStatus(currentStatus: string, residenceStatus: string): string {
   return currentStatus.trim() ? currentStatus : residenceStatus;
 }
+
+/**
+ * 申請人情報タブを開いたときの、在留資格欄の初期値を返す（fillCurrentStatus と対になる関数）。
+ * 申請人情報側が未入力で、案件側の「現在の在留資格」に値がある場合のみ、案件側の値を表示する。
+ * 申請人情報側に既に値がある場合は上書きしない。保存は、下書き保存・確認済みにした時点で行う。
+ */
+export function initialResidenceStatus(residenceStatus: string, currentStatus: string): string {
+  return residenceStatus.trim() ? residenceStatus : currentStatus;
+}

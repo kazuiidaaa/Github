@@ -4,7 +4,7 @@ import { ImageZoom } from "@/components/ImageZoom";
 import { useState } from "react";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
-import { fillCurrentStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
+import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
@@ -39,7 +39,10 @@ function Original({ doc }: { doc: DocumentRecord }) {
 }
 
 export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; onGoDocuments: () => void }) {
-  const [form, setForm] = useState<Applicant>(record.applicant);
+  const [form, setForm] = useState<Applicant>(() => ({
+    ...record.applicant,
+    residenceStatus: initialResidenceStatus(record.applicant.residenceStatus, record.currentStatus),
+  }));
   const [errors, setErrors] = useState<Partial<Record<ApplicantField, string>>>({});
   const [message, setMessage] = useState("");
   const confirmed = record.applicant.confirmationStatus === "confirmed";

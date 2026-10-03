@@ -62,6 +62,18 @@ function activeCard(f: CaseFilter): CardKey | null {
 
 const procedureLabel = (c: CaseRecord) => PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
 
+/** 一覧の「在留資格」表示。確認済みでない申請人情報の値（または案件側の値）には「未確認」を付ける。 */
+function ResidenceStatusCell({ record: c }: { record: CaseRecord }) {
+  const value = c.applicant.residenceStatus || c.currentStatus;
+  if (!value) return <>-</>;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1">
+      {value}
+      {c.applicant.confirmationStatus !== "confirmed" && <Badge tone="gray">未確認</Badge>}
+    </span>
+  );
+}
+
 function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: CaseMetrics }) {
   return (
     <div className="flex flex-col items-start gap-1">
@@ -145,7 +157,7 @@ function CasesView() {
                 </td>
                 <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</td>
                 <td className="px-4 py-3">{procedureLabel(c)}</td>
-                <td className="px-4 py-3">{c.applicant.residenceStatus || c.currentStatus || "-"}</td>
+                <td className="px-4 py-3"><ResidenceStatusCell record={c} /></td>
                 <td className="px-4 py-3">
                   <ExpiryBadge date={c.applicant.residenceExpiryDate} />
                 </td>
@@ -182,7 +194,7 @@ function CasesView() {
               <dt className="text-slate-500">手続種別</dt>
               <dd>{procedureLabel(c)}</dd>
               <dt className="text-slate-500">在留資格</dt>
-              <dd>{c.applicant.residenceStatus || c.currentStatus || "-"}</dd>
+              <dd><ResidenceStatusCell record={c} /></dd>
               <dt className="text-slate-500">在留期限</dt>
               <dd>
                 <ExpiryBadge date={c.applicant.residenceExpiryDate} />
