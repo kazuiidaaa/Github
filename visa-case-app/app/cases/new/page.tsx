@@ -4,7 +4,7 @@ import { EMPTY_FORM_DETAILS } from "@/lib/formDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { StatusSelect } from "@/components/StatusSelect";
+import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
@@ -92,11 +92,11 @@ export default function NewCasePage() {
             ))}
           </select>
         </Field>
-        <Field label="現在の在留資格">
+        <Field label="現在の在留資格" hint={STATUS_HINTS.current}>
           <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
         </Field>
         {needsTarget && (
-          <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus}>
+          <Field label={procedureType === "change" ? "変更後の在留資格" : "希望する在留資格"} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
             <StatusSelect value={targetStatus} onChange={setTargetStatus} />
           </Field>
         )}

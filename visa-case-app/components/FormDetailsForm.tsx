@@ -180,7 +180,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         {text("branchName", "17 勤務先 支店・事業所名")}
         {text("workPhone", "17 (3) 勤務先 電話番号")}
         {select("educationPlace", "18 (1) 最終学歴の所在", [["japan", "本邦"], ["foreign", "外国"]])}
-        <Field label="18 (2) 学歴の区分">
+        <Field label="18 (2) 学歴の区分" hint="最終学歴として卒業（修了）した課程を選びます。">
           <select className={inputClass} value={form.educationLevel} onChange={(e) => set("educationLevel", e.target.value)}>
             <option value="">未選択</option>
             {EDUCATION_LEVELS.map((l) => (
