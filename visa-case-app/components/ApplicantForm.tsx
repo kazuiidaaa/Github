@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { formatDateTime } from "@/lib/format";
@@ -8,7 +9,7 @@ import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
 import type { Applicant, CaseRecord, DocumentRecord } from "@/lib/types";
 
-type TextKey = "legalName" | "nationality" | "residenceStatus" | "address" | "residenceCardNumber" | "workRestriction";
+type TextKey = "legalName" | "nationality" | "address" | "residenceCardNumber" | "workRestriction";
 
 function Original({ doc }: { doc: DocumentRecord }) {
   const url = useDocumentUrl(doc);
@@ -146,7 +147,9 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           </Field>
           {date("dateOfBirth", "生年月日")}
           <div className="md:col-span-2">{text("address", "住居地")}</div>
-          {text("residenceStatus", "在留資格", { required: true, placeholder: "技術・人文知識・国際業務" })}
+          <Field label="在留資格" required error={errors.residenceStatus}>
+            <StatusSelect value={form.residenceStatus} disabled={confirmed} onChange={(v) => set("residenceStatus", v)} />
+          </Field>
           {date("residenceExpiryDate", "在留期間の満了日")}
           {text("residenceCardNumber", "在留カード番号")}
           {text("workRestriction", "就労制限", { placeholder: "例：就労制限なし" })}

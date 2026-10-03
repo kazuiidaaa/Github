@@ -11,7 +11,7 @@ export function validateApplicant(a: Applicant): Partial<Record<ApplicantField, 
   const errors: Partial<Record<ApplicantField, string>> = {};
   if (!a.legalName.trim()) errors.legalName = "氏名を入力してください。";
   if (!a.nationality.trim()) errors.nationality = "国籍・地域を入力してください。";
-  if (!a.residenceStatus.trim()) errors.residenceStatus = "在留資格を入力してください。";
+  if (!a.residenceStatus.trim()) errors.residenceStatus = "在留資格を選択してください。";
   if (!a.dateOfBirth) errors.dateOfBirth = "生年月日を入力してください。";
   else if (!isValidDate(a.dateOfBirth)) errors.dateOfBirth = "YYYY-MM-DD の形式で、実在する日付を入力してください。";
   if (!a.residenceExpiryDate) errors.residenceExpiryDate = "在留期間の満了日を入力してください。";
