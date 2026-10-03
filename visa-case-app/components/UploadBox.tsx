@@ -24,11 +24,14 @@ export function UploadBox({
   caseId,
   currentFileName,
   onUploaded,
+  compact = false,
 }: {
   caseId: string;
   /** 登録済みの在留カードのファイル名。登録済みの場合は、差し替えとして扱う */
   currentFileName?: string;
   onUploaded: (replaced: boolean) => void;
+  /** 一覧の行内に置く、簡略表示（見出し・説明を省き、余白を小さくする） */
+  compact?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
@@ -87,11 +90,15 @@ export function UploadBox({
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6">
-      <h2 className="mb-1 font-semibold">{hasDocument ? "在留カードを差し替える" : "在留カードをアップロード"}</h2>
-      <p className="mb-4 text-xs text-slate-500">
-        OCRは行いません。アップロード後、原本を見ながら申請人情報を入力します。試作版のため、実在の個人情報はアップロードしないでください。
-      </p>
+    <section className={compact ? "" : "rounded-lg border border-slate-200 bg-white p-6"}>
+      {!compact && (
+        <>
+          <h2 className="mb-1 font-semibold">{hasDocument ? "在留カードを差し替える" : "在留カードをアップロード"}</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            OCRは行いません。アップロード後、原本を見ながら申請人情報を入力します。試作版のため、実在の個人情報はアップロードしないでください。
+          </p>
+        </>
+      )}
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -103,7 +110,7 @@ export function UploadBox({
           setDragging(false);
           handle(e.dataTransfer.files[0]);
         }}
-        className={`rounded-lg border-2 border-dashed p-10 text-center text-sm ${
+        className={`rounded-lg border-2 border-dashed text-center text-sm ${compact ? "p-4" : "p-10"} ${
           dragging ? "border-slate-700 bg-slate-50" : "border-slate-300"
         }`}
       >
@@ -111,7 +118,7 @@ export function UploadBox({
           <p className="text-slate-700">{uploading.name}　アップロード中……</p>
         ) : (
           <>
-            <p className="mb-3 text-slate-600">ファイルをここにドロップ、または</p>
+            <p className={`${compact ? "mb-2" : "mb-3"} text-slate-600`}>ファイルをここにドロップ、または</p>
             <button
               type="button"
               onClick={() => input.current?.click()}
@@ -129,7 +136,7 @@ export function UploadBox({
                 e.target.value = "";
               }}
             />
-            <p className="mt-3 text-xs text-slate-500">
+            <p className={`${compact ? "mt-2" : "mt-3"} text-xs text-slate-500`}>
               対応形式：JPG / PNG / PDF　最大サイズ：{MAX_FILE_BYTES / 1024 / 1024}MB
             </p>
           </>

@@ -91,3 +91,18 @@ describe("summarize / applyFilter", () => {
     expect(applyFilter(cases, DEFAULT_FILTER).map((r) => r.record.id)).toEqual(["a", "b", "c"]);
   });
 });
+
+describe("在留カード未登録の絞り込み", () => {
+  it("noCard は documents が空の案件のみを返す", () => {
+    const withDoc = make({ id: "a" });
+    withDoc.documents = [
+      { id: "d", documentType: "residence_card", fileName: "x.png", mimeType: "image/png", fileSize: 1, status: "uploaded", uploadedAt: "2026-01-01T00:00:00Z" },
+    ];
+    const none1 = make({ id: "b" });
+    const none2 = make({ id: "c" });
+    none1.documents = [];
+    none2.documents = [];
+    const rows = applyFilter([withDoc, none1, none2], { ...DEFAULT_FILTER, noCard: true });
+    expect(rows.map((r) => r.record.id).sort()).toEqual(["b", "c"]);
+  });
+});

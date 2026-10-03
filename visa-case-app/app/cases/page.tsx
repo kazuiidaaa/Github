@@ -6,6 +6,7 @@ import { Suspense, useMemo } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
 import { DashboardCards, type CardKey } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { UploadBox } from "@/components/UploadBox";
 import { Badge } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
@@ -21,6 +22,7 @@ function readFilter(p: URLSearchParams): CaseFilter {
     status: p.get("status") ?? "all",
     within30: p.get("within30") === "1",
     missingDocs: p.get("missing") === "1",
+    noCard: p.get("nocard") === "1",
     unconfirmed: p.get("unconfirmed") === "1",
     checksPending: p.get("checks") === "1",
     sort: (p.get("sort") === "expiry" ? "expiry" : "updated") as SortKey,
@@ -34,6 +36,7 @@ function toQuery(f: CaseFilter): string {
   if (f.status !== "all") p.set("status", f.status);
   if (f.within30) p.set("within30", "1");
   if (f.missingDocs) p.set("missing", "1");
+  if (f.noCard) p.set("nocard", "1");
   if (f.unconfirmed) p.set("unconfirmed", "1");
   if (f.checksPending) p.set("checks", "1");
   if (f.sort !== "updated") p.set("sort", f.sort);
@@ -97,6 +100,7 @@ function CasesView() {
   const summary = useMemo(() => summarize(cases), [cases]);
   const rows = useMemo(() => applyFilter(cases, filter), [cases, filter]);
   const active = isFilterActive(filter);
+  const pendingCount = useMemo(() => cases.filter((c) => c.documents.length === 0).length, [cases]);
 
   const go = (f: CaseFilter) => router.replace(`/cases${toQuery(f)}`, { scroll: false });
 
@@ -122,6 +126,37 @@ function CasesView() {
       <p className="mb-2 text-xs text-slate-500">
         期限の表示は業務上の注意喚起です。申請の可否や許可の見込みを示すものではありません。
       </p>
+      {filter.noCard && (
+        <section aria-label="在留カードのまとめてアップロード" className="mb-6">
+          <p className="mb-2 text-sm font-medium" role="status">
+            在留カード未登録：残り {pendingCount} 件
+            {rows.length !== pendingCount && <span className="ml-2 font-normal text-slate-500">（絞り込み結果 {rows.length} 件）</span>}
+          </p>
+          {!canEdit && <p className="mb-2 text-xs text-slate-500">閲覧のみの権限のため、アップロードはできません。</p>}
+          {empty ? (
+            <p className="rounded-lg border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+              {loaded && cases.length > 0 && pendingCount === 0 ? "在留カードが未登録の案件はありません。" : empty}
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {rows.map(({ record: c }) => (
+                <li key={c.id} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 text-sm md:grid-cols-[1fr_2fr] md:items-center">
+                  <div>
+                    <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
+                      {c.caseName}
+                    </Link>
+                    <p className="mt-1 text-slate-600">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</p>
+                    <p className="text-xs text-slate-500">{procedureLabel(c)}</p>
+                  </div>
+                  {canEdit && <UploadBox caseId={c.id} compact onUploaded={() => {}} />}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+      {!filter.noCard && (
+        <>
       <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
@@ -209,6 +244,8 @@ function CasesView() {
           </li>
         ))}
       </ul>
+        </>
+      )}
     </div>
   );
 }

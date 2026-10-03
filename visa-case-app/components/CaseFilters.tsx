@@ -55,6 +55,10 @@ export function CaseFilters({
           未受領書類あり
         </label>
         <label className="flex items-center gap-1">
+          <input type="checkbox" checked={filter.noCard} onChange={(e) => onChange({ noCard: e.target.checked })} />
+          在留カード未登録（まとめてアップロード）
+        </label>
+        <label className="flex items-center gap-1">
           <input type="checkbox" checked={filter.unconfirmed} onChange={(e) => onChange({ unconfirmed: e.target.checked })} />
           申請人情報の確認未了
         </label>
