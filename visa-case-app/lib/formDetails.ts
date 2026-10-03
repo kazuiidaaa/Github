@@ -1,4 +1,5 @@
 import { isValidDate } from "./format";
+import type { ProcedureType } from "./types";
 
 // 公式の在留期間更新許可申請書（技術・人文知識・国際業務）にあって、
 // 申請人情報・雇用情報の既存項目にない入力項目。項目番号は公式様式のもの。
@@ -30,6 +31,8 @@ export interface WorkEntry {
 
 export interface FormDetails {
   // 申請人等作成用1
+  /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
+  placeOfBirth: string;
   maritalStatus: "" | "married" | "single";
   occupation: string;
   homeAddress: string;
@@ -39,7 +42,10 @@ export interface FormDetails {
   passportExpiry: string;
   periodOfStay: string;
   desiredPeriod: string;
+  /** 更新の理由（更新様式の項目14。変更様式では changeReason を使う） */
   renewalReason: string;
+  /** 変更の理由（変更様式の項目14） */
+  changeReason: string;
   criminalRecord: "" | "none" | "yes";
   criminalDetail: string;
   relativesPresent: "" | "yes" | "no";
@@ -83,6 +89,7 @@ export interface FormDetails {
 }
 
 export const EMPTY_FORM_DETAILS: FormDetails = {
+  placeOfBirth: "",
   maritalStatus: "",
   occupation: "",
   homeAddress: "",
@@ -93,6 +100,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   periodOfStay: "",
   desiredPeriod: "",
   renewalReason: "",
+  changeReason: "",
   criminalRecord: "",
   criminalDetail: "",
   relativesPresent: "",
@@ -157,10 +165,137 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
 
 export type FormDetailsErrors = Partial<Record<keyof FormDetails, string>>;
 
-/** 入力エラーの要約に表示する、項目名（画面のラベル文言と同じ） */
-export const FORM_DETAILS_FIELD_LABELS: Partial<Record<keyof FormDetails, string>> = {
+// ---------------------------------------------------------------------------
+// 手続種別ごとの項目番号表（Issue #83 で新設）
+//
+// 公式様式は手続種別ごとに項目番号・項目名が異なる（例：変更様式は項目5に「出生地」があり、
+// 以降が更新様式より1つ繰り下がる）。画面（FormDetailsForm）は、番号・名称を直接書かず、
+// ここの FormLayout から取得する。FormLayout に項目名がないフィールドは、その手続では表示しない。
+//
+// 認定（Issue #85）・取得（Issue #87）は、FORM_LAYOUTS に自分の手続種別の1エントリを
+// 追加するだけでよい。追加の手順は docs/phase12-change-forms-research.md の「項目番号表の仕組み」。
+// ---------------------------------------------------------------------------
+
+export type FormFieldKey = keyof FormDetails;
+
+/** 画面の区切り（見出し）。様式ごとに項番の範囲が異なりうるため、表で持つ */
+export type FormSectionKey = "applicant1" | "relatives" | "applicant2" | "workHistory" | "organization";
+
+export interface FormLayout {
+  /** 様式名（画面の説明文に表示） */
+  formName: string;
+  /** 様式の識別（出典・調査報告との対応用） */
+  formId: string;
+  sectionTitles: Record<FormSectionKey, string>;
+  /** 項目名（番号付き）。ここにないフィールドは、この手続の画面に表示しない */
+  labels: Partial<Record<FormFieldKey, string>>;
+  /**
+   * 「希望する在留資格」のように、案件情報（CaseRecord.targetStatus）を表示のみする項目の名称。
+   * 指定した手続では、入力欄を設けず、案件情報の値を表示する（二重入力を避ける）
+   */
+  desiredStatusLabel?: string;
+}
+
+/** 更新・変更で番号・名称が共通の項目（項目10以降、および所属機関等作成用・申請人等作成用2） */
+const COMMON_LABELS: Partial<Record<FormFieldKey, string>> = {
+  passportNumber: "10 (1) 旅券番号",
   passportExpiry: "10 (2) 旅券の有効期限",
+  periodOfStay: "11 現に有する在留期間",
+  desiredPeriod: "13 希望する在留期間",
+  criminalRecord: "15 犯罪を理由とする処分を受けたことの有無",
+  criminalDetail: "15 具体的内容",
+  branchName: "17 勤務先 支店・事業所名",
+  workPhone: "17 (3) 勤務先 電話番号",
+  educationPlace: "18 (1) 最終学歴の所在",
+  educationLevel: "18 (2) 学歴の区分",
+  schoolName: "18 (3) 学校名",
   graduationDate: "18 (4) 卒業年月日",
+  majorField: "19 専攻・専門分野",
+  itQualification: "20 情報処理技術者資格又は試験合格",
+  legalRepName: "22 代理人 氏名（法定代理人による申請の場合）",
+  legalRepRelationship: "22 本人との関係",
+  legalRepAddress: "22 代理人 住所",
+  legalRepPhone: "22 代理人 電話番号",
+  agentName: "取次者 氏名",
+  agentAddress: "取次者 住所",
+  agentAffiliation: "取次者 所属機関等",
+  agentPhone: "取次者 電話番号",
+  corporateNumber: "3 (2) 法人番号（13桁）",
+  employmentInsuranceNumber: "3 (4) 雇用保険適用事業所番号（11桁）",
+  orgPhone: "3 (6) 電話番号",
+  annualSales: "3 (8) 年間売上高（直近年度）",
+  foreignStaffCount: "3 (9) 外国人職員数",
+  experienceYears: "7 実務経験年数",
+  positionTitle: "8 職務上の地位（役職名）",
+  occupationCode: "9 職種（別紙「職種一覧」の番号）",
+  dispatchName: "11 派遣先等 (1) 名称",
+  dispatchCorporateNumber: "11 (2) 法人番号",
+  dispatchBranchName: "11 (3) 支店・事業所名",
+  dispatchInsuranceNumber: "11 (4) 雇用保険適用事業所番号",
+  dispatchAddress: "11 (6) 所在地",
+  dispatchPhone: "11 (6) 電話番号",
+  dispatchCapital: "11 (7) 資本金",
+  dispatchAnnualSales: "11 (8) 年間売上高",
+  dispatchPeriod: "11 (9) 派遣予定期間",
+};
+
+const COMMON_SECTION_TITLES = {
+  relatives: "16 在日親族及び同居者",
+  applicant2: "申請人等作成用2（N）（項番17〜22）",
+  workHistory: "21 職歴（外国におけるものを含む）",
+  organization: "所属機関等作成用1・2（N）",
+} as const;
+
+const RENEWAL_LAYOUT: FormLayout = {
+  formName: "在留期間更新許可申請書",
+  formId: "930004094/930004095",
+  sectionTitles: { ...COMMON_SECTION_TITLES, applicant1: "申請人等作成用1（項番5〜15）" },
+  labels: {
+    ...COMMON_LABELS,
+    maritalStatus: "5 配偶者の有無",
+    occupation: "6 職業",
+    homeAddress: "7 本国における居住地",
+    phone: "9 電話番号",
+    mobilePhone: "9 携帯電話番号",
+    renewalReason: "14 更新の理由",
+  },
+};
+
+/** 別記第三十号様式。項目5に「出生地」があり、配偶者の有無以降が1つ繰り下がる。電話番号は項目9（住居地）の欄内 */
+const CHANGE_LAYOUT: FormLayout = {
+  formName: "在留資格変更許可申請書",
+  formId: "930004065",
+  sectionTitles: { ...COMMON_SECTION_TITLES, applicant1: "申請人等作成用1（項番5〜15）" },
+  labels: {
+    ...COMMON_LABELS,
+    placeOfBirth: "5 出生地",
+    maritalStatus: "6 配偶者の有無",
+    occupation: "7 職業",
+    homeAddress: "8 本国における居住地",
+    phone: "9 電話番号（住居地の欄）",
+    mobilePhone: "9 携帯電話番号（住居地の欄）",
+    changeReason: "14 変更の理由",
+  },
+  desiredStatusLabel: "13 希望する在留資格",
+};
+
+/**
+ * 手続種別ごとの項目番号表。未対応の手続種別（認定・その他）は、従来どおり更新様式の表記で表示する
+ * （認定は #85、取得は #87 で追加する）。
+ */
+export const FORM_LAYOUTS: Partial<Record<ProcedureType, FormLayout>> = {
+  renewal: RENEWAL_LAYOUT,
+  change: CHANGE_LAYOUT,
+};
+
+export function getFormLayout(procedureType: ProcedureType): FormLayout {
+  return FORM_LAYOUTS[procedureType] ?? RENEWAL_LAYOUT;
+}
+
+/** 入力エラーの要約に表示する、項目名（画面のラベル文言と同じ）。検証対象の項目は様式間で共通 */
+export const FORM_DETAILS_FIELD_LABELS: Partial<Record<FormFieldKey, string>> = {
+  passportExpiry: COMMON_LABELS.passportExpiry,
+  graduationDate: COMMON_LABELS.graduationDate,
 };
 
 const DATE_MESSAGE = "日付をカレンダーから選び直してください。";

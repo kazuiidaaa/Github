@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { buildContent } from "../lib/documents/snapshot";
-import { EMPTY_FORM_DETAILS, FORM_DETAILS_FIELD_LABELS, normalizeFormDetails, validateFormDetails } from "../lib/formDetails";
+import {
+  EMPTY_FORM_DETAILS,
+  FORM_DETAILS_FIELD_LABELS,
+  FORM_LAYOUTS,
+  getFormLayout,
+  normalizeFormDetails,
+  validateFormDetails,
+  type FormFieldKey,
+} from "../lib/formDetails";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}): CaseRecord {
@@ -87,5 +95,56 @@ describe("FORM_DETAILS_FIELD_LABELS", () => {
     for (const k of Object.keys(errors) as (keyof typeof errors)[]) {
       expect(FORM_DETAILS_FIELD_LABELS[k]).toBeTruthy();
     }
+  });
+});
+
+describe("手続種別ごとの項目番号表", () => {
+  it("更新様式の表記は従来どおり（変更前後で差がない）", () => {
+    const l = getFormLayout("renewal").labels;
+    expect(l.maritalStatus).toBe("5 配偶者の有無");
+    expect(l.homeAddress).toBe("7 本国における居住地");
+    expect(l.desiredPeriod).toBe("13 希望する在留期間");
+    expect(l.renewalReason).toBe("14 更新の理由");
+    expect(l.placeOfBirth).toBeUndefined();
+    expect(l.changeReason).toBeUndefined();
+    expect(getFormLayout("renewal").desiredStatusLabel).toBeUndefined();
+    expect(getFormLayout("renewal").sectionTitles.applicant1).toBe("申請人等作成用1（項番5〜15）");
+  });
+
+  it("変更様式は、出生地が項目5で、以降が1つ繰り下がる", () => {
+    const layout = getFormLayout("change");
+    const l = layout.labels;
+    expect(layout.formName).toBe("在留資格変更許可申請書");
+    expect(l.placeOfBirth).toBe("5 出生地");
+    expect(l.maritalStatus).toBe("6 配偶者の有無");
+    expect(l.occupation).toBe("7 職業");
+    expect(l.homeAddress).toBe("8 本国における居住地");
+    expect(l.passportNumber).toBe("10 (1) 旅券番号");
+    expect(l.changeReason).toBe("14 変更の理由");
+    expect(l.renewalReason).toBeUndefined();
+    expect(layout.desiredStatusLabel).toBe("13 希望する在留資格");
+  });
+
+  it("未対応の手続種別は、更新様式の表記で表示する", () => {
+    expect(getFormLayout("coe")).toBe(FORM_LAYOUTS.renewal);
+    expect(getFormLayout("other")).toBe(FORM_LAYOUTS.renewal);
+  });
+
+  it("検証対象の項目名は、すべての様式の表と一致する", () => {
+    for (const layout of Object.values(FORM_LAYOUTS)) {
+      for (const k of Object.keys(FORM_DETAILS_FIELD_LABELS) as FormFieldKey[]) {
+        expect(layout.labels[k]).toBe(FORM_DETAILS_FIELD_LABELS[k]);
+      }
+    }
+  });
+
+  it("追加した項目は、保存値から復元でき、古い保存値には空で補われる", () => {
+    const restored = normalizeFormDetails({ placeOfBirth: "ダミー市", changeReason: "転職のため" });
+    expect(restored.placeOfBirth).toBe("ダミー市");
+    expect(restored.changeReason).toBe("転職のため");
+    expect(restored.renewalReason).toBe("");
+    const old = normalizeFormDetails({ renewalReason: "継続勤務" });
+    expect(old.placeOfBirth).toBe("");
+    expect(old.changeReason).toBe("");
   });
 });

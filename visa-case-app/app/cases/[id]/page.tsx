@@ -309,7 +309,7 @@ export default function CaseDetailPage() {
 
         {tab === "employment" && <EmploymentForm record={record} />}
 
-        {tab === "formDetails" && <FormDetailsForm record={record} />}
+        {tab === "formDetails" && <FormDetailsForm record={record} onGoOverview={() => setTab("overview")} />}
 
         {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} onGoDocuments={() => setTab("documents")} />}
 
