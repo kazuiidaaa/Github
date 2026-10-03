@@ -34,7 +34,7 @@ export default function NewCasePage() {
     if (bulk) {
       if (trimmedNames.length === 0) next.names = "案件名を1件以上入力してください。";
       else if (names.some((n) => n.length > 100)) next.names = "案件名は100文字以内で入力してください。";
-      if (hasEmploymentDateError(employment)) next.employment = "雇用開始日は YYYY-MM-DD の形式で入力してください。";
+      if (hasEmploymentDateError(employment)) next.employment = "雇用開始日をカレンダーから選び直してください。";
     } else {
       if (!caseName.trim()) next.caseName = "案件名を入力してください。";
       if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";

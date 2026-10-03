@@ -40,7 +40,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function text(key: TextKey, label: string, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean } = {}) {
+  function text(key: TextKey, label: string, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean } = {}) {
     const input = opts.area ? (
       <textarea
         className={inputClass}
@@ -51,6 +51,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
       />
     ) : (
       <input
+        type={opts.date ? "date" : undefined}
         className={inputClass}
         value={form[key]}
         placeholder={opts.placeholder}
@@ -127,7 +128,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
         {text("phone", "9 電話番号")}
         {text("mobilePhone", "9 携帯電話番号")}
         {text("passportNumber", "10 (1) 旅券番号")}
-        {text("passportExpiry", "10 (2) 旅券の有効期限", { placeholder: "YYYY-MM-DD" })}
+        {text("passportExpiry", "10 (2) 旅券の有効期限", { date: true })}
         {text("periodOfStay", "11 現に有する在留期間", { placeholder: "例：3年" })}
         {text("desiredPeriod", "13 希望する在留期間", { placeholder: "例：3年" })}
         {text("renewalReason", "14 更新の理由", { area: true })}
@@ -151,7 +152,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
                   <input className={inputClass} value={r.name} onChange={(e) => updateRelative(r.id, { name: e.target.value })} />
                 </Field>
                 <Field label="生年月日">
-                  <input className={inputClass} placeholder="YYYY-MM-DD" value={r.dateOfBirth} onChange={(e) => updateRelative(r.id, { dateOfBirth: e.target.value })} />
+                  <input type="date" className={inputClass} value={r.dateOfBirth} onChange={(e) => updateRelative(r.id, { dateOfBirth: e.target.value })} />
                 </Field>
                 <Field label="国籍・地域">
                   <input className={inputClass} value={r.nationality} onChange={(e) => updateRelative(r.id, { nationality: e.target.value })} />
@@ -206,7 +207,7 @@ export function FormDetailsForm({ record }: { record: CaseRecord }) {
           </select>
         </Field>
         {text("schoolName", "18 (3) 学校名")}
-        {text("graduationDate", "18 (4) 卒業年月日", { placeholder: "YYYY-MM-DD" })}
+        {text("graduationDate", "18 (4) 卒業年月日", { date: true })}
         {text("majorField", "19 専攻・専門分野", { placeholder: "例：工学" })}
         {text("itQualification", "20 情報処理技術者資格又は試験合格", { hint: "資格名または試験名。ない場合は空欄。" })}
         {text("legalRepName", "22 代理人 氏名（法定代理人による申請の場合）")}

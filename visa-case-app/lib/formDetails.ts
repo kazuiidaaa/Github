@@ -163,7 +163,7 @@ export const FORM_DETAILS_FIELD_LABELS: Partial<Record<keyof FormDetails, string
   graduationDate: "18 (4) 卒業年月日",
 };
 
-const DATE_MESSAGE = "YYYY-MM-DD の形式で、実在する日付を入力してください。";
+const DATE_MESSAGE = "日付をカレンダーから選び直してください。";
 
 /** 日付の形式のみ確認する（公式様式の項目は、確定の前提としない） */
 export function validateFormDetails(f: FormDetails): FormDetailsErrors {

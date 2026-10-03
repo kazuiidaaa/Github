@@ -69,9 +69,9 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     return (
       <Field label={label} required error={errors[key]}>
         <input
+          type="date"
           className={inputClass}
           value={form[key]}
-          placeholder="YYYY-MM-DD"
           disabled={confirmed}
           onChange={(e) => set(key, e.target.value)}
         />
