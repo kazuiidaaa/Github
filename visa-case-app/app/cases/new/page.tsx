@@ -7,6 +7,7 @@ import { useState } from "react";
 import { EmploymentFields, hasEmploymentDateError } from "@/components/EmploymentForm";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
+import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 
@@ -22,6 +23,7 @@ export default function NewCasePage() {
   // まとめて登録：雇用・会社情報を1回入力し、申請人（案件名）を複数人分入力する
   const [bulk, setBulk] = useState(false);
   const [employment, setEmployment] = useState<EmploymentInfo>({ ...EMPTY_EMPLOYMENT });
+  const [groupName, setGroupName] = useState("");
   const [names, setNames] = useState<string[]>(["", "", ""]);
 
   const needsTarget = procedureType === "change" || procedureType === "coe";
@@ -30,10 +32,12 @@ export default function NewCasePage() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
-    const trimmedNames = names.map((n) => n.trim()).filter(Boolean);
+    const bulkNames = bulk ? buildBulkCaseNames(groupName, names) : [];
     if (bulk) {
-      if (trimmedNames.length === 0) next.names = "案件名を1件以上入力してください。";
-      else if (names.some((n) => n.length > 100)) next.names = "案件名は100文字以内で入力してください。";
+      if (!groupName.trim()) next.groupName = "グループ名を入力してください。";
+      else if (groupName.length > 100) next.groupName = "グループ名は100文字以内で入力してください。";
+      if (names.length === 0) next.names = "案件を1件以上登録してください。";
+      else if (bulkNames.some((n) => n.length > 100)) next.names = "案件名は100文字以内で入力してください（グループ名に（行番号）が加わった長さを含みます）。";
       if (hasEmploymentDateError(employment)) next.employment = "雇用開始日をカレンダーから選び直してください。";
     } else {
       if (!caseName.trim()) next.caseName = "案件名を入力してください。";
@@ -68,12 +72,12 @@ export default function NewCasePage() {
         checks: [],
         documents: [],
       });
-      logAudit(id, "case_created", bulk ? { bulk: trimmedNames.length } : undefined);
+      logAudit(id, "case_created", bulk ? { bulk: bulkNames.length } : undefined);
       return id;
     };
 
     if (bulk) {
-      trimmedNames.forEach(create);
+      bulkNames.forEach(create);
       router.push("/cases");
       return;
     }
@@ -158,14 +162,17 @@ export default function NewCasePage() {
               <EmploymentFields form={employment} set={(k, v) => setEmployment((f) => ({ ...f, [k]: v }))} />
               {errors.employment && <p className="mt-2 text-sm text-red-600">{errors.employment}</p>}
             </div>
-            <Field label="申請人（案件名）" required error={errors.names} hint="空欄の行は無視します。案件名は内部管理用で、正式な氏名としては扱いません。">
+            <Field label="グループ名" required error={errors.groupName} hint="例：〇〇株式会社 技術・人文知識・国際業務 変更 2名（所属機関・手続種別・人数など。空欄の行の案件名は「グループ名（行番号）」になります）">
+              <input className={inputClass} value={groupName} onChange={(e) => setGroupName(e.target.value)} />
+            </Field>
+            <Field label="申請人（案件名）" error={errors.names} hint="任意です。空欄の行は「グループ名（行番号）」を案件名にします。入力した行は、その入力を案件名にします。案件名は内部管理用で、正式な氏名としては扱いません。">
               <div className="space-y-2">
                 {names.map((n, i) => (
                   <div key={i} className="flex gap-2">
                     <input
                       className={inputClass}
                       aria-label={`案件名 ${i + 1}`}
-                      placeholder="例：李明さん 在留期間更新"
+                      placeholder="空欄の場合は「グループ名（行番号）」"
                       value={n}
                       onChange={(e) => setNames((l) => l.map((x, j) => (j === i ? e.target.value : x)))}
                     />
@@ -185,7 +192,7 @@ export default function NewCasePage() {
           <Button type="button" variant="secondary" onClick={() => router.push("/cases")}>
             キャンセル
           </Button>
-          <Button type="submit">{bulk ? `${names.filter((n) => n.trim()).length}件を作成` : "作成"}</Button>
+          <Button type="submit">{bulk ? `${names.length}件を作成` : "作成"}</Button>
         </div>
       </form>
     </div>
