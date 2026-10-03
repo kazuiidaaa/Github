@@ -17,7 +17,9 @@ import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { UPLOADED_DOCUMENT_LABELS, findDocumentOfType, removeDocumentOfType } from "@/lib/documentKinds";
+import { unresolvedCount } from "@/lib/checks/definitions";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { evaluate } from "@/lib/requirements/evaluate";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
@@ -124,6 +126,13 @@ export default function CaseDetailPage() {
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
   }
   const a = record.applicant;
+  // タブ見出しの未対応表示。値が null のタブは表示しない（選択中のタブも表示する）。
+  const tabIndicators: Partial<Record<Tab, string>> = {};
+  if (a.confirmationStatus !== "confirmed") tabIndicators.applicant = "未確認";
+  const missingCount = evaluate(record).missing.length;
+  if (missingCount > 0) tabIndicators.requirements = `${missingCount}件`;
+  const unresolvedChecks = unresolvedCount(record.checks);
+  if (unresolvedChecks > 0) tabIndicators.checks = `${unresolvedChecks}件`;
   const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
 
   return (
@@ -188,6 +197,11 @@ export default function CaseDetailPage() {
             }`}
           >
             {t.label}
+            {tabIndicators[t.key] && (
+              <span className="ml-1.5">
+                <Badge tone="yellow">{tabIndicators[t.key]}</Badge>
+              </span>
+            )}
           </button>
         ))}
       </div>
