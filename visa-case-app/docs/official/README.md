@@ -1,17 +1,21 @@
 # 公式資料(出入国在留管理庁)
 
-在留期間更新許可申請(技術・人文知識・国際業務)に関する、公式の様式・案内の写しです。
-実行時のコードからは参照しません。転記補助シートの対応表(`lib/documents/formMapping.ts`)を点検するための参照用です。
+在留期間更新許可申請・在留資格変更許可申請・在留資格認定証明書交付申請・在留資格取得許可申請(いずれも技術・人文知識・国際業務を中心とした在留資格)に関する、公式の様式・案内の写しです。
+
+`renewal-application-form_930004095.xlsx`・`change-application-form_930004065.xlsx`・`coe-application-form_930004030.xlsx`・`acquisition-application-form_930004121.xlsx` の4様式(Excel)は、フェーズ11(`docs/phase11-excel-fill-decision.md`)の決定により、今後、実行時のコードから参照する**差し込み元テンプレート**として位置付けています(実装はIssue単位で順次行います。本README作成時点では、いずれの様式についても、案件情報をセルへ差し込む実装はまだありません)。実装後は、アプリが、これらのファイルのコピーに、案件情報を対応するセルへ書き込んだうえで、申請書類としてダウンロード提供します。それ以外のPDF資料は、実行時のコードからは参照せず、対応表を点検するための参照用です。
 
 | ファイル | 内容 | 取得元 |
 |---|---|---|
 | renewal-application-form_930004094.pdf | 在留期間更新許可申請書(別記第三十号の二様式) | https://www.moj.go.jp/isa/content/930004094.pdf |
-| renewal-application-form_930004095.xlsx | 同(Excel) | https://www.moj.go.jp/isa/content/930004095.xlsx |
+| renewal-application-form_930004095.xlsx | 同(Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004095.xlsx |
 | renewal-application-sample_001460062.pdf | 申請書の記載例 | https://www.moj.go.jp/isa/content/001460062.pdf |
 | gijinkoku-renewal-checksheet_001367009.pdf | 提出書類チェックシート(更新) | https://www.moj.go.jp/isa/content/001367009.pdf |
+| change-application-form_930004065.xlsx | 在留資格変更許可申請書(別記第三十号様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004065.xlsx |
+| coe-application-form_930004030.xlsx | 在留資格認定証明書交付申請書(別記第六号の三様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004030.xlsx |
+| acquisition-application-form_930004121.xlsx | 在留資格取得許可申請書(別記第三十六号様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004121.xlsx |
 
-- 取得日:2026-10-02
+- 取得日:2026-10-02(更新の4資料)、2026-10-03(変更・認定・取得の3様式)
 - 出典:出入国在留管理庁ホームページ(https://www.moj.go.jp/isa/applications/status/gijinkoku.html)
-- 利用条件:入管庁のコンテンツは、権利表記がない限り公共データ利用規約(PDL1.0)が適用されます(https://www.moj.go.jp/isa/copyright/index2.html)。出典を記載し、編集・加工した場合はその旨を記載してください。国が作成したかのように公表・利用してはなりません。
-- 取り扱い:事務所内での参照用です。外部へ再配布する場合は、利用条件を再確認してください。
-- 更新:様式は改正されることがあります。月次で入管庁の更新情報を確認し、版が変わった場合は、このフォルダの資料と対応表を更新してください。
+- 利用条件:入管庁のコンテンツは、権利表記がない限り公共データ利用規約(PDL1.0)が適用されます(https://www.moj.go.jp/isa/copyright/index2.html)。出典を記載し、編集・加工した場合はその旨を記載してください。国が作成したかのように公表・利用してはなりません。本アプリは、上記4様式のコピーのセルに案件情報を入力する加工を行います。加工後のファイルをダウンロードする画面に、出典および加工を行っている旨を表示してください。
+- 取り扱い:事務所内での参照・差し込み処理用です。外部へ再配布する場合は、利用条件を再確認してください。
+- 更新:様式は改正されることがあります。月次で入管庁の更新情報を確認し、版が変わった場合は、このフォルダの資料と対応表(`lib/documents/excelFill/` 配下の各モジュール)を更新してください。
