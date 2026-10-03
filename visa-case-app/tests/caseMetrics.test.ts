@@ -1,6 +1,6 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, summarize } from "../lib/caseMetrics";
+import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, summarize } from "../lib/caseMetrics";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function dateIn(days: number): string {
@@ -117,5 +117,15 @@ describe("countActiveFilters", () => {
     expect(
       countActiveFilters({ ...DEFAULT_FILTER, query: "a", status: "x", within30: true, checksPending: true }),
     ).toBe(4);
+  });
+});
+
+describe("isFilterActive", () => {
+  it("初期状態では false を返す", () => {
+    expect(isFilterActive(DEFAULT_FILTER)).toBe(false);
+  });
+
+  it("checksPending のみ true の場合は true を返す", () => {
+    expect(isFilterActive({ ...DEFAULT_FILTER, checksPending: true })).toBe(true);
   });
 });

@@ -10,6 +10,7 @@ import { UploadBox } from "@/components/UploadBox";
 import { Badge } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
+import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
@@ -51,6 +52,7 @@ function cardFilter(key: CardKey): CaseFilter {
   if (key === "checksPending") f.checksPending = true;
   if (key === "ready") f.status = "application_ready";
   if (key === "missingDocs") f.missingDocs = true;
+  if (key === "unconfirmed") f.unconfirmed = true;
   if (key === "within30") {
     f.within30 = true;
     f.sort = "expiry";
@@ -59,7 +61,7 @@ function cardFilter(key: CardKey): CaseFilter {
 }
 
 function activeCard(f: CaseFilter): CardKey | null {
-  const keys: CardKey[] = ["total", "review", "missingDocs", "checksPending", "ready", "within30"];
+  const keys: CardKey[] = ["total", "review", "missingDocs", "unconfirmed", "checksPending", "ready", "within30"];
   return keys.find((k) => toQuery(cardFilter(k)) === toQuery(f)) ?? null;
 }
 
@@ -100,7 +102,7 @@ function CasesView() {
   const summary = useMemo(() => summarize(cases), [cases]);
   const rows = useMemo(() => applyFilter(cases, filter), [cases, filter]);
   const active = isFilterActive(filter);
-  const pendingCount = useMemo(() => cases.filter((c) => c.documents.length === 0).length, [cases]);
+  const pendingCount = useMemo(() => cases.filter((c) => !hasResidenceCard(c)).length, [cases]);
 
   const go = (f: CaseFilter) => router.replace(`/cases${toQuery(f)}`, { scroll: false });
 
@@ -180,6 +182,13 @@ function CasesView() {
                       条件をリセット
                     </button>
                   )}
+                  {loaded && cases.length === 0 && canEdit && (
+                    <div className="mt-4">
+                      <Link href="/cases/new" className="inline-block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+                        新規案件
+                      </Link>
+                    </div>
+                  )}
                 </td>
               </tr>
             )}
@@ -215,6 +224,13 @@ function CasesView() {
               <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
                 条件をリセット
               </button>
+            )}
+            {loaded && cases.length === 0 && canEdit && (
+              <div className="mt-4">
+                <Link href="/cases/new" className="inline-block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+                  新規案件
+                </Link>
+              </div>
             )}
           </li>
         )}

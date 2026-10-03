@@ -4,8 +4,9 @@ import { useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { Button } from "@/components/ui";
 import { ConfirmDocumentReplaceDialog } from "@/components/ConfirmDocumentReplaceDialog";
-import { MAX_FILE_BYTES, validateDocumentFile } from "@/lib/documentValidation";
+import { FORMAT_LABEL_BY_DOCUMENT_TYPE, MAX_FILE_BYTES, validateDocumentFile } from "@/lib/documentValidation";
 import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
+import { PHOTO_GUIDANCE, UPLOADED_DOCUMENT_LABELS, replaceDocumentOfType } from "@/lib/documentKinds";
 import type { DocumentRecord } from "@/lib/types";
 
 const MAX_INLINE_BYTES = 1_000_000;
@@ -25,9 +26,12 @@ export function UploadBox({
   currentFileName,
   onUploaded,
   compact = false,
+  documentType = "residence_card",
 }: {
   caseId: string;
-  /** 登録済みの在留カードのファイル名。登録済みの場合は、差し替えとして扱う */
+  /** アップロードする書類の種別。省略時は在留カード */
+  documentType?: DocumentRecord["documentType"];
+  /** 登録済みの同じ種別の書類のファイル名。登録済みの場合は、差し替えとして扱う */
   currentFileName?: string;
   onUploaded: (replaced: boolean) => void;
   /** 一覧の行内に置く、簡略表示（見出し・説明を省き、余白を小さくする） */
@@ -40,6 +44,9 @@ export function UploadBox({
   const [failed, setFailed] = useState<File | null>(null);
   const [replacing, setReplacing] = useState<File | null>(null);
   const hasDocument = currentFileName !== undefined;
+  const isPhoto = documentType === "photo";
+  const label = UPLOADED_DOCUMENT_LABELS[documentType];
+  const accept = isPhoto ? ".jpg,.jpeg,.png" : ".jpg,.jpeg,.png,.pdf";
 
   async function upload(file: File) {
     setError("");
@@ -50,7 +57,7 @@ export function UploadBox({
       const storagePath = await uploadDocumentFile(caseId, docId, file);
       const record: DocumentRecord = {
         id: docId,
-        documentType: "residence_card",
+        documentType,
         fileName: file.name,
         mimeType: file.type,
         fileSize: file.size,
@@ -62,10 +69,11 @@ export function UploadBox({
       // 差し替えは、新しいファイルの保存に成功してから置き換える（失敗時は元の書類を残す）
       updateCase(caseId, (c) => ({
         ...c,
-        documents: [record],
-        workflowStatus: hasDocument ? "preparing" : c.workflowStatus,
+        documents: replaceDocumentOfType(c.documents, record),
+        // 申請人情報の元になる在留カードを差し替えたときだけ、作成中に戻す
+        workflowStatus: hasDocument && !isPhoto ? "preparing" : c.workflowStatus,
       }));
-      logAudit(caseId, hasDocument ? "document_replaced" : "document_uploaded", { documentType: "residence_card" });
+      logAudit(caseId, hasDocument ? "document_replaced" : "document_uploaded", { documentType });
       onUploaded(hasDocument);
     } catch (e) {
       logAudit(caseId, "document_upload_failed", undefined, "failure");
@@ -78,7 +86,7 @@ export function UploadBox({
 
   function handle(file: File | undefined) {
     if (!file || uploading) return;
-    const problem = validateDocumentFile(file);
+    const problem = validateDocumentFile(file, documentType);
     if (problem) {
       setFailed(null);
       setError(problem);
@@ -93,9 +101,11 @@ export function UploadBox({
     <section className={compact ? "" : "rounded-lg border border-slate-200 bg-white p-6"}>
       {!compact && (
         <>
-          <h2 className="mb-1 font-semibold">{hasDocument ? "在留カードを差し替える" : "在留カードをアップロード"}</h2>
+          <h2 className="mb-1 font-semibold">{hasDocument ? `${label}を差し替える` : `${label}をアップロード`}</h2>
           <p className="mb-4 text-xs text-slate-500">
-            OCRは行いません。アップロード後、原本を見ながら申請人情報を入力します。試作版のため、実在の個人情報はアップロードしないでください。
+            {isPhoto
+              ? `${PHOTO_GUIDANCE}試作版のため、実在の個人情報はアップロードしないでください。`
+              : "OCRは行いません。アップロード後、原本を見ながら申請人情報を入力します。試作版のため、実在の個人情報はアップロードしないでください。"}
           </p>
         </>
       )}
@@ -129,16 +139,18 @@ export function UploadBox({
             <input
               ref={input}
               type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
+              accept={accept}
               className="hidden"
               onChange={(e) => {
                 handle(e.target.files?.[0]);
                 e.target.value = "";
               }}
             />
-            <p className={`${compact ? "mt-2" : "mt-3"} text-xs text-slate-500`}>
-              対応形式：JPG / PNG / PDF　最大サイズ：{MAX_FILE_BYTES / 1024 / 1024}MB
-            </p>
+            {!compact && (
+              <p className="mt-3 text-xs text-slate-500">
+                対応形式：{FORMAT_LABEL_BY_DOCUMENT_TYPE[documentType]}　最大サイズ：{MAX_FILE_BYTES / 1024 / 1024}MB
+              </p>
+            )}
           </>
         )}
       </div>

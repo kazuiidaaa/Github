@@ -5,6 +5,7 @@ import { useState } from "react";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
+import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
@@ -47,7 +48,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
   const [errors, setErrors] = useState<Partial<Record<ApplicantField, string>>>({});
   const [message, setMessage] = useState("");
   const confirmed = record.applicant.confirmationStatus === "confirmed";
-  const doc = record.documents[0];
+  const doc = findDocumentOfType(record.documents, "residence_card");
   const errorFields = (Object.keys(FIELD_LABELS) as ApplicantField[]).filter((k) => errors[k]);
 
   function set<K extends keyof Applicant>(key: K, value: Applicant[K]) {
