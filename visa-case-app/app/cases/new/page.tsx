@@ -54,7 +54,8 @@ export default function NewCasePage() {
       documents: [],
     });
     logAudit(id, "case_created");
-    router.push(`/cases/${id}`);
+    // 作成直後は、次に行う書類の登録へ誘導するため「書類」タブを開く
+    router.push(`/cases/${id}?tab=documents`);
   }
 
   if (!canEdit) {
