@@ -1,6 +1,7 @@
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo, ProcedureType } from "../../types";
 import { officialFormScopeWarnings } from "../officialForms";
+import { fillAcquisitionExcel } from "./acquisition";
 import { fillRenewalExcel } from "./renewal";
 
 // 手続種別から差し込み関数を選ぶ入口（サーバー専用。node:fs を使うため、画面のコードから import しない）。
@@ -18,6 +19,8 @@ type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails) => Promise<{ buf
 
 export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
   renewal: fillRenewalExcel,
+  // 取得様式は雇用情報を使わない。希望する在留資格（targetStatus）は、現状の入力に含まれないため渡さない
+  acquisition: (a, _e, f) => fillAcquisitionExcel(a, f),
 };
 
 /**

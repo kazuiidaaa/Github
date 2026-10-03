@@ -46,9 +46,24 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
   outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_TARGET_STATUS}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
 };
 
+export const ACQUISITION_SPEC: OfficialFormSpec = {
+  procedureType: "acquisition",
+  label: "在留資格取得許可申請書",
+  form: {
+    formName: "別記第三十六号様式（第二十四条関係）在留資格取得許可申請書（Excel）",
+    fileId: "930004121",
+    sourceUrl: "https://www.moj.go.jp/isa/content/930004121.xlsx",
+    confirmedOn: "2026-10-03",
+  },
+  // 取得様式は在留資格を限定しない（希望する在留資格は様式の選択肢で選ぶ）ため、取得の手続種別なら対象
+  isInScope: (s) => s.procedureType === "acquisition",
+  outOfScopeWarning: "この様式は、在留資格取得許可申請を対象としています。この案件は対象外の可能性があります。",
+};
+
 /** 手続種別ごとの様式。未対応の手続種別は、現時点では更新の様式を、注意を付けて使う */
 export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec>> = {
   renewal: RENEWAL_SPEC,
+  acquisition: ACQUISITION_SPEC,
 };
 
 /** 差し込みに使う様式。手続種別に専用の様式がなければ、更新の様式（対象外の注意が付く） */
