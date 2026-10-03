@@ -46,9 +46,24 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
   outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_TARGET_STATUS}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
 };
 
+export const COE_SPEC: OfficialFormSpec = {
+  procedureType: "coe",
+  label: "在留資格認定証明書交付申請書",
+  form: {
+    formName: "別記第六号の三様式（第六条の二関係）在留資格認定証明書交付申請書（Excel）",
+    fileId: "930004030",
+    sourceUrl: "https://www.moj.go.jp/isa/content/930004030.xlsx",
+    confirmedOn: "2026-10-03",
+  },
+  // 認定の案件は、現に有する在留資格がない（海外からの呼び寄せ）ため、在留資格による対象外の判定はしない。
+  isInScope: (s) => s.procedureType === "coe",
+  outOfScopeWarning: "この様式は、在留資格認定証明書交付申請を対象としています。この案件は対象外の可能性があります。",
+};
+
 /** 手続種別ごとの様式。未対応の手続種別は、現時点では更新の様式を、注意を付けて使う */
 export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec>> = {
   renewal: RENEWAL_SPEC,
+  coe: COE_SPEC,
 };
 
 /** 差し込みに使う様式。手続種別に専用の様式がなければ、更新の様式（対象外の注意が付く） */
