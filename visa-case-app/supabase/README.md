@@ -57,3 +57,19 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 
 ## 7. 申請書類作成（フェーズ6-A）を使う場合
 `supabase/migrations/0008_generated_documents.sql` を、0001〜0007 の実行後に SQL Editor で実行します。生成した内部確認シートの保存と、版の管理に使います。
+
+## 8. Word出力（フェーズ6-B）を使う場合
+`supabase/migrations/0010_generated_documents_word.sql` を、0008 の実行後に SQL Editor で実行します（0009 の有無には依存しません）。Word ファイルを保存する非公開バケット `generated-documents`（10MB・.docx のみ・更新と削除は不可）と、Word 版を新しい版として登録する関数を作成します。
+
+## 9. PDF出力（フェーズ6-C）を使う場合
+`supabase/migrations/0011_generated_documents_pdf.sql` を、0010 の実行後に SQL Editor で実行します。バケット `generated-documents` に PDF を追加し、登録関数を Word と PDF の両方に対応させます。日本語フォント（Noto Sans JP、SIL Open Font License）は `public/fonts/` に同梱しており、PDF の出力時のみ読み込みます。
+
+## フェーズ10：複数ユーザーと役割
+
+`supabase/migrations/0013_roles.sql` を、0012 の実行後に SQL Editor で実行します。役割（owner / admin / staff / viewer）ごとに、案件・子テーブル・生成文書・ファイル保存先の規則を置き換え、メンバー管理の関数（`list_members`、`add_member_by_email`、`set_member_role`、`remove_member`）を追加します。実行前にバックアップを取り、ファイル冒頭の確認クエリを実行してください。アプリの更新と対になっています。0013 を実行せずに最新のアプリを使うと、アカウント画面のメンバー管理が失敗します（他の機能は従来どおり動作します）。詳細は `docs/production.md` の「9. 複数ユーザーと役割」を参照してください。
+
+## 0012・0014(フェーズ9:公式様式対応)
+
+- `supabase/migrations/0012_transcription_aid.sql`:生成文書の種類に「転記補助シート」を追加します(0011 の実行後)。
+- `supabase/migrations/0014_form_fields.sql`:公式申請書の追加入力項目(旅券番号、犯罪を理由とする処分、在日親族、職歴など)の保存先 `form_details` を追加します。0013(役割)の実行後に実行してください。個人情報を含むため、実行前にバックアップを取得してください。実行せずに最新のアプリを使うと、案件の読み込みが失敗します。
+

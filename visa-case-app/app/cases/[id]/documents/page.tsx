@@ -10,19 +10,21 @@ import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
   INTERNAL_DOCUMENT_TYPES,
+  OUTPUT_FORMAT_LABELS,
   type InternalDocumentType,
 } from "@/lib/documents/types";
 import { unresolvedCount } from "@/lib/checks/definitions";
 import { formatDateTime } from "@/lib/format";
 import { evaluate } from "@/lib/requirements/evaluate";
-import { useCase, useStoreLoaded } from "@/lib/store";
+import { useCan, useCase, useStoreLoaded } from "@/lib/store";
 
 export default function DocumentsPage() {
   const { id } = useParams<{ id: string }>();
   const record = useCase(id);
   const storeLoaded = useStoreLoaded();
+  const canEdit = useCan("edit");
   const { documents, loaded, error } = useGeneratedDocuments(id);
-  const [selected, setSelected] = useState<InternalDocumentType[]>([...INTERNAL_DOCUMENT_TYPES]);
+  const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => t !== "transcription_aid"));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -100,9 +102,10 @@ export default function DocumentsPage() {
           </label>
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <Button onClick={() => void generate()} disabled={busy || selected.length === 0}>
+          <Button onClick={() => void generate()} disabled={busy || selected.length === 0 || !canEdit}>
             {busy ? "生成中……" : "生成して保存"}
           </Button>
+          {!canEdit && <span className="text-sm text-slate-600">閲覧のみの権限のため、生成できません。</span>}
           {message && <span className="text-sm text-slate-600">{message}</span>}
         </div>
         <p className="mt-3 text-xs text-slate-500">再生成しても過去の版は上書きされず、新しい版として保存されます。</p>
@@ -118,6 +121,9 @@ export default function DocumentsPage() {
               <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
                 {DOCUMENT_TYPE_LABELS[d.documentType]} v{d.version}
               </Link>
+              {d.outputFormat !== "html" && (
+                <span className="ml-2 text-xs text-slate-500">（{OUTPUT_FORMAT_LABELS[d.outputFormat]}）</span>
+              )}
             </span>
             <span className="flex items-center gap-3">
               <Badge tone={d.status === "draft" ? "yellow" : d.status === "archived" ? "gray" : "green"}>

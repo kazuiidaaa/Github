@@ -4,15 +4,17 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
+import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCase, useStoreLoaded } from "@/lib/store";
+import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import {
   DOCUMENT_STATUS_LABELS,
   PROCEDURE_TYPES,
@@ -20,17 +22,28 @@ import {
   type DocumentRecord,
 } from "@/lib/types";
 
-type Tab = "overview" | "documents" | "applicant" | "employment" | "requirements" | "checks";
+type Tab = "overview" | "documents" | "applicant" | "employment" | "formDetails" | "requirements" | "checks";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "documents", label: "書類" },
   { key: "applicant", label: "申請人情報" },
   { key: "employment", label: "雇用・会社" },
+  { key: "formDetails", label: "公式様式項目" },
   { key: "requirements", label: "必要書類" },
   { key: "checks", label: "申請前チェック" },
 ];
 
-function DocumentRow({ doc, locked, onDelete }: { doc: DocumentRecord; locked: boolean; onDelete: () => void }) {
+function DocumentRow({
+  doc,
+  locked,
+  readOnly,
+  onDelete,
+}: {
+  doc: DocumentRecord;
+  locked: boolean;
+  readOnly: boolean;
+  onDelete: () => void;
+}) {
   const [error, setError] = useState("");
 
   async function open() {
@@ -58,7 +71,7 @@ function DocumentRow({ doc, locked, onDelete }: { doc: DocumentRecord; locked: b
           <Button variant="secondary" onClick={() => void open()}>
             表示
           </Button>
-          <Button variant="danger" disabled={locked} onClick={onDelete}>
+          <Button variant="danger" disabled={locked || readOnly} onClick={onDelete}>
             削除
           </Button>
         </span>
@@ -74,7 +87,11 @@ export default function CaseDetailPage() {
   const router = useRouter();
   const record = useCase(id);
   const loaded = useStoreLoaded();
+  const canEdit = useCan("edit");
+  const canDelete = useCan("deleteCase");
   const [tab, setTab] = useState<Tab>("overview");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (!record && !loaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
 
@@ -121,19 +138,27 @@ export default function CaseDetailPage() {
         >
           申請書類作成
         </Link>
-        <Button
-          variant="danger"
-          onClick={() => {
-            if (confirm("この案件を削除します。よろしいですか。")) {
-              deleteCase(record.id);
-              router.push("/cases");
-            }
-          }}
-        >
-          削除
-        </Button>
+        {canDelete && (
+          <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+            削除
+          </Button>
+        )}
         </div>
       </div>
+      {confirmingDelete && (
+        <ConfirmDeleteDialog
+          caseName={record.caseName}
+          busy={deleting}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={async () => {
+            setDeleting(true);
+            const ok = await deleteCase(record.id);
+            setDeleting(false);
+            if (ok) router.push("/cases");
+            else setConfirmingDelete(false);
+          }}
+        />
+      )}
 
       <div className="mb-6 flex gap-1 border-b border-slate-200">
         {TABS.map((t) => (
@@ -211,24 +236,40 @@ export default function CaseDetailPage() {
 
       {tab === "documents" && (
         <div className="space-y-6">
-          <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("applicant")} />
+          {canEdit && (
+            <UploadBox caseId={record.id} hasDocument={record.documents.length > 0} onUploaded={() => setTab("applicant")} />
+          )}
           <section className="rounded-lg border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
             {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
             {record.documents.map((d) => (
-              <DocumentRow key={d.id} doc={d} locked={record.workflowStatus === "applicant_confirmed"} onDelete={() => removeDocument(d)} />
+              <DocumentRow
+                key={d.id}
+                doc={d}
+                locked={record.workflowStatus === "applicant_confirmed"}
+                readOnly={!canEdit}
+                onDelete={() => removeDocument(d)}
+              />
             ))}
           </section>
         </div>
       )}
 
-      {tab === "applicant" && <ApplicantForm record={record} onGoDocuments={() => setTab("documents")} />}
+      {!canEdit && tab !== "overview" && tab !== "documents" && (
+        <p className="mb-4 rounded-md bg-slate-100 p-3 text-sm text-slate-700">閲覧のみの権限です。内容を変更するには、事務所の所有者または管理者に役割の変更をご依頼ください。</p>
+      )}
+      {/* 編集権限がない場合は、タブ内のすべての入力・操作を無効にする（最終的な拒否はデータベース側で行う） */}
+      <fieldset disabled={!canEdit} className="m-0 min-w-0 border-0 p-0">
+        {tab === "applicant" && <ApplicantForm record={record} onGoDocuments={() => setTab("documents")} />}
 
-      {tab === "employment" && <EmploymentForm record={record} />}
+        {tab === "employment" && <EmploymentForm record={record} />}
 
-      {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
+        {tab === "formDetails" && <FormDetailsForm record={record} />}
 
-      {tab === "checks" && <ChecksPanel record={record} />}
+        {tab === "requirements" && <RequirementsPanel record={record} onGoEmployment={() => setTab("employment")} />}
+
+        {tab === "checks" && <ChecksPanel record={record} />}
+      </fieldset>
     </div>
   );
 }

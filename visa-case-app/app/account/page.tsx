@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MembersPanel } from "@/components/MembersPanel";
 import { Button, Field, inputClass } from "@/components/ui";
 import { changePassword, signOut, useSession } from "@/lib/auth";
+import { useDemo } from "@/lib/demo";
 import { auditLabel } from "@/lib/auditLabels";
 import { formatDateTime } from "@/lib/format";
 import { getAccount, listAudit, renameOrganization, useCases } from "@/lib/store";
 import { messageOf } from "@/lib/errors";
+import { can, ROLE_LABELS, isRole } from "@/lib/permissions";
 import { isSupabaseEnabled } from "@/lib/supabase";
 import type { AccountInfo, AuditEntry } from "@/lib/supabaseBackend";
 
 export default function AccountPage() {
-  if (!isSupabaseEnabled) {
+  const demo = useDemo();
+  if (!isSupabaseEnabled || demo) {
     return (
       <div className="max-w-xl rounded-lg border border-slate-200 bg-white p-6 text-sm">
         <h1 className="mb-2 text-xl font-semibold">アカウント</h1>
@@ -88,7 +92,7 @@ function AccountContent() {
   }
 
   const caseName = (id: string | null) => (id ? (cases.find((c) => c.id === id)?.caseName ?? "（削除済みの案件）") : "-");
-  const isOwner = info?.role === "owner";
+  const isOwner = can(info?.role, "renameOrganization");
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -111,7 +115,7 @@ function AccountContent() {
             <dd>{info.lastSignInAt ? formatDateTime(info.lastSignInAt) : "-"}</dd>
             <dt className="text-slate-500">事務所</dt>
             <dd>
-              {info.organizationName}（{info.role === "owner" ? "所有者" : info.role}）
+              {info.organizationName}（{isRole(info.role) ? ROLE_LABELS[info.role] : info.role}）
             </dd>
           </dl>
         ) : (
@@ -138,6 +142,10 @@ function AccountContent() {
         </div>
         {orgMsg && <p className="mt-2 text-sm text-slate-700">{orgMsg}</p>}
       </section>
+
+      {info && can(info.role, "manageMembers") && (
+        <MembersPanel myRole={info.role} myUserId={info.userId} onChanged={() => void listAudit().then(setAudit)} />
+      )}
 
       <form onSubmit={savePassword} className="space-y-4 rounded-lg border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">パスワードの変更</h2>
