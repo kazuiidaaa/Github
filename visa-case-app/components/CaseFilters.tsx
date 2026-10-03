@@ -25,8 +25,8 @@ export function CaseFilters({
       <div className="flex flex-wrap gap-3">
         <input
           className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm md:w-72"
-          placeholder="氏名・案件名で検索"
-          aria-label="氏名・案件名で検索"
+          placeholder="案件名・氏名・在留資格で検索"
+          aria-label="案件名・氏名・在留資格で検索"
           value={filter.query}
           onChange={(e) => onChange({ query: e.target.value })}
         />
@@ -65,6 +65,7 @@ export function CaseFilters({
         </select>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm">
+        <div role="group" aria-label="絞り込み条件" className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-1">
           <input type="checkbox" checked={filter.within30} onChange={(e) => onChange({ within30: e.target.checked })} />
           期限30日以内（超過を含む）
@@ -85,6 +86,7 @@ export function CaseFilters({
           <input type="checkbox" checked={filter.checksPending} onChange={(e) => onChange({ checksPending: e.target.checked })} />
           申請前チェック未完了
         </label>
+        </div>
         {active && (
           <button onClick={onReset} className="text-blue-700 hover:underline">
             条件をリセット
