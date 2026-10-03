@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fillCurrentStatus, validateApplicant, validateDraft } from "../lib/applicant";
+import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft } from "../lib/applicant";
 import { isValidDate } from "../lib/format";
 import { EMPTY_APPLICANT, type Applicant } from "../lib/types";
 
@@ -56,5 +56,20 @@ describe("fillCurrentStatus", () => {
 
   it("案件側に入力済みなら、上書きしない", () => {
     expect(fillCurrentStatus("技術・人文知識・国際業務", "留学")).toBe("技術・人文知識・国際業務");
+  });
+});
+
+describe("initialResidenceStatus", () => {
+  it("申請人情報側が未入力（空・空白のみ）なら、案件側の現在の在留資格を初期値にする", () => {
+    expect(initialResidenceStatus("", "留学")).toBe("留学");
+    expect(initialResidenceStatus("  ", "留学")).toBe("留学");
+  });
+
+  it("申請人情報側に入力済みなら、上書きしない", () => {
+    expect(initialResidenceStatus("技術・人文知識・国際業務", "留学")).toBe("技術・人文知識・国際業務");
+  });
+
+  it("双方が未入力なら、空のまま", () => {
+    expect(initialResidenceStatus("", "")).toBe("");
   });
 });
