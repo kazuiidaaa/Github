@@ -28,3 +28,14 @@ describe("書類ファイルの検証", () => {
     expect(storageExtension("application/pdf")).toBe("pdf");
   });
 });
+
+describe("証明写真ファイルの検証", () => {
+  it("JPEG・PNGを許可し、PDFを拒否する", () => {
+    expect(validateDocumentFile(f("p.jpg", "image/jpeg"), "photo")).toBeNull();
+    expect(validateDocumentFile(f("p.png", "image/png"), "photo")).toBeNull();
+    expect(validateDocumentFile(f("p.pdf", "application/pdf"), "photo")).not.toBeNull();
+  });
+  it("在留カードは従来どおりPDFを許可する", () => {
+    expect(validateDocumentFile(f("a.pdf", "application/pdf"), "residence_card")).toBeNull();
+  });
+});

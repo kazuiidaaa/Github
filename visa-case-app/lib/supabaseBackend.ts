@@ -27,7 +27,7 @@ const GENERATED_BUCKET = "generated-documents";
 
 interface DocumentRow {
   id: string;
-  document_type: "residence_card";
+  document_type: "residence_card" | "photo";
   file_name: string;
   mime_type: string | null;
   file_size: number | null;

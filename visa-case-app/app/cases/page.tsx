@@ -10,6 +10,7 @@ import { UploadBox } from "@/components/UploadBox";
 import { Badge } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
+import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
@@ -100,7 +101,7 @@ function CasesView() {
   const summary = useMemo(() => summarize(cases), [cases]);
   const rows = useMemo(() => applyFilter(cases, filter), [cases, filter]);
   const active = isFilterActive(filter);
-  const pendingCount = useMemo(() => cases.filter((c) => c.documents.length === 0).length, [cases]);
+  const pendingCount = useMemo(() => cases.filter((c) => !hasResidenceCard(c)).length, [cases]);
 
   const go = (f: CaseFilter) => router.replace(`/cases${toQuery(f)}`, { scroll: false });
 

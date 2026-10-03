@@ -72,7 +72,7 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
 
 export interface DocumentRecord {
   id: string;
-  documentType: "residence_card";
+  documentType: "residence_card" | "photo";
   fileName: string;
   mimeType: string;
   fileSize?: number;
