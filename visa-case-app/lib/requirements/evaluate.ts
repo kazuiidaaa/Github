@@ -34,20 +34,58 @@ function normalize(s: string): string {
   return s.replace(/[\s・･]/g, "");
 }
 
-function matchRuleSet(procedureType: string, residenceStatus: string): RuleSet | null {
+function matchRuleSet(procedureType: string, residenceStatus: string, ruleSets: RuleSet[]): RuleSet | null {
   const status = normalize(residenceStatus);
-  return RULE_SETS.find((r) => r.procedureType === procedureType && status.includes(normalize(r.residenceStatus))) ?? null;
+  if (status === "") return null;
+  return ruleSets.find((r) => r.procedureType === procedureType && status.includes(normalize(r.residenceStatus))) ?? null;
 }
 
-function findRuleSet(c: CaseRecord): RuleSet | null {
+/** 変更後（希望）の在留資格で規則を引く手続種別。規則の residenceStatus は申請後に持つ在留資格を意味するため */
+const TARGET_STATUS_PROCEDURES: readonly string[] = ["change", "coe", "acquisition"];
+
+/**
+ * 規則を引くための在留資格を決める。
+ * - 変更・認定・取得：変更後（希望）の在留資格（空なら一致なし）。現在の在留資格では引かない
+ * - 更新・その他：確認済みの申請人情報の在留資格があればそれ、なければ現在の在留資格
+ */
+export function statusForRules(
+  procedureType: string,
+  input: { currentStatus: string; targetStatus: string; confirmedResidenceStatus?: string },
+): string {
+  if (TARGET_STATUS_PROCEDURES.includes(procedureType)) return input.targetStatus;
+  return input.confirmedResidenceStatus || input.currentStatus;
+}
+
+function findRuleSet(c: CaseRecord, ruleSets: RuleSet[]): RuleSet | null {
   // 下書きの入力は正式なデータではないため、確認済みの場合のみ優先する
   const confirmed = c.applicant.confirmationStatus === "confirmed";
-  return matchRuleSet(c.procedureType, (confirmed && c.applicant.residenceStatus) || c.currentStatus);
+  const status = statusForRules(c.procedureType, {
+    currentStatus: c.currentStatus,
+    targetStatus: c.targetStatus,
+    confirmedResidenceStatus: confirmed ? c.applicant.residenceStatus : "",
+  });
+  return matchRuleSet(c.procedureType, status, ruleSets);
 }
 
 /** 手続種別と在留資格（文字列）だけから、対応する規則があるかを判定する（案件作成画面の案内用） */
-export function hasRuleSetFor(procedureType: string, residenceStatus: string): boolean {
-  return matchRuleSet(procedureType, residenceStatus) !== null;
+export function hasRuleSetFor(procedureType: string, residenceStatus: string, ruleSets: RuleSet[] = RULE_SETS): boolean {
+  return matchRuleSet(procedureType, residenceStatus, ruleSets) !== null;
+}
+
+/**
+ * 案件作成画面で「規則が未整備」の案内を出すか。evaluate と同じ在留資格の決め方（statusForRules）を使う。
+ * 手続種別が未選択、または判定に使う在留資格が未入力の間は出さない（入力途中の表示を避ける）。
+ */
+export function shouldShowNoRuleGuide(
+  procedureType: string,
+  currentStatus: string,
+  targetStatus: string,
+  ruleSets: RuleSet[] = RULE_SETS,
+): boolean {
+  if (procedureType === "") return false;
+  const status = statusForRules(procedureType, { currentStatus, targetStatus });
+  if (status.trim() === "") return false;
+  return !hasRuleSetFor(procedureType, status, ruleSets);
 }
 
 /** 規則が未整備の手続・在留資格に対する案内文。対応する組み合わせは RULE_SETS から生成する */
@@ -63,7 +101,7 @@ export function notApplicableMessage(): string {
  * 案件の入力内容と規則から、必要書類を判定する。
  * 判定は「候補」であり、法的な適否の最終判断は行わない。
  */
-export function evaluate(c: CaseRecord): Evaluation {
+export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evaluation {
   const empty: Evaluation = {
     ruleSet: null,
     needsCategory: false,
@@ -73,7 +111,7 @@ export function evaluate(c: CaseRecord): Evaluation {
     requiredCount: 0,
     receivedCount: 0,
   };
-  const ruleSet = findRuleSet(c);
+  const ruleSet = findRuleSet(c, ruleSets);
   if (!ruleSet) {
     return {
       ...empty,

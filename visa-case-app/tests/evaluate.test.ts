@@ -1,7 +1,8 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { evaluate, hasRuleSetFor, notApplicableMessage } from "../lib/requirements/evaluate";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
+import { evaluate, hasRuleSetFor, notApplicableMessage, shouldShowNoRuleGuide, statusForRules } from "../lib/requirements/evaluate";
+import { RULE_SETS, type RuleSet } from "../lib/requirements/rules";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type CaseRecord, type OrgCategory } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withholdingSpecial = false): CaseRecord {
   return {
@@ -128,21 +129,95 @@ describe("証明写真の登録と写真の行の状態（#52）", () => {
   });
 });
 
+const CHANGE_RULE_SET = { ...RULE_SETS[0], id: "test-change", procedureType: "change", residenceStatus: "技術・人文知識・国際業務" } as unknown as RuleSet;
+const TEST_SETS = [...RULE_SETS, CHANGE_RULE_SET];
+
 describe("案件作成画面向けの規則判定", () => {
   it("対応する手続・在留資格の組み合わせでは true", () => {
     expect(hasRuleSetFor("renewal", "技術・人文知識・国際業務")).toBe(true);
   });
 
-  it("未整備の組み合わせでは false", () => {
-    expect(hasRuleSetFor("change", "技術・人文知識・国際業務")).toBe(false);
-    expect(hasRuleSetFor("coe", "技術・人文知識・国際業務")).toBe(false);
-    expect(hasRuleSetFor("renewal", "留学")).toBe(false);
+  it("未整備の組み合わせでは false（規則が増えない other を使う）", () => {
+    expect(hasRuleSetFor("other", "技術・人文知識・国際業務")).toBe(false);
     expect(hasRuleSetFor("other", "")).toBe(false);
+    expect(hasRuleSetFor("renewal", "留学")).toBe(false);
+    expect(hasRuleSetFor("renewal", "")).toBe(false);
   });
 
   it("案内文は必要書類タブの未整備の案内と同一で、対応する組み合わせを示す", () => {
-    const reason = evaluate(make({ currentStatus: "留学" })).notApplicableReason;
+    const reason = evaluate(make({ procedureType: "other", currentStatus: "留学" })).notApplicableReason;
     expect(reason).toBe(notApplicableMessage());
     expect(reason).toContain("「技術・人文知識・国際業務」の「在留期間更新許可申請」");
+  });
+
+  it("RULE_SETS の全要素が、判定と案内文の両方に反映される", () => {
+    for (const r of RULE_SETS) {
+      expect(hasRuleSetFor(r.procedureType, r.residenceStatus)).toBe(true);
+      const label = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label;
+      expect(label).toBeTruthy();
+      expect(notApplicableMessage()).toContain(label as string);
+      expect(notApplicableMessage()).toContain(r.residenceStatus);
+    }
+  });
+});
+
+describe("規則を引く在留資格の決め方", () => {
+  it("変更では、現在=留学・変更後=技人国の案件が一致する", () => {
+    const c = make({ procedureType: "change", currentStatus: "留学", targetStatus: "技術・人文知識・国際業務" });
+    expect(evaluate(c, TEST_SETS).ruleSet?.id).toBe("test-change");
+  });
+
+  it("変更では、現在=技人国・変更後=空だと一致しない", () => {
+    const c = make({ procedureType: "change", currentStatus: "技術・人文知識・国際業務", targetStatus: "" });
+    expect(evaluate(c, TEST_SETS).ruleSet).toBeNull();
+  });
+
+  it("変更では、確認済みの申請人情報の在留資格（現在）でも引かない", () => {
+    const applicant = { ...EMPTY_APPLICANT, confirmationStatus: "confirmed" as const, residenceStatus: "技術・人文知識・国際業務" };
+    const c = make({ procedureType: "change", currentStatus: "留学", targetStatus: "", applicant });
+    expect(evaluate(c, TEST_SETS).ruleSet).toBeNull();
+  });
+
+  it("更新では、確認済みの申請人情報があればそれを、なければ現在の在留資格を使う", () => {
+    const applicant = { ...EMPTY_APPLICANT, confirmationStatus: "confirmed" as const, residenceStatus: "技術・人文知識・国際業務" };
+    expect(evaluate(make({ currentStatus: "留学", applicant })).ruleSet).not.toBeNull();
+    expect(evaluate(make({ currentStatus: "留学" })).ruleSet).toBeNull();
+  });
+
+  it("statusForRules は手続種別ごとに基準を切り替える", () => {
+    const i = { currentStatus: "留学", targetStatus: "教授", confirmedResidenceStatus: "芸術" };
+    expect(statusForRules("change", i)).toBe("教授");
+    expect(statusForRules("coe", i)).toBe("教授");
+    expect(statusForRules("acquisition", i)).toBe("教授");
+    expect(statusForRules("renewal", i)).toBe("芸術");
+    expect(statusForRules("other", i)).toBe("芸術");
+    expect(statusForRules("other", { ...i, confirmedResidenceStatus: "" })).toBe("留学");
+    expect(statusForRules("change", { ...i, targetStatus: "" })).toBe("");
+  });
+
+  const T = "技術・人文知識・国際業務";
+  const table: [string, string, string, boolean][] = [
+    // 手続種別, 現在, 変更後, 規則が一致するか
+    ["renewal", T, "", true],
+    ["renewal", "留学", "", false],
+    ["renewal", "", "", false],
+    ["other", T, "", false],
+    ["other", "", T, false],
+    ["change", "留学", T, true],
+    ["change", T, "", false],
+    ["change", T, "留学", false],
+    ["coe", "", T, false],
+  ];
+  it.each(table)("案内と evaluate が一致する: %s / 現在=%s / 変更後=%s", (procedureType, currentStatus, targetStatus, matched) => {
+    const c = make({ procedureType: procedureType as CaseRecord["procedureType"], currentStatus, targetStatus });
+    expect(evaluate(c, TEST_SETS).ruleSet !== null).toBe(matched);
+    const status = statusForRules(procedureType, { currentStatus, targetStatus });
+    expect(hasRuleSetFor(procedureType, status, TEST_SETS)).toBe(evaluate(c, TEST_SETS).ruleSet !== null);
+    // 案内は、手続種別と判定用の在留資格が入力済みで、規則がない場合のみ出る
+    expect(shouldShowNoRuleGuide(procedureType, currentStatus, targetStatus, TEST_SETS)).toBe(status.trim() !== "" && !matched);
+  });
+
+  it("手続種別が未選択のときは案内を出さない", () => {
+    expect(shouldShowNoRuleGuide("", "留学", "", TEST_SETS)).toBe(false);
   });
 });
