@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ImageZoom } from "@/components/ImageZoom";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
@@ -24,10 +25,7 @@ function Original({ doc }: { doc: DocumentRecord }) {
   return (
     <>
       <h2 className="mb-3 font-semibold">原本：{doc.fileName}</h2>
-      {url && doc.mimeType.startsWith("image/") && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="在留カード" className="max-h-[32rem] w-full rounded border border-slate-200 object-contain" />
-      )}
+      {url && doc.mimeType.startsWith("image/") && <ImageZoom src={url} alt="在留カード" />}
       {url && doc.mimeType === "application/pdf" && (
         <iframe src={url} title="在留カード" className="h-[32rem] w-full rounded border border-slate-200" />
       )}
