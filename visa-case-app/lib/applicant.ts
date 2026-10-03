@@ -6,8 +6,9 @@ export type ApplicantField = keyof Pick<
   "legalName" | "nationality" | "dateOfBirth" | "residenceStatus" | "residenceExpiryDate"
 >;
 
-/** 確認済みにするための必須項目を検証する。問題がなければ空のオブジェクトを返す。 */
 /**
+ * 確認済みにするための必須項目を検証する。問題がなければ空のオブジェクトを返す。
+ *
  * 日付欄は type="date" のため、通常は形式の誤りは入力されない。
  * 過去に自由入力で保存された値が残っている場合に限り、選び直しを促す（isValidDate は安全網として残す）。
  */
