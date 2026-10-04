@@ -26,10 +26,19 @@ on:
   schedule:
     - cron: '36 5 * * 5'
 
+# 既定の権限は読み取りのみとし、結果のアップロードに必要な権限はジョブ側で付与する
+permissions:
+  contents: read
+
 jobs:
   MSDO:
     # currently only windows latest is supported
     runs-on: windows-latest
+    # 検査結果を Security タブ（コードスキャン）へアップロードするために必要
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
 
     steps:
     - uses: actions/checkout@v4
