@@ -24,6 +24,7 @@ export function parseFillInput(raw: unknown): FillInput | null {
   return {
     procedureType,
     currentStatus: typeof r.currentStatus === "string" ? r.currentStatus : "",
+    targetStatus: typeof r.targetStatus === "string" ? r.targetStatus : "",
     applicant,
     employment: strings<EmploymentInfo>(EMPTY_EMPLOYMENT, r.employment),
     formDetails: normalizeFormDetails(r.formDetails),
