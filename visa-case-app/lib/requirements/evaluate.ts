@@ -1,6 +1,6 @@
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { isCollected } from "./progress";
-import { RULE_SETS, type RequirementRule, type RuleSet } from "./rules";
+import { ACQUISITION_CAUSE_LABELS, RULE_SETS, type RequirementRule, type RuleSet } from "./rules";
 
 export type Result = "required" | "not_required" | "check";
 
@@ -19,6 +19,8 @@ export interface Evaluation {
   notApplicableReason?: string;
   /** カテゴリー未入力のため、共通の書類のみを判定している */
   needsCategory: boolean;
+  /** 取得の事由が未選択のため、全事由に共通の書類のみを判定している（取得許可申請のみ） */
+  needsCause: boolean;
   items: EvaluatedItem[];
   /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
@@ -35,6 +37,9 @@ function normalize(s: string): string {
 }
 
 function matchRuleSet(procedureType: string, residenceStatus: string, ruleSets: RuleSet[]): RuleSet | null {
+  // 在留資格によらず手続種別だけで適用する規則（取得許可申請）。在留資格が空でも一致する
+  const anyStatus = ruleSets.find((r) => r.procedureType === procedureType && r.anyResidenceStatus);
+  if (anyStatus) return anyStatus;
   const status = normalize(residenceStatus);
   if (status === "") return null;
   return ruleSets.find((r) => r.procedureType === procedureType && status.includes(normalize(r.residenceStatus))) ?? null;
@@ -92,7 +97,7 @@ export function shouldShowNoRuleGuide(
 export function notApplicableMessage(): string {
   const supported = RULE_SETS.map((r) => {
     const label = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label ?? r.procedureType;
-    return `「${r.residenceStatus}」の「${label}」`;
+    return r.anyResidenceStatus ? `在留資格を問わない「${label}」` : `「${r.residenceStatus}」の「${label}」`;
   }).join("、");
   return `この手続・在留資格の規則は未整備です。現在は${supported}のみ対応しています。`;
 }
@@ -105,6 +110,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   const empty: Evaluation = {
     ruleSet: null,
     needsCategory: false,
+    needsCause: false,
     items: [],
     missing: [],
     toCheck: [],
@@ -119,17 +125,43 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     };
   }
 
+  const items: EvaluatedItem[] = [];
+
+  // 取得の事由で判定する規則集合は、所属機関のカテゴリーに依存しない
+  if (ruleSet.basis === "acquisitionCause") {
+    const cause = c.formDetails.acquisitionCause;
+    const needsCause = cause === "";
+    for (const rule of ruleSet.rules) {
+      const causes = rule.causes ?? [];
+      // 事由が未選択の間は、全事由に共通の書類のみ判定する
+      if (needsCause && causes.length < Object.keys(ACQUISITION_CAUSE_LABELS).length) continue;
+      const label = needsCause ? "" : ACQUISITION_CAUSE_LABELS[cause];
+      let result: Result;
+      let reason: string;
+      if (!needsCause && !causes.includes(cause)) {
+        result = "not_required";
+        reason = `取得の事由「${label}」では原則不要`;
+      } else {
+        result = rule.level;
+        reason = needsCause ? "全事由共通" : `取得の事由「${label}」で${rule.level === "required" ? "必要" : "要確認"}`;
+      }
+      const state = c.requirementStates[rule.id] ?? NO_STATE;
+      items.push({ rule, result, effective: state.override ?? result, reason, state });
+    }
+    return summarize(ruleSet, false, needsCause, items);
+  }
+
   const { category } = c.employment;
   const needsCategory = category === "";
-  const items: EvaluatedItem[] = [];
 
   for (const rule of ruleSet.rules) {
     // カテゴリー未入力の間は、全カテゴリーに共通の書類のみ判定する
-    if (needsCategory && rule.categories.length < 4) continue;
+    const categories = rule.categories ?? [];
+    if (needsCategory && categories.length < 4) continue;
 
     let result: Result;
     let reason: string;
-    if (!needsCategory && !rule.categories.includes(category)) {
+    if (!needsCategory && !categories.includes(category)) {
       result = "not_required";
       reason = `カテゴリー${category}では原則不要`;
     } else if (rule.when && !c.employment[rule.when]) {
@@ -144,10 +176,15 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     items.push({ rule, result, effective: state.override ?? result, reason, state });
   }
 
+  return summarize(ruleSet, needsCategory, false, items);
+}
+
+function summarize(ruleSet: RuleSet, needsCategory: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
   const required = items.filter((i) => i.effective === "required");
   return {
     ruleSet,
     needsCategory,
+    needsCause,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
     toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),

@@ -1,3 +1,4 @@
+import type { FormDetails } from "../formDetails";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
 // 必要書類の規則。プログラムから分離したデータとして保持し、改正時はここだけを修正する。
@@ -5,13 +6,17 @@ import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
 export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
+/** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
+export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
 
 export interface RequirementRule {
   id: string;
   name: string;
   party: Party;
-  /** この書類が必要となるカテゴリー */
-  categories: Category[];
+  /** この書類が必要となるカテゴリー（basis が acquisitionCause の規則集合では使わない） */
+  categories?: Category[];
+  /** この書類が必要となる取得の事由（basis が acquisitionCause の規則集合のみ） */
+  causes?: AcquisitionCause[];
   /** required：必要、check：必要となる場合があり確認を要する */
   level: "required" | "check";
   /** 入力された雇用・会社情報が真の場合のみ適用する条件 */
@@ -26,10 +31,20 @@ export interface RuleSet {
   title: string;
   procedureType: ProcedureType;
   residenceStatus: string;
+  /** true の場合、在留資格（希望する在留資格を含む）の種類・有無によらず手続種別だけで適用する */
+  anyResidenceStatus?: boolean;
+  /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
+  basis?: "category" | "acquisitionCause";
   sources: { title: string; url: string }[];
   checkedAt: string;
   rules: RequirementRule[];
 }
+
+export const ACQUISITION_CAUSE_LABELS: Record<AcquisitionCause, string> = {
+  nationalityLoss: "国籍離脱・喪失",
+  birth: "出生",
+  other: "その他",
+};
 
 const ALL: Category[] = ["1", "2", "3", "4"];
 
@@ -474,148 +489,118 @@ export const GIJINKOKU_CHANGE: RuleSet = {
   ],
 };
 
-// 在留資格取得許可申請（技術・人文知識・国際業務の取得）。カテゴリーは更新・変更・認定と同じ所属機関の区分。
-// 公式ページの記載を機械的に取得して作成した提案で、チェックシートは未確認。根拠・限界は docs/phase14-acquisition-requirements-research.md を参照。
-// 行政書士による公式情報の目視照合が必要なため、申請書・写真以外はすべて verify: true とする。
-export const GIJINKOKU_ACQUISITION: RuleSet = {
-  id: "gijinkoku_acquisition",
-  title: "技術・人文知識・国際業務 在留資格取得許可申請",
+// 在留資格取得許可申請。必要書類は所属機関のカテゴリーではなく「取得の事由」で決まる。
+// 出典は行政書士提供の実務資料（解説記事に基づく。入管庁の公式資料の逐語確認ではない）。
+// そのため、すべて verify: true とし、行政書士が公式情報で確認した後に外す。根拠・確認事項は docs/phase14-acquisition-requirements-research.md を参照。
+// 希望する在留資格（targetStatus）の種類・有無に依存しない（anyResidenceStatus）。
+const ALL_CAUSES: AcquisitionCause[] = ["nationalityLoss", "birth", "other"];
+
+export const ACQUISITION_BY_CAUSE: RuleSet = {
+  id: "acquisition_by_cause",
+  title: "在留資格取得許可申請（取得の事由別）",
   procedureType: "acquisition",
-  residenceStatus: "技術・人文知識・国際業務",
-  checkedAt: "2026-10-03",
-  sources: [
-    { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html" },
-    { title: "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/930004121.xlsx" },
-  ],
+  residenceStatus: "",
+  anyResidenceStatus: true,
+  basis: "acquisitionCause",
+  checkedAt: "2026-10-04",
+  sources: [{ title: "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/930004121.xlsx" }],
   rules: [
-    { id: "application_form", name: "在留資格取得許可申請書", party: "applicant", categories: ALL, level: "required" },
-    { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの" },
+    {
+      id: "application_form",
+      name: "在留資格取得許可申請書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "事由が生じた日から30日以内に申請する（手数料は無料）",
+      verify: true,
+    },
+    {
+      id: "photo",
+      name: "写真（縦4cm×横3cm）",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: "行政書士提供の一覧で、出生には写真の記載がない（出生では必要書類に含めていない。実務での扱いは要確認）",
+      verify: true,
+    },
     {
       id: "passport_presentation",
-      name: "パスポート（提示）",
+      name: "旅券（提示）",
       party: "applicant",
-      categories: ALL,
+      causes: ALL_CAUSES,
       level: "required",
-      note: "公式ページの記載に基づく。取得の事由により提示できない場合の扱いは、行政書士が確認すること",
+      note: "提示のみで、提出書類としてコピーを付ける書類ではない",
       verify: true,
     },
     {
-      id: "acquisition_cause_documents",
-      name: "取得の事由に応じた書類（国籍離脱の場合は国籍を証明する文書等）",
+      id: "passport_reason_statement",
+      name: "旅券を提示できない理由を記載した理由書",
       party: "applicant",
-      categories: ALL,
+      causes: ALL_CAUSES,
       level: "check",
-      note: "取得の事由（国籍離脱・喪失等）により異なる。公式ページの「区分別書類」の詳細は未確認のため、行政書士が個別に確認すること",
+      note: "旅券を提示できない場合のみ",
       verify: true,
     },
     {
-      id: "category_proof",
-      name: "所属機関のカテゴリーを証明する文書",
-      party: "organization",
-      categories: ["1", "2", "3"],
-      level: "required",
-      note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
-      verify: true,
-    },
-    {
-      id: "vocational_school_certificate",
-      name: "専門士・高度専門士の称号を付与されたことを証明する文書",
+      id: "agent_identity_document",
+      name: "申請取次者の身分を証する文書等（提示）",
       party: "applicant",
-      categories: ALL,
+      causes: ALL_CAUSES,
       level: "check",
-      note: "専門学校を卒業した場合のみ",
+      note: "申請取次者が書類を提出する場合のみ",
       verify: true,
     },
     {
-      id: "dispatch_documents",
-      name: "派遣契約に基づいて就労する場合の資料（誓約書（派遣元用・派遣先用）、労働条件通知書、労働者派遣個別契約書）",
-      party: "organization",
-      categories: ALL,
-      level: "check",
-      note: "申請人が被派遣者の場合のみ。公式案内で資料の範囲を確認すること",
-      verify: true,
-    },
-    {
-      id: "activity_documents",
-      name: "活動内容等を明らかにする資料（労働契約書、役員報酬を定める定款・議事録等）",
-      party: "organization",
-      categories: ["3", "4"],
-      level: "required",
-      verify: true,
-    },
-    {
-      id: "career_documents",
-      name: "学歴及び職歴その他経歴等を証明する文書（卒業証明書、在職証明書、IT技術者資格証等）",
+      id: "nationality_proof",
+      name: "国籍を証する書類",
       party: "applicant",
-      categories: ["3", "4"],
-      level: "required",
-      verify: true,
-    },
-    { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: ["3", "4"], level: "required", verify: true },
-    {
-      id: "business_description",
-      name: "事業内容を明らかにする資料（会社案内等）",
-      party: "organization",
-      categories: ["3", "4"],
-      level: "required",
-      verify: true,
-    },
-    { id: "financial_statements", name: "直近年度の決算文書の写し", party: "organization", categories: ["3", "4"], level: "required", note: "新規事業の場合は事業計画書", verify: true },
-    {
-      id: "representative_declaration",
-      name: "所属機関の代表者に関する申告書（参考様式）",
-      party: "organization",
-      categories: ["3", "4"],
+      causes: ["nationalityLoss"],
       level: "required",
       verify: true,
     },
     {
-      id: "language_ability",
-      name: "言語能力（CEFR・B2相当）を示す資料",
+      id: "cause_proof",
+      name: "事由を証する書類",
       party: "applicant",
-      categories: ["3", "4"],
-      level: "check",
-      note: "言語能力を用いた対人業務に従事する場合",
-      verify: true,
-    },
-    {
-      id: "withholding_exemption",
-      name: "源泉徴収の免除を受ける機関であることを明らかにする資料（外国法人の免除証明書等）",
-      party: "organization",
-      categories: ["4"],
-      level: "check",
-      note: "法定調書合計表を提出できない理由を明らかにする資料。免除を受ける機関の場合のみ",
-      verify: true,
-    },
-    {
-      id: "payroll_office_notification",
-      name: "給与支払事務所等の開設届出書の写し",
-      party: "organization",
-      categories: ["4"],
+      causes: ["other"],
       level: "required",
-      note: "法定調書合計表を提出できない理由を明らかにする資料（源泉徴収の免除を受ける機関を除く）",
+      note: "主に日米地位協定による在留者が、協定上の地位を失った場合など",
       verify: true,
     },
     {
-      id: "withholding_tax_receipts",
-      name: "直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）",
-      party: "organization",
-      categories: ["4"],
+      id: "birth_certificate",
+      name: "出生したことを証する書類",
+      party: "applicant",
+      causes: ["birth"],
       level: "required",
-      note: "公式案内では、これ又は納期の特例の承認を示す資料のいずれかと推測される（未確認）",
       verify: true,
     },
     {
-      id: "withholding_special_approval",
-      name: "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
-      party: "organization",
-      categories: ["4"],
+      id: "parents_questionnaire",
+      name: "両親の情報を記載した質問書",
+      party: "applicant",
+      causes: ["birth"],
       level: "required",
-      when: "withholdingSpecial",
-      note: "納期の特例の承認を受けている場合",
+      verify: true,
+    },
+    {
+      id: "household_residence_certificate",
+      name: "世帯全員の住民票",
+      party: "applicant",
+      causes: ["birth"],
+      level: "required",
+      verify: true,
+    },
+    {
+      id: "activity_materials",
+      name: "日本での活動内容に応じた資料",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: "希望する在留資格に応じた資料（別途 規則が整備されている在留資格ではその規則を参照）",
       verify: true,
     },
   ],
 };
 
-export const RULE_SETS: RuleSet[] = [GIJINKOKU_RENEWAL, GIJINKOKU_CHANGE, GIJINKOKU_COE, GIJINKOKU_ACQUISITION];
+export const RULE_SETS: RuleSet[] = [GIJINKOKU_RENEWAL, GIJINKOKU_CHANGE, GIJINKOKU_COE, ACQUISITION_BY_CAUSE];
