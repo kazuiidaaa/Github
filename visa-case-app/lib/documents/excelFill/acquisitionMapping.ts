@@ -125,6 +125,14 @@ export const ACQUISITION_FILL_ITEMS: AcquisitionFillItem[] = [
   item("取次者", "取次者 電話番号", "Z101", (c) => c.f.agentPhone),
 ];
 
+/** 「有・無」のうち、未選択（空文字）はそのまま。選ばれた側だけを PickItem の writes キーとして使う */
+function yesNoLabel(v: "" | "yes" | "no"): "" | "有" | "無" {
+  return v === "yes" ? "有" : v === "no" ? "無" : "";
+}
+
+/** 11「在留資格取得の事由」の□（J36 出生・N36 国籍離脱・喪失・V36 その他） */
+const CAUSE_CHECKBOX_LABELS: Record<string, string> = { birth: "出生", nationalityLoss: "国籍離脱・喪失", other: "その他" };
+
 export const ACQUISITION_PICK_ITEMS: AcquisitionPickItem[] = [
   {
     no: "4",
@@ -148,4 +156,57 @@ export const ACQUISITION_PICK_ITEMS: AcquisitionPickItem[] = [
       無: { AH21: "", AI21: "", AJ21: "無" },
     },
   },
+  {
+    no: "11",
+    label: "在留資格取得の事由",
+    sheet: S,
+    get: (c) => CAUSE_CHECKBOX_LABELS[c.f.acquisitionCause] ?? "",
+    writes: {
+      出生: { J36: "■" },
+      "国籍離脱・喪失": { N36: "■" },
+      その他: { V36: "■" },
+    },
+  },
+  {
+    no: "13",
+    label: "希望する在留資格",
+    sheet: S,
+    get: (c) => {
+      const s = c.targetStatus.trim();
+      if (!s) return "";
+      return ACQUISITION_CHECKBOX_STATUSES.includes(s) ? s : "その他";
+    },
+    // H42 永住者の配偶者等・P42 日本人の配偶者等・X42 定住者・H44 家族滞在・M44 その他
+    writes: {
+      永住者の配偶者等: { H42: "■" },
+      日本人の配偶者等: { P42: "■" },
+      定住者: { X42: "■" },
+      家族滞在: { H44: "■" },
+      その他: { M44: "■" },
+    },
+  },
+  {
+    no: "14",
+    label: "犯罪を理由とする処分の有無",
+    sheet: S,
+    get: (c) => yesNoLabel(c.f.criminalRecord === "yes" ? "yes" : c.f.criminalRecord === "none" ? "no" : ""),
+    // C47「有」・D47「（具体的内容」・AG47「）」・AH47「・」・AI47「無」（別々のセル。具体的内容はI47へ別途書く）
+    writes: {
+      有: { AH47: "", AI47: "" },
+      無: { C47: "", D47: "", AG47: "", AH47: "" },
+    },
+  },
+  ...RELATIVE_ROWS.map(
+    (row, i): AcquisitionPickItem => ({
+      no: "15",
+      label: `在日親族（${i + 1}人目） 同居`,
+      sheet: S,
+      get: (c) => {
+        const r = c.f.relativesPresent === "yes" ? c.f.relatives[i] : undefined;
+        return yesNoLabel(r?.livesTogether ?? "");
+      },
+      // U{row}（結合セル1つ）は「はい・いいえ」。選ばれた方だけにする
+      writes: { 有: { [`U${row}`]: "はい" }, 無: { [`U${row}`]: "いいえ" } },
+    }),
+  ),
 ];

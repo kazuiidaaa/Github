@@ -2,6 +2,8 @@
 
 方式は `docs/phase11-renewal-fill-engine.md`（#79）、画面・生成履歴への統合は `docs/phase11-official-form-ui.md`（#80）、項目番号は `docs/phase12-change-forms-research.md`（#83）。本書は、**変更様式で更新と異なる点**と設計判断を記録する。
 
+> **追記（フェーズ15）**：本書の「チェックボックス・有無の○は対象外」という記述は、利用者の明示の指示により方針転換し、差し込み対応済み。詳細は `docs/phase15-checkbox-pick-fill-engine.md` を参照。
+
 ## 構成
 
 | ファイル | 役割 |

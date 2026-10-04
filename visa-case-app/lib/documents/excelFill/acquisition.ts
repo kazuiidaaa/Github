@@ -2,23 +2,16 @@ import path from "node:path";
 import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
 import type { Applicant } from "../../types";
-import {
-  ACQUISITION_CHECKBOX_STATUSES,
-  ACQUISITION_FILL_ITEMS,
-  ACQUISITION_PICK_ITEMS,
-  MAX_RELATIVES,
-  type AcquisitionCtx,
-} from "./acquisitionMapping";
+import { ACQUISITION_FILL_ITEMS, ACQUISITION_PICK_ITEMS, MAX_RELATIVES, type AcquisitionCtx } from "./acquisitionMapping";
 import { sheetKey } from "./renewalMapping";
 
 /** 差し込み元テンプレート（リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
 export const ACQUISITION_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "acquisition-application-form_930004121.xlsx");
 
-const CAUSE_LABELS: Record<string, string> = { birth: "出生", nationalityLoss: "国籍離脱・喪失", other: "その他" };
-
 /**
  * 案件情報を、公式の在留資格取得許可申請書（Excel）の対応欄へ差し込み、ワークブックをバッファで返す。
- * 雇用情報は使わない。targetStatus（案件の希望する在留資格）は、4つの在留資格以外の「その他（ ）」欄に使う。
+ * 雇用情報は使わない。targetStatus（案件の希望する在留資格）は、様式の4つのチェックボックスのいずれかに
+ * 一致すれば該当の□を、一致しなければ「その他（ ）」の□と自由記入欄を使う（ACQUISITION_PICK_ITEMS）。
  * 入力のない項目は、テンプレートの元の状態（空欄）のまま変更しない。
  * 注意：Edge ランタイムでは使えない（node:fs を使う）。
  */
@@ -61,14 +54,6 @@ function buildWarnings(c: AcquisitionCtx): string[] {
   }
   if (c.f.relativesPresent === "yes" && c.f.relatives.length > MAX_RELATIVES) {
     w.push(`在日親族は、様式の欄（${MAX_RELATIVES}人分）に入らない分を差し込んでいません。別紙に記載してください。`);
-  }
-  const cause = CAUSE_LABELS[c.f.acquisitionCause];
-  if (cause) w.push(`11 在留資格取得の事由（${cause}）は、チェックボックスのため差し込んでいません。様式上で該当の□を選択してください。`);
-  const target = c.targetStatus.trim();
-  if (ACQUISITION_CHECKBOX_STATUSES.includes(target)) {
-    w.push(`13 希望する在留資格（${target}）は、チェックボックスのため差し込んでいません。様式上で該当の□を選択してください。`);
-  } else if (target) {
-    w.push("13 希望する在留資格は、様式の4つの選択肢にないため、「その他（ ）」欄へ差し込んでいます。「その他」の□を選択してください。");
   }
   return w;
 }

@@ -203,6 +203,67 @@ export const COE_FILL_ITEMS: FillItem[] = [
   item("12", "派遣先（9）派遣予定期間", O2, "H38", (c) => c.f.dispatchPeriod),
 ];
 
+/** 「有・無」のうち、未選択（空文字）はそのまま。選ばれた側だけを PickItem の writes キーとして使う */
+function yesNoLabel(v: "" | "yes" | "no"): "" | "有" | "無" {
+  return v === "yes" ? "有" : v === "no" ? "無" : "";
+}
+
+/**
+ * 11「入国目的」の□（34個）。キーは様式に印字された選択肢の文字そのもの（「」の中身）。
+ * 案件の希望する在留資格（targetStatus）が、この文字と一字一句一致したときだけ、該当のセルを■にする。
+ * 「高度専門職」「特定技能」「技能実習」「特定活動」は、案件側のプルダウンが号・種別まで持たないため、
+ * あえて対応表に含めない（一致しないため差し込まれず、coe.ts の warnings で案内する）。
+ */
+export const COE_PURPOSE_CHECKBOXES: Record<string, string> = {
+  教授: "B39",
+  教育: "H39",
+  芸術: "N39",
+  文化活動: "T39",
+  宗教: "AD39",
+  報道: "AK39",
+  企業内転勤: "B41",
+  "研究（転勤）": "J41",
+  "経営・管理": "R41",
+  研究: "Y41",
+  "技術・人文知識・国際業務": "AD41",
+  介護: "B43",
+  技能: "H43",
+  "特定活動（研究活動等）": "M43",
+  "特定活動（本邦大学卒業者）": "AD43",
+  "特定技能（1号）": "B45",
+  "特定技能（2号）": "L45",
+  興行: "U45",
+  留学: "AC45",
+  研修: "AJ45",
+  "技能実習（1号）": "B47",
+  "技能実習（2号）": "M47",
+  "技能実習（3号）": "AA47",
+  家族滞在: "AK47",
+  "特定活動（研究活動等家族）": "B49",
+  "特定活動（EPA家族）": "Q49",
+  "特定活動（本邦大卒者家族）": "AB49",
+  日本人の配偶者等: "B51",
+  永住者の配偶者等: "N51",
+  定住者: "AA51",
+  "高度専門職（1号イ）": "B53",
+  "高度専門職（1号ロ）": "M53",
+  "高度専門職（1号ハ）": "Y53",
+  その他: "AK53",
+};
+
+/** coe.ts の warnings で、targetStatus が様式の選択肢（34個）のどれかと一致するかの判定に使う */
+export const COE_PURPOSE_LABELS: string[] = Object.keys(COE_PURPOSE_CHECKBOXES);
+
+/**
+ * 案件のプルダウン（lib/types.ts の RESIDENCE_STATUSES）の表記と、COE_PURPOSE_CHECKBOXES の文字が
+ * 一致するものだけを、実際に□を■へ置き換える対象にする（「その他」は案件側に対応する値がないため対象外）。
+ */
+const COE_PURPOSE_WRITES: Record<string, Record<string, string>> = Object.fromEntries(
+  Object.entries(COE_PURPOSE_CHECKBOXES)
+    .filter(([label]) => label !== "その他")
+    .map(([label, cell]) => [label, { [cell]: "■" }]),
+);
+
 export const COE_PICK_ITEMS: PickItem[] = [
   {
     no: "4",
@@ -226,6 +287,92 @@ export const COE_PICK_ITEMS: PickItem[] = [
       無: { AK23: "", AM23: "", AN23: "無" },
     },
   },
+  {
+    no: "11",
+    label: "入国目的",
+    sheet: S1,
+    get: (c) => (c.targetStatus ?? "").trim(),
+    writes: COE_PURPOSE_WRITES,
+  },
+  {
+    no: "15",
+    label: "同伴者の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.accompanied),
+    // AG58「有」・AH58「・」・AI58「無」（別々のセル）
+    writes: {
+      有: { AH58: "", AI58: "" },
+      無: { AG58: "", AH58: "" },
+    },
+  },
+  {
+    no: "17",
+    label: "過去の出入国歴の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.entryHistory),
+    // M64「有」・N64「・」・O64「無」（別々のセル）
+    writes: {
+      有: { N64: "", O64: "" },
+      無: { M64: "", N64: "" },
+    },
+  },
+  {
+    no: "18",
+    label: "過去の認定証明書交付申請歴の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.coeHistory),
+    // Q70「有」・R70「・」・S70「無」（別々のセル）
+    writes: {
+      有: { R70: "", S70: "" },
+      無: { Q70: "", R70: "" },
+    },
+  },
+  {
+    no: "19",
+    label: "犯罪を理由とする処分の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.criminalRecord === "yes" ? "yes" : c.f.criminalRecord === "none" ? "no" : ""),
+    // C78「有」・D78「（具体的内容」・AL78「）」・AM78「・」・AN78「無」（別々のセル。具体的内容はJ78へ別途書く）
+    writes: {
+      有: { AM78: "", AN78: "" },
+      無: { C78: "", D78: "", AL78: "", AM78: "" },
+    },
+  },
+  {
+    no: "20",
+    label: "退去強制又は出国命令による出国の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.deportationHistory),
+    // R81「有」・S81「・」・T81「無」（別々のセル）
+    writes: {
+      有: { S81: "", T81: "" },
+      無: { R81: "", S81: "" },
+    },
+  },
+  {
+    no: "21",
+    label: "在日親族及び同居者の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.relativesPresent),
+    // C89「有」・D89は、注記文の末尾に「・　無」を含む1セル
+    writes: {
+      有: { D89: "（「有」の場合は，以下の欄に在日親族及び同居者を記入してください。）" },
+      無: { C89: "", D89: "無" },
+    },
+  },
+  ...RELATIVE_ROWS.map(
+    (row, i): PickItem => ({
+      no: "21",
+      label: `在日親族（${i + 1}人目） 同居予定の有無`,
+      sheet: S1,
+      get: (c) => {
+        const r = c.f.relativesPresent === "yes" ? c.f.relatives[i] : undefined;
+        return yesNoLabel(r?.livesTogether ?? "");
+      },
+      // V{row}（結合セル1つ）は「有・無」。選ばれた方だけにする
+      writes: { 有: { [`V${row}`]: "有" }, 無: { [`V${row}`]: "無" } },
+    }),
+  ),
 ];
 
 export const COE_DIGIT_CHECKS: DigitCheck[] = [

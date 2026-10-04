@@ -2,6 +2,8 @@
 
 方針は `docs/phase11-excel-fill-decision.md`、方式は `docs/phase11-renewal-fill-engine.md`(#79)、画面統合は `docs/phase11-official-form-ui.md`(#80)。項目と案件DBの対応は `docs/phase14-acquisition-forms-research.md`(#87)。本書は、取得様式で確認した座標・判断・制約を記録する。#79 の方式(ロック解除セルの機械的列挙、`{ sheet, cell, get }` の対応表、座標の整合テスト)を踏襲している。
 
+> **追記(フェーズ15)**:本書の「チェックボックス(□)・有無の○は対象外」という記述は、利用者の明示の指示により方針転換し、差し込み対応済み。詳細は `docs/phase15-checkbox-pick-fill-engine.md` を参照。
+
 ## 構成
 
 | ファイル | 役割 |

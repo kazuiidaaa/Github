@@ -114,7 +114,7 @@ describe("changeMapping の座標（テンプレートとの整合）", () => {
     expect(text(wb, S1, "G21")).toBe("女");
     expect(text(wb, S1, "AG21")).toBe("有・無");
     // 変更様式の項番（原本）。性別は4、配偶者の有無は6（5は出生地）
-    expect(CHANGE_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "6"]);
+    expect(CHANGE_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "6", "15", "16", "16", "16", "16", "16", "16", "16"]);
   });
 
   it("項目番号は、画面の項目番号表（FORM_LAYOUTS.change）と一致する", () => {
@@ -177,6 +177,12 @@ describe("fillChangeExcel", () => {
     expect(t(S1, "M68")).toBe("1992/02/03");
     expect(t(S1, "AE68")).toBe("ZZ00000000XX");
     expect(t(S1, "A70")).toBe(""); // 2人目は空欄のまま
+    expect([t(S1, "AH56"), t(S1, "AI56")]).toEqual(["", ""]); // 15 犯罪歴「有」
+    expect([t(S1, "C56"), t(S1, "D56"), t(S1, "AG56")]).toEqual(["有", "（具体的内容", "）"]);
+    expect(t(S1, "C62")).toBe("有"); // 16 在日親族の有無（有）
+    expect(t(S1, "D62")).toBe("（「有」の場合は，以下の欄に在日親族及び同居者を記入してください。）");
+    expect(t(S1, "T68")).toBe("有"); // 16 同居の有無（1人目）
+    expect(t(S1, "T70")).toBe("有・無"); // 2人目は空欄のため未選択のまま
     const all = CHANGE_FILL_ITEMS.map((i) => t(i.sheet, i.cell)).join("");
     expect(all).not.toContain("更新の理由"); // 更新用の項目は書かれない
 
@@ -218,6 +224,19 @@ describe("fillChangeExcel", () => {
     const wb = await open(buffer);
     expect([text(wb, S1, "E21"), text(wb, S1, "F21"), text(wb, S1, "G21")]).toEqual(["", "", "女"]);
     expect(text(wb, S1, "AG21")).toBe("有");
+  });
+
+  it("犯罪歴「無」・在日親族「無」の場合は、その側だけを残す", async () => {
+    const { buffer, warnings } = await fillChangeExcel(applicant, employment, { ...details, criminalRecord: "none", relativesPresent: "no" }, TARGET);
+    const wb = await open(buffer);
+    const t = (s: string, c: string) => text(wb, s, c);
+    expect(t(S1, "I56")).toBe(""); // 15 具体的内容は書かない
+    expect([t(S1, "C56"), t(S1, "D56"), t(S1, "AG56"), t(S1, "AH56")]).toEqual(["", "", "", ""]); // 15 無
+    expect(t(S1, "AI56")).toBe("無");
+    expect([t(S1, "C62"), t(S1, "D62")]).toEqual(["", "無"]); // 16 無
+    expect(t(S1, "A68")).toBe(""); // 親族なしのため1人目も空欄
+    expect(t(S1, "T68")).toBe("有・無"); // 相手が入力されないため未選択のまま
+    expect(warnings).toEqual([]);
   });
 
   it("入力がなければ、すべてのシートがテンプレートの元の状態のまま", async () => {
