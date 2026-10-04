@@ -164,6 +164,12 @@ export function RequirementsPanel({
         </p>
       )}
 
+      {ev.ruleSet && ev.needsCause && (
+        <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
+          取得の事由が未選択のため、全事由に共通の書類のみ表示しています。事由別の書類は、事由の選択後に判定します（「公式様式項目」タブで取得の事由を選択）。
+        </p>
+      )}
+
       <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
         <p>
           必要書類：{progress.requiredCount}件／受領済み：{progress.receivedCount}件／

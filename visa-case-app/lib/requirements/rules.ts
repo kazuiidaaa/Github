@@ -1,3 +1,4 @@
+import type { FormDetails } from "../formDetails";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
 // 必要書類の規則。プログラムから分離したデータとして保持し、改正時はここだけを修正する。
@@ -5,13 +6,17 @@ import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
 export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
+/** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
+export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
 
 export interface RequirementRule {
   id: string;
   name: string;
   party: Party;
-  /** この書類が必要となるカテゴリー */
-  categories: Category[];
+  /** この書類が必要となるカテゴリー（basis が acquisitionCause の規則集合では使わない） */
+  categories?: Category[];
+  /** この書類が必要となる取得の事由（basis が acquisitionCause の規則集合のみ） */
+  causes?: AcquisitionCause[];
   /** required：必要、check：必要となる場合があり確認を要する */
   level: "required" | "check";
   /** 入力された雇用・会社情報が真の場合のみ適用する条件 */
@@ -26,10 +31,20 @@ export interface RuleSet {
   title: string;
   procedureType: ProcedureType;
   residenceStatus: string;
+  /** true の場合、在留資格（希望する在留資格を含む）の種類・有無によらず手続種別だけで適用する */
+  anyResidenceStatus?: boolean;
+  /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
+  basis?: "category" | "acquisitionCause";
   sources: { title: string; url: string }[];
   checkedAt: string;
   rules: RequirementRule[];
 }
+
+export const ACQUISITION_CAUSE_LABELS: Record<AcquisitionCause, string> = {
+  nationalityLoss: "国籍離脱・喪失",
+  birth: "出生",
+  other: "その他",
+};
 
 const ALL: Category[] = ["1", "2", "3", "4"];
 
@@ -474,4 +489,118 @@ export const GIJINKOKU_CHANGE: RuleSet = {
   ],
 };
 
-export const RULE_SETS: RuleSet[] = [GIJINKOKU_RENEWAL, GIJINKOKU_CHANGE, GIJINKOKU_COE];
+// 在留資格取得許可申請。必要書類は所属機関のカテゴリーではなく「取得の事由」で決まる。
+// 出典は行政書士提供の実務資料（解説記事に基づく。入管庁の公式資料の逐語確認ではない）。
+// そのため、すべて verify: true とし、行政書士が公式情報で確認した後に外す。根拠・確認事項は docs/phase14-acquisition-requirements-research.md を参照。
+// 希望する在留資格（targetStatus）の種類・有無に依存しない（anyResidenceStatus）。
+const ALL_CAUSES: AcquisitionCause[] = ["nationalityLoss", "birth", "other"];
+
+export const ACQUISITION_BY_CAUSE: RuleSet = {
+  id: "acquisition_by_cause",
+  title: "在留資格取得許可申請（取得の事由別）",
+  procedureType: "acquisition",
+  residenceStatus: "",
+  anyResidenceStatus: true,
+  basis: "acquisitionCause",
+  checkedAt: "2026-10-04",
+  sources: [{ title: "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/930004121.xlsx" }],
+  rules: [
+    {
+      id: "application_form",
+      name: "在留資格取得許可申請書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "事由が生じた日から30日以内に申請する（手数料は無料）",
+      verify: true,
+    },
+    {
+      id: "photo",
+      name: "写真（縦4cm×横3cm）",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: "行政書士提供の一覧で、出生には写真の記載がない（出生では必要書類に含めていない。実務での扱いは要確認）",
+      verify: true,
+    },
+    {
+      id: "passport_presentation",
+      name: "旅券（提示）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "提示のみで、提出書類としてコピーを付ける書類ではない",
+      verify: true,
+    },
+    {
+      id: "passport_reason_statement",
+      name: "旅券を提示できない理由を記載した理由書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: "旅券を提示できない場合のみ",
+      verify: true,
+    },
+    {
+      id: "agent_identity_document",
+      name: "申請取次者の身分を証する文書等（提示）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: "申請取次者が書類を提出する場合のみ",
+      verify: true,
+    },
+    {
+      id: "nationality_proof",
+      name: "国籍を証する書類",
+      party: "applicant",
+      causes: ["nationalityLoss"],
+      level: "required",
+      verify: true,
+    },
+    {
+      id: "cause_proof",
+      name: "事由を証する書類",
+      party: "applicant",
+      causes: ["other"],
+      level: "required",
+      note: "主に日米地位協定による在留者が、協定上の地位を失った場合など",
+      verify: true,
+    },
+    {
+      id: "birth_certificate",
+      name: "出生したことを証する書類",
+      party: "applicant",
+      causes: ["birth"],
+      level: "required",
+      verify: true,
+    },
+    {
+      id: "parents_questionnaire",
+      name: "両親の情報を記載した質問書",
+      party: "applicant",
+      causes: ["birth"],
+      level: "required",
+      verify: true,
+    },
+    {
+      id: "household_residence_certificate",
+      name: "世帯全員の住民票",
+      party: "applicant",
+      causes: ["birth"],
+      level: "required",
+      verify: true,
+    },
+    {
+      id: "activity_materials",
+      name: "日本での活動内容に応じた資料",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: "希望する在留資格に応じた資料（別途 規則が整備されている在留資格ではその規則を参照）",
+      verify: true,
+    },
+  ],
+};
+
+export const RULE_SETS: RuleSet[] = [GIJINKOKU_RENEWAL, GIJINKOKU_CHANGE, GIJINKOKU_COE, ACQUISITION_BY_CAUSE];
