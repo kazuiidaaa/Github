@@ -30,6 +30,11 @@ jobs:
   MSDO:
     # currently only windows latest is supported
     runs-on: windows-latest
+    # 結果を Security タブへアップロードするために必要な権限
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
 
     steps:
     - uses: actions/checkout@v4
