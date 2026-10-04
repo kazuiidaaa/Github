@@ -6,6 +6,7 @@ import { COE_TEMPLATE_PATH, fillCoeExcel } from "./coe";
 import {
   COE_FILL_ITEMS,
   COE_PICK_ITEMS,
+  COE_PURPOSE_CHECKBOXES,
   COE_SHEET_APPLICANT_1 as S1,
   COE_SHEET_APPLICANT_2 as S2,
   COE_SHEET_ORG_1 as O1,
@@ -120,7 +121,7 @@ describe("coeMapping の座標（テンプレートとの整合）", () => {
     const wb = await open(COE_TEMPLATE_PATH);
     expect([text(wb, S1, "E23"), text(wb, S1, "G23"), text(wb, S1, "H23")]).toEqual(["男", "・", "女"]);
     expect([text(wb, S1, "AK23"), text(wb, S1, "AM23"), text(wb, S1, "AN23")]).toEqual(["有", "・", "無"]);
-    expect(COE_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "6"]);
+    expect(COE_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "6", "11", "15", "17", "18", "19", "20", "21", "21", "21", "21", "21"]);
   });
 });
 
@@ -158,6 +159,15 @@ describe("fillCoeExcel", () => {
     expect(cells(S1, ["A95", "E95", "N95", "R95", "Z95", "AI95"])).toEqual(["配偶者", "HANAKO YAMADA", "1992/02/03", "テスト国", "", "ZZ00000000XX"]); // 21 1人目
     expect(cells(S1, ["A97", "Z97"])).toEqual(["子", "テスト小学校"]); // 2人目
     expect(t(S1, "A99")).toBe(""); // 3人目は空欄のまま
+    expect(cells(S1, ["AG58", "AH58", "AI58"])).toEqual(["有", "・", "無"]); // 15 同伴者は未入力のため原本のまま
+    expect(cells(S1, ["M64", "N64", "O64"])).toEqual(["有", "", ""]); // 17 出入国歴の有無（有）
+    expect(cells(S1, ["Q70", "R70", "S70"])).toEqual(["有", "", ""]); // 18 認定申請歴の有無（有）
+    expect(cells(S1, ["C78", "D78", "AL78", "AM78", "AN78"])).toEqual(["有", "（具体的内容", "）", "", ""]); // 19 犯罪歴の有無（有）
+    expect(cells(S1, ["R81", "S81", "T81"])).toEqual(["有", "", ""]); // 20 送還歴の有無（有）
+    expect(t(S1, "C89")).toBe("有"); // 21 在日親族の有無（有）
+    expect(t(S1, "D89")).toBe("（「有」の場合は，以下の欄に在日親族及び同居者を記入してください。）");
+    expect(cells(S1, ["V95", "V97"])).toEqual(["有", "無"]); // 21 同居予定の有無（1・2人目）
+    expect(t(S1, "V99")).toBe("有・無"); // 3人目は空欄のため未選択のまま
 
     // 申請人等作成用2（N）
     expect(t(S2, "E8")).toBe("テスト株式会社"); // 22 勤務先名称
@@ -194,16 +204,47 @@ describe("fillCoeExcel", () => {
     expect([text(wb, S1, "AK23"), text(wb, S1, "AM23"), text(wb, S1, "AN23")]).toEqual(["", "", "無"]);
   });
 
+  it("入国目的（11）は、希望する在留資格が様式の選択肢と一致する場合だけ、該当の□にチェックを付ける", async () => {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, "技術・人文知識・国際業務");
+    const wb = await open(buffer);
+    expect(text(wb, S1, COE_PURPOSE_CHECKBOXES["技術・人文知識・国際業務"])).toBe("■");
+    expect(text(wb, S1, COE_PURPOSE_CHECKBOXES["教授"])).toBe("□"); // 選ばれなかった□はそのまま
+    expect(warnings).toEqual([]);
+  });
+
+  it("入国目的（11）が様式の選択肢と一致しない（号・種別まで様式側で選ぶ必要がある等）場合は、チェックを付けず警告する", async () => {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, "高度専門職");
+    const wb = await open(buffer);
+    for (const cell of Object.values(COE_PURPOSE_CHECKBOXES)) expect(text(wb, S1, cell), cell).toBe("□");
+    expect(warnings.join("\n")).toContain("入国目的（高度専門職）は、様式の選択肢と一致しないため");
+  });
+
   it("有無が「有」でなければ、出入国歴・認定申請歴・送還歴の詳細は書かない", async () => {
-    const { buffer } = await fillCoeExcel(applicant, employment, {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, {
       ...details,
+      accompanied: "no",
       entryHistory: "no",
       coeHistory: "",
       deportationHistory: "no",
       criminalRecord: "none",
+      relativesPresent: "no",
     });
     const wb = await open(buffer);
     for (const c of ["E67", "Q67", "AE67", "S73", "AK73", "J78", "Q83", "AE83"]) expect(text(wb, S1, c), c).toBe("");
+    expect([text(wb, S1, "AG58"), text(wb, S1, "AH58")]).toEqual(["", ""]); // 15 同伴者の有無（無）
+    expect(text(wb, S1, "AI58")).toBe("無");
+    expect([text(wb, S1, "M64"), text(wb, S1, "N64")]).toEqual(["", ""]); // 17 無
+    expect(text(wb, S1, "O64")).toBe("無");
+    // coeHistory が未入力（""）のため、18は未選択のまま（原本の表記）
+    expect([text(wb, S1, "Q70"), text(wb, S1, "R70"), text(wb, S1, "S70")]).toEqual(["有", "・", "無"]);
+    expect([text(wb, S1, "C78"), text(wb, S1, "D78"), text(wb, S1, "AL78"), text(wb, S1, "AM78")]).toEqual(["", "", "", ""]); // 19 無
+    expect(text(wb, S1, "AN78")).toBe("無");
+    expect([text(wb, S1, "R81"), text(wb, S1, "S81")]).toEqual(["", ""]); // 20 無
+    expect(text(wb, S1, "T81")).toBe("無");
+    expect([text(wb, S1, "C89"), text(wb, S1, "D89")]).toEqual(["", "無"]); // 21 無
+    expect(text(wb, S1, "A95")).toBe(""); // 親族なしのため1人目も空欄
+    expect(text(wb, S1, "V95")).toBe("有・無"); // 相手が入力されないため未選択のまま
+    expect(warnings).toEqual([]);
   });
 
   it("入力がなければ、すべてのシートがテンプレートの元の状態のまま", async () => {

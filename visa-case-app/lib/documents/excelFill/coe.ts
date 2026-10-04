@@ -8,6 +8,7 @@ import {
   COE_MAX_RELATIVES,
   COE_MAX_WORK_HISTORY,
   COE_PICK_ITEMS,
+  COE_PURPOSE_LABELS,
 } from "./coeMapping";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
 
@@ -17,15 +18,17 @@ export const COE_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "c
 /**
  * 案件情報を、公式の在留資格認定証明書交付申請書（Excel）の対応欄へ差し込み、ワークブックをバッファで返す。
  * 入力のない項目は、テンプレートの元の状態（空欄）のまま変更しない。
- * 入国目的（項目11）は様式のチェック欄で、入力値を持たないため差し込まない（docs/phase11-coe-fill-engine.md）。
+ * 入国目的（項目11）は様式のチェック欄だが、案件の「希望する在留資格」（targetStatus）が様式の選択肢と
+ * 一字一句一致する場合に限り、該当の□を■へ置き換えて選択を反映する（一致しない場合は差し込まず、warningsで案内する）。
  * 注意：Edge ランタイムでは使えない（node:fs を使う）。
  */
 export async function fillCoeExcel(
   a: Applicant,
   e: EmploymentInfo,
   f: FormDetails,
+  targetStatus = "",
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
-  const ctx: FillCtx = { a, e, f };
+  const ctx: FillCtx = { a, e, f, targetStatus };
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(COE_TEMPLATE_PATH);
 
@@ -71,6 +74,10 @@ function buildWarnings(c: FillCtx): string[] {
   }
   if (c.f.occupationCode && !/^\d{1,3}$/.test(c.f.occupationCode.trim())) {
     w.push("職種が番号ではないため、所属機関等作成用1の職種欄は空欄です。別紙「職種一覧」の番号を記入してください。");
+  }
+  const target = (c.targetStatus ?? "").trim();
+  if (target && !COE_PURPOSE_LABELS.includes(target)) {
+    w.push(`11 入国目的（${target}）は、様式の選択肢と一致しないため、チェックを付けていません。様式上で該当の□を選択してください（「高度専門職」「特定技能」「技能実習」「特定活動」は、号の種類まで様式上でご確認ください）。`);
   }
   for (const d of COE_DIGIT_CHECKS) {
     const raw = d.get(c);

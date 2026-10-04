@@ -14,6 +14,8 @@ export interface FillCtx {
   a: Applicant;
   e: EmploymentInfo;
   f: FormDetails;
+  /** 案件の「希望する在留資格」。認定（COE）の項目11「入国目的」チェックの判定にのみ使う。更新・変更は設定しない */
+  targetStatus?: string;
 }
 
 /** 1つのセルへ文字列を書き込む定義。結合セルは、左上のセルを指定する */
@@ -231,6 +233,31 @@ export const RENEWAL_FILL_ITEMS: FillItem[] = [
   item("11", "派遣先（9）派遣予定期間", O2, "H42", (c) => c.f.dispatchPeriod),
 ];
 
+/** 「有・無」のうち、未選択（空文字）はそのまま。選ばれた側だけを PickItem の writes キーとして使う */
+function yesNoLabel(v: "" | "yes" | "no"): "" | "有" | "無" {
+  return v === "yes" ? "有" : v === "no" ? "無" : "";
+}
+
+/** 16「在日親族及び同居者」の注記文（「有」のときに残す部分。原本は末尾に「・　無」が続く） */
+const RELATIVES_NOTE_WHEN_YES = "（「有」の場合は，以下の欄に在日親族及び同居者を記入してください。）";
+
+/**
+ * 在日親族の各行にある「同居の有無」（結合セル1つに「有・無」。Y21と同じ方式）。
+ * relativesPresent が「有」で、かつ該当行の相手が入力されているときだけ判定する（relativeItems と同じ条件）。
+ */
+function relativeLivesTogetherPickItems(sheet: string, rows: number[], no: string): PickItem[] {
+  return rows.map((row, i) => ({
+    no,
+    label: `在日親族（${i + 1}人目） 同居の有無`,
+    sheet,
+    get: (c: FillCtx) => {
+      const r = c.f.relativesPresent === "yes" ? c.f.relatives[i] : undefined;
+      return yesNoLabel(r?.livesTogether ?? "");
+    },
+    writes: { 有: { [`T${row}`]: "有" }, 無: { [`T${row}`]: "無" } },
+  }));
+}
+
 export const RENEWAL_PICK_ITEMS: PickItem[] = [
   {
     no: "4",
@@ -251,6 +278,29 @@ export const RENEWAL_PICK_ITEMS: PickItem[] = [
     // Y21（Y21:AB21の結合セル）は「有・無」。選ばれた方だけにする
     writes: { 有: { Y21: "有" }, 無: { Y21: "無" } },
   },
+  {
+    no: "15",
+    label: "犯罪を理由とする処分の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.criminalRecord === "yes" ? "yes" : c.f.criminalRecord === "none" ? "no" : ""),
+    // C53「有」・D53「（具体的内容」・AG53「）」・AH53「・」・AI53「無」（別々のセル。具体的内容の文字はIssue #79の仕組みでI53へ書く）
+    writes: {
+      有: { AH53: "", AI53: "" },
+      無: { C53: "", D53: "", AG53: "", AH53: "" },
+    },
+  },
+  {
+    no: "16",
+    label: "在日親族及び同居者の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.relativesPresent),
+    // C58「有」・D58は、注記文の末尾に「・　無」を含む1セル。無のときは注記文ごと「無」に置き換える
+    writes: {
+      有: { D58: RELATIVES_NOTE_WHEN_YES },
+      無: { C58: "", D58: "無" },
+    },
+  },
+  ...relativeLivesTogetherPickItems(S1, RELATIVE_ROWS, "16"),
 ];
 
 function maritalLabel(v: string): string {

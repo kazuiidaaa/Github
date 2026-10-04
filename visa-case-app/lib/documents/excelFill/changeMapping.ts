@@ -217,6 +217,28 @@ function maritalLabel(v: string): string {
   return v === "married" ? "有" : v === "single" ? "無" : "";
 }
 
+/** 「有・無」のうち、未選択（空文字）はそのまま。選ばれた側だけを PickItem の writes キーとして使う */
+function yesNoLabel(v: "" | "yes" | "no"): "" | "有" | "無" {
+  return v === "yes" ? "有" : v === "no" ? "無" : "";
+}
+
+/** 16「在日親族及び同居者」の注記文（「有」のときに残す部分。原本は末尾に「・　無」が続く） */
+const RELATIVES_NOTE_WHEN_YES = "（「有」の場合は，以下の欄に在日親族及び同居者を記入してください。）";
+
+/** 在日親族の各行にある「同居の有無」（結合セル1つに「有・無」。AG21と同じ方式） */
+function relativeLivesTogetherPickItems(sheet: string, rows: number[], no: string): ChangePickItem[] {
+  return rows.map((row, i) => ({
+    no,
+    label: `在日親族（${i + 1}人目） 同居の有無`,
+    sheet,
+    get: (c: ChangeCtx) => {
+      const r = c.f.relativesPresent === "yes" ? c.f.relatives[i] : undefined;
+      return yesNoLabel(r?.livesTogether ?? "");
+    },
+    writes: { 有: { [`T${row}`]: "有" }, 無: { [`T${row}`]: "無" } },
+  }));
+}
+
 export const CHANGE_PICK_ITEMS: ChangePickItem[] = [
   {
     no: "4",
@@ -237,6 +259,29 @@ export const CHANGE_PICK_ITEMS: ChangePickItem[] = [
     // AG21（AG21:AJ21の結合セル）は「有・無」。選ばれた方だけにする
     writes: { 有: { AG21: "有" }, 無: { AG21: "無" } },
   },
+  {
+    no: "15",
+    label: "犯罪を理由とする処分の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.criminalRecord === "yes" ? "yes" : c.f.criminalRecord === "none" ? "no" : ""),
+    // C56「有」・D56「（具体的内容」・AG56「）」・AH56「・」・AI56「無」（別々のセル）
+    writes: {
+      有: { AH56: "", AI56: "" },
+      無: { C56: "", D56: "", AG56: "", AH56: "" },
+    },
+  },
+  {
+    no: "16",
+    label: "在日親族及び同居者の有無",
+    sheet: S1,
+    get: (c) => yesNoLabel(c.f.relativesPresent),
+    // C62「有」・D62は、注記文の末尾に「・　無」を含む1セル
+    writes: {
+      有: { D62: RELATIVES_NOTE_WHEN_YES },
+      無: { C62: "", D62: "無" },
+    },
+  },
+  ...relativeLivesTogetherPickItems(S1, RELATIVE_ROWS, "16"),
 ];
 
 /** 桁数の検証は、更新様式と同じ項目・桁数 */

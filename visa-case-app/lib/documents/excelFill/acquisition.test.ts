@@ -92,10 +92,18 @@ describe("acquisitionMapping の座標（テンプレートとの整合）", () 
     const wb = await open(ACQUISITION_TEMPLATE_PATH);
     expect([text(wb, "E21"), text(wb, "F21"), text(wb, "G21")]).toEqual(["男", "・", "女"]);
     expect([text(wb, "AH21"), text(wb, "AI21"), text(wb, "AJ21")]).toEqual(["有", "・", "無"]);
-    expect(ACQUISITION_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "6"]);
-    for (const p of ACQUISITION_PICK_ITEMS) {
+    expect(ACQUISITION_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "6", "11", "13", "14", "15", "15", "15", "15"]);
+    // 「有・無」等、選ばれなかった側を消す方式（4・6・14・15）の書き換え先はラベルの文字があるセル（保護あり）。
+    // 11・13の□は、原本自体が入力用に保護を外している（J36等）ため対象外
+    for (const p of ACQUISITION_PICK_ITEMS.filter((p) => p.no !== "11" && p.no !== "13")) {
       for (const writes of Object.values(p.writes)) {
         for (const cell of Object.keys(writes)) expect(sheet(wb).getCell(cell).protection?.locked, cell).not.toBe(false);
+      }
+    }
+    // 11・13の□は、逆に保護が外れている（本来、人が直接「X」等を書き込める入力欄であるため）
+    for (const p of ACQUISITION_PICK_ITEMS.filter((p) => p.no === "11" || p.no === "13")) {
+      for (const writes of Object.values(p.writes)) {
+        for (const cell of Object.keys(writes)) expect(sheet(wb).getCell(cell).protection?.locked, cell).toBe(false);
       }
     }
   });
@@ -119,20 +127,26 @@ describe("fillAcquisitionExcel", () => {
     expect(t("H33")).toBe("TE1234567"); // 10
     expect([t("X33"), t("AD33"), t("AH33")]).toEqual(["2030", "5", "6"]);
     expect(t("Z36")).toBe("テスト事由"); // 11
+    expect(t("V36")).toBe("■"); // 11 事由チェック（その他）
+    expect([t("J36"), t("N36")]).toEqual(["□", "□"]); // 選ばれなかった□はそのまま
     expect(t("F39")).toBe("テスト理由"); // 12
     expect(t("Q44")).toBe("特定活動"); // 13 その他
+    expect(t("M44")).toBe("■"); // 13 希望する在留資格チェック（4択にないため、その他）
+    expect([t("H42"), t("P42"), t("X42"), t("H44")]).toEqual(["□", "□", "□", "□"]); // 選ばれなかった□はそのまま
     expect(t("AF42")).toBe("1年"); // 13 在留期間
     expect(t("I47")).toBe("テスト処分"); // 14
+    expect([t("C47"), t("D47"), t("AG47"), t("AH47"), t("AI47")]).toEqual(["有", "（具体的内容", "）", "", ""]); // 14 有・無
     expect([t("A56"), t("D56"), t("M56"), t("Q56"), t("X56"), t("AE56")]).toEqual(["父", "ICHIRO YAMADA", "1980/02/03", "テスト国", "テスト商事", "ZZ00000000XX"]); // 15
     expect([t("A58"), t("D58")]).toEqual(["母", "HANAKO YAMADA"]);
     expect(t("A60")).toBe(""); // 3人目は空欄
+    expect([t("U56"), t("U58")]).toEqual(["はい", "はい"]); // 15 同居（2人とも livesTogether: "yes"）
+    expect(t("U60")).toBe("はい・いいえ"); // 3人目は空欄のため未選択のまま（原本の表示のまま）
     expect([t("F65"), t("AC65"), t("F67"), t("G70"), t("Y70")]).toEqual(["保証 太郎", "知人", "東京都保証区1-1", "03-1111-1111", "090-1111-1111"]); // 16
     expect([t("F74"), t("AC74"), t("F76"), t("G79")]).toEqual(["代理 花子", "母", "東京都代理区2-2", "03-2222-2222"]); // 17
     expect(t("Y79")).toBe(""); // 代理人の携帯電話番号は対象外
     expect([t("E96"), t("T96"), t("C101"), t("Z101")]).toEqual(["取次 一郎", "東京都取次区3-3", "テスト事務所", "03-3333-3333"]); // 取次者
 
-    expect(warnings.join("\n")).toContain("11 在留資格取得の事由（その他）");
-    expect(warnings.join("\n")).toContain("「その他」の□を選択");
+    expect(warnings).toEqual([]);
   });
 
   it("配偶者あり・性別女の場合は、選ばれた側だけを残す", async () => {
@@ -142,7 +156,7 @@ describe("fillAcquisitionExcel", () => {
     expect([text(wb, "AH21"), text(wb, "AI21"), text(wb, "AJ21")]).toEqual(["有", "", ""]);
   });
 
-  it("取得の事由・処分歴・親族の「なし」は、内容を書かない。4つの在留資格はその他欄に書かず、警告する", async () => {
+  it("取得の事由・処分歴・親族の「なし」は、内容を書かない。4つの在留資格は、該当のチェックだけを付ける", async () => {
     const { buffer, warnings } = await fillAcquisitionExcel(
       applicant,
       { ...details, acquisitionCause: "birth", criminalRecord: "none", relativesPresent: "no" },
@@ -150,9 +164,11 @@ describe("fillAcquisitionExcel", () => {
     );
     const wb = await open(buffer);
     expect([text(wb, "Z36"), text(wb, "I47"), text(wb, "A56"), text(wb, "Q44")]).toEqual(["", "", "", ""]);
-    const joined = warnings.join("\n");
-    expect(joined).toContain("事由（出生）");
-    expect(joined).toContain("13 希望する在留資格（定住者）");
+    expect(text(wb, "J36")).toBe("■"); // 11 事由チェック（出生）
+    expect(text(wb, "X42")).toBe("■"); // 13 希望する在留資格チェック（定住者）
+    expect([text(wb, "C47"), text(wb, "D47"), text(wb, "AG47"), text(wb, "AH47")]).toEqual(["", "", "", ""]); // 14 無
+    expect(text(wb, "AI47")).toBe("無");
+    expect(warnings).toEqual([]);
   });
 
   it("入力がなければ、テンプレートの元の状態のまま", async () => {

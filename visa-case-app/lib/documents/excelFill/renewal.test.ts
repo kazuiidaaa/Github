@@ -102,7 +102,7 @@ describe("renewalMapping の座標（テンプレートとの整合）", () => {
     expect(text(wb, SHEET_APPLICANT_1, "F21")).toBe("・");
     expect(text(wb, SHEET_APPLICANT_1, "G21")).toBe("女");
     expect(text(wb, SHEET_APPLICANT_1, "Y21")).toBe("有・無");
-    expect(RENEWAL_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "5"]);
+    expect(RENEWAL_PICK_ITEMS.map((p) => p.no)).toEqual(["4", "5", "15", "16", "16", "16", "16", "16", "16", "16"]);
   });
 });
 
@@ -128,6 +128,11 @@ describe("fillRenewalExcel", () => {
     expect(t(SHEET_APPLICANT_1, "M64")).toBe("1992/02/03");
     expect(t(SHEET_APPLICANT_1, "AE64")).toBe("ZZ00000000XX");
     expect(t(SHEET_APPLICANT_1, "A66")).toBe(""); // 2人目は空欄のまま
+    expect([t(SHEET_APPLICANT_1, "C53"), t(SHEET_APPLICANT_1, "D53"), t(SHEET_APPLICANT_1, "AG53"), t(SHEET_APPLICANT_1, "AH53"), t(SHEET_APPLICANT_1, "AI53")]).toEqual(["有", "（具体的内容", "）", "・", "無"]); // 15 犯罪歴は未入力のため原本のまま
+    expect(t(SHEET_APPLICANT_1, "C58")).toBe("有"); // 16 在日親族の有無（有）
+    expect(t(SHEET_APPLICANT_1, "D58")).toBe("（「有」の場合は，以下の欄に在日親族及び同居者を記入してください。）");
+    expect(t(SHEET_APPLICANT_1, "T64")).toBe("有"); // 16 同居の有無（1人目）
+    expect(t(SHEET_APPLICANT_1, "T66")).toBe("有・無"); // 2人目は空欄のため未選択のまま
 
     // 申請人等作成用2（N）
     expect(t(SHEET_APPLICANT_2, "E9")).toBe("テスト株式会社"); // 17 勤務先名称
@@ -156,6 +161,24 @@ describe("fillRenewalExcel", () => {
     const { buffer } = await fillRenewalExcel({ ...applicant, gender: "女" }, employment, details);
     const wb = await open(buffer);
     expect([text(wb, SHEET_APPLICANT_1, "E21"), text(wb, SHEET_APPLICANT_1, "F21"), text(wb, SHEET_APPLICANT_1, "G21")]).toEqual(["", "", "女"]);
+  });
+
+  it("犯罪歴「有」・在日親族「無」の場合は、その側だけを残す", async () => {
+    const { buffer, warnings } = await fillRenewalExcel(applicant, employment, {
+      ...details,
+      criminalRecord: "yes",
+      criminalDetail: "テスト処分",
+      relativesPresent: "no",
+    });
+    const wb = await open(buffer);
+    const t = (s: string, c: string) => text(wb, s, c);
+    expect(t(SHEET_APPLICANT_1, "I53")).toBe("テスト処分"); // 15 具体的内容
+    expect([t(SHEET_APPLICANT_1, "AH53"), t(SHEET_APPLICANT_1, "AI53")]).toEqual(["", ""]); // 15 有
+    expect([t(SHEET_APPLICANT_1, "C53"), t(SHEET_APPLICANT_1, "D53"), t(SHEET_APPLICANT_1, "AG53")]).toEqual(["有", "（具体的内容", "）"]);
+    expect([t(SHEET_APPLICANT_1, "C58"), t(SHEET_APPLICANT_1, "D58")]).toEqual(["", "無"]); // 16 無
+    expect(t(SHEET_APPLICANT_1, "A64")).toBe(""); // 親族なしのため1人目も空欄
+    expect(t(SHEET_APPLICANT_1, "T64")).toBe("有・無"); // 相手が入力されないため未選択のまま
+    expect(warnings).toEqual([]);
   });
 
   it("入力がなければ、すべてのシートがテンプレートの元の状態のまま", async () => {
