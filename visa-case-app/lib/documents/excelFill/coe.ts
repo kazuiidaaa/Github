@@ -12,7 +12,10 @@ import {
   COE_PURPOSE_LABELS,
   COE_SHEET_APPLICANT_1,
 } from "./coeMapping";
+import { COE_M_FILL_ITEMS, COE_M_MANUAL_ITEMS, COE_M_MAX_WORK_HISTORY, COE_M_PICK_ITEMS } from "./coeMappingM";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
+
+const KEIEI_KANRI = "経営・管理";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
 
@@ -28,13 +31,19 @@ export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
   U: officialPath("coe-application-form-U_930004059.xlsx"),
 };
 
+/** 差し込む範囲。n＝様式Nの全シート、m＝様式Mの全シート（経営・管理）、first＝第1表のみ */
+type FillScope = "n" | "m" | "first";
+
 /**
- * 差し込む範囲を決める。第2表以降（申請人用2・所属機関用）の対応表は様式Nのものだけなので、
- * 様式N以外、および様式を特定できない高度専門職では、第1表だけを差し込む（Nの表を他の様式へ流用しない）。
+ * 差し込む範囲を決める。第2表以降（申請人用2・所属機関用）の対応表は、様式 N と M（経営・管理）だけなので、
+ * それ以外の様式、および様式を特定できない高度専門職では、第1表だけを差し込む（他の様式の表を流用しない）。
+ * 高度専門職ではない「経営・管理」は、様式 M を使う（Issue #191）。
  */
-function planFill(r: CoeFormResolution): { form: CoeFormCode; firstSheetOnly: boolean } {
-  if (r.kind === "resolved") return { form: r.form, firstSheetOnly: r.form !== "N" };
-  return { form: "N", firstSheetOnly: r.kind !== "not_applicable" };
+function planFill(r: CoeFormResolution, targetStatus: string): { form: CoeFormCode; scope: FillScope } {
+  if (r.kind === "resolved") return { form: r.form, scope: r.form === "N" ? "n" : "first" };
+  if (r.kind !== "not_applicable") return { form: "N", scope: "first" };
+  if (targetStatus.trim() === KEIEI_KANRI) return { form: "M", scope: "m" };
+  return { form: "N", scope: "n" };
 }
 
 /**
@@ -52,7 +61,7 @@ export async function fillCoeExcel(
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f, targetStatus };
   const resolution = resolveCoeForm(targetStatus, f.hspActivity ?? "");
-  const plan = planFill(resolution);
+  const plan = planFill(resolution, targetStatus);
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(COE_TEMPLATE_PATHS[plan.form]);
 
@@ -64,15 +73,15 @@ export async function fillCoeExcel(
   };
 
   const first = sheetKey(COE_SHEET_APPLICANT_1);
-  const inRange = (sheet: string) => !plan.firstSheetOnly || sheetKey(sheet) === first;
-  for (const it of COE_FILL_ITEMS) {
-    if (!inRange(it.sheet)) continue;
+  const firstOnly = <T extends { sheet: string }>(xs: T[]) => (plan.scope === "n" ? xs : xs.filter((x) => sheetKey(x.sheet) === first));
+  const fillItems = [...firstOnly(COE_FILL_ITEMS), ...(plan.scope === "m" ? COE_M_FILL_ITEMS : [])];
+  const pickItems = [...firstOnly(COE_PICK_ITEMS), ...(plan.scope === "m" ? COE_M_PICK_ITEMS : [])];
+  for (const it of fillItems) {
     const value = it.get(ctx);
     if (value === "") continue;
     sheetOf(it.sheet).getCell(it.cell).value = value;
   }
-  for (const p of COE_PICK_ITEMS) {
-    if (!inRange(p.sheet)) continue;
+  for (const p of pickItems) {
     const writes = p.writes[p.get(ctx)];
     if (!writes) continue;
     const ws = sheetOf(p.sheet);
@@ -80,11 +89,15 @@ export async function fillCoeExcel(
   }
 
   const buffer = Buffer.from(await wb.xlsx.writeBuffer());
-  return { buffer, warnings: buildWarnings(ctx, resolution) };
+  return { buffer, warnings: buildWarnings(ctx, resolution, plan.scope) };
 }
 
-function buildWarnings(c: FillCtx, resolution: CoeFormResolution): string[] {
+function buildWarnings(c: FillCtx, resolution: CoeFormResolution, scope: FillScope): string[] {
   const w: string[] = [];
+  const maxWork = scope === "m" ? COE_M_MAX_WORK_HISTORY : COE_MAX_WORK_HISTORY;
+  if (scope === "m") {
+    w.push(`様式 M（経営・管理）の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${COE_M_MANUAL_ITEMS}。`);
+  }
   if (resolution.kind === "resolved" && resolution.form !== "N") {
     w.push(`様式 ${resolution.form} の第2表以降は未対応です。第1表のみ差し込んでいます。第2表以降は、様式上で記入してください。`);
   } else if (resolution.kind === "activity_missing" || resolution.kind === "unknown") {
@@ -96,8 +109,8 @@ function buildWarnings(c: FillCtx, resolution: CoeFormResolution): string[] {
   if (c.f.relativesPresent === "yes" && c.f.relatives.length > COE_MAX_RELATIVES) {
     w.push(`在日親族・同居者は、様式の欄（${COE_MAX_RELATIVES}人分）に入らない分を差し込んでいません。別紙に記載してください。`);
   }
-  if (c.f.workHistory.length > COE_MAX_WORK_HISTORY) {
-    w.push(`職歴は、様式の欄（${COE_MAX_WORK_HISTORY}件分）に入らない分を差し込んでいません。別紙に記載してください。`);
+  if (c.f.workHistory.length > maxWork) {
+    w.push(`職歴は、様式の欄（${maxWork}件分）に入らない分を差し込んでいません。別紙に記載してください。`);
   }
   if (c.e.jobDescription.split(/\r?\n/).filter((l) => l.trim() !== "").length > JOB_DESCRIPTION_LINES) {
     w.push("活動内容詳細が3行以上あるため、2行目に続けて差し込んでいます。欄に収まるか確認し、必要なら別紙に記載してください。");

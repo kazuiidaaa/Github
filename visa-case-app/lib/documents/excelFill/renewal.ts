@@ -9,6 +9,7 @@ import {
   RENEWAL_DIGIT_CHECKS,
   RENEWAL_FILL_ITEMS,
   RENEWAL_PICK_ITEMS,
+  SHEET_APPLICANT_1,
   digitsOf,
   sheetKey,
   type FillCtx,
@@ -26,8 +27,13 @@ export async function fillRenewalExcel(
   a: Applicant,
   e: EmploymentInfo,
   f: FormDetails,
+  currentStatus = "",
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f };
+  // 経営・管理の更新は、第2表以降（様式Nの表）を使えないため、第1表（申請人用（更新）１）だけを差し込む（Issue #191）
+  const firstOnly = isKeieiKanri(currentStatus) || isKeieiKanri(a.residenceStatus);
+  const first = sheetKey(SHEET_APPLICANT_1);
+  const inRange = (sheet: string) => !firstOnly || sheetKey(sheet) === first;
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(RENEWAL_TEMPLATE_PATH);
 
@@ -39,11 +45,13 @@ export async function fillRenewalExcel(
   };
 
   for (const it of RENEWAL_FILL_ITEMS) {
+    if (!inRange(it.sheet)) continue;
     const value = it.get(ctx);
     if (value === "") continue;
     sheetOf(it.sheet).getCell(it.cell).value = value;
   }
   for (const p of RENEWAL_PICK_ITEMS) {
+    if (!inRange(p.sheet)) continue;
     const writes = p.writes[p.get(ctx)];
     if (!writes) continue;
     const ws = sheetOf(p.sheet);
@@ -51,11 +59,16 @@ export async function fillRenewalExcel(
   }
 
   const buffer = Buffer.from(await wb.xlsx.writeBuffer());
-  return { buffer, warnings: buildWarnings(ctx) };
+  return { buffer, warnings: buildWarnings(ctx, firstOnly) };
 }
 
-function buildWarnings(c: FillCtx): string[] {
+const isKeieiKanri = (status: string) => status.trim() === "経営・管理";
+
+function buildWarnings(c: FillCtx, firstOnly = false): string[] {
   const w: string[] = [];
+  if (firstOnly) {
+    w.push("在留資格が「経営・管理」のため、第1表（申請人用（更新）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。");
+  }
   if (c.a.confirmationStatus !== "confirmed") {
     w.push("申請人情報が確定していません。すべての項目を、原本と照合してから使用してください。");
   }
