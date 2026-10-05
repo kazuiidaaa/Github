@@ -131,3 +131,25 @@ describe("公式様式項目タブの描画（様式ごとの表示）", () => {
     expect(headings(html("other"))).toEqual(headings(html("renewal")));
   });
 });
+
+describe("高度専門職のポイント計算表（Issue #186）", () => {
+  it("高度専門職の案件には、号から決まるシートのチェック一覧を表示する", () => {
+    const markup = html("coe", "高度専門職（1号ロ）");
+    expect(headings(markup)).toContain("高度専門職のポイント計算表");
+    expect(markup).toContain("使うシート：高度専門職1号ロ");
+    expect(markup).toContain("博士学位（専門職学位を除く）");
+    expect(markup).toContain("ポイント計算表をダウンロード");
+  });
+
+  it("号が未選択・2号の案件には、使うシートの選択を表示し、選ぶまでチェック一覧を出さない", () => {
+    for (const status of ["高度専門職", "高度専門職（2号）"]) {
+      const markup = html("change", status);
+      expect(markup, status).toContain("使うシート");
+      expect(markup, status).not.toContain("博士学位（専門職学位を除く）");
+    }
+  });
+
+  it("高度専門職以外の案件には、表示しない", () => {
+    expect(headings(html("coe", "技術・人文知識・国際業務"))).not.toContain("高度専門職のポイント計算表");
+  });
+});

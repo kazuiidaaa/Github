@@ -424,3 +424,14 @@ describe("高度専門職2号の変更の所得・納税・社会保険の書類
     expect(hsp1.items.some((i) => i.rule.id.startsWith("hsp2_"))).toBe(false);
   });
 });
+
+describe("号つきの高度専門職（Issue #181）", () => {
+  it("高度専門職の保存値は、高度専門職の規則にだけ一致し、他の在留資格の規則には誤一致しない", () => {
+    for (const procedureType of ["coe", "change", "renewal"] as const) {
+      const hasHspRules = RULE_SETS.some((r) => r.procedureType === procedureType && r.residenceStatus.startsWith("高度専門職"));
+      for (const grade of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
+        expect(hasRuleSetFor(procedureType, grade), `${procedureType}:${grade}`).toBe(hasHspRules);
+      }
+    }
+  });
+});

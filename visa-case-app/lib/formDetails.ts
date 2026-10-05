@@ -1,3 +1,4 @@
+import { sanitizePointChecks } from "./hspPoints";
 import { isValidDate } from "./format";
 import type { ProcedureType } from "./types";
 
@@ -133,6 +134,10 @@ export interface FormDetails {
   deportationLastDate: string;
   /** 高度専門職の「行う活動」（使う様式の選択に使う。lib/hspForm.ts。Issue #181） */
   hspActivity: string;
+  /** 高度専門職のポイント計算表で使うシート（A＝1号イ、B＝1号ロ、C＝1号ハ）。号が未選択・2号のとき、ここで選ぶ（lib/hspPoints.ts。Issue #186） */
+  hspPointSheet: string;
+  /** ポイント計算表で選んだチェック欄（「シート:行」。例：「B:20」）。表の項目は lib/hspPointRows.ts */
+  hspPointChecks: string[];
 }
 
 export const EMPTY_FORM_DETAILS: FormDetails = {
@@ -189,6 +194,8 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
+  hspPointSheet: "",
+  hspPointChecks: [],
   stayPurpose: "",
   guarantorName: "",
   guarantorRelationship: "",
@@ -233,6 +240,7 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     ...merged,
     relatives: Array.isArray(r.relatives) ? r.relatives : [],
     workHistory: Array.isArray(r.workHistory) ? r.workHistory : [],
+    hspPointChecks: sanitizePointChecks(r.hspPointChecks),
   };
 }
 
