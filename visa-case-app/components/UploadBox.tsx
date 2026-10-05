@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { Button } from "@/components/ui";
+import { useToast } from "@/components/Toast";
 import { ConfirmDocumentReplaceDialog } from "@/components/ConfirmDocumentReplaceDialog";
 import { FORMAT_LABEL_BY_DOCUMENT_TYPE, MAX_FILE_BYTES, validateDocumentFile } from "@/lib/documentValidation";
 import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
@@ -38,6 +39,7 @@ export function UploadBox({
   /** 一覧の行内に置く、簡略表示（見出し・説明を省き、余白を小さくする） */
   compact?: boolean;
 }) {
+  const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -80,10 +82,12 @@ export function UploadBox({
       }));
       logAudit(caseId, hasDocument ? "document_replaced" : "document_uploaded", { documentType });
       setNotice(aspectWarning);
+      toast.success(hasDocument ? `${label}を差し替えました` : `${label}をアップロードしました`);
       onUploaded(hasDocument);
     } catch (e) {
       logAudit(caseId, "document_upload_failed", undefined, "failure");
       setError(`アップロードに失敗しました：${messageOf(e)}`);
+      toast.error(`${label}のアップロードに失敗しました`);
       setFailed(file);
     } finally {
       setUploading(null);

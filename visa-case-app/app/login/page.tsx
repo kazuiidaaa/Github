@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PasswordField } from "@/components/PasswordField";
 import { Button, Field, inputClass } from "@/components/ui";
-import { signIn, startDemo } from "@/lib/auth";
+import { requestPasswordReset, signIn, startDemo } from "@/lib/auth";
 import { isSupabaseEnabled } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -11,6 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"login" | "reset">("login");
+  const [sent, setSent] = useState(false);
   const router = useRouter();
 
   async function submit(e: React.FormEvent) {
@@ -18,6 +21,22 @@ export default function LoginPage() {
     setBusy(true);
     setError((await signIn(email, password)) ?? "");
     setBusy(false);
+  }
+
+  async function submitReset(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const err = await requestPasswordReset(email);
+    setBusy(false);
+    if (err) return setError(err);
+    setError("");
+    setSent(true);
+  }
+
+  function switchMode(m: "login" | "reset") {
+    setMode(m);
+    setError("");
+    setSent(false);
   }
 
   if (!isSupabaseEnabled) {
@@ -32,15 +51,46 @@ export default function LoginPage() {
     );
   }
 
+  if (mode === "reset") {
+    return (
+      <form onSubmit={submitReset} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
+        <h1 className="text-center text-xl font-semibold">パスワードの再設定</h1>
+        <p className="text-xs text-slate-500">登録したメールアドレスを入力してください。再設定用のリンクをメールでお送りします。</p>
+        <fieldset disabled={busy} className="space-y-5">
+          <Field label="メールアドレス">
+            <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Field>
+        </fieldset>
+        {error && (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
+        {sent && (
+          <p role="status" className="rounded-xl bg-slate-100 p-3 text-sm text-slate-800">
+            登録されている場合、再設定の案内をお送りします。
+          </p>
+        )}
+        <Button type="submit" disabled={busy} className="w-full">
+          {busy ? "送信中……" : "再設定のメールを送る"}
+        </Button>
+        <button type="button" onClick={() => switchMode("login")} className="block w-full text-center text-sm font-bold text-accent underline underline-offset-2">
+          ログイン画面へ戻る
+        </button>
+      </form>
+    );
+  }
+
   return (
     <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
       <h1 className="text-center text-xl font-semibold">ログイン</h1>
-      <Field label="メールアドレス">
-        <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
-      </Field>
-      <Field label="パスワード">
-        <input type="password" required autoComplete="current-password" className={inputClass} value={password} onChange={(e) => setPassword(e.target.value)} />
-      </Field>
+      <p className="text-xs text-slate-500">行政書士事務所の関係者向けのシステムです。事務所のメンバー以外の方は、ご利用いただけません。</p>
+      <fieldset disabled={busy} className="space-y-5">
+        <Field label="メールアドレス">
+          <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Field>
+        <PasswordField label="パスワード" value={password} onChange={setPassword} autoComplete="current-password" />
+      </fieldset>
       {error && (
         <p role="alert" className="text-sm text-red-600">
           {error}
@@ -49,6 +99,9 @@ export default function LoginPage() {
       <Button type="submit" disabled={busy} className="w-full">
         {busy ? "確認中……" : "ログイン"}
       </Button>
+      <button type="button" disabled={busy} onClick={() => switchMode("reset")} className="block w-full text-center text-sm font-bold text-accent underline underline-offset-2">
+        パスワードを忘れた場合
+      </button>
       <div className="border-t border-slate-200 pt-4">
         <Button
           type="button"
