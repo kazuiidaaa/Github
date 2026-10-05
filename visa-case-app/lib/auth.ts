@@ -2,6 +2,7 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { passwordUpdateErrorMessage } from "./authMessages";
 import { clearDemoData, isDemo, localKey, setDemo } from "./demo";
 import { buildDemoSeedCases } from "./demoSeed";
 import { resetDocuments, DOCUMENTS_KEY } from "./documents/store";
@@ -85,7 +86,7 @@ export async function setNewPassword(next: string): Promise<string | null> {
   if (next.length < 8) return "新しいパスワードは8文字以上で入力してください。";
   try {
     const { error } = await supabase.auth.updateUser({ password: next });
-    if (error) return "パスワードを設定できませんでした。リンクの有効期限が切れたか、条件を満たしていない可能性があります。";
+    if (error) return passwordUpdateErrorMessage(error);
     logAudit(null, "password_changed");
     return null;
   } catch {
