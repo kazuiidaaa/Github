@@ -15,7 +15,7 @@ import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
 import { useDemo } from "@/lib/demo";
 import { getConfirmerName, useCan, useCase } from "@/lib/store";
 
-type StatusChange = "reviewed" | "final" | "archived";
+type StatusChange = "reviewed" | "submitted" | "archived";
 
 /** 状態変更の確認ダイアログの内容。影響は changeStatus（lib/documents/store.ts）の実際の処理に即して書く */
 const STATUS_CONFIRM: Record<StatusChange, { title: string; message: string; note: string; label: string }> = {
@@ -25,11 +25,11 @@ const STATUS_CONFIRM: Record<StatusChange, { title: string; message: string; not
     note: "操作の記録（監査ログ）が残ります。",
     label: "確認済みにする",
   },
-  final: {
-    title: "最終版にする",
-    message: "この版の状態を「最終版」に変更します。",
+  submitted: {
+    title: "提出済みにする",
+    message: "この版を、入管へ提出した版として記録します。",
     note: "操作の記録（監査ログ）が残ります。",
-    label: "最終版にする",
+    label: "提出済みにする",
   },
   archived: {
     title: "書類を保管にする",
@@ -127,7 +127,7 @@ export default function DocumentPreviewPage() {
             </Button>
           )}
           {canEdit && doc.status === "reviewed" && (
-            <Button onClick={() => setAsking("final")}>最終版にする</Button>
+            <Button onClick={() => setAsking("submitted")}>提出済みにする</Button>
           )}
           {canEdit && doc.status !== "archived" && (
             <Button variant="secondary" onClick={() => setAsking("archived")}>

@@ -96,3 +96,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 - `supabase/migrations/0018_rate_limits.sql`:集計表 `rate_limits`(利用者からの直接の読み書きは不可)と、関数 `check_rate_limit` を追加します。既存のデータへの影響はありません。0017 の実行後に SQL Editor で実行します。
 - 実行しない場合、レート制限は適用されません(共有ストアを利用できないときは、制限を止めて処理を続ける仕様のためです。公式様式の生成そのものは動作します)。
 - 古い行は、関数の呼び出し時に一部の確率で削除します(1時間より前の窓)。
+
+## 0019(生成文書の状態:「最終版」を「提出済み」へ)
+
+- `supabase/migrations/0019_document_status_submitted.sql`:`generated_documents.document_status` の `final` を `submitted` に変更し(制約と遷移の規則)、既存の `final` を `submitted` に読み替えます。0018 の実行後に SQL Editor で実行します。
+- 実際に提出済みかどうかは DB から判別できないため、読み替え後に、未提出の版がないか画面で確認してください。
+- 監査ログの過去の記録(`document_final`)は書き換えません。
