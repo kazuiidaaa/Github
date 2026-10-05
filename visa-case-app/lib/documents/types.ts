@@ -8,7 +8,8 @@ export type GeneratedDocumentType =
   | "application_checklist"
   | "reason_statement"
   | "official_application_form"
-  | "transcription_aid";
+  | "transcription_aid"
+  | "hsp_point_sheet";
 
 /**
  * 「申請書類作成」画面で新規に生成できる文書。
@@ -26,11 +27,16 @@ export type InternalDocumentType = (typeof INTERNAL_DOCUMENT_TYPES)[number];
 /** 新規生成はできないが、過去の版の閲覧・出力のために内容を組み立てられる種類 */
 export type LegacyDocumentType = "transcription_aid";
 /** content_json を組み立てられる種類 */
-export type BuildableDocumentType = InternalDocumentType | LegacyDocumentType;
+export type BuildableDocumentType = InternalDocumentType | LegacyDocumentType | "hsp_point_sheet";
 
 /** 差し込み済みの公式様式（Excel）の種類。手続種別ごとに lib/documents/officialForms.ts へ追加する */
 export function isOfficialForm(type: GeneratedDocumentType): boolean {
-  return type === "official_application_form";
+  return type === "official_application_form" || type === "hsp_point_sheet";
+}
+
+/** 高度専門職のポイント計算表（案件の画面から、版として保存する。「申請書類作成」の生成の選択肢には出さない） */
+export function isHspPointSheet(type: GeneratedDocumentType): boolean {
+  return type === "hsp_point_sheet";
 }
 
 export const DOCUMENT_TYPE_LABELS: Record<GeneratedDocumentType, string> = {
@@ -40,6 +46,7 @@ export const DOCUMENT_TYPE_LABELS: Record<GeneratedDocumentType, string> = {
   reason_statement: "理由書ドラフト",
   official_application_form: "公式申請様式",
   transcription_aid: "転記補助シート",
+  hsp_point_sheet: "高度専門職ポイント計算表",
 };
 
 export type GeneratedDocumentStatus = "draft" | "reviewed" | "submitted" | "archived";
@@ -100,6 +107,8 @@ export const OFFICIAL_FORM_NOTICES = [
  * この内容から同じファイルを再生成できる（ファイル本体は content_json から作る）。
  */
 export interface OfficialFormContent {
+  /** 省略は、申請書様式。"hspPoint" は、高度専門職のポイント計算表（エクセルの再生成で、差し込み先を切り替える） */
+  kind?: "hspPoint";
   form: { formName: string; fileId: string; sourceUrl: string; confirmedOn: string };
   applicantConfirmed: boolean;
   /** 差し込みエンジンの warnings と、対象外の案件の注意 */

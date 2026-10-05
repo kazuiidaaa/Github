@@ -106,6 +106,14 @@ export function officialFormScopeWarnings(s: OfficialFormScope): string[] {
   return spec.procedureType === s.procedureType && spec.isInScope(s) ? [] : [spec.outOfScopeWarning];
 }
 
+/** 高度専門職のポイント計算表（参考書式）の出典。docs/official/README.md と一致させる */
+export const HSP_POINT_FORM: OfficialFormContent["form"] = {
+  formName: "高度専門職ポイント計算表（令和5年4月1日以降の参考書式。Excel）",
+  fileId: "930001673",
+  sourceUrl: "https://www.moj.go.jp/isa/content/930001673.xls",
+  confirmedOn: "2026-10-05",
+};
+
 /** 案件の現在の内容から、差し込みの入力値の写しを作る（値はすべて複製し、案件への参照は持たない） */
 export function officialFormInputOf(c: CaseRecord): OfficialFormContent["input"] {
   return JSON.parse(

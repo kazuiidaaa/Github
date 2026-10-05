@@ -13,7 +13,7 @@ vi.mock("../lib/documents/officialFormClient", () => ({
 }));
 vi.mock("../lib/store", () => ({ logAudit: vi.fn(), newId: () => `id-${Math.random().toString(36).slice(2)}` }));
 
-import { generateDocuments, getGeneratedDocuments } from "../lib/documents/store";
+import { generateDocuments, getGeneratedDocuments, saveHspPointSheet } from "../lib/documents/store";
 import { requestOfficialXlsx } from "../lib/documents/officialFormClient";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
@@ -78,5 +78,38 @@ describe("確認前の版の更新（Issue #203）", () => {
     expect(all.find((x) => x.id === d.id)?.status).toBe("reviewed");
     expect(all.find((x) => x.id === d.id)?.version).toBe(d.version);
     expect(out[0].id).not.toBe(d.id);
+  });
+});
+
+describe("ポイント計算表の版管理（Issue #186）", () => {
+  beforeEach(() => mem.clear());
+  const rec: CaseRecord = { ...record, id: "case-hsp", procedureType: "change", currentStatus: "技術・人文知識・国際業務", targetStatus: "高度専門職（1号イ）" };
+  const input = () => ({
+    applicant: rec.applicant,
+    employment: rec.employment,
+    formDetails: { ...EMPTY_FORM_DETAILS, hspPointChecks: ["A:14"] },
+    currentStatus: rec.currentStatus,
+    targetStatus: rec.targetStatus,
+  });
+
+  it("画面の版とエクセルの版を保存し、エクセルの版を返す。ポイント計算表の再生成には、画面の入力値を使う", async () => {
+    const mock = vi.mocked(requestOfficialXlsx);
+    mock.mockClear();
+    const xlsx = await saveHspPointSheet(rec, input());
+    expect(xlsx.outputFormat).toBe("xlsx");
+    expect(xlsx.documentType).toBe("hsp_point_sheet");
+    expect(mock.mock.calls[0][2]).toBe("hspPoint");
+    const shown = getGeneratedDocuments(rec.id).filter((d) => d.documentType === "hsp_point_sheet");
+    expect(shown.map((d) => d.outputFormat).sort()).toEqual(["html", "xlsx"]);
+    const html = shown.find((d) => d.outputFormat === "html");
+    expect(html?.content.officialForm?.kind).toBe("hspPoint");
+    expect(html?.content.officialForm?.input.formDetails.hspPointChecks).toEqual(["A:14"]);
+  });
+
+  it("確認前の版があれば、再度保存したとき、行を増やさず更新する", async () => {
+    await saveHspPointSheet(rec, input());
+    await saveHspPointSheet(rec, input());
+    const shown = getGeneratedDocuments(rec.id).filter((d) => d.documentType === "hsp_point_sheet");
+    expect(shown).toHaveLength(2);
   });
 });

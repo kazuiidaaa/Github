@@ -7,6 +7,7 @@ import type { FormDetails } from "@/lib/formDetails";
 import { HSP_PASS_POINTS, HSP_POINT_SHEETS, estimateHspPoints, hspPointConfirmLines, pointCheckId, resolveHspPointSheet, type HspPointSheetKey } from "@/lib/hspPoints";
 import { useDemo } from "@/lib/demo";
 import { downloadHspPointXlsx } from "@/lib/documents/officialFormClient";
+import { downloadFile, saveHspPointSheet } from "@/lib/documents/store";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
 import { officialFormInputOf } from "@/lib/documents/officialForms";
 import type { CaseRecord } from "@/lib/types";
@@ -32,7 +33,7 @@ export function HspPointSection({
 }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState<"" | "download" | "save">("");
   const needsLogin = officialFormNeedsLogin(useDemo());
   const resolution = resolveHspPointSheet(status, form.hspPointSheet);
   if (resolution.kind === "not_applicable") return null;
@@ -44,8 +45,24 @@ export function HspPointSection({
     onChange("hspPointChecks", on ? [...form.hspPointChecks, id] : form.hspPointChecks.filter((x) => x !== id));
   }
 
+  async function save() {
+    setConfirming("");
+    setBusy(true);
+    setMessage("");
+    try {
+      const input = { ...officialFormInputOf(record), formDetails: JSON.parse(JSON.stringify(form)) as FormDetails, targetStatus: status };
+      const created = await saveHspPointSheet(record, input);
+      await downloadFile(created);
+      setMessage(`版（v${created.version}）として保存し、ダウンロードしました。「申請書類作成」の生成履歴で確認できます。`);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "保存に失敗しました。");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function download() {
-    setConfirming(false);
+    setConfirming("");
     setBusy(true);
     setMessage("");
     try {
@@ -122,8 +139,11 @@ export function HspPointSection({
             </div>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button variant="secondary" disabled={busy || needsLogin} onClick={() => setConfirming(true)}>
-              ポイント計算表をダウンロード（エクセル）
+            <Button variant="secondary" disabled={busy || needsLogin} onClick={() => setConfirming("save")}>
+              版として保存してダウンロード（エクセル）
+            </Button>
+            <Button variant="secondary" disabled={busy || needsLogin} onClick={() => setConfirming("download")}>
+              保存せずにダウンロード（エクセル）
             </Button>
             {needsLogin && <span className="text-xs text-amber-900">{OFFICIAL_FORM_LOGIN_REQUIRED}</span>}
             <span role="status" className="text-xs text-slate-600">
@@ -134,15 +154,15 @@ export function HspPointSection({
       )}
       {confirming && estimate && (
         <ConfirmDialog
-          title="ポイント計算表を作成します"
+          title={confirming === "save" ? "ポイント計算表を、版として保存します" : "ポイント計算表を作成します"}
           message={hspPointConfirmLines(estimate).map((line) => (
             <span key={line} className="mt-1 block first:mt-0">
               {line}
             </span>
           ))}
-          confirmLabel="確認して作成する"
-          onCancel={() => setConfirming(false)}
-          onConfirm={() => void download()}
+          confirmLabel={confirming === "save" ? "確認して保存する" : "確認して作成する"}
+          onCancel={() => setConfirming("")}
+          onConfirm={() => void (confirming === "save" ? save() : download())}
         />
       )}
     </section>

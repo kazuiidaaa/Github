@@ -39,3 +39,20 @@ describe("mergeCreated", () => {
     expect(merged.map((d) => [d.id, d.version])).toEqual([["b", 3], ["a", 2]]);
   });
 });
+
+import { hspSelectionSummary } from "../lib/documents/hspSummary";
+import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT } from "../lib/types";
+
+describe("hspSelectionSummary", () => {
+  const base = { applicant: EMPTY_APPLICANT, employment: EMPTY_EMPLOYMENT, currentStatus: "", targetStatus: "高度専門職（1号イ）" };
+  it("保存した入力値から、選択した項目と目安の合計点を組み立てる", () => {
+    const s = hspSelectionSummary({ ...base, formDetails: { ...EMPTY_FORM_DETAILS, hspPointChecks: ["A:14"] } });
+    expect(s?.sheetLabel).toBe("高度専門職1号イ");
+    expect(s?.rows).toHaveLength(1);
+    expect(s?.total).toBe(30);
+  });
+  it("高度専門職でない場合は、null を返す", () => {
+    expect(hspSelectionSummary({ ...base, targetStatus: "技術・人文知識・国際業務", formDetails: { ...EMPTY_FORM_DETAILS } })).toBeNull();
+  });
+});

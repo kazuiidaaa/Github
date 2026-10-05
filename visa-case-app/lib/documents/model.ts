@@ -1,3 +1,4 @@
+import { hspSelectionSummary } from "./hspSummary";
 import { formatDate, formatDateTime } from "../format";
 import { CHECK_STATUS_LABELS, CHECK_TYPE_LABELS, REQUIREMENT_STATUS_LABELS } from "../types";
 import {
@@ -30,7 +31,7 @@ function kv(rows: [string, string | undefined][]): Block {
 
 /** 文書の種類ごとの、見出し上の位置づけ */
 export function eyebrowOf(type: GeneratedDocument["documentType"]): string {
-  if (type === "official_application_form") return "公式様式への差し込み（下書き。提出前に原本と照合）";
+  if (type === "official_application_form" || type === "hsp_point_sheet") return "公式様式への差し込み（下書き。提出前に原本と照合）";
   return type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）";
 }
 
@@ -78,6 +79,16 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
     out.push({ kind: "heading", text: "注意（差し込み時の確認事項）" });
     if (o.warnings.length === 0) out.push({ kind: "paragraph", text: "なし" });
     for (const w of o.warnings) out.push({ kind: "paragraph", text: `注意：${w}` });
+    const hsp = o.kind === "hspPoint" ? hspSelectionSummary(o.input) : null;
+    if (hsp) {
+      out.push({ kind: "heading", text: `選択した項目（${hsp.sheetLabel}）` });
+      out.push({ kind: "table", widths: [14, 56, 14, 16], head: ["区分", "項目", "点数", "疎明資料"], rows: hsp.rows.map((r) => [r.section, r.label, r.points, r.evidence]) });
+      out.push({
+        kind: "paragraph",
+        text: `印字点数の単純合計（目安）：${hsp.total}点（基準 ${hsp.passPoints}点：${hsp.reachesPass ? "達しています" : "達していません"}）。該当の判断は、行政書士が資料で確認してください。`,
+      });
+      for (const n of hsp.notes) out.push({ kind: "paragraph", text: `注意：${n}` });
+    }
   }
 
   if (c.transcription) {
@@ -199,5 +210,5 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
 
 /** 各ページの下部に表示する文言（ページ番号は出力側で付ける） */
 export function footerLabel(doc: GeneratedDocument): string {
-  return `${GENERATED_STATUS_LABELS[doc.status]}／${doc.documentType === "official_application_form" ? "下書き" : "内部確認用"}`;
+  return `${GENERATED_STATUS_LABELS[doc.status]}／${(doc.documentType === "official_application_form" || doc.documentType === "hsp_point_sheet") ? "下書き" : "内部確認用"}`;
 }

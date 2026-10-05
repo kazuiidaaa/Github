@@ -138,7 +138,8 @@ describe("高度専門職のポイント計算表（Issue #186）", () => {
     expect(headings(markup)).toContain("高度専門職のポイント計算表");
     expect(markup).toContain("使うシート：高度専門職1号ロ");
     expect(markup).toContain("博士学位（専門職学位を除く）");
-    expect(markup).toContain("ポイント計算表をダウンロード");
+    expect(markup).toContain("版として保存してダウンロード");
+    expect(markup).toContain("保存せずにダウンロード");
   });
 
   it("号が未選択・2号の案件には、使うシートの選択を表示し、選ぶまでチェック一覧を出さない", () => {
