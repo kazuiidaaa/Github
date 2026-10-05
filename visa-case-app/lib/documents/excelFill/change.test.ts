@@ -278,7 +278,7 @@ describe("fillChangeExcel", () => {
   });
 
   it("変更後の在留資格が技術・人文知識・国際業務以外なら、様式の対象外を警告する", async () => {
-    const { warnings } = await fillChangeExcel(applicant, employment, details, "経営・管理");
+    const { warnings } = await fillChangeExcel(applicant, employment, details, "留学");
     expect(warnings.join("\n")).toContain("変更後の在留資格に合う様式");
   });
 
