@@ -41,8 +41,8 @@ jobs:
       actions: read
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-dotnet@v4
+    - uses: actions/checkout@v7
+    - uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
           5.0.x
@@ -54,6 +54,6 @@ jobs:
         # eslint はリポジトリ直下に設定が無く失敗するため除外（アプリの lint は visa-case-app 側で実施）
         tools: 'antimalware,checkov,templateanalyzer'
     - name: Upload results to Security tab
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: ${{ steps.msdo.outputs.sarifFile }}
