@@ -1,0 +1,120 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./node_modules/**)",
+      "Read(./.next/**)",
+      "Read(./package-lock.json)",
+      "Read(./tsconfig.tsbuildinfo)",
+      "Read(./.env*)",
+      "Bash(git push origin --delete:*)"
+    ]
+  },
+  "env": {
+    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "deniedMcpServers": [
+    {
+      "serverName": "claude.ai Addepar MCP"
+    },
+    {
+      "serverName": "claude.ai Atlassian MCP"
+    },
+    {
+      "serverName": "claude.ai Bigdata.com"
+    },
+    {
+      "serverName": "claude.ai Cloudflare Developer Platform"
+    },
+    {
+      "serverName": "claude.ai CoCounsel Legal"
+    },
+    {
+      "serverName": "claude.ai Constant Contact"
+    },
+    {
+      "serverName": "claude.ai Craft MCP Connection"
+    },
+    {
+      "serverName": "claude.ai Fireflies"
+    },
+    {
+      "serverName": "claude.ai Gemini"
+    },
+    {
+      "serverName": "claude.ai HyperFrames by HeyGen"
+    },
+    {
+      "serverName": "claude.ai S&P - Deterministic Retrieval"
+    },
+    {
+      "serverName": "claude.ai Superhuman Mail"
+    },
+    {
+      "serverName": "claude.ai Xero"
+    },
+    {
+      "serverName": "claude.ai vidIQ"
+    },
+    {
+      "serverName": "claude.ai Uber Eats"
+    },
+    {
+      "serverName": "claude.ai AccuWeather®"
+    },
+    {
+      "serverName": "claude.ai Anthropic Economic Index"
+    },
+    {
+      "serverName": "claude.ai Canva"
+    },
+    {
+      "serverName": "claude.ai Claude Docs"
+    },
+    {
+      "serverName": "claude.ai Gmail"
+    },
+    {
+      "serverName": "claude.ai Google Calendar"
+    },
+    {
+      "serverName": "claude.ai Google Docs"
+    },
+    {
+      "serverName": "claude.ai Google Drive"
+    },
+    {
+      "serverName": "claude.ai Google Sheets"
+    },
+    {
+      "serverName": "claude.ai Google Slides"
+    },
+    {
+      "serverName": "claude.ai ICD-10 Codes"
+    },
+    {
+      "serverName": "claude.ai Intuit QuickBooks"
+    },
+    {
+      "serverName": "claude.ai Microsoft 365"
+    },
+    {
+      "serverName": "claude.ai Notion"
+    },
+    {
+      "serverName": "claude.ai PDF Viewer"
+    },
+    {
+      "serverName": "claude.ai PubMed"
+    },
+    {
+      "serverName": "claude.ai Slack"
+    },
+    {
+      "serverName": "claude.ai SlidesGPT"
+    },
+    {
+      "serverName": "beeper"
+    }
+  ]
+}
