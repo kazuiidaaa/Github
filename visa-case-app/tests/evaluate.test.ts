@@ -392,6 +392,20 @@ describe("高度専門職：選んだ項目から導く疎明資料の番号ご�
     expect(ids).toEqual(["hsp_point_table", "hsp_point_evidence"]);
   });
 
+  it("資格（⑧）・投資運用業等（㉑）を選ぶと、番号ごとの疎明資料を「必要」で出す。必要書類の件数に数える", () => {
+    // B：修士(①)・資格 複数(⑧)・投資運用業等(㉑)
+    const ev = withChecks(change1, { hspPointChecks: ["B:15", "B:48", "B:95"] });
+    expect(ev.items.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence_①", "hsp_point_evidence_⑧", "hsp_point_evidence_㉑"]);
+    const by = (id: string) => ev.items.find((i) => i.rule.id === id)!;
+    expect(by("hsp_point_evidence_①").effective).toBe("check");
+    expect(by("hsp_point_evidence_⑧").effective).toBe("required");
+    expect(by("hsp_point_evidence_㉑").effective).toBe("required");
+    expect(ev.requiredCount).toBe(3); // ポイント計算表 + ⑧ + ㉑
+    expect(ev.missing.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence_⑧", "hsp_point_evidence_㉑"]);
+    // 選ばなければ、出さない
+    expect(withChecks(change1, { hspPointChecks: ["B:15"] }).items.some((i) => i.rule.id === "hsp_point_evidence_⑧")).toBe(false);
+  });
+
   it("選んだ項目の番号ごとに、親の疎明資料の直後へ「要確認」で出す。必要書類の件数には数えない", () => {
     // B：修士(①)・職歴(②)・年収(③)・日本語能力Ⅰ(⑮)
     const ev = withChecks(change1, { hspPointChecks: ["B:15", "B:20", "B:27", "B:72"] });
