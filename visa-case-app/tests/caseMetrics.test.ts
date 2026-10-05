@@ -1,6 +1,6 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, summarize } from "../lib/caseMetrics";
+import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, matchesSearch, normalizeSearchText, summarize } from "../lib/caseMetrics";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function dateIn(days: number): string {
@@ -127,5 +127,46 @@ describe("isFilterActive", () => {
 
   it("checksPending のみ true の場合は true を返す", () => {
     expect(isFilterActive({ ...DEFAULT_FILTER, checksPending: true })).toBe(true);
+  });
+});
+
+describe("検索の照合（全角・半角、かな・カナ、大文字・小文字、空白）", () => {
+  it("正規化は、全角・半角、カナの種類、大文字・小文字、空白の違いを吸収する", () => {
+    expect(normalizeSearchText("ﾘ ﾒｲ")).toBe("りめい");
+    expect(normalizeSearchText("リ　メイ")).toBe("りめい");
+    expect(normalizeSearchText("りめい")).toBe("りめい");
+    expect(normalizeSearchText("ＬＩ　Ｍｉｎｇ")).toBe("liming");
+    expect(normalizeSearchText("ガ")).toBe("が");
+  });
+
+  it("「ﾘ ﾒｲ」「りめい」「リメイ」は相互に一致する", () => {
+    const forms = ["ﾘ ﾒｲ", "りめい", "リメイ", "リ　メイ", "り めい"];
+    for (const q of forms) for (const t of forms) expect(matchesSearch(q, [t])).toBe(true);
+  });
+
+  it("「李 明」は「李明」「李　明」と一致するが、読みの「りめい」とは一致しない", () => {
+    expect(matchesSearch("李 明", ["李明"])).toBe(true);
+    expect(matchesSearch("李明", ["李　明"])).toBe(true);
+    expect(matchesSearch("李 明", ["りめい"])).toBe(false);
+    expect(matchesSearch("りめい", ["李 明"])).toBe(false);
+  });
+
+  it("英字は全角・半角、大文字・小文字を問わず一致する", () => {
+    expect(matchesSearch("ＬＩ ming", ["Li Ming"])).toBe(true);
+    expect(matchesSearch("LIMING", ["li　ming"])).toBe(true);
+    expect(matchesSearch("wang", ["Li Ming"])).toBe(false);
+  });
+
+  it("検索語が空（空白のみを含む）なら常に一致し、項目をまたいだ一致はしない", () => {
+    expect(matchesSearch("  　", ["abc"])).toBe(true);
+    expect(matchesSearch("abcdef", ["abc", "def"])).toBe(false);
+  });
+
+  it("applyFilter は氏名の表記の違いを吸収して絞り込む", () => {
+    const cases = [make({ id: "a", name: "リ メイ" }), make({ id: "b", name: "Wang Fang" })];
+    const ids = (query: string) => applyFilter(cases, { ...DEFAULT_FILTER, query }).map((r) => r.record.id);
+    expect(ids("ﾘﾒｲ")).toEqual(["a"]);
+    expect(ids("りめい")).toEqual(["a"]);
+    expect(ids("ＷＡＮＧ　fang")).toEqual(["b"]);
   });
 });

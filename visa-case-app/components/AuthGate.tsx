@@ -15,12 +15,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const onLogin = pathname === "/login";
+  // 再設定メールのリンク先は、未ログイン（リンクの期限切れ）でも、画面側で案内を出すため移動させない
+  const onReset = pathname === "/reset-password";
 
   useEffect(() => {
     if (!isSupabaseEnabled || demo) return;
-    if (session === null && !onLogin) router.replace("/login");
+    if (session === null && !onLogin && !onReset) router.replace("/login");
     if (session && onLogin) router.replace("/");
-  }, [session, onLogin, router, demo]);
+  }, [session, onLogin, onReset, router, demo]);
 
   if (isMisconfigured) {
     // 本番で設定に問題がある場合は、仮データ方式へ切り替えず、画面全体を停止する
@@ -55,6 +57,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
   if (session === undefined && failed) return <>{children}</>;
   if (session === undefined) return <p className="text-sm text-slate-500">読み込み中……</p>;
-  if (!session && !onLogin) return null;
+  if (!session && !onLogin && !onReset) return null;
   return <>{children}</>;
 }
