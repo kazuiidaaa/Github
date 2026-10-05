@@ -147,7 +147,7 @@ describe("fillHspPointExcel", () => {
     expect(names.some((n) => n.startsWith("A ") || n.startsWith("C "))).toBe(false);
     expect(names.some((n) => n.includes("疎明資料"))).toBe(true);
     const ws = sheetOf(wb, HSP_POINT_SHEETS.B.sheetName)!;
-    for (const r of HSP_POINT_SHEETS.B.rows) expect(String(ws.getCell(`${r.col ?? "AF"}${r.row}`).value), `row ${r.row}`).toBe([15, 20, 27].includes(r.row) ? "■" : "□");
+    for (const r of HSP_POINT_SHEETS.B.rows) expect(String(ws.getCell(`${r.col ?? "AF"}${r.row}`).value ?? ""), `row ${r.row}`).toBe(r.blankInTemplate ? "" : [15, 20, 27].includes(r.row) ? "■" : "□");
     expect(ws.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(70);
     expect(warnings.join("\n")).toContain("合計欄へ書き込みました");
     expect(warnings.join("\n")).toContain("単純合計は 70 点");
@@ -204,21 +204,20 @@ describe("fillHspPointExcel", () => {
     expect(String(ws.getCell("AF15").value)).toBe("□");
   });
 
-  it("B の資格（1つ・複数）は、択一で、選んだ欄を「■」、選ばない欄を「□」にする。点数は合計に含める", async () => {
+  it("B の資格（1つ・複数）は、ラジオボタン（フォーム部品）の欄のため、文字を書かず、様式上での選択を警告する。点数は合計に含める", async () => {
     const one = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27, 46]) });
     const ws1 = sheetOf(await open(one.buffer), HSP_POINT_SHEETS.B.sheetName)!;
-    expect(String(ws1.getCell("AF46").value)).toBe("■");
-    expect(String(ws1.getCell("AF48").value)).toBe("□");
+    expect(String(ws1.getCell("AF46").value ?? "")).toBe("");
+    expect(String(ws1.getCell("AF48").value ?? "")).toBe("");
     expect(ws1.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(35); // 年収 30 + 資格（1つ）5
+    expect(one.warnings.join("\n")).toContain("様式上で選択してください");
     const many = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27, 48]) });
     const ws2 = sheetOf(await open(many.buffer), HSP_POINT_SHEETS.B.sheetName)!;
-    expect(String(ws2.getCell("AF46").value)).toBe("□");
-    expect(String(ws2.getCell("AF48").value)).toBe("■");
+    expect(String(ws2.getCell("AF46").value ?? "")).toBe("");
+    expect(String(ws2.getCell("AF48").value ?? "")).toBe("");
     expect(ws2.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(40); // 年収 30 + 資格（複数）10
     const none = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27]) });
-    const ws3 = sheetOf(await open(none.buffer), HSP_POINT_SHEETS.B.sheetName)!;
-    expect(String(ws3.getCell("AF46").value)).toBe("□");
-    expect(String(ws3.getCell("AF48").value)).toBe("□");
+    expect(none.warnings.join("\n")).not.toContain("様式上で選択してください");
   });
 
   it("資格の「1つ」と「複数」を両方選ぶと、択一の重複として、合計欄を書き込まず、注意する", async () => {
