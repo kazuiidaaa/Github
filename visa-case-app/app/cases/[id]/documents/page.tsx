@@ -7,6 +7,8 @@ import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
 import { Badge, Button } from "@/components/ui";
 import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
+import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
+import { useDemo } from "@/lib/demo";
 import { splitHistory } from "@/lib/documents/history";
 import { officialFormScopeWarnings } from "@/lib/documents/officialForms";
 import {
@@ -28,6 +30,7 @@ export default function DocumentsPage() {
   const record = useCase(id);
   const storeLoaded = useStoreLoaded();
   const canEdit = useCan("edit");
+  const needsLogin = officialFormNeedsLogin(useDemo());
   const { documents, loaded, error } = useGeneratedDocuments(id);
   const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => !isOfficialForm(t)));
   const [busy, setBusy] = useState(false);
@@ -138,11 +141,13 @@ export default function DocumentsPage() {
             <label key={t} className="flex items-center gap-2">
               <input
                 type="checkbox"
+                disabled={isOfficialForm(t) && needsLogin}
                 checked={selected.includes(t)}
                 onChange={(e) => setSelected((s) => (e.target.checked ? [...s, t] : s.filter((x) => x !== t)))}
               />
               {DOCUMENT_TYPE_LABELS[t]}
               {isOfficialForm(t) && <span className="text-xs text-slate-500">（エクセル）</span>}
+              {isOfficialForm(t) && needsLogin && <span className="text-xs text-amber-900">{OFFICIAL_FORM_LOGIN_REQUIRED}</span>}
             </label>
           ))}
           <label className="flex items-center gap-2 text-slate-400">

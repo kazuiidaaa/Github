@@ -69,3 +69,14 @@
 * `generated_documents` は DB のトリガーにより更新できない。内容の訂正はできない。
 * `register_generated_file` により、エクセルの行にも、この `content_json` が複製される。
 * そのため、訂正・削除は、案件ごとの削除以外にできない（版や項目だけを消す手段はない）。
+
+## デモモードでの扱い（Issue #120）
+
+* **方針**：認証は弱めない。生成 API（`app/api/documents/official-form/route.ts`）は、Supabase 設定済みでは `X-Demo-Mode` を無視し、ログインのトークンを必須とする（#117）。この仕様は変更しない。
+* Supabase 設定済みの環境で、デモモード（ログインなし）のときは、公式様式（エクセル）を生成できない。画面側で、送信の前に止め、「公式様式（エクセル）の生成には、ログインが必要です。デモモードでは利用できません。」と案内する。
+  * `lib/documents/officialFormAccess.ts`：判定（`officialFormNeedsLogin`）と文言。
+  * `lib/documents/officialFormClient.ts`：判定に当てはまる場合は、`fetch` を呼ばずに `AppError` を投げる（保存済みの版の再ダウンロードにも効く）。
+  * 生成画面：公式申請様式のチェックを無効にし、同じ文言を表示する。ほかの文書は、従来どおり生成できる。
+  * 詳細画面：「エクセル出力」を無効にし、同じ文言を表示する。
+* **変えないもの**：Supabase 未設定のローカル環境のデモ動作（`X-Demo-Mode` を付けて送信する）。
+* テスト：`tests/officialFormDemoLogin.test.ts`。

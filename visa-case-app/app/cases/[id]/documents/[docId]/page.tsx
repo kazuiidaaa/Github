@@ -8,13 +8,16 @@ import { DocumentSheet } from "@/components/documents/DocumentSheet";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
 import { Button } from "@/components/ui";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
+import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
 import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
+import { useDemo } from "@/lib/demo";
 import { getConfirmerName, useCan, useCase } from "@/lib/store";
 
 export default function DocumentPreviewPage() {
   const { id, docId } = useParams<{ id: string; docId: string }>();
   const record = useCase(id);
   const canEdit = useCan("edit");
+  const needsLogin = officialFormNeedsLogin(useDemo());
   const { documents, loaded } = useGeneratedDocuments(id);
   const doc = documents.find((d) => d.id === docId);
   const [message, setMessage] = useState("");
@@ -108,7 +111,7 @@ export default function DocumentPreviewPage() {
               {OUTPUT_FORMAT_LABELS[doc.outputFormat]}をダウンロード
             </Button>
           ) : isOfficialForm(doc.documentType) ? (
-            <Button variant="secondary" disabled={busy || !canEdit} onClick={() => void file("xlsx")}>
+            <Button variant="secondary" disabled={busy || !canEdit || needsLogin} onClick={() => void file("xlsx")}>
               {busy ? "出力中……" : "エクセル出力"}
             </Button>
           ) : (
@@ -124,6 +127,9 @@ export default function DocumentPreviewPage() {
           <Button variant="secondary" onClick={() => window.print()}>
             印刷
           </Button>
+          {needsLogin && isOfficialForm(doc.documentType) && (
+            <span className="text-sm text-amber-900">{OFFICIAL_FORM_LOGIN_REQUIRED}</span>
+          )}
           {message && <span className="text-sm text-red-700">{message}</span>}
         </div>
       </div>
