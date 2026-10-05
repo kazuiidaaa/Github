@@ -2,7 +2,7 @@ import { evaluate } from "../requirements/evaluate";
 import { progressOf } from "../requirements/progress";
 import { sortChecks } from "../checks/definitions";
 import { buildTranscription } from "./formMapping";
-import { officialFormInputOf, officialFormSpecFor } from "./officialForms";
+import { HSP_POINT_FORM, officialFormInputOf, officialFormSpecFor } from "./officialForms";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type CaseRecord } from "../types";
 import {
   DOCUMENT_TYPE_LABELS,
@@ -134,6 +134,19 @@ export function buildContent(
           applicantConfirmed: c.applicant.confirmationStatus === "confirmed",
           warnings: [...officialFormWarnings],
           input: officialFormInputOf(c),
+        },
+        notices: [...OFFICIAL_FORM_NOTICES, NOTICES[1]],
+      };
+    case "hsp_point_sheet":
+      return {
+        ...base,
+        officialForm: {
+          kind: "hspPoint",
+          form: { ...HSP_POINT_FORM },
+          applicantConfirmed: c.applicant.confirmationStatus === "confirmed",
+          warnings: [...officialFormWarnings],
+          // 画面で編集中の内容を使う場合は、呼び出し側で input を差し替える（lib/documents/store.ts の saveHspPointSheet）
+          input: { ...officialFormInputOf(c), targetStatus: c.targetStatus },
         },
         notices: [...OFFICIAL_FORM_NOTICES, NOTICES[1]],
       };

@@ -1,4 +1,5 @@
 import { formatDate, formatDateTime } from "@/lib/format";
+import { hspSelectionSummary } from "@/lib/documents/hspSummary";
 import { eyebrowOf } from "@/lib/documents/model";
 import {
   DOCUMENT_TYPE_LABELS,
@@ -56,6 +57,7 @@ function ApplicantSection({ a }: { a: NonNullable<ContentJson["applicant"]> }) {
 }
 
 function OfficialFormSection({ o }: { o: NonNullable<ContentJson["officialForm"]> }) {
+  const hsp = o.kind === "hspPoint" ? hspSelectionSummary(o.input) : null;
   return (
     <>
       <Section title="対象の公式様式">
@@ -73,6 +75,36 @@ function OfficialFormSection({ o }: { o: NonNullable<ContentJson["officialForm"]
           <p key={w} className="text-sm font-medium text-amber-800">注意：{w}</p>
         ))}
       </Section>
+      {hsp && (
+        <Section title={`選択した項目（${hsp.sheetLabel}）`}>
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-100 text-left">
+                <th className="border border-slate-300 p-1.5">区分</th>
+                <th className="border border-slate-300 p-1.5">項目</th>
+                <th className="w-20 border border-slate-300 p-1.5">点数</th>
+                <th className="w-20 border border-slate-300 p-1.5">疎明資料</th>
+              </tr>
+            </thead>
+            <tbody>
+              {hsp.rows.map((r) => (
+                <tr key={`${r.section}-${r.label}`}>
+                  <td className="border border-slate-300 p-1.5">{r.section}</td>
+                  <td className="border border-slate-300 p-1.5">{r.label}</td>
+                  <td className="border border-slate-300 p-1.5">{r.points}</td>
+                  <td className="border border-slate-300 p-1.5">{r.evidence}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-sm">
+            印字点数の単純合計（目安）：<strong>{hsp.total}点</strong>（基準 {hsp.passPoints}点：{hsp.reachesPass ? "達しています" : "達していません"}）。該当の判断は、行政書士が資料で確認してください。
+          </p>
+          {hsp.notes.map((n) => (
+            <p key={n} className="text-sm font-medium text-amber-800">注意：{n}</p>
+          ))}
+        </Section>
+      )}
     </>
   );
 }

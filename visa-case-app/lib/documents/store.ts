@@ -16,6 +16,7 @@ import type {
   GeneratedDocumentStatus,
   GeneratedDocumentType,
   InternalDocumentType,
+  OfficialFormContent,
   OutputFormat,
 } from "./types";
 import { isOfficialForm } from "./types";
@@ -178,6 +179,47 @@ async function updateDraft(existing: GeneratedDocument, title: string, content: 
 }
 
 /**
+ * 画面の版を保存する。確認前の最新の版（同じ案件・同じ種類）があれば更新し、なければ新しい版を追加する。
+ * 更新した場合は updated が true。
+ */
+async function saveVersion(
+  caseId: string,
+  type: GeneratedDocumentType,
+  title: string,
+  content: ContentJson,
+): Promise<{ doc: GeneratedDocument; updated: boolean }> {
+  const draft = findEditableDraft(byCase[caseId] ?? [], caseId, type, "html");
+  if (draft) return { doc: await updateDraft(draft, title, content), updated: true };
+  let doc: GeneratedDocument;
+  if (usesSupabase()) {
+    const { data, error: e } = await db().rpc("create_generated_document", {
+      p_case_id: caseId,
+      p_document_type: type,
+      p_title: title,
+      p_content: content,
+    });
+    if (e) throw toAppError(e);
+    doc = fromRow(data as Row);
+  } else {
+    const all = readLocal();
+    const version = Math.max(0, ...all.filter((d) => d.caseId === caseId && d.documentType === type).map((d) => d.version)) + 1;
+    doc = {
+      id: newId(),
+      caseId,
+      outputFormat: "html",
+      documentType: type,
+      title,
+      version,
+      content,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+    };
+    writeLocal([...all, doc]);
+  }
+  return { doc, updated: false };
+}
+
+/**
  * 選択した種類の文書を、現在の案件情報から生成する。
  * 同じ種類・同じ出力形式に確認前の最新の版があれば、その版を更新する。
  * なければ（確認済み以降が最新の場合を含む）、新しい版として追加する。確認済み以降の版は上書きしない。
@@ -192,38 +234,9 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
       const official = isOfficialForm(type) ? await requestOfficialXlsx(record.procedureType, officialFormInputOf(record)) : undefined;
       const content = buildContent(record, type, new Date(), official?.warnings);
       const title = titleOf(record, type);
-      let doc: GeneratedDocument;
-      const draft = findEditableDraft(byCase[record.id] ?? [], record.id, type, "html");
-      if (draft) {
-        doc = await updateDraft(draft, title, content);
-      } else if (usesSupabase()) {
-        const { data, error: e } = await db().rpc("create_generated_document", {
-          p_case_id: record.id,
-          p_document_type: type,
-          p_title: title,
-          p_content: content,
-        });
-        if (e) throw toAppError(e);
-        doc = fromRow(data as Row);
-      } else {
-        const all = readLocal();
-        const version =
-          Math.max(0, ...all.filter((d) => d.caseId === record.id && d.documentType === type).map((d) => d.version)) + 1;
-        doc = {
-          id: newId(),
-          caseId: record.id,
-          outputFormat: "html",
-          documentType: type,
-          title,
-          version,
-          content,
-          status: "draft",
-          createdAt: new Date().toISOString(),
-        };
-        writeLocal([...all, doc]);
-      }
+      const { doc, updated } = await saveVersion(record.id, type, title, content);
       created.push(doc);
-      if (!draft) logAudit(record.id, "document_generated", { type, version: doc.version });
+      if (!updated) logAudit(record.id, "document_generated", { type, version: doc.version });
       if (official) {
         // 保存した版（画面）から、エクセルを新しい版として保存する。画面の版には、注意と出典が残る
         const xlsx = await exportFile(doc, "xlsx", official.blob);
@@ -238,6 +251,28 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
     }
   }
   return created;
+}
+
+/**
+ * 高度専門職のポイント計算表を、版として保存する（Issue #186）。
+ * 画面の版（入力値の写し）とエクセルを保存し、エクセルの版を返す。ダウンロードは、呼び出し側で downloadFile を使う。
+ * input は、画面で編集中の内容（案件へ保存する前でもよい）。確認前の最新の版があれば、更新する。
+ */
+export async function saveHspPointSheet(record: CaseRecord, input: OfficialFormContent["input"]): Promise<GeneratedDocument> {
+  const xlsx = await requestOfficialXlsx(record.procedureType, input, "hspPoint");
+  const base = buildContent(record, "hsp_point_sheet", new Date(), xlsx.warnings);
+  if (!base.officialForm) throw new AppError("文書の内容を作成できませんでした。");
+  const content: ContentJson = { ...base, officialForm: { ...base.officialForm, input: JSON.parse(JSON.stringify(input)) as typeof input } };
+  const { doc, updated } = await saveVersion(record.id, "hsp_point_sheet", titleOf(record, "hsp_point_sheet"), content);
+  const created: GeneratedDocument[] = [doc];
+  try {
+    if (!updated) logAudit(record.id, "document_generated", { type: "hsp_point_sheet", version: doc.version });
+    created.push(await exportFile(doc, "xlsx", xlsx.blob));
+    return created[created.length - 1];
+  } finally {
+    byCase = { ...byCase, [record.id]: mergeCreated(byCase[record.id] ?? [], created) };
+    emit();
+  }
 }
 
 /** 状態を変更する。内容（content_json）は変更しない */
@@ -308,7 +343,7 @@ async function buildFile(doc: GeneratedDocument): Promise<Blob> {
     // 保存した入力値の写しから作る（現在の案件情報は参照しない）
     const o = doc.content.officialForm;
     if (!o) throw new AppError("この版には、エクセルを作るための情報がありません。");
-    return (await requestOfficialXlsx(doc.content.case.procedureType, o.input)).blob;
+    return (await requestOfficialXlsx(doc.content.case.procedureType, o.input, o.kind === "hspPoint" ? "hspPoint" : undefined)).blob;
   }
   if (doc.outputFormat === "pdf") {
     const { buildPdf, loadJapaneseFont } = await import("./pdf");

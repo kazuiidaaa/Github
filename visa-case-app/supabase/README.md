@@ -108,3 +108,15 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 - `supabase/migrations/0020_draft_documents_update.sql`:確認前(draft)の版に限り、題名・内容・版番号の変更を許可します(`guard_generated_documents` の差し替え)。更新用の関数 `update_draft_generated_document` と、保管庫 `generated-documents` の上書き用ポリシーを追加します。0019 の実行後に SQL Editor で実行します。
 - 確認済み(reviewed)・提出済み(submitted)・保管(archived)の版は、内容も、保管庫のファイルも、変更できません。行の削除のポリシーは、設けないままです。
 - 実行しない場合、最新のアプリで再生成すると、確認前の版の更新に失敗します(新しい版の追加は従来どおりです)。既存のデータは変更しません。
+
+## 0021(生成文書:高度専門職ポイント計算表)
+
+- `supabase/migrations/0021_hsp_point_sheet.sql`:`generated_documents.document_type` の許可する値に `hsp_point_sheet` を追加します(制約の付け直しのみ。既存のデータ・ポリシー・トリガーは変更しません)。0020 の実行後に SQL Editor で実行します。
+- 実行しない場合、案件の「ポイント計算表」の「版として保存してダウンロード」が失敗します(「保存せずにダウンロード」は動作します)。
+- 実行前に、制約名が `generated_documents_document_type_check` であることを確認してください(0012 と同じ名称です)。
+
+  ```sql
+  select conname, pg_get_constraintdef(oid)
+  from pg_constraint
+  where conrelid = 'public.generated_documents'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%document_type%';
+  ```
