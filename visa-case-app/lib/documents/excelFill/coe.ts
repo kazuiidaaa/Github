@@ -12,7 +12,7 @@ import {
   COE_PURPOSE_LABELS,
   COE_SHEET_APPLICANT_1,
 } from "./coeMapping";
-import { COE_M_FILL_ITEMS, COE_M_MANUAL_ITEMS, COE_M_MAX_WORK_HISTORY, COE_M_PICK_ITEMS } from "./coeMappingM";
+import { COE_TABLE2, type Table2Mapping } from "./coeTable2";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
 
 const KEIEI_KANRI = "経営・管理";
@@ -31,19 +31,16 @@ export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
   U: officialPath("coe-application-form-U_930004059.xlsx"),
 };
 
-/** 差し込む範囲。n＝様式Nの全シート、m＝様式Mの全シート（経営・管理）、first＝第1表のみ */
-type FillScope = "n" | "m" | "first";
-
 /**
- * 差し込む範囲を決める。第2表以降（申請人用2・所属機関用）の対応表は、様式 N と M（経営・管理）だけなので、
- * それ以外の様式、および様式を特定できない高度専門職では、第1表だけを差し込む（他の様式の表を流用しない）。
- * 高度専門職ではない「経営・管理」は、様式 M を使う（Issue #191）。
+ * 差し込む範囲を決める。第2表以降（申請人用2以降・所属機関用）は、様式 N（coeMapping.ts）と、
+ * I・L・M・U（coeTable2.ts）の対応表がある。様式を特定できない高度専門職では、第1表だけを差し込む
+ * （他の様式の表を流用しない）。高度専門職ではない「経営・管理」は、様式 M を使う（Issue #191）。
  */
-function planFill(r: CoeFormResolution, targetStatus: string): { form: CoeFormCode; scope: FillScope } {
-  if (r.kind === "resolved") return { form: r.form, scope: r.form === "N" ? "n" : "first" };
-  if (r.kind !== "not_applicable") return { form: "N", scope: "first" };
-  if (targetStatus.trim() === KEIEI_KANRI) return { form: "M", scope: "m" };
-  return { form: "N", scope: "n" };
+function planFill(r: CoeFormResolution, targetStatus: string): { form: CoeFormCode; firstOnly: boolean } {
+  if (r.kind === "resolved") return { form: r.form, firstOnly: false };
+  if (r.kind !== "not_applicable") return { form: "N", firstOnly: true };
+  if (targetStatus.trim() === KEIEI_KANRI) return { form: "M", firstOnly: false };
+  return { form: "N", firstOnly: false };
 }
 
 /**
@@ -73,9 +70,10 @@ export async function fillCoeExcel(
   };
 
   const first = sheetKey(COE_SHEET_APPLICANT_1);
-  const firstOnly = <T extends { sheet: string }>(xs: T[]) => (plan.scope === "n" ? xs : xs.filter((x) => sheetKey(x.sheet) === first));
-  const fillItems = [...firstOnly(COE_FILL_ITEMS), ...(plan.scope === "m" ? COE_M_FILL_ITEMS : [])];
-  const pickItems = [...firstOnly(COE_PICK_ITEMS), ...(plan.scope === "m" ? COE_M_PICK_ITEMS : [])];
+  const table2 = plan.form === "N" ? null : COE_TABLE2[plan.form];
+  const firstOnly = <T extends { sheet: string }>(xs: T[]) => (table2 || plan.firstOnly ? xs.filter((x) => sheetKey(x.sheet) === first) : xs);
+  const fillItems = [...firstOnly(COE_FILL_ITEMS), ...(table2 && !plan.firstOnly ? table2.fill : [])];
+  const pickItems = [...firstOnly(COE_PICK_ITEMS), ...(table2 && !plan.firstOnly ? table2.pick : [])];
   for (const it of fillItems) {
     const value = it.get(ctx);
     if (value === "") continue;
@@ -89,18 +87,16 @@ export async function fillCoeExcel(
   }
 
   const buffer = Buffer.from(await wb.xlsx.writeBuffer());
-  return { buffer, warnings: buildWarnings(ctx, resolution, plan.scope) };
+  return { buffer, warnings: buildWarnings(ctx, resolution, plan.form === "N" || plan.firstOnly ? null : COE_TABLE2[plan.form]) };
 }
 
-function buildWarnings(c: FillCtx, resolution: CoeFormResolution, scope: FillScope): string[] {
+function buildWarnings(c: FillCtx, resolution: CoeFormResolution, table2: Table2Mapping | null): string[] {
   const w: string[] = [];
-  const maxWork = scope === "m" ? COE_M_MAX_WORK_HISTORY : COE_MAX_WORK_HISTORY;
-  if (scope === "m") {
-    w.push(`様式 M（経営・管理）の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${COE_M_MANUAL_ITEMS}。`);
+  const maxWork = table2 ? table2.maxWork : COE_MAX_WORK_HISTORY;
+  if (table2) {
+    w.push(`${table2.name}の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${table2.manual}。`);
   }
-  if (resolution.kind === "resolved" && resolution.form !== "N") {
-    w.push(`様式 ${resolution.form} の第2表以降は未対応です。第1表のみ差し込んでいます。第2表以降は、様式上で記入してください。`);
-  } else if (resolution.kind === "activity_missing" || resolution.kind === "unknown") {
+  if (resolution.kind === "activity_missing" || resolution.kind === "unknown") {
     w.push(`${describeCoeForm(resolution)}様式Nの第1表のみ差し込んでいます。使う様式を確認し、必要なら別の様式へ転記してください。`);
   }
   if (c.a.confirmationStatus !== "confirmed") {
