@@ -16,6 +16,7 @@
 | coe-application-form-L_930004032.xlsx | 認定申請書 様式 L(企業内転勤。高度専門職1号ロ)。同上 | https://www.moj.go.jp/isa/content/930004032.xlsx |
 | coe-application-form-M_930004034.xlsx | 認定申請書 様式 M(経営・管理。高度専門職1号ハ)。同上 | https://www.moj.go.jp/isa/content/930004034.xlsx |
 | coe-application-form-U_930004059.xlsx | 認定申請書 様式 U(法律・会計、医療。高度専門職1号ロ・ハ)。同上 | https://www.moj.go.jp/isa/content/930004059.xlsx |
+| points-calculation-table_930001673.xlsx | 高度専門職のポイント計算表(令和5年4月1日以降の参考書式。シート:A 第1号イ・B 第1号ロ・C 第1号ハ・疎明資料(基本例)・中小企業者の参考表。第2号と共用)。公式のxlsを、Excelで.xlsxに保存し直したもの(Issue #186)。差し込み元は未実装 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号 930001673) |
 | acquisition-application-form_930004121.xlsx | 在留資格取得許可申請書(別記第三十六号様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004121.xlsx |
 
 - 取得日:2026-10-02(更新の4資料)、2026-10-03(変更・認定・取得の3様式)
