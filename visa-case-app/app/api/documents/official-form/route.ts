@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { fillOfficialExcel } from "../../../../lib/documents/excelFill";
+import { fillHspPointExcel } from "../../../../lib/documents/excelFill/hspPoint";
 import { parseFillInput } from "../../../../lib/documents/excelFill/input";
 import { byteLength, checkSharedRateLimit, clientKey, createRateLimiter, isDeclaredTooLarge, MAX_BODY_BYTES } from "../../../../lib/documents/officialFormGuard";
 import { isSupabaseEnabled } from "../../../../lib/supabase";
@@ -59,7 +60,10 @@ export async function POST(req: Request) {
   const input = parseFillInput(raw);
   if (!input) return fail("入力の形式が正しくありません。", 400);
   try {
-    const { buffer, warnings } = await fillOfficialExcel(input);
+    // 高度専門職のポイント計算表（Issue #186）。手続種別の様式とは別の様式のため、form で切り替える。
+    // 使うシートを決める在留資格は、targetStatus で受ける（更新は、呼び出し側が現在の在留資格を入れる）
+    const isHspPoint = typeof raw === "object" && raw !== null && (raw as Record<string, unknown>).form === "hspPoint";
+    const { buffer, warnings } = isHspPoint ? await fillHspPointExcel(input.targetStatus ?? "", input.formDetails) : await fillOfficialExcel(input);
     return Response.json({ warnings, xlsxBase64: buffer.toString("base64") });
   } catch {
     // 内容（個人情報を含む）は、エラーメッセージに含めない
