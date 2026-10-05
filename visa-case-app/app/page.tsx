@@ -2,23 +2,14 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { HomeMetricCards } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
-import { applyFilter, DEFAULT_FILTER, summarize, type CaseRow, type Summary } from "@/lib/caseMetrics";
+import { applyFilter, DEFAULT_FILTER, summarize, type CaseRow } from "@/lib/caseMetrics";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 
 const LIST_SIZE = 5;
-
-/** 件数カード。移動先は、案件一覧の対応する絞り込み。 */
-const COUNTS: { label: string; field: keyof Summary; href: string }[] = [
-  { label: "確認待ち", field: "review", href: "/cases?status=review_required" },
-  { label: "書類待ち", field: "missingDocs", href: "/cases?missing=1" },
-  { label: "確認未了", field: "unconfirmed", href: "/cases?unconfirmed=1" },
-  { label: "申請前チェック待ち", field: "checksPending", href: "/cases?checks=1" },
-  { label: "申請準備完了", field: "ready", href: "/cases?status=application_ready" },
-  { label: "期限30日以内", field: "within30", href: "/cases?within30=1&sort=expiry" },
-];
 
 function CaseList({ rows, empty, showExpiry }: { rows: CaseRow[]; empty: string; showExpiry: boolean }) {
   if (rows.length === 0) {
@@ -78,25 +69,14 @@ export default function HomePage() {
       </div>
 
       {!loaded ? (
-        <p className="text-sm text-slate-500" role="status">
-          {error ? "案件を読み込めませんでした。時間をおいて再度お試しください。" : "読み込み中……"}
+        <p className="text-sm text-slate-500" role={error ? "alert" : "status"}>
+          {error ? "案件を読み込めませんでした。ページを再読み込みしてください。解決しない場合は、時間をおいて再度お試しください。" : "読み込み中……"}
         </p>
       ) : (
         <>
           <section aria-label="対応が必要な件数" className="mb-8">
             <h2 className="mb-3 text-sm text-slate-600">対応が必要な件数（{summary.total} 件中）</h2>
-            <div className="anim-stagger grid grid-cols-2 gap-3 md:grid-cols-6">
-              {COUNTS.map((c) => (
-                <Link
-                  key={c.field}
-                  href={c.href}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
-                >
-                  <span className="block text-xs text-slate-500">{c.label}</span>
-                  <span className="mt-1 block text-2xl font-semibold">{summary[c.field]}</span>
-                </Link>
-              ))}
-            </div>
+            <HomeMetricCards summary={summary} />
           </section>
 
           <div className="grid gap-8 md:grid-cols-2">

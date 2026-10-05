@@ -3,17 +3,21 @@
 import { EMPTY_FORM_DETAILS } from "@/lib/formDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmploymentFields, hasEmploymentDateError } from "@/components/EmploymentForm";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
+import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
+import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
 import { notApplicableMessage, shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
+import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
+  const toast = useToast();
   const canEdit = useCan("edit");
   const [caseName, setCaseName] = useState("");
   const [procedureType, setProcedureType] = useState<ProcedureType | "">("");
@@ -26,6 +30,68 @@ export default function NewCasePage() {
   const [employment, setEmployment] = useState<EmploymentInfo>({ ...EMPTY_EMPLOYMENT });
   const [groupName, setGroupName] = useState("");
   const [names, setNames] = useState<string[]>(["", "", ""]);
+
+  // 入力内容の保護（Issue #155）：離脱の警告と、まとめて登録の一時保存
+  const [restored, setRestored] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const allowLeave = useRef(false);
+  const dirty = isNewCaseDirty({ caseName, procedureType, currentStatus, targetStatus, memo, groupName, names, employment });
+
+  useEffect(() => {
+    // 同じタブでの再読み込み後に、前回の入力を復元する（サーバー描画との不一致を避けるため、表示後に読む）
+    const d = loadNewCaseDraft();
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (d) {
+      setBulk(true);
+      setProcedureType(d.procedureType as ProcedureType | "");
+      setCurrentStatus(d.currentStatus);
+      setTargetStatus(d.targetStatus);
+      setGroupName(d.groupName);
+      setNames(d.names);
+      setEmployment(d.employment);
+      setRestored(true);
+    }
+    setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || allowLeave.current) return;
+    if (bulk) {
+      saveNewCaseDraft({ procedureType, currentStatus, targetStatus, groupName, names, employment });
+    }
+  }, [hydrated, bulk, procedureType, currentStatus, targetStatus, groupName, names, employment]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (allowLeave.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
+  function leave() {
+    allowLeave.current = true;
+    clearNewCaseDraft();
+    router.push("/cases");
+  }
+
+  function clearInput() {
+    clearNewCaseDraft();
+    setRestored(false);
+    setProcedureType("");
+    setCurrentStatus("");
+    setTargetStatus("");
+    setMemo("");
+    setGroupName("");
+    setNames([...INITIAL_BULK_NAMES]);
+    setEmployment({ ...EMPTY_EMPLOYMENT });
+    setErrors({});
+  }
 
   const needsTarget = procedureNeedsTarget(procedureType);
   // 必要書類の判定（evaluate）と同じ基準で、規則が未整備かを判定する
@@ -80,12 +146,18 @@ export default function NewCasePage() {
       return id;
     };
 
+    // 作成に成功したら、離脱の警告を解除し、一時保存を消してから遷移する
+    allowLeave.current = true;
     if (bulk) {
       bulkNames.forEach(create);
+      clearNewCaseDraft();
+      toast.success(`${bulkNames.length}件の案件を作成しました`);
       router.push("/cases");
       return;
     }
     const id = create(caseName.trim());
+    clearNewCaseDraft();
+    toast.success("案件を作成しました");
     // 作成直後は、次に行う書類の登録へ誘導するため「書類」タブを開く
     router.push(`/cases/${id}?tab=documents`);
   }
@@ -103,7 +175,16 @@ export default function NewCasePage() {
 
   return (
     <div className="max-w-2xl">
-      <Link href="/cases" className="text-sm text-blue-700 hover:underline">
+      <Link
+        href="/cases"
+        className="text-sm text-blue-700 hover:underline"
+        onClick={(e) => {
+          if (dirty) {
+            e.preventDefault();
+            setLeaveOpen(true);
+          }
+        }}
+      >
         ← 案件一覧
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">新規案件作成</h1>
@@ -130,6 +211,14 @@ export default function NewCasePage() {
         <p className="mb-4 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
           同じ所属機関の複数の申請人について、手続種別と雇用・会社情報を1回入力し、人数分の案件をまとめて作成します。入管への申請は、申請人お一人につき1件の申請書が必要です。作成後の各案件は独立しており、以後は個別に編集します（案件間で情報は同期されません）。
         </p>
+      )}
+      {restored && (
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+          <span>前回の入力を復元しました。（案件メモは復元されません）</span>
+          <Button type="button" variant="secondary" onClick={clearInput}>
+            入力をクリア
+          </Button>
+        </div>
       )}
       <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
         {!bulk && (
@@ -198,12 +287,13 @@ export default function NewCasePage() {
           </>
         )}
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={() => router.push("/cases")}>
+          <Button type="button" variant="secondary" onClick={() => (dirty ? setLeaveOpen(true) : router.push("/cases"))}>
             キャンセル
           </Button>
           <Button type="submit">{bulk ? `${names.length}件を作成` : "作成"}</Button>
         </div>
       </form>
+      {leaveOpen && <ConfirmLeaveDialog onCancel={() => setLeaveOpen(false)} onConfirm={leave} />}
     </div>
   );
 }

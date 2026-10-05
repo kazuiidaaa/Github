@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { LoadingNotice } from "@/components/LoadingNotice";
 import { Badge, Button } from "@/components/ui";
 import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
 import { useDemo } from "@/lib/demo";
 import { splitHistory } from "@/lib/documents/history";
 import { officialFormScopeWarnings } from "@/lib/documents/officialForms";
+import { precheckRows, precheckWarnings } from "@/lib/documents/precheck";
 import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
@@ -35,8 +38,10 @@ export default function DocumentsPage() {
   const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => !isOfficialForm(t)));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [failure, setFailure] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [newIds, setNewIds] = useState<string[]>([]);
+  const [archiving, setArchiving] = useState<GeneratedDocument | null>(null);
   const historyRef = useRef<HTMLElement>(null);
   const knownIds = useRef<Set<string> | null>(null);
 
@@ -58,7 +63,7 @@ export default function DocumentsPage() {
     return () => clearTimeout(timer);
   }, [newIds]);
 
-  if (!record && !storeLoaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
+  if (!record && !storeLoaded) return <LoadingNotice />;
   if (!record) {
     return (
       <div>
@@ -77,31 +82,42 @@ export default function DocumentsPage() {
     currentStatus: record.currentStatus,
     residenceStatus: record.applicant.residenceStatus,
   });
-  const checksDone = record.checks.length > 0 ? `${unresolvedCount(record.checks)}件が未解決` : "未実施";
+  const rows = precheckRows({
+    applicantConfirmed: record.applicant.confirmationStatus === "confirmed",
+    hasRuleSet: !!ev.ruleSet,
+    requiredCount: ev.requiredCount,
+    receivedCount: ev.receivedCount,
+    checksTotal: record.checks.length,
+    checksUnresolved: unresolvedCount(record.checks),
+  });
+  const precheckNotes = precheckWarnings(rows);
 
   async function generate() {
     if (!record || selected.length === 0) return;
     setBusy(true);
-    setMessage("");
+    setMessage("生成中……");
+    setFailure("");
     knownIds.current = new Set(documents.map((d) => d.id));
     try {
       await generateDocuments(record, selected);
       setMessage("新しい版として生成しました。内容を確認してください。");
     } catch (e) {
       knownIds.current = null;
-      setMessage(`生成に失敗しました：${messageOf(e)}`);
+      setMessage("");
+      setFailure(`生成に失敗しました：${messageOf(e)}`);
     } finally {
       setBusy(false);
     }
   }
 
   async function archive(d: GeneratedDocument) {
-    if (!confirm(`${DOCUMENT_TYPE_LABELS[d.documentType]} v${d.version} を保管にします。よろしいですか。`)) return;
+    setArchiving(null);
     setMessage("");
+    setFailure("");
     try {
       await changeStatus(d, "archived", "");
     } catch (e) {
-      setMessage(`保管への変更に失敗しました：${messageOf(e)}`);
+      setFailure(`保管への変更に失敗しました：${messageOf(e)}`);
     }
   }
 
@@ -122,15 +138,19 @@ export default function DocumentsPage() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <h2 className="mb-3 font-semibold">データ状態</h2>
-        <dl className="grid grid-cols-[10rem_1fr] gap-y-2">
-          <dt className="text-slate-500">申請人情報</dt>
-          <dd>{record.applicant.confirmationStatus === "confirmed" ? "確認済み" : "下書き（未確認）"}</dd>
-          <dt className="text-slate-500">必要書類</dt>
-          <dd>
-            {ev.ruleSet ? `必要 ${ev.requiredCount} 件中 ${ev.receivedCount} 件が収集済み` : "規則の対象外（追加した書類のみ）"}
-          </dd>
-          <dt className="text-slate-500">申請前チェック</dt>
-          <dd>{checksDone}</dd>
+        <dl className="grid grid-cols-[9rem_1fr] items-center gap-y-3">
+          {rows.map((r) => (
+            <Fragment key={r.key}>
+              <dt className="text-slate-500">{r.label}</dt>
+              <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Badge tone={r.tone === "done" ? "green" : r.tone === "warn" ? "yellow" : "gray"}>{r.status}</Badge>
+                {r.detail && <span>{r.detail}</span>}
+                <Link href={`/cases/${record.id}?tab=${r.tab}`} className="text-blue-700 hover:underline">
+                  {r.unresolved ? "確認・対応する" : "開く"}
+                </Link>
+              </dd>
+            </Fragment>
+          ))}
         </dl>
       </section>
 
@@ -165,12 +185,28 @@ export default function DocumentsPage() {
             <OfficialFormNotice />
           </div>
         )}
+        {precheckNotes.length > 0 && (
+          <div role="note" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
+            <p>注意：次の事項が未解決です（生成はできます）。生成した書類は、行政書士が内容を確認してから使用してください。</p>
+            <ul className="mt-1 list-disc pl-5">
+              {precheckNotes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="mt-4 flex items-center gap-3">
           <Button onClick={() => void generate()} disabled={busy || selected.length === 0 || !canEdit}>
             {busy ? "生成中……" : "生成して保存"}
           </Button>
           {!canEdit && <span className="text-sm text-slate-600">閲覧のみの権限のため、生成できません。</span>}
-          {message && <span className="text-sm text-slate-600">{message}</span>}
+          {/* 結果の表示要素は、結果が出る前から画面に置く（後から追加すると読み上げられない場合があるため） */}
+          <span role="status" className="text-sm text-slate-600">
+            {message}
+          </span>
+          <span role="alert" className="text-sm text-red-700">
+            {failure}
+          </span>
         </div>
         <p className="mt-3 text-xs text-slate-500">再生成しても過去の版は上書きされず、新しい版として保存されます。</p>
       </section>
@@ -185,7 +221,11 @@ export default function DocumentsPage() {
             </label>
           )}
         </div>
-        {error && <p className="px-6 py-3 text-sm text-red-700">{error}</p>}
+        {error && (
+          <p role="alert" className="px-6 py-3 text-sm text-red-700">
+            {error}　ページを再読み込みしてください。
+          </p>
+        )}
         {loaded && documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">生成された文書はありません。</p>}
         {loaded && documents.length > 0 && visible.length === 0 && (
           <p className="px-6 py-6 text-sm text-slate-500">表示する版はありません。保管済みの版は、上の選択で表示できます。</p>
@@ -198,6 +238,7 @@ export default function DocumentsPage() {
             }`}
           >
             <span>
+              {newIds.includes(d.id) && <span className="sr-only">新しい版：</span>}
               <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
                 {DOCUMENT_TYPE_LABELS[d.documentType]} v{d.version}
               </Link>
@@ -212,7 +253,7 @@ export default function DocumentsPage() {
               </Badge>
               <span className="text-slate-500">{formatDateTime(d.createdAt)}</span>
               {canEdit && d.status !== "archived" && (
-                <Button variant="secondary" onClick={() => void archive(d)}>
+                <Button variant="secondary" onClick={() => setArchiving(d)}>
                   保管にする
                 </Button>
               )}
@@ -220,6 +261,16 @@ export default function DocumentsPage() {
           </div>
         ))}
       </section>
+      {archiving && (
+        <ConfirmDialog
+          title="書類を保管にする"
+          message={`${DOCUMENT_TYPE_LABELS[archiving.documentType]} v${archiving.version} を保管にします。一覧では初期状態で非表示になります。`}
+          note="「保管済みを表示」にすると、保管した版を見られます。画面から保管を取り消す操作はありません。操作の記録（監査ログ）が残ります。"
+          confirmLabel="保管にする"
+          onCancel={() => setArchiving(null)}
+          onConfirm={() => void archive(archiving)}
+        />
+      )}
     </div>
   );
 }

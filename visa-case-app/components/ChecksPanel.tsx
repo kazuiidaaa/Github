@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeadlineBanner } from "@/components/DeadlineBanner";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { missingChecks, sortChecks, unresolvedCount } from "@/lib/checks/definitions";
@@ -29,6 +30,7 @@ const TYPES: CheckType[] = ["applicant", "document", "deadline", "manual"];
 export function ChecksPanel({ record }: { record: CaseRecord }) {
   const [memo, setMemo] = useState(record.checkMemo);
   const [newName, setNewName] = useState("");
+  const [askingReady, setAskingReady] = useState(false);
   const [planned, setPlanned] = useState(record.plannedApplicationDate);
   const ready = record.workflowStatus === "application_ready";
   const unresolved = unresolvedCount(record.checks);
@@ -84,13 +86,13 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
     setNewName("");
   }
 
+  function onMarkReady() {
+    if (unresolved > 0) setAskingReady(true);
+    else markReady();
+  }
+
   function markReady() {
-    if (
-      unresolved > 0 &&
-      !confirm("未確認のチェックがあります。\nそれでも申請準備完了にしますか？")
-    ) {
-      return;
-    }
+    setAskingReady(false);
     updateCase(record.id, (c) => ({ ...c, checkMemo: memo, workflowStatus: "application_ready" }));
     logAudit(record.id, "application_ready_marked", { unresolved });
   }
@@ -183,10 +185,22 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={markReady} disabled={ready}>
+        <Button onClick={onMarkReady} disabled={ready}>
           {ready ? "申請準備完了です" : "申請準備完了にする"}
         </Button>
       </div>
+
+      {askingReady && (
+        <ConfirmDialog
+          title="未確認のチェックがあります"
+          message={`未確認のチェックが${unresolved}件あります。それでも案件を「申請準備完了」にします。`}
+          note="準備完了にした後でチェックを変更すると、案件の状態は「要確認」に戻ります。未確認の件数は、操作の記録（監査ログ）に残ります。"
+          confirmLabel="準備完了にする"
+          tone="caution"
+          onCancel={() => setAskingReady(false)}
+          onConfirm={markReady}
+        />
+      )}
     </div>
   );
 }

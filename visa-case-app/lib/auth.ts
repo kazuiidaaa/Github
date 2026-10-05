@@ -2,7 +2,8 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { clearDemoData, setDemo } from "./demo";
+import { clearDemoData, isDemo, localKey, setDemo } from "./demo";
+import { buildDemoSeedCases } from "./demoSeed";
 import { resetDocuments, DOCUMENTS_KEY } from "./documents/store";
 import { CASES_KEY, logAudit, resetStore } from "./store";
 import { supabase } from "./supabase";
@@ -58,10 +59,55 @@ export async function signIn(email: string, password: string): Promise<string | 
   }
 }
 
+/**
+ * 再設定メールの送信を依頼する。登録の有無は区別せず、成功扱いなら null を返す
+ * （メールアドレスの有無を、画面から推測できないようにするため）。接続不良・回数超過のみ文言を返す。
+ */
+export async function requestPasswordReset(email: string): Promise<string | null> {
+  if (!supabase) return "Supabase の接続情報が設定されていません。";
+  const trouble = "送信できませんでした。時間をおいて再度お試しください。";
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Supabase の「Redirect URLs」に、この URL の登録が必要
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (!error) return null;
+    if (error.status === 429 || !error.status || error.status >= 500) return trouble;
+    return null;
+  } catch {
+    return trouble;
+  }
+}
+
+/** 再設定メールのリンクから入った状態で、新しいパスワードを設定する。失敗時は表示用の文言を返す。 */
+export async function setNewPassword(next: string): Promise<string | null> {
+  if (!supabase) return "Supabase の接続情報が設定されていません。";
+  if (next.length < 8) return "新しいパスワードは8文字以上で入力してください。";
+  try {
+    const { error } = await supabase.auth.updateUser({ password: next });
+    if (error) return "パスワードを設定できませんでした。リンクの有効期限が切れたか、条件を満たしていない可能性があります。";
+    logAudit(null, "password_changed");
+    return null;
+  } catch {
+    return "サーバーに接続できません。時間をおいて再度お試しください。";
+  }
+}
+
+/** デモ用の保存領域にだけ、架空の案件を書き込む。ここへ来るのは startDemo の直後のみ（通常ログインでは呼ばれない） */
+function seedDemoCases() {
+  if (!isDemo()) return; // デモに切り替えられなかった場合は、通常の保存領域へ書かない
+  try {
+    localStorage.setItem(localKey(CASES_KEY), JSON.stringify(buildDemoSeedCases()));
+  } catch {
+    // 保存できない場合は、案件のない状態で開始する
+  }
+}
+
 /** デモモードを開始する。サーバーには接続せず、ブラウザ内の仮データで動作する。 */
 export function startDemo() {
   clearDemoData([CASES_KEY, DOCUMENTS_KEY]); // 前回の消去漏れがあれば取り除く
   setDemo(true); // 先に切り替える（resetStore が、切替後の方式で役割を初期化するため）
+  seedDemoCases();
   resetStore();
   resetDocuments();
 }

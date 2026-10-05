@@ -375,7 +375,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         <Button disabled={hasError} onClick={save}>
           保存
         </Button>
-        {saved && <span className="text-sm text-green-700">保存しました。</span>}
+        <span role="status" className="text-sm text-green-700">
+          {saved && "保存しました"}
+        </span>
       </div>
     </div>
   );
