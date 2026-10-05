@@ -39,6 +39,27 @@ export function createRateLimiter(limit: number, windowMs: number): RateLimiter 
   };
 }
 
+/** 共有ストア（Supabase の関数 check_rate_limit）を呼ぶ関数。戻り値は、上限内なら 0、超過なら待ち秒数 */
+export type SharedRateCall = () => PromiseLike<{ data: unknown; error: unknown }>;
+
+/**
+ * 共有ストアでのレート制限の判定。接続不能・想定外の応答の場合は、制限を止めて通す（機能の停止を避けるため）。
+ * ログには、内容を含まない固定の文言のみを残す。
+ */
+export async function checkSharedRateLimit(call: SharedRateCall): Promise<RateLimitResult> {
+  try {
+    const { data, error } = await call();
+    if (error || typeof data !== "number" || !Number.isFinite(data)) {
+      console.error("[official-form] レート制限の共有ストアを利用できないため、制限を適用せずに処理します。");
+      return { ok: true };
+    }
+    return data > 0 ? { ok: false, retryAfterSec: Math.max(1, Math.ceil(data)) } : { ok: true };
+  } catch {
+    console.error("[official-form] レート制限の共有ストアを利用できないため、制限を適用せずに処理します。");
+    return { ok: true };
+  }
+}
+
 /** 呼び出し元の識別。ログイン済みはユーザー ID、それ以外は IP（プロキシ経由の先頭） */
 export function clientKey(userId: string | null, headers: Headers): string {
   if (userId) return `user:${userId}`;

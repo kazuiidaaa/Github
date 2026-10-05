@@ -90,3 +90,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
   ```
 
   `cases_procedure_type_check` 以外の名前が返った場合は、その名前に合わせてファイルを読み替えてください。
+
+## 0018(公式様式の生成 API のレート制限)
+
+- `supabase/migrations/0018_rate_limits.sql`:集計表 `rate_limits`(利用者からの直接の読み書きは不可)と、関数 `check_rate_limit` を追加します。既存のデータへの影響はありません。0017 の実行後に SQL Editor で実行します。
+- 実行しない場合、レート制限は適用されません(共有ストアを利用できないときは、制限を止めて処理を続ける仕様のためです。公式様式の生成そのものは動作します)。
+- 古い行は、関数の呼び出し時に一部の確率で削除します(1時間より前の窓)。
