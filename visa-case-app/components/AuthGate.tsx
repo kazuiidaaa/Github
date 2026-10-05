@@ -25,7 +25,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (isMisconfigured) {
     // 本番で設定に問題がある場合は、仮データ方式へ切り替えず、画面全体を停止する
     return (
-      <div role="alert" className="mx-auto max-w-lg rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+      <div role="alert" className="mx-auto max-w-lg rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800">
         <p className="mb-2 font-semibold">環境設定に問題があるため、利用を停止しています</p>
         <ul className="list-disc pl-5">
           {configIssues.map((i) => (
@@ -39,14 +39,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!isSupabaseEnabled || demo) return <>{children}</>;
   if (session === undefined && failed && !onLogin) {
     return (
-      <div role="alert" className="mx-auto max-w-lg rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+      <div role="alert" className="mx-auto max-w-lg rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800">
         <p className="mb-2 font-semibold">ログイン状態を確認できませんでした</p>
         <p>通信に問題がある可能性があります。再読み込みするか、ログイン画面からやり直してください。</p>
         <div className="mt-3 flex gap-3">
-          <button type="button" onClick={() => window.location.reload()} className="rounded border border-red-300 px-3 py-1">
+          <button type="button" onClick={() => window.location.reload()} className="rounded-full border border-red-300 px-3 py-1 font-bold">
             再読み込み
           </button>
-          <Link href="/login" className="rounded bg-red-700 px-3 py-1 text-white">
+          <Link href="/login" className="rounded-full bg-red-700 px-3 py-1 font-bold text-white">
             ログイン画面へ
           </Link>
         </div>

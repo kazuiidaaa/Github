@@ -4,7 +4,7 @@ import { useState } from "react";
 import { countActiveFilters, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS } from "@/lib/types";
 
-const select = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm";
+const select = "rounded-xl border border-line-strong bg-white px-3 py-2 text-sm";
 
 export function CaseFilters({
   filter,
@@ -24,7 +24,7 @@ export function CaseFilters({
     <div className="mb-4 space-y-3">
       <div className="flex flex-wrap gap-3">
         <input
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm md:w-72"
+          className="w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm md:w-72"
           placeholder="案件名・氏名・在留資格で検索"
           aria-label="案件名・氏名・在留資格で検索"
           value={filter.query}
@@ -32,7 +32,7 @@ export function CaseFilters({
         />
         <button
           type="button"
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm md:hidden"
+          className="rounded-xl border border-line-strong bg-white px-3 py-2 text-sm md:hidden"
           aria-expanded={open}
           aria-controls="case-filter-panel"
           onClick={() => setOpen((v) => !v)}

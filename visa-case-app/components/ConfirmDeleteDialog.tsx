@@ -20,8 +20,8 @@ export function ConfirmDeleteDialog({
   // 削除の処理中は、Escape で閉じない
   useDialogA11y(dialogRef, () => !busy && onCancel());
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="del-title" className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm anim-fade-in">
+      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="del-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl anim-pop-in">
         <h2 id="del-title" className="text-lg font-semibold">
           案件の削除
         </h2>

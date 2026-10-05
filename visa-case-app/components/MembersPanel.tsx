@@ -51,7 +51,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="mb-2 font-semibold">メンバー管理</h2>
       <p className="mb-4 text-xs text-slate-500">
         所有者：すべての操作。管理者：案件の削除とメンバーの追加・削除（担当者・閲覧のみ）。担当者：案件の作成・編集（削除は不可）。閲覧のみ：閲覧だけ。
@@ -86,7 +86,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
               <td className="md:table-cell md:px-3 md:py-2">
                 {myRole === "owner" ? (
                   <select
-                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                    className="rounded-xl border border-line-strong bg-white px-2 py-1 text-sm"
                     aria-label={`${m.email}の役割`}
                     value={m.role}
                     disabled={busy}

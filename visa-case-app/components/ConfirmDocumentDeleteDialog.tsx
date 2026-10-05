@@ -13,8 +13,8 @@ export function ConfirmDocumentDeleteDialog({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="del-doc-title" className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm anim-fade-in">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="del-doc-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl anim-pop-in">
         <h2 id="del-doc-title" className="text-lg font-semibold">
           書類の削除
         </h2>

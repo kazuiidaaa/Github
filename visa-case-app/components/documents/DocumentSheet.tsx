@@ -130,7 +130,7 @@ export function DocumentSheet({ doc }: { doc: GeneratedDocument }) {
   const type = doc.documentType;
   const confirmed = doc.status !== "draft";
   return (
-    <article className="mx-auto max-w-[210mm] bg-white p-8 text-slate-900 shadow-sm print:shadow-none">
+    <article className="paper mx-auto max-w-[210mm] bg-white p-8 text-slate-900 shadow-sm print:shadow-none">
       <header className="mb-6 border-b-2 border-slate-800 pb-3">
         <p className="text-xs text-slate-500">
           {eyebrowOf(type)}

@@ -102,7 +102,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
     <div className="space-y-6">
       <DeadlineBanner date={record.applicant.residenceExpiryDate} />
 
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
         <p className="flex items-center gap-2">
           状態：
           <Badge tone={ready ? "green" : "yellow"}>{ready ? "申請準備完了" : "未完了"}</Badge>
@@ -132,7 +132,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         const items = sorted.filter((k) => k.type === type);
         if (items.length === 0 && type !== "manual") return null;
         return (
-          <section key={type} className="rounded-lg border border-slate-200 bg-white">
+          <section key={type} className="rounded-2xl border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">{CHECK_TYPE_LABELS[type]}</h2>
             <ul className="divide-y divide-slate-100">
               {items.map((k) => (
@@ -167,7 +167,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         );
       })}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-2 font-semibold">行政書士メモ</h2>
         <textarea
           className={inputClass}
@@ -178,7 +178,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         />
       </section>
 
-      <div className="rounded-md bg-slate-100 p-4 text-xs leading-relaxed text-slate-700">
+      <div className="rounded-xl bg-slate-100 p-4 text-xs leading-relaxed text-slate-700">
         申請準備完了は、当事務所内の確認状態を示すものです。申請の可否、許可の見込み、必要書類の最終判断を保証するものではありません。
       </div>
 
@@ -213,7 +213,7 @@ function CheckRow({
           <p className={`mt-1 text-xs ${ref.tone === "warn" ? "text-amber-800" : "text-slate-500"}`}>参考：{ref.text}</p>
         )}
         <input
-          className="mt-2 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+          className="mt-2 w-full rounded-xl border border-line-strong px-2 py-1 text-xs"
           placeholder="メモ"
           aria-label={`${check.name} メモ`}
           value={note}
@@ -224,7 +224,7 @@ function CheckRow({
       </div>
       <div className="flex items-start gap-2">
         <select
-          className="rounded-md border border-slate-300 bg-white px-2 py-1"
+          className="rounded-xl border border-line-strong bg-white px-2 py-1"
           aria-label={`${check.name} 状態`}
           value={check.status}
           onChange={(e) => onPatch(check.key, { status: e.target.value as CheckStatus })}

@@ -149,9 +149,9 @@ function CasesView() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">案件一覧</h1>
         {canEdit && (
-          <Link href="/cases/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-          新規案件
-        </Link>
+          <Link href="/cases/new" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover">
+            新規案件
+          </Link>
         )}
       </div>
       {loaded && <DashboardCards summary={summary} active={activeCard(filter)} onSelect={(k) => go(cardFilter(k))} />}
@@ -167,13 +167,13 @@ function CasesView() {
           </p>
           {!canEdit && <p className="mb-2 text-xs text-slate-500">閲覧のみの権限のため、アップロードはできません。</p>}
           {empty ? (
-            <p className="rounded-lg border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+            <p className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
               {loaded && cases.length > 0 && pendingCount === 0 ? "在留カードが未登録の案件はありません。" : empty}
             </p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="anim-stagger space-y-3">
               {rows.map(({ record: c }) => (
-                <li key={c.id} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 text-sm md:grid-cols-[1fr_2fr] md:items-center">
+                <li key={c.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm md:grid-cols-[1fr_2fr] md:items-center">
                   <div>
                     <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
                       {c.caseName}
@@ -190,20 +190,20 @@ function CasesView() {
       )}
       {!filter.noCard && (
         <>
-      <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
-              <th className="px-4 py-3">案件名</th>
-              <th className="px-4 py-3">申請人氏名</th>
-              <th className="px-4 py-3">手続種別</th>
-              <th className="px-4 py-3">在留資格</th>
-              <th className="px-4 py-3">在留期限</th>
-              <th className="px-4 py-3">状況</th>
-              <th className="px-4 py-3">最終更新</th>
+              <th className="whitespace-nowrap px-4 py-3">案件名</th>
+              <th className="whitespace-nowrap px-4 py-3">申請人氏名</th>
+              <th className="whitespace-nowrap px-4 py-3">手続種別</th>
+              <th className="whitespace-nowrap px-4 py-3">在留資格</th>
+              <th className="whitespace-nowrap px-4 py-3">在留期限</th>
+              <th className="whitespace-nowrap px-4 py-3">状況</th>
+              <th className="whitespace-nowrap px-4 py-3">最終更新</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="anim-stagger">
             {empty && (
               <tr>
                 <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
@@ -215,7 +215,7 @@ function CasesView() {
                   )}
                   {loaded && cases.length === 0 && canEdit && (
                     <div className="mt-4">
-                      <Link href="/cases/new" className="inline-block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+                      <Link href="/cases/new" className="inline-block rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-text hover:bg-accent-hover">
                         新規案件
                       </Link>
                     </div>
@@ -224,7 +224,7 @@ function CasesView() {
               </tr>
             )}
             {rows.map(({ record: c, metrics: m }) => (
-              <tr key={c.id} className="border-t border-slate-100 align-top hover:bg-slate-50">
+              <tr key={c.id} className="border-t border-slate-100 align-top hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-medium">
                   <Link href={`/cases/${c.id}`} className="text-blue-700 hover:underline">
                     {c.caseName}
@@ -250,9 +250,9 @@ function CasesView() {
       </div>
 
       {/* 狭い画面幅（md 未満）では、表に代えてカード形式で表示する */}
-      <ul className="space-y-3 md:hidden">
+      <ul className="anim-stagger space-y-3 md:hidden">
         {empty && (
-          <li className="rounded-lg border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+          <li className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
             {empty}
             {loaded && cases.length > 0 && active && (
               <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
@@ -261,7 +261,7 @@ function CasesView() {
             )}
             {loaded && cases.length === 0 && canEdit && (
               <div className="mt-4">
-                <Link href="/cases/new" className="inline-block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
+                <Link href="/cases/new" className="inline-block rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-text hover:bg-accent-hover">
                   新規案件
                 </Link>
               </div>
@@ -269,7 +269,7 @@ function CasesView() {
           </li>
         )}
         {rows.map(({ record: c, metrics: m }) => (
-          <li key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+          <li key={c.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
             <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
               {c.caseName}
             </Link>

@@ -33,7 +33,7 @@ export function CustomRequirementForm({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <Field label="書類名" required error={error}>
         <input className={inputClass} value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
       </Field>

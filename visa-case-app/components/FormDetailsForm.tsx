@@ -21,7 +21,7 @@ type TextKey = {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="font-semibold">{title}</h2>
       {hint && <p className="mb-4 mt-1 text-xs text-slate-500">{hint}</p>}
       <div className={`grid gap-4 md:grid-cols-2 ${hint ? "" : "mt-4"}`}>{children}</div>
@@ -131,14 +131,14 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
 
   return (
     <div className="max-w-4xl space-y-6">
-      <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-900">
+      <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
         公式の{layout.formName}の項目のうち、他の画面にない項目です。入力した内容は「転記補助シート」に載ります。
         旅券番号、犯罪を理由とする処分の内容、親族の情報などの個人情報を含むため、必要な項目のみ入力してください。
         項目名の番号は、公式様式の項番です。
       </p>
 
       {errorFields.length > 0 && (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <p className="font-medium">入力内容に {errorFields.length} 件の誤りがあります。修正するまで保存できません。</p>
           <ul className="mt-1 list-disc pl-5">
             {errorFields.map((k) => (
@@ -151,7 +151,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {warnings.length > 0 && (
-        <div role="status" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <ul className="list-disc pl-5">
             {warnings.map((w) => (
               <li key={w}>{w}</li>
@@ -179,7 +179,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
           // 希望する在留資格は、案件情報の targetStatus を表示するのみ（二重入力を避ける）
           <div>
             <Field label={layout.desiredStatusLabel} hint={`案件情報の「${layout.desiredStatusCaseLabel ?? "希望する在留資格"}」です。この画面では入力しません。`}>
-              <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                 <span className="font-medium">{record.targetStatus || "未設定"}</span>
                 {onGoOverview && (
                   <button type="button" onClick={onGoOverview} className="text-xs underline">
@@ -227,13 +227,13 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {layout.sectionTitles.relatives && (
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">{layout.sectionTitles.relatives}</h2>
         <div className="mt-4 max-w-xs">{select("relativesPresent", [["yes", "有"], ["no", "無"]], "有無")}</div>
         {form.relativesPresent === "yes" && (
           <div className="mt-4 space-y-4">
             {form.relatives.map((r, i) => (
-              <div key={r.id} className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-3">
+              <div key={r.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-3">
                 <p className="text-xs font-medium text-slate-500 md:col-span-3">{i + 1} 人目</p>
                 <Field label="続柄">
                   <input className={inputClass} value={r.relationship} onChange={(e) => updateRelative(r.id, { relationship: e.target.value })} />
@@ -321,11 +321,11 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {layout.sectionTitles.workHistory && (
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">{layout.sectionTitles.workHistory}</h2>
         <div className="mt-4 space-y-3">
           {form.workHistory.map((w) => (
-            <div key={w.id} className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-4">
+            <div key={w.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-4">
               <Field label="入社（年月）">
                 <input className={inputClass} placeholder="YYYY-MM" value={w.joinedOn} onChange={(e) => updateWork(w.id, { joinedOn: e.target.value })} />
               </Field>

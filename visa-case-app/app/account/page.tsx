@@ -17,7 +17,7 @@ export default function AccountPage() {
   const demo = useDemo();
   if (!isSupabaseEnabled || demo) {
     return (
-      <div className="max-w-xl rounded-lg border border-slate-200 bg-white p-6 text-sm">
+      <div className="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <h1 className="mb-2 text-xl font-semibold">アカウント</h1>
         <p className="text-slate-600">
           仮データ方式で動作しているため、ログインとアカウントの機能は使用できません。Supabase の接続情報を設定すると、この画面が有効になります。
@@ -98,12 +98,12 @@ function AccountContent() {
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">アカウント</h1>
       {error && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">
           {error}
         </p>
       )}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 font-semibold">アカウント情報</h2>
         {info ? (
           <dl className="grid grid-cols-[10rem_1fr] gap-y-3 text-sm">
@@ -128,7 +128,7 @@ function AccountContent() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 font-semibold">事務所名</h2>
         <div className="flex items-end gap-3">
           <div className="flex-1">
@@ -147,7 +147,7 @@ function AccountContent() {
         <MembersPanel myRole={info.role} myUserId={info.userId} onChanged={() => void listAudit().then(setAudit)} />
       )}
 
-      <form onSubmit={savePassword} className="space-y-4 rounded-lg border border-slate-200 bg-white p-6">
+      <form onSubmit={savePassword} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">パスワードの変更</h2>
         <Field label="現在のパスワード">
           <input type="password" required autoComplete="current-password" className={inputClass} value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
@@ -168,7 +168,7 @@ function AccountContent() {
         </Button>
       </form>
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">監査ログ（直近100件）</h2>
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">

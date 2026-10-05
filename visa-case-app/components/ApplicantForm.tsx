@@ -137,7 +137,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
         {doc ? (
           <Original doc={doc} />
         ) : (
@@ -150,7 +150,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
         )}
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-semibold">申請人情報</h2>
           <Badge tone={confirmed ? "green" : "yellow"}>{confirmed ? "確認済み" : "下書き"}</Badge>
@@ -159,7 +159,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           原本を確認しながら入力してください。自動読み取りは行いません。確認済みにした値が、正式な申請人情報になります。
         </p>
         {errorFields.length > 0 && (
-          <div role="alert" className="mb-5 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             <p className="font-medium">入力内容に {errorFields.length} 件の誤りまたは未入力があります。</p>
             <ul className="mt-1 list-disc pl-5">
               {errorFields.map((k) => (
@@ -190,7 +190,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           {text("workRestriction", "就労制限", { placeholder: "例：就労制限なし" })}
         </div>
 
-        <div className="mt-6 rounded-md bg-slate-50 p-4 text-sm">
+        <div className="mt-6 rounded-xl bg-slate-50 p-4 text-sm">
           {confirmed ? (
             <>
               <p className="text-green-700">

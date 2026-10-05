@@ -37,7 +37,7 @@ function CellLabel({ children }: { children: string }) {
   return <span className="mb-1 block text-xs text-slate-500 md:hidden">{children}</span>;
 }
 
-const selectClass = "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs";
+const selectClass = "rounded-xl border border-line-strong bg-white px-2 py-1 text-xs";
 
 function StatusSelect({ label, value, onChange }: { label: string; value: RequirementStatus; onChange: (v: RequirementStatus) => void }) {
   return (
@@ -128,7 +128,7 @@ export function RequirementsPanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-md bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
+      <div className="rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
         <p className="font-medium">
           表示される書類は管理用の候補です。申請時の必要書類は、最新の公式案内および個別案件を確認してください。
         </p>
@@ -153,10 +153,10 @@ export function RequirementsPanel({
         )}
       </div>
 
-      {!ev.ruleSet && <p className="rounded-md bg-slate-100 p-4 text-sm text-slate-700">{ev.notApplicableReason}</p>}
+      {!ev.ruleSet && <p className="rounded-xl bg-slate-100 p-4 text-sm text-slate-700">{ev.notApplicableReason}</p>}
 
       {ev.ruleSet && ev.needsCategory && (
-        <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           所属機関のカテゴリーが未入力のため、全カテゴリー共通の書類のみ表示しています。
           <button onClick={onGoEmployment} className="ml-2 underline">
             「雇用・会社」タブで入力する
@@ -165,12 +165,12 @@ export function RequirementsPanel({
       )}
 
       {ev.ruleSet && ev.needsCause && (
-        <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           取得の事由が未選択のため、全事由に共通の書類のみ表示しています。事由別の書類は、事由の選択後に判定します（「公式様式項目」タブで取得の事由を選択）。
         </p>
       )}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
         <p>
           必要書類：{progress.requiredCount}件／受領済み：{progress.receivedCount}件／
           <span className={progress.missing.length > 0 ? "font-semibold text-red-700" : "text-green-700"}>不足：{progress.missing.length}件</span>
@@ -187,7 +187,7 @@ export function RequirementsPanel({
                 </li>
               ))}
             </ul>
-            <button onClick={() => void copyMissing()} className="mt-2 rounded-md border border-slate-300 px-3 py-1 hover:bg-slate-50">
+            <button onClick={() => void copyMissing()} className="mt-2 rounded-full border border-line-strong px-3 py-1 font-bold hover:bg-slate-50">
               不足書類をコピー
             </button>
             {copied && <span className="ml-2 text-green-700">コピーしました。</span>}
@@ -196,7 +196,7 @@ export function RequirementsPanel({
       </section>
 
       {ev.ruleSet && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white md:overflow-x-auto">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
           <table className={TABLE_CLASS}>
             <thead className={THEAD_CLASS}>
               <tr>
@@ -238,7 +238,7 @@ export function RequirementsPanel({
           <p className="text-sm text-slate-500">規則にない書類は、「書類を追加」から登録できます。</p>
         )}
         {record.customRequirements.length > 0 && (
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white md:overflow-x-auto">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
             <table className={TABLE_CLASS}>
               <thead className={THEAD_CLASS}>
                 <tr>
@@ -387,7 +387,7 @@ function Row({
         </select>
         {state.override && (
           <input
-            className="mt-2 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+            className="mt-2 w-full rounded-xl border border-line-strong px-2 py-1 text-xs"
             placeholder="理由を記録"
             value={note}
             onChange={(e) => setNote(e.target.value)}
