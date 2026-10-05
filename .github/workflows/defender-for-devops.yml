@@ -48,7 +48,7 @@ jobs:
           5.0.x
           6.0.x
     - name: Run Microsoft Security DevOps
-      uses: microsoft/security-devops-action@v1.6.0
+      uses: microsoft/security-devops-action@v1.12.0
       id: msdo
       with:
         # eslint はリポジトリ直下に設定が無く失敗するため除外（アプリの lint は visa-case-app 側で実施）
