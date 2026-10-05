@@ -1,4 +1,4 @@
-// 高度専門職ポイント計算表（docs/official/hsp-point-calculation-sheet_930001673.xlsx）の、チェック欄（□）の一覧。
+// 高度専門職ポイント計算表（docs/official/points-calculation-table_930001673.xlsx）の、チェック欄（□）の一覧。
 // シート（A＝1号イ、B＝1号ロ、C＝1号ハ）の「AF列のロック解除セル」から生成した（Issue #186）。様式が改正されたら、再生成して、試験（hspPoint.test.ts）で照合する。
 // points は、様式に印字された点数。印字がない・複数項目の組み合わせで決まるもの（研究実績の2つ以上など）は null。
 

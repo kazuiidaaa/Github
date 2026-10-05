@@ -40,7 +40,7 @@ A＝高度専門職第1号イ、B＝同ロ、C＝同ハ。1号の各シートは
 番号と細目は、計算表の注記が正であり、改正され得る。案件ごとの確認は、行政書士が行う。
 
 ## ポイント計算表の入力と差し込み（Issue #186）
-- 差し込み元：`docs/official/hsp-point-calculation-sheet_930001673.xlsx`（`.xls` を Excel で保存し直したもの。`.xls` は参照用）。
+- 差し込み元：`docs/official/points-calculation-table_930001673.xlsx`（`.xls` を Excel で保存し直したもの。`.xls` は参照用）。
 - チェック欄の定義：`lib/hspPointRows.ts`（A＝1号イ、B＝1号ロ、C＝1号ハ。各シートの AF 列のロック解除セル□を、項目名・印字点数・疎明資料の番号とともに持つ）。`lib/documents/excelFill/hspPoint.test.ts` が、全行が実在の□を指すこと、定義に漏れがないことを照合する。様式が改正されたら、再生成して照合する。
 - 保存：`FormDetails.hspPointSheet`（2号・号が未選択のときに、使うシートを選ぶ）と `hspPointChecks`（「シート:行」の一覧。例：「B:20」）。DB の変更はない（JSON）。
 - 画面：案件の「申請書の補足情報」に、高度専門職の案件のとき「高度専門職のポイント計算表」を表示する（`components/HspPointSection.tsx`）。号から使うシートが決まり、2号・号が未選択のときは、シートを選ぶ。認定・変更は希望する在留資格、更新は現在の在留資格で判定する。

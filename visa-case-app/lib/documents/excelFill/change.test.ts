@@ -282,6 +282,13 @@ describe("fillChangeExcel", () => {
     expect(warnings.join("\n")).toContain("変更後の在留資格に合う様式");
   });
 
+  it("号つきの高度専門職は、項目13にそのまま入り、様式の対象外を警告する（Issue #181）", async () => {
+    const hsp = "高度専門職（1号ロ）";
+    const { buffer, warnings } = await fillChangeExcel(applicant, employment, details, hsp);
+    expect(text(await open(buffer), S1, "I45")).toBe(hsp);
+    expect(warnings.join("\n")).toContain("変更後の在留資格に合う様式");
+  });
+
   it("様式の欄に収まらない・形式が合わない入力は、警告する", async () => {
     const relatives = Array.from({ length: 7 }, (_, i) => ({ ...details.relatives[0], id: `r${i}` }));
     const { warnings } = await fillChangeExcel(

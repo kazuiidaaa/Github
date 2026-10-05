@@ -5,7 +5,7 @@ import { HSP_POINT_SHEETS, checkedRows, estimateHspPoints, resolveHspPointSheet,
 import { sheetKey } from "./renewalMapping";
 
 /** 差し込み元テンプレート（高度専門職ポイント計算表。リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
-export const HSP_POINT_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "hsp-point-calculation-sheet_930001673.xlsx");
+export const HSP_POINT_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "points-calculation-table_930001673.xlsx");
 
 const CHECK_COLUMN = "AF";
 
