@@ -1,0 +1,44 @@
+# テスト・lint・型検査・ビルドを自動実行する（Issue #177）
+# 実装者の手元の結果に頼らず、PR の画面から、品質の検査結果を確認できるようにする。
+# 運用方針：導入の初期は、警告のみ（失敗扱いにしない）。main で全件の成功を確認した後に、
+# ブランチ保護で必須の検査に加える（visa-case-app/docs/ci.md）。秘密情報は使わない。
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: lint・型検査・ビルド・テスト
+    runs-on: ubuntu-latest
+    # 警告のみ。main で全件の成功を確認した後に、削除して必須とする
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: visa-case-app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          # @types/node（^22）と、手元で確認済みの 22 系に合わせる
+          node-version: 22
+          cache: npm
+          cache-dependency-path: visa-case-app/package-lock.json
+      - name: 依存関係の導入
+        run: npm ci
+      - name: lint
+        run: npm run lint
+      # 型定義（LayoutProps など）は next build が生成するため、型検査は build の後に行う
+      # 環境変数（NEXT_PUBLIC_SUPABASE_*）は設定しない。未設定のままで build が通ることを手元で確認済み
+      - name: ビルド
+        run: npm run build
+      - name: 型検査
+        run: npx tsc --noEmit
+      - name: テスト
+        run: npm test
