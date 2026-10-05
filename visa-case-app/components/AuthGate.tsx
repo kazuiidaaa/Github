@@ -15,8 +15,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const onLogin = pathname === "/login";
-  // 再設定メールのリンク先は、未ログイン（リンクの期限切れ）でも、画面側で案内を出すため移動させない
-  const onReset = pathname === "/reset-password";
+  // 再設定メールのリンク先は、未ログイン（リンクの期限切れ）でも、画面側で案内を出すため移動させない。「ご利用にあたって」（/about）も、ログイン前に読めるようにする
+  const onReset = pathname === "/reset-password" || pathname === "/about";
 
   useEffect(() => {
     if (!isSupabaseEnabled || demo) return;

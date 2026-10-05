@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import { AuthGate } from "@/components/AuthGate";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PageTransition } from "@/components/PageTransition";
 import { StoreErrorBanner } from "@/components/StoreErrorBanner";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <PageTransition>{children}</PageTransition>
             </AuthGate>
           </main>
+          <Footer />
         </ToastProvider>
       </body>
     </html>
