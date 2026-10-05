@@ -1,0 +1,13 @@
+# 依存ライブラリと GitHub Actions の更新を、週 1 回、自動で提案する（Issue #128）
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/visa-case-app"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
