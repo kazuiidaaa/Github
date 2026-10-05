@@ -14,10 +14,11 @@ export interface HspPointRow {
   evidence: string;
 }
 
-export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; label: string; rows: HspPointRow[] }> = {
+export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; label: string; /** 合計欄（結合セルの左上）。差し込みで、合計点を書き込む */ totalCell: string; rows: HspPointRow[] }> = {
   A: {
     sheetName: "A 高度専門職第１号イ",
     label: "高度専門職1号イ",
+    totalCell: "AI88",
     rows: [
       { row: 14, section: "学歴", label: "博士学位（専門職学位を除く）", points: 30, evidence: "①" },
       { row: 15, section: "学歴", label: "修士又は専門職学位", points: 20, evidence: "①" },
@@ -58,6 +59,7 @@ export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; lab
   B: {
     sheetName: "B 高度専門職第１号ロ",
     label: "高度専門職1号ロ",
+    totalCell: "AI96",
     rows: [
       { row: 13, section: "学歴", label: "博士学位（専門職学位を除く）", points: 30, evidence: "①" },
       { row: 14, section: "学歴", label: "経営管理に関する専門職学位（MBA，MOT）を保有", points: 25, evidence: "①" },
@@ -100,6 +102,7 @@ export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; lab
   C: {
     sheetName: "C 高度専門職１号ハ",
     label: "高度専門職1号ハ",
+    totalCell: "AI82",
     rows: [
       { row: 14, section: "学歴", label: "経営管理に関する専門職学位（MBA，MOT）を保有", points: 25, evidence: "①" },
       { row: 15, section: "学歴", label: "博士若しくは修士の学位又は専門職学位", points: 20, evidence: "①" },

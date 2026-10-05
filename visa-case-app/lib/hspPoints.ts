@@ -46,10 +46,13 @@ export interface HspPointEstimate {
   unscored: HspPointRow[];
   reachesPass: boolean;
   notes: string[];
+  /** 様式の合計欄へ、合計点を書き込んでよいか。項目を選んでいて、点数の印字がない項目と、択一の区分の重複がないときだけ true */
+  totalWritable: boolean;
 }
 
 /**
- * 目安の合計点。選んだ項目に印字された点数の単純合計であり、様式へは書き込まない。
+ * 目安の合計点。選んだ項目に印字された点数の単純合計。
+ * 様式の合計欄へは、totalWritable のときだけ書き込む（点数の印字がない項目や、択一の区分の重複があるときは、行政書士が確認して記入する）。
  * 研究実績の2つ以上の組み合わせ、特別加算の上限、年齢による年収の範囲などは判定しない（行政書士が、計算表の欄で確認する）。
  */
 export function estimateHspPoints(sheet: HspPointSheetKey, checks: readonly string[]): HspPointEstimate {
@@ -57,12 +60,28 @@ export function estimateHspPoints(sheet: HspPointSheetKey, checks: readonly stri
   const total = rows.reduce((sum, r) => sum + (r.points ?? 0), 0);
   const unscored = rows.filter((r) => r.points === null);
   const notes: string[] = [];
+  let duplicated = false;
   for (const section of EXCLUSIVE_SECTIONS) {
-    if (rows.filter((r) => r.section === section).length > 1) notes.push(`「${section}」は、1つだけ選ぶ項目です。複数選んでいます。`);
+    if (rows.filter((r) => r.section === section).length > 1) {
+      duplicated = true;
+      notes.push(`「${section}」は、1つだけ選ぶ項目です。複数選んでいます。`);
+    }
   }
   if (unscored.length > 0) notes.push(`点数が印字されていない項目（${unscored.map((r) => r.label.slice(0, 12)).join("、")}…）は、合計に含めていません。計算表で点数を確認してください。`);
   if (rows.length > 0 && !rows.some((r) => r.section === "年収")) notes.push("年収が未選択です。年収が300万円に満たないときは、他の項目の合計が70点以上でも、高度専門職外国人としては認められません。");
-  return { total, unscored, reachesPass: total >= HSP_PASS_POINTS, notes };
+  return { total, unscored, reachesPass: total >= HSP_PASS_POINTS, notes, totalWritable: rows.length > 0 && unscored.length === 0 && !duplicated };
+}
+
+/** ダウンロード前の確認で表示する注意（画面の確認ダイアログ用）。合計欄の書き込み有無と、判定していない事項、行政書士の確認を知らせる */
+export function hspPointConfirmLines(est: HspPointEstimate): string[] {
+  return [
+    est.totalWritable
+      ? `合計欄へ、選んだ項目の印字点数の単純合計 ${est.total} 点を書き込みます。`
+      : "合計欄は書き込みません。計算表で確認し、様式上で記入してください。",
+    "研究実績の2つ以上の組み合わせ・特別加算の上限・年齢による年収の範囲は、判定していません。",
+    ...est.notes,
+    "作成したファイルは、行政書士が内容を確認してから使用してください。",
+  ];
 }
 
 /** 保存値から、存在しないチェック（様式の改正や、別シートの値）を除く */
