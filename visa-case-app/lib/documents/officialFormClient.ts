@@ -3,6 +3,7 @@
 import { AppError } from "../errors";
 import { isDemo } from "../demo";
 import { supabase, usesSupabase } from "../supabase";
+import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "./officialFormAccess";
 import type { CaseRecord } from "../types";
 import type { OfficialFormContent } from "./types";
 
@@ -24,6 +25,8 @@ export async function requestOfficialXlsx(
   procedureType: CaseRecord["procedureType"],
   input: FormInput,
 ): Promise<{ blob: Blob; warnings: string[] }> {
+  // Supabase 設定済みのデモモードは、サーバーが必ず 401 にするため、送信せずに案内する（Issue #120）
+  if (officialFormNeedsLogin(isDemo())) throw new AppError(OFFICIAL_FORM_LOGIN_REQUIRED);
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (usesSupabase() && supabase) {
     const { data } = await supabase.auth.getSession();
