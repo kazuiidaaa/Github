@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge, Button } from "@/components/ui";
 import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
@@ -38,6 +39,7 @@ export default function DocumentsPage() {
   const [message, setMessage] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [newIds, setNewIds] = useState<string[]>([]);
+  const [archiving, setArchiving] = useState<GeneratedDocument | null>(null);
   const historyRef = useRef<HTMLElement>(null);
   const knownIds = useRef<Set<string> | null>(null);
 
@@ -105,7 +107,7 @@ export default function DocumentsPage() {
   }
 
   async function archive(d: GeneratedDocument) {
-    if (!confirm(`${DOCUMENT_TYPE_LABELS[d.documentType]} v${d.version} を保管にします。よろしいですか。`)) return;
+    setArchiving(null);
     setMessage("");
     try {
       await changeStatus(d, "archived", "");
@@ -235,7 +237,7 @@ export default function DocumentsPage() {
               </Badge>
               <span className="text-slate-500">{formatDateTime(d.createdAt)}</span>
               {canEdit && d.status !== "archived" && (
-                <Button variant="secondary" onClick={() => void archive(d)}>
+                <Button variant="secondary" onClick={() => setArchiving(d)}>
                   保管にする
                 </Button>
               )}
@@ -243,6 +245,16 @@ export default function DocumentsPage() {
           </div>
         ))}
       </section>
+      {archiving && (
+        <ConfirmDialog
+          title="書類を保管にする"
+          message={`${DOCUMENT_TYPE_LABELS[archiving.documentType]} v${archiving.version} を保管にします。一覧では初期状態で非表示になります。`}
+          note="「保管済みを表示」にすると、保管した版を見られます。画面から保管を取り消す操作はありません。操作の記録（監査ログ）が残ります。"
+          confirmLabel="保管にする"
+          onCancel={() => setArchiving(null)}
+          onConfirm={() => void archive(archiving)}
+        />
+      )}
     </div>
   );
 }

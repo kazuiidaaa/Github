@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge, Button } from "@/components/ui";
 import { CustomRequirementForm, type CustomRequirementInput } from "@/components/CustomRequirementForm";
 import { findDocumentOfType } from "@/lib/documentKinds";
@@ -80,6 +81,7 @@ export function RequirementsPanel({
   const progress = progressOf(ev, record.customRequirements, today);
   const [copied, setCopied] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState<CustomRequirement | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   function patchCustom(id: string, change: Partial<CustomRequirement>, action: string) {
@@ -103,7 +105,7 @@ export function RequirementsPanel({
   }
 
   function removeCustom(r: CustomRequirement) {
-    if (!window.confirm(`「${r.name}」を削除します。よろしいですか。`)) return;
+    setRemoving(null);
     updateCase(record.id, (c) => ({ ...c, customRequirements: c.customRequirements.filter((x) => x.id !== r.id) }));
     logAudit(record.id, "custom_requirement_deleted", { requirementId: r.id, name: r.name });
   }
@@ -290,7 +292,7 @@ export function RequirementsPanel({
                         <button onClick={() => setEditingId(r.id)} className="mr-3 text-blue-700 underline">
                           編集
                         </button>
-                        <button onClick={() => removeCustom(r)} className="text-red-700 underline">
+                        <button onClick={() => setRemoving(r)} className="text-red-700 underline">
                           削除
                         </button>
                       </td>
@@ -302,6 +304,18 @@ export function RequirementsPanel({
           </div>
         )}
       </section>
+
+      {removing && (
+        <ConfirmDialog
+          title="必要書類の削除"
+          message={`追加した必要書類「${removing.name}」を、この案件から削除します。入力済みの状態・期限・メモも消え、元に戻せません。`}
+          note="操作の記録（監査ログ）には、書類名が残ります。"
+          confirmLabel="削除する"
+          tone="caution"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => removeCustom(removing)}
+        />
+      )}
     </div>
   );
 }
