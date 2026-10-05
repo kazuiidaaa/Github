@@ -95,6 +95,22 @@ export const RESIDENCE_STATUSES = [
   "定住者",
 ] as const;
 
+/**
+ * 高度専門職の号。保存値は、認定（COE）様式の入国目的の選択肢と同じ文字列にする（完全一致で□を■にするため）。
+ * 号が未選択の既存案件は、従来どおり「高度専門職」のまま保存される。
+ */
+export const ADVANCED_PROFESSIONAL_STATUS = "高度専門職";
+export const ADVANCED_PROFESSIONAL_GRADES = [
+  "高度専門職（1号イ）",
+  "高度専門職（1号ロ）",
+  "高度専門職（1号ハ）",
+] as const;
+
+/** 号つきの値（例：「高度専門職（1号ロ）」）から、基本の在留資格（「高度専門職」）を返す。それ以外は、そのまま返す */
+export function baseResidenceStatus(value: string): string {
+  return (ADVANCED_PROFESSIONAL_GRADES as readonly string[]).includes(value) ? ADVANCED_PROFESSIONAL_STATUS : value;
+}
+
 export const WORKFLOW_LABELS = {
   preparing: "準備中",
   applicant_confirmed: "申請人情報 確認済み",

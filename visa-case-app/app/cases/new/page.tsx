@@ -241,7 +241,7 @@ export default function NewCasePage() {
         </Field>
         {needsTarget && (
           <Field label={targetStatusLabel(procedureType)} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
-            <StatusSelect value={targetStatus} onChange={setTargetStatus} />
+            <StatusSelect value={targetStatus} onChange={setTargetStatus} withGrade />
           </Field>
         )}
         {showNoRuleGuide && (

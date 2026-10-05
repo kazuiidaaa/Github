@@ -1,7 +1,7 @@
 import path from "node:path";
 import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
-import type { Applicant, EmploymentInfo } from "../../types";
+import { ADVANCED_PROFESSIONAL_STATUS, type Applicant, type EmploymentInfo } from "../../types";
 import {
   COE_DIGIT_CHECKS,
   COE_FILL_ITEMS,
@@ -76,8 +76,10 @@ function buildWarnings(c: FillCtx): string[] {
     w.push("職種が番号ではないため、所属機関等作成用1の職種欄は空欄です。別紙「職種一覧」の番号を記入してください。");
   }
   const target = (c.targetStatus ?? "").trim();
-  if (target && !COE_PURPOSE_LABELS.includes(target)) {
-    w.push(`11 入国目的（${target}）は、様式の選択肢と一致しないため、チェックを付けていません。様式上で該当の□を選択してください（「高度専門職」「特定技能」「技能実習」「特定活動」は、号の種類まで様式上でご確認ください）。`);
+  if (target === ADVANCED_PROFESSIONAL_STATUS) {
+    w.push("11 入国目的（高度専門職）は、号（イ・ロ・ハ）が未選択のため、チェックを付けていません。案件の「希望する在留資格」で号を選択してください。");
+  } else if (target && !COE_PURPOSE_LABELS.includes(target)) {
+    w.push(`11 入国目的（${target}）は、様式の選択肢と一致しないため、チェックを付けていません。様式上で該当の□を選択してください（「特定技能」「技能実習」「特定活動」は、号・種別の種類まで様式上でご確認ください）。`);
   }
   for (const d of COE_DIGIT_CHECKS) {
     const raw = d.get(c);
