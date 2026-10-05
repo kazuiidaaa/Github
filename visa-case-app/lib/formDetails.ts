@@ -131,6 +131,8 @@ export interface FormDetails {
   deportationHistory: "" | "yes" | "no";
   deportationCount: string;
   deportationLastDate: string;
+  /** 高度専門職の「行う活動」（使う様式の選択に使う。lib/hspForm.ts。Issue #181） */
+  hspActivity: string;
 }
 
 export const EMPTY_FORM_DETAILS: FormDetails = {
@@ -186,6 +188,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   dispatchPeriod: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
+  hspActivity: "",
   stayPurpose: "",
   guarantorName: "",
   guarantorRelationship: "",

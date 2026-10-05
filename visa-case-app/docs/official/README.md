@@ -12,7 +12,7 @@
 | gijinkoku-renewal-checksheet_001367009.pdf | 提出書類チェックシート(更新) | https://www.moj.go.jp/isa/content/001367009.pdf |
 | change-application-form_930004065.xlsx | 在留資格変更許可申請書(別記第三十号様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004065.xlsx |
 | coe-application-form_930004030.xlsx | 在留資格認定証明書交付申請書(別記第六号の三様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004030.xlsx |
-| coe-application-form-I_930004028.xlsx | 認定申請書 様式 I(教授。高度専門職1号イで教授の活動を行う場合)。取り込みのみで、コードからは未参照 | https://www.moj.go.jp/isa/content/930004028.xlsx |
+| coe-application-form-I_930004028.xlsx | 認定申請書 様式 I(教授。高度専門職1号イで教授の活動を行う場合)。第1表のみ差し込み元（`lib/documents/excelFill/coe.ts`） | https://www.moj.go.jp/isa/content/930004028.xlsx |
 | coe-application-form-L_930004032.xlsx | 認定申請書 様式 L(企業内転勤。高度専門職1号ロ)。同上 | https://www.moj.go.jp/isa/content/930004032.xlsx |
 | coe-application-form-M_930004034.xlsx | 認定申請書 様式 M(経営・管理。高度専門職1号ハ)。同上 | https://www.moj.go.jp/isa/content/930004034.xlsx |
 | coe-application-form-U_930004059.xlsx | 認定申請書 様式 U(法律・会計、医療。高度専門職1号ロ・ハ)。同上 | https://www.moj.go.jp/isa/content/930004059.xlsx |

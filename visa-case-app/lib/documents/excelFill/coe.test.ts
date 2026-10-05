@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { EMPTY_FORM_DETAILS, type FormDetails } from "../../formDetails";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type EmploymentInfo } from "../../types";
-import { COE_TEMPLATE_PATH, fillCoeExcel } from "./coe";
+import { COE_TEMPLATE_PATH, COE_TEMPLATE_PATHS, fillCoeExcel } from "./coe";
 import {
   COE_FILL_ITEMS,
   COE_PICK_ITEMS,
@@ -212,11 +212,88 @@ describe("fillCoeExcel", () => {
     expect(warnings).toEqual([]);
   });
 
-  it("入国目的（11）が様式の選択肢と一致しない（号・種別まで様式側で選ぶ必要がある等）場合は、チェックを付けず警告する", async () => {
+  it.each(["高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"])(
+    "入国目的（11）は、高度専門職の号が一致する場合、その号の□だけを■にする: %s",
+    async (grade) => {
+      const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, grade);
+      const wb = await open(buffer);
+      for (const [label, cell] of Object.entries(COE_PURPOSE_CHECKBOXES)) {
+        expect(text(wb, S1, cell), label).toBe(label === grade ? "■" : "□");
+      }
+      // 行う活動が未選択のため、様式は決まらない（様式の確認だけを案内する）
+      expect(warnings.filter((m) => !m.includes("行う活動を選択すると"))).toEqual([]);
+    },
+  );
+
+  it("高度専門職の号が未選択の場合は、チェックを付けず、号の選択を案内する", async () => {
     const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, "高度専門職");
     const wb = await open(buffer);
     for (const cell of Object.values(COE_PURPOSE_CHECKBOXES)) expect(text(wb, S1, cell), cell).toBe("□");
-    expect(warnings.join("\n")).toContain("入国目的（高度専門職）は、様式の選択肢と一致しないため");
+    expect(warnings.join("\n")).toContain("入国目的（高度専門職）は、号（イ・ロ・ハ）が未選択");
+  });
+
+  it.each([
+    ["高度専門職（1号イ）", "教授", "I"],
+    ["高度専門職（1号ロ）", "企業内転勤", "L"],
+    ["高度専門職（1号ハ）", "経営・管理", "M"],
+    ["高度専門職（1号ロ）", "法律・会計業務", "U"],
+  ] as const)("様式がN以外（%s・%s → 様式%s）の場合は、その様式の第1表だけに差し込み、第2表以降は未対応と警告する", async (grade, activity, form) => {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, { ...details, hspActivity: activity }, grade);
+    const wb = await open(buffer);
+    const tpl = await open(COE_TEMPLATE_PATHS[form]);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(tpl.worksheets.map((w) => w.name));
+    for (const [label, cell] of Object.entries(COE_PURPOSE_CHECKBOXES)) {
+      expect(text(wb, S1, cell), label).toBe(label === grade ? "■" : "□");
+    }
+    expect(text(wb, S1, "E23")).not.toBe(""); // 第1表には差し込まれている
+    // 第1表以外は、テンプレートの元の状態のまま（様式Nの対応表を流用しない）
+    for (const ws of wb.worksheets.slice(1)) {
+      const orig = tpl.getWorksheet(ws.id)!;
+      ws.eachRow((row) =>
+        row.eachCell((c) => expect(plain(c.value), `${ws.name}!${c.address}`).toBe(plain(orig.getCell(c.address).value))),
+      );
+    }
+    expect(warnings.join("\n")).toContain(`様式 ${form} の第2表以降は未対応です`);
+  });
+
+  it("様式N（教授以外の研究・技術・人文知識・国際業務）は、従来どおり第2表以降も差し込み、警告しない", async () => {
+    const { buffer, warnings } = await fillCoeExcel(
+      applicant,
+      employment,
+      { ...details, hspActivity: "技術・人文知識・国際業務" },
+      "高度専門職（1号ロ）",
+    );
+    const wb = await open(buffer);
+    expect(text(wb, O1, "A1")).not.toBeUndefined();
+    expect(warnings.join("\n")).not.toContain("未対応です");
+  });
+
+  it("高度専門職で、行う活動が未選択・表にない組み合わせの場合は、様式Nの第1表だけに差し込み、様式の確認を警告する", async () => {
+    for (const activity of ["", "医療"]) {
+      const grade = activity ? "高度専門職（1号ハ）" : "高度専門職（1号ロ）";
+      const { warnings } = await fillCoeExcel(applicant, employment, { ...details, hspActivity: activity }, grade);
+      expect(warnings.join("\n"), activity).toContain("様式Nの第1表のみ差し込んでいます");
+    }
+  });
+
+  it("様式ごとのテンプレートの第1表は、様式Nと同じ入力欄の配置である（差し込み先の座標を共有できる）", async () => {
+    for (const [form, file] of Object.entries(COE_TEMPLATE_PATHS)) {
+      const wb = await open(file);
+      for (const it of COE_FILL_ITEMS.filter((i) => sheetKey(i.sheet) === sheetKey(S1))) {
+        const c = sheet(wb, S1).getCell(it.cell);
+        expect(c.protection?.locked, `様式${form} ${it.cell} ${it.label}`).toBe(false);
+      }
+      for (const [label, cell] of Object.entries(COE_PURPOSE_CHECKBOXES)) {
+        expect(text(wb, S1, cell), `様式${form} ${label}`).toBe("□");
+      }
+    }
+  });
+
+  it("入国目的（11）が様式の選択肢と一致しない（号・種別まで様式側で選ぶ必要がある等）場合は、チェックを付けず警告する", async () => {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, "特定技能");
+    const wb = await open(buffer);
+    for (const cell of Object.values(COE_PURPOSE_CHECKBOXES)) expect(text(wb, S1, cell), cell).toBe("□");
+    expect(warnings.join("\n")).toContain("入国目的（特定技能）は、様式の選択肢と一致しないため");
   });
 
   it("有無が「有」でなければ、出入国歴・認定申請歴・送還歴の詳細は書かない", async () => {

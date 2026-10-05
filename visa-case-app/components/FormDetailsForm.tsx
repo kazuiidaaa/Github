@@ -11,6 +11,7 @@ import {
   type Relative,
   type WorkEntry,
 } from "@/lib/formDetails";
+import { describeCoeForm, HSP_ACTIVITIES, isAdvancedProfessional, resolveCoeForm } from "@/lib/hspForm";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import type { CaseRecord } from "@/lib/types";
@@ -187,6 +188,23 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
                   </button>
                 )}
               </div>
+            </Field>
+          </div>
+        )}
+        {record.procedureType === "coe" && isAdvancedProfessional(record.targetStatus) && (
+          <div className="md:col-span-2">
+            <Field label="高度専門職の行う活動" hint="号と行う活動から、認定申請書で使う様式（I・L・M・N・U）が決まります。">
+              <select className={inputClass} value={form.hspActivity} onChange={(e) => set("hspActivity", e.target.value)}>
+                <option value="">未選択</option>
+                {HSP_ACTIVITIES.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
+              </select>
+              <p role="note" className="mt-1 text-xs text-slate-600">
+                {describeCoeForm(resolveCoeForm(record.targetStatus, form.hspActivity))}
+              </p>
             </Field>
           </div>
         )}
