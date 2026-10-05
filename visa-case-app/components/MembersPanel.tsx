@@ -74,7 +74,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
         <tbody className="block md:table-row-group">
           {members === null && !error && (
             <tr className="block md:table-row">
-              <td colSpan={3} className="block px-3 py-4 text-slate-500 md:table-cell">
+              <td colSpan={3} className="block px-3 py-4 text-slate-500 md:table-cell" role="status">
                 読み込み中……
               </td>
             </tr>

@@ -8,6 +8,7 @@ import { DocumentSheet } from "@/components/documents/DocumentSheet";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui";
+import { LoadingNotice } from "@/components/LoadingNotice";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
 import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
@@ -43,7 +44,7 @@ export default function DocumentPreviewPage() {
   const record = useCase(id);
   const canEdit = useCan("edit");
   const needsLogin = officialFormNeedsLogin(useDemo());
-  const { documents, loaded } = useGeneratedDocuments(id);
+  const { documents, loaded, error } = useGeneratedDocuments(id);
   const doc = documents.find((d) => d.id === docId);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -59,7 +60,7 @@ export default function DocumentPreviewPage() {
         </Link>
       </div>
     ) : (
-      <p className="text-sm text-slate-500">読み込み中……</p>
+      <LoadingNotice error={error} />
     );
   }
 
@@ -157,7 +158,9 @@ export default function DocumentPreviewPage() {
           {needsLogin && isOfficialForm(doc.documentType) && (
             <span className="text-sm text-amber-900">{OFFICIAL_FORM_LOGIN_REQUIRED}</span>
           )}
-          {message && <span className="text-sm text-red-700">{message}</span>}
+          <span role="alert" className="text-sm text-red-700">
+            {message}
+          </span>
         </div>
       </div>
       <DocumentSheet doc={doc} />

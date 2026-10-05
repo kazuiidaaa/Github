@@ -119,7 +119,7 @@ function AccountContent() {
             </dd>
           </dl>
         ) : (
-          !error && <p className="text-sm text-slate-500">読み込み中……</p>
+          !error && <p role="status" className="text-sm text-slate-500">読み込み中……</p>
         )}
         <div className="mt-5">
           <Button variant="secondary" onClick={() => void signOut()}>
@@ -181,14 +181,14 @@ function AccountContent() {
           <tbody>
             {audit === null && (
               <tr>
-                <td colSpan={3} className="px-6 py-6 text-slate-500">
+                <td colSpan={3} className="px-6 py-6 text-slate-500" role="status">
                   読み込み中……
                 </td>
               </tr>
             )}
             {audit?.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-6 text-slate-500">
+                <td colSpan={3} className="px-6 py-6 text-slate-500" role="status">
                   記録はありません。
                 </td>
               </tr>

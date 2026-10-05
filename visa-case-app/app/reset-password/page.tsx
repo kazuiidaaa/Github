@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
       </div>
     );
   }
-  if (session === undefined) return <p className="text-sm text-slate-500">読み込み中……</p>;
+  if (session === undefined) return <p role="status" className="text-sm text-slate-500">読み込み中……</p>;
   if (session === null) {
     return (
       <div className={`${cardClass} text-sm`}>

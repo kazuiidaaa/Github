@@ -6,6 +6,7 @@ import { Suspense, useMemo } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
 import { DashboardCards, type CardKey } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { LoadingNotice } from "@/components/LoadingNotice";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
@@ -186,10 +187,11 @@ function CasesView() {
 
   let empty = "";
   if (rows.length === 0) {
-    if (!loaded) empty = error ? "案件を読み込めませんでした。時間をおいて再度お試しください。" : "読み込み中……";
+    if (!loaded) empty = error ? "案件を読み込めませんでした。ページを再読み込みしてください。解決しない場合は、時間をおいて再度お試しください。" : "読み込み中……";
     else if (cases.length === 0) empty = "案件がありません。「新規案件」から作成してください。";
     else empty = "該当する案件がありません。";
   }
+  const emptyRole = loaded ? undefined : error ? "alert" : "status";
 
   return (
     <div>
@@ -214,7 +216,7 @@ function CasesView() {
           </p>
           {!canEdit && <p className="mb-2 text-xs text-slate-500">閲覧のみの権限のため、アップロードはできません。</p>}
           {empty ? (
-            <p className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+            <p role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
               {loaded && cases.length > 0 && pendingCount === 0 ? "在留カードが未登録の案件はありません。" : empty}
             </p>
           ) : (
@@ -264,7 +266,7 @@ function CasesView() {
           <tbody className="anim-stagger">
             {empty && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={7} role={emptyRole} className="px-4 py-10 text-center text-slate-500">
                   {empty}
                   {loaded && cases.length > 0 && active && (
                     <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
@@ -310,7 +312,7 @@ function CasesView() {
       {/* 狭い画面幅（md 未満）では、表に代えてカード形式で表示する */}
       <ul className="anim-stagger space-y-3 md:hidden">
         {empty && (
-          <li className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+          <li role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
             {empty}
             {loaded && cases.length > 0 && active && (
               <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
@@ -384,7 +386,7 @@ function CasesView() {
 
 export default function CasesPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-slate-500">読み込み中……</p>}>
+    <Suspense fallback={<LoadingNotice />}>
       <CasesView />
     </Suspense>
   );

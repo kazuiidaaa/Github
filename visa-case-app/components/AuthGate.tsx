@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { useSessionState } from "@/lib/auth";
+import { LoadingNotice } from "@/components/LoadingNotice";
 import { useDemo } from "@/lib/demo";
 import { configIssues } from "@/lib/env";
 import { isMisconfigured, isSupabaseEnabled } from "@/lib/supabase";
@@ -56,7 +57,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   if (session === undefined && failed) return <>{children}</>;
-  if (session === undefined) return <p className="text-sm text-slate-500">読み込み中……</p>;
+  if (session === undefined) return <LoadingNotice />;
   if (!session && !onLogin && !onReset) return null;
   return <>{children}</>;
 }
