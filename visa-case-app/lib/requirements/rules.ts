@@ -944,15 +944,110 @@ export const HSP_COE: RuleSet = {
   rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
 };
 
-/** 2号の変更は、HSP_CHANGE より先に照合する（RULE_SETS の並び順）。所得・納税・社会保険の書類は #188 で追加する */
+/**
+ * 高度専門職2号の変更で、ポイント計算表のほかに求められる、所得・納税・公的年金・公的医療保険の書類（Issue #188）。
+ * 日本で発行される証明書は、発行日から3か月以内のもの。
+ * 点数（70点・80点）と在留期間による省略の分岐は、案件の入力項目にせず、各書類の注記で案内する。
+ * 申請人の状況（住民税の特別徴収、年金・医療保険の制度、事業主かどうか）で要否が変わる書類は、推測せず「要確認」（check）とし、
+ * 行政書士が判断する。
+ */
+const HSP2_PERIOD_NOTE = "70点以上を維持して3年以上継続在留している場合は、直近3年分でよい。80点以上を維持して1年以上継続在留している場合は、直近1年分でよい";
+const hsp2Documents: RequirementRule[] = [
+  {
+    id: "hsp2_resident_tax_certificates",
+    name: "住民税の課税（又は非課税）証明書及び納税証明書（各1通）",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: `直近5年分の所得及び納税状況を証明する資料。${HSP2_PERIOD_NOTE}。発行日から3か月以内のもの`,
+    verify: true,
+  },
+  {
+    id: "hsp2_resident_tax_payment",
+    name: "住民税の納付を証明する資料（通帳の写し、領収証書等）",
+    party: "applicant",
+    categories: ALL,
+    level: "check",
+    note: "直近3年間すべて特別徴収の場合は不要。提出が困難な場合は、その理由書を提出する",
+    verify: true,
+  },
+  {
+    id: "hsp2_resident_tax_reason",
+    name: "住民税の資料の提出が困難な理由書",
+    party: "applicant",
+    categories: ALL,
+    level: "check",
+    note: "住民税の納付を証明する資料を提出できない場合のみ",
+    verify: true,
+  },
+  {
+    id: "hsp2_national_tax_certificates",
+    name: "国税の納税証明書（その3）：源泉所得税及び復興特別所得税、申告所得税及び復興特別所得税、消費税及び地方消費税、相続税、贈与税の5税目",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: "直近5年分の所得及び納税状況を証明する資料。発行日から3か月以内のもの",
+    verify: true,
+  },
+  {
+    id: "hsp2_income_proof",
+    name: "所得を証明するもの（預貯金通帳の写しなど）",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: "直近5年分の所得及び納税状況を証明する資料",
+    verify: true,
+  },
+  {
+    id: "hsp2_public_pension",
+    name: "公的年金の保険料の納付状況を証明する資料（被保険者記録照会回答票等、ねんきん定期便、ねんきんネット、国民年金保険料領収証書など）",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: "直近2年間。80点以上を維持して1年以上継続在留している場合は、直近1年分でよい。発行日から3か月以内のもの",
+    verify: true,
+  },
+  {
+    id: "hsp2_public_health_insurance",
+    name: "公的医療保険の保険料の納付状況を証明する資料（健康保険被保険者証、国民健康保険の納付証明書・領収証書など）",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: "直近2年間。80点以上を維持して1年以上継続在留している場合は、直近1年分でよい。発行日から3か月以内のもの",
+    verify: true,
+  },
+  {
+    id: "hsp2_employer_insurance",
+    name: "事業所の保険料に関する資料（領収証書、社会保険料納入証明書等）",
+    party: "applicant",
+    categories: ALL,
+    level: "check",
+    note: "申請時に、社会保険適用事業所の事業主である場合のみ。80点以上を維持して1年以上継続在留している場合は、直近1年分でよい",
+    verify: true,
+  },
+  {
+    id: "hsp2_80points_evidence",
+    name: "80点以上を確認できる資料",
+    party: "applicant",
+    categories: ALL,
+    level: "check",
+    note: "80点以上として、提出資料の一部の省略を希望する場合のみ",
+    verify: true,
+  },
+];
+
+/** 2号の変更は、HSP_CHANGE より先に照合する（RULE_SETS の並び順） */
 export const HSP_CHANGE_2: RuleSet = {
   id: "hsp_change_2",
-  title: `高度専門職2号への在留資格変更許可申請${HSP_PARTIAL}`,
+  title: `高度専門職2号への在留資格変更許可申請（ポイント計算表・疎明資料・所得納税社会保険の書類のみ整備。他の書類は未整備）`,
   procedureType: "change",
   residenceStatus: "高度専門職（2号）",
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
-  rules: hspPointRules("1号イ・ロ・ハのいずれかのシート。要件：1号又は高度外国人材としての特定活動で3年以上在留し、70点以上であること"),
+  rules: [
+    ...hspPointRules("1号イ・ロ・ハのいずれかのシート。要件：1号又は高度外国人材としての特定活動で3年以上在留し、70点以上であること"),
+    ...hsp2Documents,
+  ],
 };
 
 export const HSP_CHANGE: RuleSet = {

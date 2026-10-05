@@ -343,7 +343,7 @@ describe("高度専門職の規則（Issue #186）", () => {
     return evaluate(make({ procedureType, [field]: status } as Partial<CaseRecord>));
   };
 
-  it("認定・変更・更新で、ポイント計算表とその疎明資料の2件を、必要書類として出す", () => {
+  it("認定・変更・更新で、ポイント計算表とその疎明資料を、必要書類として出す", () => {
     for (const [procedureType, status] of [
       ["coe", "高度専門職（1号ロ）"],
       ["change", "高度専門職（1号イ）"],
@@ -352,9 +352,12 @@ describe("高度専門職の規則（Issue #186）", () => {
     ] as const) {
       const ev = find(procedureType, status);
       expect(ev.ruleSet?.id, `${procedureType}:${status}`).toMatch(/^hsp_/);
-      expect(ev.items.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence"]);
-      expect(ev.items.every((i) => i.effective === "required")).toBe(true);
-      expect(ev.ruleSet?.title).toContain("ポイント計算表・疎明資料のみ整備");
+      const ids = ev.items.map((i) => i.rule.id);
+      expect(ids.slice(0, 2)).toEqual(["hsp_point_table", "hsp_point_evidence"]);
+      expect(ev.items.slice(0, 2).every((i) => i.effective === "required")).toBe(true);
+      expect(ev.ruleSet?.title).toContain("ポイント計算表・疎明資料");
+      // 2号の変更だけ、所得・納税・社会保険の書類（hsp2_）が加わる
+      expect(ids.some((id) => id.startsWith("hsp2_")), `${procedureType}:${status}`).toBe(status === "高度専門職（2号）");
     }
   });
 
@@ -376,6 +379,49 @@ describe("高度専門職の規則（Issue #186）", () => {
 
   it("取得許可申請には、高度専門職の規則を足さない（取得の事由で判定する規則集合のまま）", () => {
     expect(RULE_SETS.some((r) => r.procedureType === "acquisition" && r.id.startsWith("hsp_"))).toBe(false);
+  });
+});
+
+describe("高度専門職2号の変更の所得・納税・社会保険の書類（Issue #188）", () => {
+  const ev = evaluate(make({ procedureType: "change", targetStatus: "高度専門職（2号）" }));
+  const level = (id: string) => ev.items.find((i) => i.rule.id === id)?.effective;
+
+  it("住民税・国税・所得・公的年金・公的医療保険の書類を、必要書類として出す", () => {
+    for (const id of [
+      "hsp2_resident_tax_certificates",
+      "hsp2_national_tax_certificates",
+      "hsp2_income_proof",
+      "hsp2_public_pension",
+      "hsp2_public_health_insurance",
+    ]) {
+      expect(level(id), id).toBe("required");
+    }
+  });
+
+  it("申請人の状況で要否が変わる書類は、推測せず「要確認」にする", () => {
+    for (const id of ["hsp2_resident_tax_payment", "hsp2_resident_tax_reason", "hsp2_employer_insurance", "hsp2_80points_evidence"]) {
+      expect(level(id), id).toBe("check");
+    }
+  });
+
+  it("書類の名称・注記に、3か月以内・対象期間（5年・3年・2年・1年）を示す", () => {
+    const note = (id: string) => ev.items.find((i) => i.rule.id === id)?.rule.note ?? "";
+    expect(note("hsp2_resident_tax_certificates")).toContain("3か月以内");
+    expect(note("hsp2_resident_tax_certificates")).toContain("直近5年分");
+    expect(note("hsp2_resident_tax_certificates")).toContain("直近3年分");
+    expect(note("hsp2_resident_tax_certificates")).toContain("直近1年分");
+    expect(note("hsp2_public_pension")).toContain("直近2年間");
+    expect(note("hsp2_resident_tax_payment")).toContain("特別徴収");
+  });
+
+  it("書類は、ポイント計算表と合わせて11件。要確認の4件は、必要書類の件数に数えない", () => {
+    expect(ev.items).toHaveLength(11);
+    expect(ev.requiredCount).toBe(7);
+  });
+
+  it("高度専門職（1号）の変更・認定・更新には、所得・納税・社会保険の書類を出さない", () => {
+    const hsp1 = evaluate(make({ procedureType: "change", targetStatus: "高度専門職（1号ロ）" }));
+    expect(hsp1.items.some((i) => i.rule.id.startsWith("hsp2_"))).toBe(false);
   });
 });
 
