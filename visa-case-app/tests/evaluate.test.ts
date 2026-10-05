@@ -336,3 +336,13 @@ describe("規則を引く在留資格の決め方", () => {
     expect(shouldShowNoRuleGuide("", "留学", "", TEST_SETS)).toBe(false);
   });
 });
+
+describe("号つきの高度専門職（Issue #181）", () => {
+  it("高度専門職の保存値は、他の在留資格の規則に誤一致しない", () => {
+    for (const procedureType of ["coe", "change", "renewal"] as const) {
+      for (const grade of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
+        expect(hasRuleSetFor(procedureType, grade), `${procedureType}:${grade}`).toBe(false);
+      }
+    }
+  });
+});
