@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button, Field, inputClass } from "@/components/ui";
 import { messageOf } from "@/lib/errors";
 import { assignableRoles, canRemoveMember, ROLE_LABELS, ROLES, type Role } from "@/lib/permissions";
@@ -14,6 +15,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
+  const [removing, setRemoving] = useState<MemberInfo | null>(null);
   const addable = assignableRoles(myRole);
   const [role, setRole] = useState<Role>("staff");
 
@@ -107,11 +109,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
                   <Button
                     variant="danger"
                     disabled={busy}
-                    onClick={() => {
-                      if (confirm(`${m.email} を事務所から削除します。よろしいですか？`)) {
-                        void run(() => removeMember(m.userId), "メンバーを削除しました。");
-                      }
-                    }}
+                    onClick={() => setRemoving(m)}
                   >
                     削除
                   </Button>
@@ -150,6 +148,22 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
         </Button>
       </form>
       {msg && <p className="mt-2 text-sm text-slate-700">{msg}</p>}
+      {removing && (
+        <ConfirmDialog
+          title="メンバーの削除"
+          message={`${removing.email} を事務所から削除します。この方は、事務所の案件を見られなくなります。`}
+          note="この方のアカウント自体は削除されません。再び追加すれば、見られるようになります。操作の記録（監査ログ）が残ります。"
+          confirmLabel="削除する"
+          tone="caution"
+          busy={busy}
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            const target = removing;
+            setRemoving(null);
+            void run(() => removeMember(target.userId), "メンバーを削除しました。");
+          }}
+        />
+      )}
     </section>
   );
 }

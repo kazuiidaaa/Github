@@ -6,6 +6,7 @@ import { useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { DocumentSheet } from "@/components/documents/DocumentSheet";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
@@ -13,6 +14,30 @@ import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/docu
 import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
 import { useDemo } from "@/lib/demo";
 import { getConfirmerName, useCan, useCase } from "@/lib/store";
+
+type StatusChange = "reviewed" | "final" | "archived";
+
+/** 状態変更の確認ダイアログの内容。影響は changeStatus（lib/documents/store.ts）の実際の処理に即して書く */
+const STATUS_CONFIRM: Record<StatusChange, { title: string; message: string; note: string; label: string }> = {
+  reviewed: {
+    title: "行政書士確認済みにする",
+    message: "この版を、行政書士が内容を確認した版として記録します。確認者の名前と確認日時が、書類に表示されます。",
+    note: "操作の記録（監査ログ）が残ります。",
+    label: "確認済みにする",
+  },
+  final: {
+    title: "最終版にする",
+    message: "この版の状態を「最終版」に変更します。",
+    note: "操作の記録（監査ログ）が残ります。",
+    label: "最終版にする",
+  },
+  archived: {
+    title: "書類を保管にする",
+    message: "この版を保管にします。書類の一覧では初期状態で非表示になります。",
+    note: "「保管済みを表示」にすると見られます。画面から保管を取り消す操作はありません。操作の記録（監査ログ）が残ります。",
+    label: "保管にする",
+  },
+};
 
 export default function DocumentPreviewPage() {
   const { id, docId } = useParams<{ id: string; docId: string }>();
@@ -23,6 +48,7 @@ export default function DocumentPreviewPage() {
   const doc = documents.find((d) => d.id === docId);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState<StatusChange | null>(null);
   const router = useRouter();
 
   if (!doc) {
@@ -61,8 +87,9 @@ export default function DocumentPreviewPage() {
     }
   }
 
-  async function run(status: "reviewed" | "final" | "archived", ask: string) {
-    if (!doc || !confirm(ask)) return;
+  async function run(status: StatusChange) {
+    setAsking(null);
+    if (!doc) return;
     try {
       await changeStatus(doc, status, status === "reviewed" ? await getConfirmerName() : "");
       setMessage("");
@@ -95,15 +122,15 @@ export default function DocumentPreviewPage() {
         )}
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && doc.status === "draft" && (
-            <Button onClick={() => void run("reviewed", "内容を確認し、行政書士確認済みにします。よろしいですか。")}>
+            <Button onClick={() => setAsking("reviewed")}>
               行政書士確認済みにする
             </Button>
           )}
           {canEdit && doc.status === "reviewed" && (
-            <Button onClick={() => void run("final", "この版を最終版にします。よろしいですか。")}>最終版にする</Button>
+            <Button onClick={() => setAsking("final")}>最終版にする</Button>
           )}
           {canEdit && doc.status !== "archived" && (
-            <Button variant="secondary" onClick={() => void run("archived", "この版を保管にします。よろしいですか。")}>
+            <Button variant="secondary" onClick={() => setAsking("archived")}>
               保管にする
             </Button>
           )}
@@ -137,6 +164,16 @@ export default function DocumentPreviewPage() {
         </div>
       </div>
       <DocumentSheet doc={doc} />
+      {asking && (
+        <ConfirmDialog
+          title={STATUS_CONFIRM[asking].title}
+          message={STATUS_CONFIRM[asking].message}
+          note={STATUS_CONFIRM[asking].note}
+          confirmLabel={STATUS_CONFIRM[asking].label}
+          onCancel={() => setAsking(null)}
+          onConfirm={() => void run(asking)}
+        />
+      )}
     </div>
   );
 }

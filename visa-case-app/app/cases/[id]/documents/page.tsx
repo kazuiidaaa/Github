@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { Badge, Button } from "@/components/ui";
 import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
@@ -12,6 +13,7 @@ import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/docu
 import { useDemo } from "@/lib/demo";
 import { splitHistory } from "@/lib/documents/history";
 import { officialFormScopeWarnings } from "@/lib/documents/officialForms";
+import { precheckRows, precheckWarnings } from "@/lib/documents/precheck";
 import {
   DOCUMENT_TYPE_LABELS,
   GENERATED_STATUS_LABELS,
@@ -39,6 +41,7 @@ export default function DocumentsPage() {
   const [failure, setFailure] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [newIds, setNewIds] = useState<string[]>([]);
+  const [archiving, setArchiving] = useState<GeneratedDocument | null>(null);
   const historyRef = useRef<HTMLElement>(null);
   const knownIds = useRef<Set<string> | null>(null);
 
@@ -79,7 +82,15 @@ export default function DocumentsPage() {
     currentStatus: record.currentStatus,
     residenceStatus: record.applicant.residenceStatus,
   });
-  const checksDone = record.checks.length > 0 ? `${unresolvedCount(record.checks)}件が未解決` : "未実施";
+  const rows = precheckRows({
+    applicantConfirmed: record.applicant.confirmationStatus === "confirmed",
+    hasRuleSet: !!ev.ruleSet,
+    requiredCount: ev.requiredCount,
+    receivedCount: ev.receivedCount,
+    checksTotal: record.checks.length,
+    checksUnresolved: unresolvedCount(record.checks),
+  });
+  const precheckNotes = precheckWarnings(rows);
 
   async function generate() {
     if (!record || selected.length === 0) return;
@@ -100,7 +111,7 @@ export default function DocumentsPage() {
   }
 
   async function archive(d: GeneratedDocument) {
-    if (!confirm(`${DOCUMENT_TYPE_LABELS[d.documentType]} v${d.version} を保管にします。よろしいですか。`)) return;
+    setArchiving(null);
     setMessage("");
     setFailure("");
     try {
@@ -127,15 +138,19 @@ export default function DocumentsPage() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <h2 className="mb-3 font-semibold">データ状態</h2>
-        <dl className="grid grid-cols-[10rem_1fr] gap-y-2">
-          <dt className="text-slate-500">申請人情報</dt>
-          <dd>{record.applicant.confirmationStatus === "confirmed" ? "確認済み" : "下書き（未確認）"}</dd>
-          <dt className="text-slate-500">必要書類</dt>
-          <dd>
-            {ev.ruleSet ? `必要 ${ev.requiredCount} 件中 ${ev.receivedCount} 件が収集済み` : "規則の対象外（追加した書類のみ）"}
-          </dd>
-          <dt className="text-slate-500">申請前チェック</dt>
-          <dd>{checksDone}</dd>
+        <dl className="grid grid-cols-[9rem_1fr] items-center gap-y-3">
+          {rows.map((r) => (
+            <Fragment key={r.key}>
+              <dt className="text-slate-500">{r.label}</dt>
+              <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Badge tone={r.tone === "done" ? "green" : r.tone === "warn" ? "yellow" : "gray"}>{r.status}</Badge>
+                {r.detail && <span>{r.detail}</span>}
+                <Link href={`/cases/${record.id}?tab=${r.tab}`} className="text-blue-700 hover:underline">
+                  {r.unresolved ? "確認・対応する" : "開く"}
+                </Link>
+              </dd>
+            </Fragment>
+          ))}
         </dl>
       </section>
 
@@ -168,6 +183,16 @@ export default function DocumentsPage() {
               </p>
             ))}
             <OfficialFormNotice />
+          </div>
+        )}
+        {precheckNotes.length > 0 && (
+          <div role="note" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
+            <p>注意：次の事項が未解決です（生成はできます）。生成した書類は、行政書士が内容を確認してから使用してください。</p>
+            <ul className="mt-1 list-disc pl-5">
+              {precheckNotes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
           </div>
         )}
         <div className="mt-4 flex items-center gap-3">
@@ -228,7 +253,7 @@ export default function DocumentsPage() {
               </Badge>
               <span className="text-slate-500">{formatDateTime(d.createdAt)}</span>
               {canEdit && d.status !== "archived" && (
-                <Button variant="secondary" onClick={() => void archive(d)}>
+                <Button variant="secondary" onClick={() => setArchiving(d)}>
                   保管にする
                 </Button>
               )}
@@ -236,6 +261,16 @@ export default function DocumentsPage() {
           </div>
         ))}
       </section>
+      {archiving && (
+        <ConfirmDialog
+          title="書類を保管にする"
+          message={`${DOCUMENT_TYPE_LABELS[archiving.documentType]} v${archiving.version} を保管にします。一覧では初期状態で非表示になります。`}
+          note="「保管済みを表示」にすると、保管した版を見られます。画面から保管を取り消す操作はありません。操作の記録（監査ログ）が残ります。"
+          confirmLabel="保管にする"
+          onCancel={() => setArchiving(null)}
+          onConfirm={() => void archive(archiving)}
+        />
+      )}
     </div>
   );
 }
