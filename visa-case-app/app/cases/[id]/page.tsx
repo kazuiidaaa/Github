@@ -68,17 +68,17 @@ function DocumentRow({
 
   return (
     <div className="px-6 py-3 text-sm">
-      <div className="flex items-center justify-between">
-        <span>{UPLOADED_DOCUMENT_LABELS[doc.documentType]}：{doc.fileName}</span>
-        <span className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <span className="min-w-0 break-all">{UPLOADED_DOCUMENT_LABELS[doc.documentType]}：{doc.fileName}</span>
+        <span className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap">
           <Badge tone="blue">
             {DOCUMENT_STATUS_LABELS[doc.status]}
           </Badge>
           <span className="text-slate-500">{formatDateTime(doc.uploadedAt)}</span>
-          <Button variant="secondary" onClick={() => void open()}>
+          <Button variant="secondary" className="min-h-10 md:min-h-0" onClick={() => void open()}>
             表示
           </Button>
-          <Button variant="danger" disabled={locked || readOnly} onClick={onDelete}>
+          <Button variant="danger" className="min-h-10 md:min-h-0" disabled={locked || readOnly} onClick={onDelete}>
             削除
           </Button>
         </span>
@@ -142,23 +142,23 @@ export default function CaseDetailPage() {
       <Link href="/cases" className="text-sm text-blue-700 hover:underline">
         ← 案件一覧
       </Link>
-      <div className="mt-2 mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{record.caseName}</h1>
+      <div className="mt-2 mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold break-words">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
             <WorkflowBadge status={record.workflowStatus} />
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between gap-2 md:w-auto md:shrink-0 md:justify-start">
         <Link
           href={`/cases/${record.id}/documents`}
-          className="rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
+          className="inline-flex min-h-10 items-center whitespace-nowrap md:min-h-0 rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
         >
           申請書類作成
         </Link>
         {canDelete && (
-          <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+          <Button variant="danger" className="min-h-10 md:min-h-0" onClick={() => setConfirmingDelete(true)}>
             削除
           </Button>
         )}
@@ -223,27 +223,27 @@ export default function CaseDetailPage() {
                 {a.confirmationStatus === "confirmed" ? "確認済み" : "下書き"}
               </Badge>
             </h2>
-            <dl className="grid grid-cols-[10rem_1fr] gap-y-3 text-sm">
+            <dl className="grid grid-cols-1 gap-y-1 text-sm md:grid-cols-[10rem_1fr] md:gap-y-3">
               <dt className="text-slate-500">氏名</dt>
-              <dd>{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">国籍・地域</dt>
-              <dd>{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">生年月日</dt>
-              <dd>{formatDate(a.dateOfBirth)}</dd>
+              <dd className="mb-2 break-words md:mb-0">{formatDate(a.dateOfBirth)}</dd>
               <dt className="text-slate-500">性別</dt>
-              <dd>{a.gender || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.gender || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">住居地</dt>
-              <dd>{a.address || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.address || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留資格</dt>
-              <dd>{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留期間の満了日</dt>
-              <dd>
+              <dd className="mb-2 md:mb-0">
                 <ExpiryBadge date={a.residenceExpiryDate} />
               </dd>
               <dt className="text-slate-500">在留カード番号</dt>
-              <dd>{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">就労制限</dt>
-              <dd>{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
               <p className="mt-4 text-sm text-green-700">
