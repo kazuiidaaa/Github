@@ -1,9 +1,7 @@
-# lint・型検査・build・テストを自動で実行する（Issue #177）
-# これまでは、実装者が手元で実行した結果を PR 本文に書く運用で、結果が PR の画面から確認できなかった。
-# 秘密情報は使わない。build に必要な環境変数（NEXT_PUBLIC_SUPABASE_*）は設定しない
-# （未設定のままで build が通ることを確認済み。lib/env.ts は、未設定のとき仮データ方式で動作する）。
-# まずは警告のみ（失敗扱いにしない）で運用する。main で全件成功することを確認した後に、
-# ブランチの保護規則で必須とするかを判断する（docs/security-scans.md の方針と同じ）。
+# テスト・lint・型検査・ビルドを自動実行する（Issue #177）
+# 実装者の手元の結果に頼らず、PR の画面から、品質の検査結果を確認できるようにする。
+# 運用方針：導入の初期は、警告のみ（失敗扱いにしない）。main で全件の成功を確認した後に、
+# ブランチ保護で必須の検査に加える（visa-case-app/docs/ci.md）。秘密情報は使わない。
 name: CI
 
 on:
@@ -17,11 +15,10 @@ permissions:
 
 jobs:
   check:
-    name: lint・型検査・build・テスト
+    name: lint・型検査・ビルド・テスト
     runs-on: ubuntu-latest
-    # 警告のみ。「必須」にする設定は、リポジトリの設定（ブランチの保護規則）で、利用者が行う
+    # 警告のみ。main で全件の成功を確認した後に、削除して必須とする
     continue-on-error: true
-    timeout-minutes: 20
     defaults:
       run:
         working-directory: visa-case-app
@@ -29,13 +26,19 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
-          # 手元で確認済みのバージョン（package.json に engines の指定はない）
+          # @types/node（^22）と、手元で確認済みの 22 系に合わせる
           node-version: 22
           cache: npm
           cache-dependency-path: visa-case-app/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      # 型検査は、build が生成する型（LayoutProps 等）が必要なため、build の後に行う
-      - run: npm run build
-      - run: npx tsc --noEmit
-      - run: npm test
+      - name: 依存関係の導入
+        run: npm ci
+      - name: lint
+        run: npm run lint
+      # 型定義（LayoutProps など）は next build が生成するため、型検査は build の後に行う
+      # 環境変数（NEXT_PUBLIC_SUPABASE_*）は設定しない。未設定のままで build が通ることを手元で確認済み
+      - name: ビルド
+        run: npm run build
+      - name: 型検査
+        run: npx tsc --noEmit
+      - name: テスト
+        run: npm test
