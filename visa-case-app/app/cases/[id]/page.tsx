@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
@@ -15,6 +15,7 @@ import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { ApplicantForm } from "@/components/ApplicantForm";
+import { useToast } from "@/components/Toast";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
@@ -40,6 +41,10 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "requirements", label: "必要書類" },
   { key: "checks", label: "申請前チェック" },
 ];
+const TAB_KEYS = TABS.map((t) => t.key);
+function parseTab(value: string | null): Tab {
+  return TAB_KEYS.find((k) => k === value) ?? "overview";
+}
 
 function DocumentRow({
   doc,
@@ -69,17 +74,17 @@ function DocumentRow({
 
   return (
     <div className="px-6 py-3 text-sm">
-      <div className="flex items-center justify-between">
-        <span>{UPLOADED_DOCUMENT_LABELS[doc.documentType]}：{doc.fileName}</span>
-        <span className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <span className="min-w-0 break-all">{UPLOADED_DOCUMENT_LABELS[doc.documentType]}：{doc.fileName}</span>
+        <span className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap">
           <Badge tone="blue">
             {DOCUMENT_STATUS_LABELS[doc.status]}
           </Badge>
           <span className="text-slate-500">{formatDateTime(doc.uploadedAt)}</span>
-          <Button variant="secondary" onClick={() => void open()}>
+          <Button variant="secondary" className="min-h-10 md:min-h-0" onClick={() => void open()}>
             表示
           </Button>
-          <Button variant="danger" disabled={locked || readOnly} onClick={onDelete}>
+          <Button variant="danger" className="min-h-10 md:min-h-0" disabled={locked || readOnly} onClick={onDelete}>
             削除
           </Button>
         </span>
@@ -93,12 +98,36 @@ function DocumentRow({
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const record = useCase(id);
   const loaded = useStoreLoaded();
   const canEdit = useCan("edit");
   const canDelete = useCan("deleteCase");
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<Tab>(() => (searchParams.get("tab") === "documents" ? "documents" : "overview"));
+  // 開いているタブは URL の ?tab= から決める。切替は履歴を増やさないよう replace を使う
+  const tab = parseTab(searchParams.get("tab"));
+  function setTab(next: Tab) {
+    router.replace(`/cases/${id}?tab=${next}`, { scroll: false });
+  }
+  function onTabKeyDown(e: React.KeyboardEvent, index: number) {
+    const last = TABS.length - 1;
+    const target =
+      e.key === "ArrowRight" ? (index + 1) % TABS.length
+      : e.key === "ArrowLeft" ? (index - 1 + TABS.length) % TABS.length
+      : e.key === "Home" ? 0
+      : e.key === "End" ? last
+      : -1;
+    if (target < 0) return;
+    e.preventDefault();
+    setTab(TABS[target].key);
+    document.getElementById(`case-tab-${TABS[target].key}`)?.focus();
+  }
+  // 案件の読み込み後にタブバーが現れるため、その時点でも位置を合わせる
+  const tabBarShown = !!record;
+  useEffect(() => {
+    // 選択中のタブが見える位置へ、タブバーだけを横にスクロールする
+    document.getElementById(`case-tab-${tab}`)?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [tab, tabBarShown]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
@@ -127,6 +156,7 @@ export default function CaseDetailPage() {
       documents: removeDocumentOfType(c.documents, d.documentType),
     }));
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
+    toast.success(`${UPLOADED_DOCUMENT_LABELS[d.documentType]}を削除しました`);
   }
   const a = record.applicant;
   // タブ見出しの未対応表示。値が null のタブは表示しない（選択中のタブも表示する）。
@@ -143,23 +173,23 @@ export default function CaseDetailPage() {
       <Link href="/cases" className="text-sm text-blue-700 hover:underline">
         ← 案件一覧
       </Link>
-      <div className="mt-2 mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{record.caseName}</h1>
+      <div className="mt-2 mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold break-words">{record.caseName}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
             {procedure}
             <WorkflowBadge status={record.workflowStatus} />
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between gap-2 md:w-auto md:shrink-0 md:justify-start">
         <Link
           href={`/cases/${record.id}/documents`}
-          className="rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
+          className="inline-flex min-h-10 items-center whitespace-nowrap md:min-h-0 rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
         >
           申請書類作成
         </Link>
         {canDelete && (
-          <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+          <Button variant="danger" className="min-h-10 md:min-h-0" onClick={() => setConfirmingDelete(true)}>
             削除
           </Button>
         )}
@@ -174,7 +204,10 @@ export default function CaseDetailPage() {
             setDeleting(true);
             const ok = await deleteCase(record.id);
             setDeleting(false);
-            if (ok) router.push("/cases");
+            if (ok) {
+              toast.success("案件を削除しました");
+              router.push("/cases");
+            }
             else setConfirmingDelete(false);
           }}
         />
@@ -190,12 +223,19 @@ export default function CaseDetailPage() {
         />
       )}
 
-      <div className="mb-6 flex gap-1 border-b border-slate-200">
-        {TABS.map((t) => (
+      <div role="tablist" aria-label="案件の項目" className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
+        {TABS.map((t, i) => (
           <button
             key={t.key}
+            type="button"
+            role="tab"
+            id={`case-tab-${t.key}`}
+            aria-selected={tab === t.key}
+            aria-controls={tab === t.key ? "case-tabpanel" : undefined}
+            tabIndex={tab === t.key ? 0 : -1}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium ${
+            onKeyDown={(e) => onTabKeyDown(e, i)}
+            className={`shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium ${
               tab === t.key ? "border-b-2 border-accent text-foreground" : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -209,6 +249,7 @@ export default function CaseDetailPage() {
         ))}
       </div>
 
+      <div id="case-tabpanel" role="tabpanel" aria-labelledby={`case-tab-${tab}`}>
       {tab === "overview" && (
         <div className="space-y-6">
           {(() => {
@@ -224,27 +265,27 @@ export default function CaseDetailPage() {
                 {a.confirmationStatus === "confirmed" ? "確認済み" : "下書き"}
               </Badge>
             </h2>
-            <dl className="grid grid-cols-[10rem_1fr] gap-y-3 text-sm">
+            <dl className="grid grid-cols-1 gap-y-1 text-sm md:grid-cols-[10rem_1fr] md:gap-y-3">
               <dt className="text-slate-500">氏名</dt>
-              <dd>{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">国籍・地域</dt>
-              <dd>{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">生年月日</dt>
-              <dd>{formatDate(a.dateOfBirth)}</dd>
+              <dd className="mb-2 break-words md:mb-0">{formatDate(a.dateOfBirth)}</dd>
               <dt className="text-slate-500">性別</dt>
-              <dd>{a.gender || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.gender || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">住居地</dt>
-              <dd>{a.address || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.address || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留資格</dt>
-              <dd>{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">在留期間の満了日</dt>
-              <dd>
+              <dd className="mb-2 md:mb-0">
                 <ExpiryBadge date={a.residenceExpiryDate} />
               </dd>
               <dt className="text-slate-500">在留カード番号</dt>
-              <dd>{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
               <dt className="text-slate-500">就労制限</dt>
-              <dd>{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
               <p className="mt-4 text-sm text-green-700">
@@ -316,6 +357,7 @@ export default function CaseDetailPage() {
 
         {tab === "checks" && <ChecksPanel record={record} />}
       </fieldset>
+      </div>
     </div>
   );
 }
