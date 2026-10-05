@@ -237,7 +237,7 @@ describe("fillCoeExcel", () => {
     ["高度専門職（1号ロ）", "企業内転勤", "L"],
     ["高度専門職（1号ハ）", "経営・管理", "M"],
     ["高度専門職（1号ロ）", "法律・会計業務", "U"],
-  ] as const)("様式がN以外（%s・%s → 様式%s）の場合は、その様式の第1表だけに差し込み、第2表以降は未対応と警告する", async (grade, activity, form) => {
+  ] as const)("様式がN以外（%s・%s → 様式%s）の場合は、その様式のテンプレートで、第1表の入国目的の■を付け、様式Nの表を流用しない", async (grade, activity, form) => {
     const { buffer, warnings } = await fillCoeExcel(applicant, employment, { ...details, hspActivity: activity }, grade);
     const wb = await open(buffer);
     const tpl = await open(COE_TEMPLATE_PATHS[form]);
@@ -246,14 +246,9 @@ describe("fillCoeExcel", () => {
       expect(text(wb, S1, cell), label).toBe(label === grade ? "■" : "□");
     }
     expect(text(wb, S1, "E23")).not.toBe(""); // 第1表には差し込まれている
-    // 第1表以外は、テンプレートの元の状態のまま（様式Nの対応表を流用しない）
-    for (const ws of wb.worksheets.slice(1)) {
-      const orig = tpl.getWorksheet(ws.id)!;
-      ws.eachRow((row) =>
-        row.eachCell((c) => expect(plain(c.value), `${ws.name}!${c.address}`).toBe(plain(orig.getCell(c.address).value))),
-      );
-    }
-    expect(warnings.join("\n")).toContain(`様式 ${form} の第2表以降は未対応です`);
+    // 様式の案内文を警告に含める（未対応の欄を、様式上で記入するため）
+    expect(warnings.join("\n")).toContain("案件情報に項目がないため差し込んでいません");
+    expect(warnings.join("\n")).not.toContain("未対応です");
   });
 
   it("様式N（教授以外の研究・技術・人文知識・国際業務）は、従来どおり第2表以降も差し込み、警告しない", async () => {
