@@ -14,6 +14,7 @@ import { EmploymentForm } from "@/components/EmploymentForm";
 import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
+import { NextActionCard } from "@/components/NextActionCard";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
@@ -252,16 +253,7 @@ export default function CaseDetailPage() {
             )}
           </section>
           <CaseInfoEditor record={record} canEdit={canEdit} />
-          {!doc && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-              <p>次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。</p>
-              {canEdit && (
-                <Button type="button" onClick={() => setTab("documents")}>
-                  書類を登録する
-                </Button>
-              )}
-            </div>
-          )}
+          <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
         </div>
       )}
 
