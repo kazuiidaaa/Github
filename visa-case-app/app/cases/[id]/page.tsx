@@ -201,7 +201,7 @@ export default function CaseDetailPage() {
             {t.label}
             {tabIndicators[t.key] && (
               <span className="ml-1.5">
-                <Badge tone="yellow">{tabIndicators[t.key]}</Badge>
+                <Badge tone="yellow" icon={false}>{tabIndicators[t.key]}</Badge>
               </span>
             )}
           </button>

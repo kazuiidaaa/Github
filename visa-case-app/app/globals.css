@@ -1,19 +1,231 @@
 @import "tailwindcss";
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-}
+/*
+ * デザインの規則（Issue #122）
+ * - 色は青・橙・灰を基調とし、赤と緑の対比に頼らない。文字は背景に対し 4.5 以上の対比。
+ * - 状態は色だけでなく、文字と図形（SVG）を併記する。
+ * - 既存画面が使う Tailwind の色名（slate / blue / red / amber / yellow / green / white）は、
+ *   下の変数で置き換える。暗色は :root[data-theme="dark"] で上書きする。
+ *   （red は橙系、green は青緑系に割り当て、赤と緑の区別に頼らない。）
+ */
+@theme {
+  --color-white: #ffffff;
 
-@theme inline {
+  --color-slate-50: #f5f5f7;
+  --color-slate-100: #ececf0;
+  --color-slate-200: #d9d9de;
+  --color-slate-300: #bcbcc4;
+  --color-slate-400: #6e6e73;
+  --color-slate-500: #636366;
+  --color-slate-600: #48484a;
+  --color-slate-700: #3a3a3c;
+  --color-slate-800: #2c2c2e;
+  --color-slate-900: #1d1d1f;
+
+  --color-blue-50: #eaf3ff;
+  --color-blue-100: #d6e8ff;
+  --color-blue-200: #a9cdf7;
+  --color-blue-700: #0059b3;
+  --color-blue-800: #004a99;
+  --color-blue-900: #003a7a;
+
+  --color-red-50: #fff1e6;
+  --color-red-100: #ffe3cc;
+  --color-red-200: #ffc999;
+  --color-red-300: #f0a060;
+  --color-red-400: #d96a1a;
+  --color-red-600: #b84a00;
+  --color-red-700: #a13f00;
+  --color-red-800: #8a3600;
+  --color-red-900: #6e2b00;
+
+  --color-amber-50: #fff8e1;
+  --color-amber-100: #ffefb8;
+  --color-amber-200: #f5d878;
+  --color-amber-700: #7a5200;
+  --color-amber-800: #6b4700;
+  --color-amber-900: #573a00;
+
+  --color-yellow-50: #fff8e1;
+  --color-yellow-100: #ffefb8;
+  --color-yellow-300: #e6c24d;
+  --color-yellow-800: #6b4700;
+  --color-yellow-900: #573a00;
+
+  --color-green-100: #d9f0f5;
+  --color-green-700: #00606f;
+  --color-green-800: #004f5c;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-line-strong: var(--line-strong);
+
   --font-sans: var(--font-noto-sans-jp), "Noto Sans JP", sans-serif;
   --font-mono: var(--font-noto-sans-jp), "Noto Sans JP", sans-serif;
+
+  --ease-apple: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root {
+  color-scheme: light;
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  --accent: #0066cc;
+  --accent-hover: #0058b0;
+  --accent-text: #ffffff;
+  --line-strong: #8a8a93;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #1d1d1f;
+  --foreground: #f5f5f7;
+  --accent: #2997ff;
+  --accent-hover: #5cb0ff;
+  --accent-text: #000000;
+  --line-strong: #8e8e93;
+
+  --color-white: #2c2c2e;
+
+  --color-slate-50: #252527;
+  --color-slate-100: #2c2c2e;
+  --color-slate-200: #3a3a3c;
+  --color-slate-300: #505054;
+  --color-slate-400: #a1a1a6;
+  --color-slate-500: #a8a8ad;
+  --color-slate-600: #c7c7cc;
+  --color-slate-700: #d9d9de;
+  --color-slate-800: #e8e8ed;
+  --color-slate-900: #f5f5f7;
+
+  --color-blue-50: #0c2a47;
+  --color-blue-100: #10375e;
+  --color-blue-200: #1f5588;
+  --color-blue-700: #6cb6ff;
+  --color-blue-800: #8cc6ff;
+  --color-blue-900: #b0d8ff;
+
+  --color-red-50: #3d2210;
+  --color-red-100: #4a2a12;
+  --color-red-200: #6b3d1a;
+  --color-red-300: #8f5326;
+  --color-red-400: #ff9f5a;
+  --color-red-600: #ffa766;
+  --color-red-700: #ffb27a;
+  --color-red-800: #ffc299;
+  --color-red-900: #ffd2b3;
+
+  --color-amber-50: #33290a;
+  --color-amber-100: #40320c;
+  --color-amber-200: #5c4915;
+  --color-amber-700: #f0c64d;
+  --color-amber-800: #f5d166;
+  --color-amber-900: #f9de8a;
+
+  --color-yellow-50: #33290a;
+  --color-yellow-100: #40320c;
+  --color-yellow-300: #7d6320;
+  --color-yellow-800: #f5d166;
+  --color-yellow-900: #f9de8a;
+
+  --color-green-100: #0c3a44;
+  --color-green-700: #6fd3e6;
+  --color-green-800: #8fdcec;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-noto-sans-jp), "Noto Sans JP", sans-serif;
+  font-weight: 500;
+  transition:
+    background-color 0.25s var(--ease-apple),
+    color 0.25s var(--ease-apple);
+}
+
+h1,
+h2,
+h3,
+h4,
+th,
+legend {
+  font-weight: 700;
+}
+
+/* 動きの規則：短く、操作の結果を示す動きのみ（0.15〜0.3 秒） */
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  transition:
+    background-color 0.18s var(--ease-apple),
+    border-color 0.18s var(--ease-apple),
+    color 0.18s var(--ease-apple),
+    box-shadow 0.18s var(--ease-apple),
+    transform 0.18s var(--ease-apple),
+    opacity 0.18s var(--ease-apple);
+}
+
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.anim-page-enter {
+  animation: page-enter 0.28s var(--ease-apple) both;
+}
+
+.anim-pop-in {
+  animation: pop-in 0.2s var(--ease-apple) both;
+}
+
+/* 一覧などで、子要素を順に表示する（--i に順番を指定する） */
+.anim-stagger > * {
+  animation: page-enter 0.28s var(--ease-apple) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 30ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  button:not(:disabled):active {
+    transform: none;
+  }
 }
