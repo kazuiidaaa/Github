@@ -97,7 +97,10 @@ export default function CaseDetailPage() {
   const canEdit = useCan("edit");
   const canDelete = useCan("deleteCase");
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<Tab>(() => (searchParams.get("tab") === "documents" ? "documents" : "overview"));
+  const [tab, setTab] = useState<Tab>(() => {
+    const t = searchParams.get("tab");
+    return TABS.find((x) => x.key === t)?.key ?? "overview";
+  });
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
