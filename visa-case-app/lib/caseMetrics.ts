@@ -169,15 +169,33 @@ export interface CaseRow {
   metrics: CaseMetrics;
 }
 
+/**
+ * 検索の照合用に文字列を正規化する。
+ * 全角・半角の英数字とカナ（NFKC）、大文字・小文字、ひらがな・カタカナ、空白（全角・半角）の有無の違いを同一視する。
+ * 漢字と読み（例：「李」と「り」）は対応づけない。
+ */
+export function normalizeSearchText(s: string): string {
+  return s
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\u30a1-\u30f6]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60))
+    .replace(/\s+/g, "");
+}
+
+/** 検索語が、いずれかの対象文字列に含まれるか。検索語が空（空白のみを含む）なら常に true。 */
+export function matchesSearch(query: string, targets: string[]): boolean {
+  const q = normalizeSearchText(query);
+  if (!q) return true;
+  // 項目をまたいだ偶然の一致を避けるため、空白を含まない区切り文字で連結する（検索語に区切り文字は残らない）
+  return targets.map(normalizeSearchText).join("\u0000").includes(q);
+}
+
 export function applyFilter(cases: CaseRecord[], f: CaseFilter): CaseRow[] {
-  const q = f.query.trim().toLowerCase();
+  const q = f.query;
   const rows = cases
     .map((record) => ({ record, metrics: metricsOf(record) }))
     .filter(({ record: c, metrics: m }) => {
-      if (q) {
-        const text = `${c.caseName} ${c.applicant.legalName} ${c.applicant.residenceStatus || c.currentStatus}`.toLowerCase();
-        if (!text.includes(q)) return false;
-      }
+      if (!matchesSearch(q, [c.caseName, c.applicant.legalName, c.applicant.residenceStatus || c.currentStatus])) return false;
       if (f.procedure !== "all" && c.procedureType !== f.procedure) return false;
       if (f.status !== "all" && c.workflowStatus !== f.status) return false;
       if (f.within30 && !m.within30) return false;
