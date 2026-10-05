@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Noto_Sans_JP } from "next/font/google";
 import { AuthGate } from "@/components/AuthGate";
 import { Footer } from "@/components/Footer";
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   description: "行政書士向け 在留資格申請の案件管理（MVP-1 試作）",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" data-theme="light" suppressHydrationWarning className={`${notoSansJP.variable} h-full antialiased`}>
       <head>
