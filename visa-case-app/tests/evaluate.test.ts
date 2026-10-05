@@ -338,10 +338,11 @@ describe("規則を引く在留資格の決め方", () => {
 });
 
 describe("号つきの高度専門職（Issue #181）", () => {
-  it("高度専門職の保存値は、他の在留資格の規則に誤一致しない", () => {
+  it("高度専門職の保存値は、高度専門職の規則にだけ一致し、他の在留資格の規則には誤一致しない", () => {
     for (const procedureType of ["coe", "change", "renewal"] as const) {
+      const hasHspRules = RULE_SETS.some((r) => r.procedureType === procedureType && r.residenceStatus.startsWith("高度専門職"));
       for (const grade of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
-        expect(hasRuleSetFor(procedureType, grade), `${procedureType}:${grade}`).toBe(false);
+        expect(hasRuleSetFor(procedureType, grade), `${procedureType}:${grade}`).toBe(hasHspRules);
       }
     }
   });
