@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
@@ -39,6 +39,10 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "requirements", label: "必要書類" },
   { key: "checks", label: "申請前チェック" },
 ];
+const TAB_KEYS = TABS.map((t) => t.key);
+function parseTab(value: string | null): Tab {
+  return TAB_KEYS.find((k) => k === value) ?? "overview";
+}
 
 function DocumentRow({
   doc,
@@ -97,7 +101,30 @@ export default function CaseDetailPage() {
   const canEdit = useCan("edit");
   const canDelete = useCan("deleteCase");
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<Tab>(() => (searchParams.get("tab") === "documents" ? "documents" : "overview"));
+  // 開いているタブは URL の ?tab= から決める。切替は履歴を増やさないよう replace を使う
+  const tab = parseTab(searchParams.get("tab"));
+  function setTab(next: Tab) {
+    router.replace(`/cases/${id}?tab=${next}`, { scroll: false });
+  }
+  function onTabKeyDown(e: React.KeyboardEvent, index: number) {
+    const last = TABS.length - 1;
+    const target =
+      e.key === "ArrowRight" ? (index + 1) % TABS.length
+      : e.key === "ArrowLeft" ? (index - 1 + TABS.length) % TABS.length
+      : e.key === "Home" ? 0
+      : e.key === "End" ? last
+      : -1;
+    if (target < 0) return;
+    e.preventDefault();
+    setTab(TABS[target].key);
+    document.getElementById(`case-tab-${TABS[target].key}`)?.focus();
+  }
+  // 案件の読み込み後にタブバーが現れるため、その時点でも位置を合わせる
+  const tabBarShown = !!record;
+  useEffect(() => {
+    // 選択中のタブが見える位置へ、タブバーだけを横にスクロールする
+    document.getElementById(`case-tab-${tab}`)?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [tab, tabBarShown]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
@@ -189,12 +216,19 @@ export default function CaseDetailPage() {
         />
       )}
 
-      <div className="mb-6 flex gap-1 border-b border-slate-200">
-        {TABS.map((t) => (
+      <div role="tablist" aria-label="案件の項目" className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
+        {TABS.map((t, i) => (
           <button
             key={t.key}
+            type="button"
+            role="tab"
+            id={`case-tab-${t.key}`}
+            aria-selected={tab === t.key}
+            aria-controls={tab === t.key ? "case-tabpanel" : undefined}
+            tabIndex={tab === t.key ? 0 : -1}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium ${
+            onKeyDown={(e) => onTabKeyDown(e, i)}
+            className={`shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium ${
               tab === t.key ? "border-b-2 border-accent text-foreground" : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -208,6 +242,7 @@ export default function CaseDetailPage() {
         ))}
       </div>
 
+      <div id="case-tabpanel" role="tabpanel" aria-labelledby={`case-tab-${tab}`}>
       {tab === "overview" && (
         <div className="space-y-6">
           {(() => {
@@ -315,6 +350,7 @@ export default function CaseDetailPage() {
 
         {tab === "checks" && <ChecksPanel record={record} />}
       </fieldset>
+      </div>
     </div>
   );
 }
