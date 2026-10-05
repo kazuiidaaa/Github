@@ -102,3 +102,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 - `supabase/migrations/0019_document_status_submitted.sql`:`generated_documents.document_status` の `final` を `submitted` に変更し(制約と遷移の規則)、既存の `final` を `submitted` に読み替えます。0018 の実行後に SQL Editor で実行します。
 - 実際に提出済みかどうかは DB から判別できないため、読み替え後に、未提出の版がないか画面で確認してください。
 - 監査ログの過去の記録(`document_final`)は書き換えません。
+
+## 0020(生成文書:確認前の版の更新)
+
+- `supabase/migrations/0020_draft_documents_update.sql`:確認前(draft)の版に限り、題名・内容・版番号の変更を許可します(`guard_generated_documents` の差し替え)。更新用の関数 `update_draft_generated_document` と、保管庫 `generated-documents` の上書き用ポリシーを追加します。0019 の実行後に SQL Editor で実行します。
+- 確認済み(reviewed)・提出済み(submitted)・保管(archived)の版は、内容も、保管庫のファイルも、変更できません。行の削除のポリシーは、設けないままです。
+- 実行しない場合、最新のアプリで再生成すると、確認前の版の更新に失敗します(新しい版の追加は従来どおりです)。既存のデータは変更しません。

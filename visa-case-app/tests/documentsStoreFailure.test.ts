@@ -52,3 +52,31 @@ describe("generateDocuments の途中失敗", () => {
     expect(shown.map((d) => d.outputFormat).sort()).toEqual(["html", "xlsx"]);
   });
 });
+
+describe("確認前の版の更新（Issue #203）", () => {
+  beforeEach(() => mem.clear());
+
+  it("確認前の版があれば、新しい行を作らず、同じ行を更新して版番号を進める", async () => {
+    await generateDocuments(record, ["case_summary"]);
+    const first = getGeneratedDocuments(record.id).filter((d) => d.documentType === "case_summary");
+    expect(first).toHaveLength(1);
+    await generateDocuments(record, ["case_summary"]);
+    const second = getGeneratedDocuments(record.id).filter((d) => d.documentType === "case_summary");
+    expect(second).toHaveLength(1);
+    expect(second[0].id).toBe(first[0].id);
+    expect(second[0].version).toBe(first[0].version + 1);
+  });
+
+  it("確認済みの版が最新なら、上書きせず、新しい版を追加する", async () => {
+    await generateDocuments(record, ["case_summary"]);
+    const [d] = getGeneratedDocuments(record.id);
+    const { changeStatus } = await import("../lib/documents/store");
+    await changeStatus(d, "reviewed", "確認者");
+    const out = await generateDocuments(record, ["case_summary"]);
+    const all = getGeneratedDocuments(record.id).filter((x) => x.documentType === "case_summary");
+    expect(all).toHaveLength(2);
+    expect(all.find((x) => x.id === d.id)?.status).toBe("reviewed");
+    expect(all.find((x) => x.id === d.id)?.version).toBe(d.version);
+    expect(out[0].id).not.toBe(d.id);
+  });
+});

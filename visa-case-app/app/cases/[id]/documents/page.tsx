@@ -43,19 +43,8 @@ export default function DocumentsPage() {
   const [newIds, setNewIds] = useState<string[]>([]);
   const [archiving, setArchiving] = useState<GeneratedDocument | null>(null);
   const historyRef = useRef<HTMLElement>(null);
-  const knownIds = useRef<Set<string> | null>(null);
 
-  // 生成で追加された版（生成前に存在しなかった版）を特定する。
-  useEffect(() => {
-    const before = knownIds.current;
-    if (!before) return;
-    const added = documents.filter((d) => !before.has(d.id)).map((d) => d.id);
-    if (added.length === 0) return;
-    knownIds.current = null;
-    setNewIds(added);
-  }, [documents]);
-
-  // 生成直後に、追加された版を強調して生成履歴へスクロールする。数秒後に強調を外す。
+  // 生成直後に、追加・更新された版を強調して生成履歴へスクロールする。数秒後に強調を外す。
   useEffect(() => {
     if (newIds.length === 0) return;
     historyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -97,12 +86,11 @@ export default function DocumentsPage() {
     setBusy(true);
     setMessage("生成中……");
     setFailure("");
-    knownIds.current = new Set(documents.map((d) => d.id));
     try {
-      await generateDocuments(record, selected);
-      setMessage("新しい版として生成しました。内容を確認してください。");
+      const touched = await generateDocuments(record, selected);
+      setNewIds(touched.map((d) => d.id));
+      setMessage("生成しました（確認前の版がある場合は、その版を更新しました）。内容を確認してください。");
     } catch (e) {
-      knownIds.current = null;
       setMessage("");
       setFailure(`生成に失敗しました：${messageOf(e)}`);
     } finally {
@@ -238,7 +226,7 @@ export default function DocumentsPage() {
             }`}
           >
             <span>
-              {newIds.includes(d.id) && <span className="sr-only">新しい版：</span>}
+              {newIds.includes(d.id) && <span className="sr-only">生成・更新した版：</span>}
               <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
                 {DOCUMENT_TYPE_LABELS[d.documentType]} v{d.version}
               </Link>
@@ -247,7 +235,7 @@ export default function DocumentsPage() {
               )}
             </span>
             <span className="flex items-center gap-3">
-              {newIds.includes(d.id) && <Badge tone="green">新規</Badge>}
+              {newIds.includes(d.id) && <Badge tone="green">新規・更新</Badge>}
               <Badge tone={d.status === "draft" ? "yellow" : d.status === "archived" ? "gray" : "green"}>
                 {GENERATED_STATUS_LABELS[d.status]}
               </Badge>
