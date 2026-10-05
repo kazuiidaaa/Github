@@ -11,11 +11,13 @@ import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
 import { notApplicableMessage, shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
+import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 
 export default function NewCasePage() {
   const router = useRouter();
+  const toast = useToast();
   const canEdit = useCan("edit");
   const [caseName, setCaseName] = useState("");
   const [procedureType, setProcedureType] = useState<ProcedureType | "">("");
@@ -149,11 +151,13 @@ export default function NewCasePage() {
     if (bulk) {
       bulkNames.forEach(create);
       clearNewCaseDraft();
+      toast.success(`${bulkNames.length}件の案件を作成しました`);
       router.push("/cases");
       return;
     }
     const id = create(caseName.trim());
     clearNewCaseDraft();
+    toast.success("案件を作成しました");
     // 作成直後は、次に行う書類の登録へ誘導するため「書類」タブを開く
     router.push(`/cases/${id}?tab=documents`);
   }
