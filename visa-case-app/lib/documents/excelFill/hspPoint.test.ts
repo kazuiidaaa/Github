@@ -17,15 +17,24 @@ const sheetOf = (wb: ExcelJS.Workbook, name: string) => wb.worksheets.find((s) =
 const checks = (sheet: HspPointSheetKey, rows: number[]) => rows.map((r) => pointCheckId(sheet, r));
 
 describe("ポイント計算表の行の定義とテンプレートの整合", () => {
-  it("すべての行が、実在するシートの「AF列のロック解除セル（□）」を指す", async () => {
+  it("すべての行が、実在するシートのチェック欄（AF列のロック解除セル。例外は col で指定）を指す", async () => {
     const wb = await open(HSP_POINT_TEMPLATE_PATH);
     for (const [key, def] of Object.entries(HSP_POINT_SHEETS)) {
       const ws = sheetOf(wb, def.sheetName);
       expect(ws, key).toBeDefined();
       for (const r of def.rows) {
-        const c = ws!.getCell(`AF${r.row}`);
-        expect(c.protection?.locked, `${key}:${r.row} ${r.label}`).toBe(false);
-        expect(String(c.value), `${key}:${r.row} ${r.label}`).toBe("□");
+        const c = ws!.getCell(`${r.col ?? "AF"}${r.row}`);
+        if (r.blankInTemplate) {
+          // ラジオボタン（フォーム部品）で選ぶ欄。セルは空で、ロック解除されている
+          expect(c.protection?.locked, `${key}:${r.row} ${r.label}`).toBe(false);
+          expect(String(c.value ?? ""), `${key}:${r.row} ${r.label}`).toBe("");
+        } else if (r.col) {
+          // ロック済みの「□」（B の投資運用業等）。差し込みは、ロックと無関係に値を書く
+          expect(String(c.value), `${key}:${r.row} ${r.label}`).toBe("□");
+        } else {
+          expect(c.protection?.locked, `${key}:${r.row} ${r.label}`).toBe(false);
+          expect(String(c.value), `${key}:${r.row} ${r.label}`).toBe("□");
+        }
       }
     }
   });
@@ -138,7 +147,7 @@ describe("fillHspPointExcel", () => {
     expect(names.some((n) => n.startsWith("A ") || n.startsWith("C "))).toBe(false);
     expect(names.some((n) => n.includes("疎明資料"))).toBe(true);
     const ws = sheetOf(wb, HSP_POINT_SHEETS.B.sheetName)!;
-    for (const r of HSP_POINT_SHEETS.B.rows) expect(String(ws.getCell(`AF${r.row}`).value), `row ${r.row}`).toBe([15, 20, 27].includes(r.row) ? "■" : "□");
+    for (const r of HSP_POINT_SHEETS.B.rows) expect(String(ws.getCell(`${r.col ?? "AF"}${r.row}`).value), `row ${r.row}`).toBe([15, 20, 27].includes(r.row) ? "■" : "□");
     expect(ws.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(70);
     expect(warnings.join("\n")).toContain("合計欄へ書き込みました");
     expect(warnings.join("\n")).toContain("単純合計は 70 点");
@@ -193,5 +202,48 @@ describe("fillHspPointExcel", () => {
     const { buffer } = await fillHspPointExcel("高度専門職（1号イ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [15]) });
     const ws = sheetOf(await open(buffer), HSP_POINT_SHEETS.A.sheetName)!;
     expect(String(ws.getCell("AF15").value)).toBe("□");
+  });
+
+  it("B の資格（1つ・複数）は、択一で、選んだ欄を「■」、選ばない欄を「□」にする。点数は合計に含める", async () => {
+    const one = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27, 46]) });
+    const ws1 = sheetOf(await open(one.buffer), HSP_POINT_SHEETS.B.sheetName)!;
+    expect(String(ws1.getCell("AF46").value)).toBe("■");
+    expect(String(ws1.getCell("AF48").value)).toBe("□");
+    expect(ws1.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(35); // 年収 30 + 資格（1つ）5
+    const many = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27, 48]) });
+    const ws2 = sheetOf(await open(many.buffer), HSP_POINT_SHEETS.B.sheetName)!;
+    expect(String(ws2.getCell("AF46").value)).toBe("□");
+    expect(String(ws2.getCell("AF48").value)).toBe("■");
+    expect(ws2.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(40); // 年収 30 + 資格（複数）10
+    const none = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27]) });
+    const ws3 = sheetOf(await open(none.buffer), HSP_POINT_SHEETS.B.sheetName)!;
+    expect(String(ws3.getCell("AF46").value)).toBe("□");
+    expect(String(ws3.getCell("AF48").value)).toBe("□");
+  });
+
+  it("資格の「1つ」と「複数」を両方選ぶと、択一の重複として、合計欄を書き込まず、注意する", async () => {
+    const est = estimateHspPoints("B", checks("B", [27, 46, 48]));
+    expect(est.totalWritable).toBe(false);
+    expect(est.notes.join("\n")).toContain("「資格」は、1つだけ選ぶ項目です");
+  });
+
+  it("B の投資運用業等は、AG95 の「□」を「■」にし、10点を合計に含める", async () => {
+    const { buffer } = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [27, 95]) });
+    const ws = sheetOf(await open(buffer), HSP_POINT_SHEETS.B.sheetName)!;
+    expect(String(ws.getCell("AG95").value)).toBe("■");
+    expect(ws.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(40); // 年収 30 + 投資運用業等 10
+  });
+
+  it("特別加算には上限がないため、選んだ点数をそのまま合計する", () => {
+    const est = estimateHspPoints("B", checks("B", [27, 48, 52, 54, 95]));
+    expect(est.total).toBe(30 + 10 + 10 + 10 + 10); // 年収・資格（複数）・特別加算Ⅰ・Ⅱ・投資運用業等
+    expect(estimateHspPoints("B", checks("B", [27])).notes.join("\n")).not.toContain("上限");
+    expect(hspPointConfirmLines(est).join("\n")).not.toContain("上限");
+  });
+
+  it("資格・投資運用業等を選ぶと、疎明資料の番号（⑧・㉑）が導かれる", () => {
+    expect(evidenceNumbers("B", checks("B", [46]))).toEqual(["⑧"]);
+    expect(evidenceNumbers("B", checks("B", [48, 95]))).toEqual(["⑧", "㉑"]);
+    expect(evidenceNumbers("C", checks("C", [81]))).toEqual(["㉑"]);
   });
 });

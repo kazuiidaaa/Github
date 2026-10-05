@@ -1,5 +1,6 @@
 // 高度専門職ポイント計算表（docs/official/points-calculation-table_930001673.xlsx）の、チェック欄（□）の一覧。
 // シート（A＝1号イ、B＝1号ロ、C＝1号ハ）の「AF列のロック解除セル」から生成した（Issue #186）。様式が改正されたら、再生成して、試験（hspPoint.test.ts）で照合する。
+// col は、チェック欄が AF 列でない項目だけに付ける（B の投資運用業等は AG 列）。blankInTemplate は、様式のチェック欄が空欄で、ラジオボタン（フォーム部品）で選ぶ項目（B の資格）。
 // points は、様式に印字された点数。印字がない・複数項目の組み合わせで決まるもの（研究実績の2つ以上など）は null。
 
 export type HspPointSheetKey = "A" | "B" | "C";
@@ -12,6 +13,10 @@ export interface HspPointRow {
   points: number | null;
   /** 疎明資料の番号（様式の記載。結合セルの範囲に含まれる行は、同じ番号を持つ。空は、番号の記載がない項目（年齢）） */
   evidence: string;
+  /** チェック欄の列。省略は AF 列。様式の作りが異なる項目（投資運用業等のロック済みセル）だけ指定する */
+  col?: string;
+  /** 様式のチェック欄が空欄（ラジオボタンの部品）の項目。差し込みで、未選択は「□」、選択は「■」を書き込む。部品は、ExcelJS の書き出しで消える */
+  blankInTemplate?: boolean;
 }
 
 export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; label: string; /** 合計欄（結合セルの左上）。差し込みで、合計点を書き込む */ totalCell: string; rows: HspPointRow[] }> = {
@@ -84,6 +89,8 @@ export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; lab
       { row: 40, section: "研究", label: "外国政府から補助金，競争的資金等を受けた研究に３回以上従事", points: null, evidence: "⑤" },
       { row: 42, section: "研究", label: "学術論文データベース登載の学術雑誌の論文が3本以上（責任著者又は筆頭著者のものに限る）", points: null, evidence: "⑥" },
       { row: 44, section: "研究", label: "その他法務大臣が認める研究実績", points: null, evidence: "⑦" },
+      { row: 46, section: "資格", label: "日本の国家資格（業務独占資格又は名称独占資格）・IT告示の試験の合格又は資格：１つ保有", points: 5, evidence: "⑧", blankInTemplate: true },
+      { row: 48, section: "資格", label: "日本の国家資格（業務独占資格又は名称独占資格）・IT告示の試験の合格又は資格：複数保有", points: 10, evidence: "⑧", blankInTemplate: true },
       { row: 52, section: "特別加算", label: "Ⅰ イノベーション促進支援措置を受けている", points: 10, evidence: "⑨" },
       { row: 54, section: "特別加算", label: "Ⅱ Ⅰに該当する企業であって，中小企業基本法に規定する中小企業者", points: 10, evidence: "⑩" },
       { row: 56, section: "特別加算", label: "Ⅲ 産業の国際競争力強化等のため、地方公共団体における高度人材外国人の受入れ促進の支援措置（法務大臣が認めるもの）を受けている", points: 10, evidence: "⑪" },
@@ -97,6 +104,7 @@ export const HSP_POINT_SHEETS: Record<HspPointSheetKey, { sheetName: string; lab
       { row: 84, section: "特別加算", label: "Ⅱ スーパーグローバル大学創成支援事業（トップ型・グローバル化牽引型）の補助金交付大学を卒業", points: null, evidence: "⑰" },
       { row: 86, section: "特別加算", label: "Ⅲ イノベーティブ・アジア事業のパートナー校を卒業", points: null, evidence: "⑰" },
       { row: 89, section: "特別加算", label: "イノベーティブ・アジア事業の一環としてJICAが実施する研修を修了", points: 5, evidence: "⑱" },
+      { row: 95, section: "特別加算", label: "投資運用業等に係る業務に従事", points: 10, evidence: "㉑", col: "AG" },
     ],
   },
   C: {

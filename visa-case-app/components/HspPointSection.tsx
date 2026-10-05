@@ -113,7 +113,7 @@ export function HspPointSection({
                 選択した項目の印字点数の単純合計（目安）：<strong>{estimate.total}点</strong>（基準 {HSP_PASS_POINTS}点：
                 {estimate.reachesPass ? "目安では到達" : "目安では未到達"}）
               </p>
-              <p className="mt-1 text-xs text-slate-500">研究実績の組み合わせ・特別加算の上限・年齢による年収の範囲は判定していません。正式な合計は、計算表で確認してください。</p>
+              <p className="mt-1 text-xs text-slate-500">研究実績の組み合わせ・年齢による年収の範囲は判定していません。正式な合計は、計算表で確認してください。</p>
               {estimate.notes.map((n) => (
                 <p key={n} className="mt-1 text-xs text-amber-900">
                   {n}
