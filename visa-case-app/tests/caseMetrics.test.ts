@@ -1,6 +1,6 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
-import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, summarize } from "../lib/caseMetrics";
+import { applyFilter, countActiveFilters, DEFAULT_FILTER, expiryLevel, expiryMessage, isFilterActive, nextSort, paginate, sortState, summarize } from "../lib/caseMetrics";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
 function dateIn(days: number): string {
@@ -127,5 +127,62 @@ describe("isFilterActive", () => {
 
   it("checksPending のみ true の場合は true を返す", () => {
     expect(isFilterActive({ ...DEFAULT_FILTER, checksPending: true })).toBe(true);
+  });
+});
+
+describe("並び替え（案件名・申請人氏名・在留期限）", () => {
+  const cases = [
+    make({ id: "a", caseName: "丙案件", name: "KIM", expiry: dateIn(10), updatedAt: "2026-03-01T00:00:00Z" }),
+    make({ id: "b", caseName: "", name: "", expiry: "", updatedAt: "2026-02-01T00:00:00Z" }),
+    make({ id: "c", caseName: "あ案件", name: "LI", expiry: dateIn(200), updatedAt: "2026-01-01T00:00:00Z" }),
+  ];
+  const ids = (sort: Parameters<typeof applyFilter>[1]["sort"]) => applyFilter(cases, { ...DEFAULT_FILTER, sort }).map((r) => r.record.id);
+
+  it("在留期限は近い順・遠い順のどちらでも、未入力が末尾", () => {
+    expect(ids("expiry")).toEqual(["a", "c", "b"]);
+    expect(ids("expiryDesc")).toEqual(["c", "a", "b"]);
+  });
+  it("案件名は昇順・降順のどちらでも、未入力が末尾", () => {
+    expect(ids("name")).toEqual(["c", "a", "b"]);
+    expect(ids("nameDesc")).toEqual(["a", "c", "b"]);
+  });
+  it("申請人氏名は昇順・降順のどちらでも、未入力が末尾", () => {
+    expect(ids("applicant")).toEqual(["a", "c", "b"]);
+    expect(ids("applicantDesc")).toEqual(["c", "a", "b"]);
+  });
+  it("最終更新は新しい順・古い順", () => {
+    expect(ids("updated")).toEqual(["a", "b", "c"]);
+    expect(ids("updatedAsc")).toEqual(["c", "b", "a"]);
+  });
+  it("見出しを押したときの切り替え", () => {
+    expect(nextSort("updated", "name")).toBe("name");
+    expect(nextSort("name", "name")).toBe("nameDesc");
+    expect(nextSort("nameDesc", "name")).toBe("name");
+    expect(nextSort("expiry", "updated")).toBe("updated");
+    expect(nextSort("updated", "updated")).toBe("updatedAsc");
+    expect(sortState("expiryDesc")).toEqual({ column: "expiry", dir: "desc" });
+  });
+});
+
+describe("paginate", () => {
+  const items = Array.from({ length: 120 }, (_, i) => i);
+  it("1ページ目は50件", () => {
+    const p = paginate(items, 1);
+    expect(p.items).toHaveLength(50);
+    expect(p.totalPages).toBe(3);
+    expect(p.total).toBe(120);
+  });
+  it("最終ページは端数", () => {
+    const p = paginate(items, 3);
+    expect(p.items).toEqual(items.slice(100));
+  });
+  it("範囲外・不正なページは補正する", () => {
+    expect(paginate(items, 99).page).toBe(3);
+    expect(paginate(items, 0).page).toBe(1);
+    expect(paginate(items, Number.NaN).page).toBe(1);
+  });
+  it("1ページ分以下なら総ページ数は1", () => {
+    expect(paginate(items.slice(0, 50), 1).totalPages).toBe(1);
+    expect(paginate([], 1)).toMatchObject({ items: [], page: 1, totalPages: 1, total: 0 });
   });
 });
