@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { PageTransition } from "@/components/PageTransition";
 import { StoreErrorBanner } from "@/components/StoreErrorBanner";
 import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
@@ -26,13 +27,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <Header />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-          <AuthGate>
-            <StoreErrorBanner />
-            <PageTransition>{children}</PageTransition>
-          </AuthGate>
-        </main>
+        <ToastProvider>
+          <Header />
+          <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+            <AuthGate>
+              <StoreErrorBanner />
+              <PageTransition>{children}</PageTransition>
+            </AuthGate>
+          </main>
+        </ToastProvider>
       </body>
     </html>
   );
