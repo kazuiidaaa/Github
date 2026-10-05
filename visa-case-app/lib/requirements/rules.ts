@@ -919,15 +919,21 @@ const HSP_PARTIAL = "（ポイント計算表・疎明資料のみ整備。他�
  * 必要なものは、行政書士が「判断」で必要に切り替える。
  */
 export const HSP_EVIDENCE_RULE_PREFIX = "hsp_point_evidence_";
+/** 選んだ時点で、提出が必要な疎明資料の番号。資格（⑧）・投資運用業等（㉑）は、その資格・業務に就くことを証する資料がないと、加点の根拠がないため */
+export const HSP_EVIDENCE_REQUIRED_MARKS = ["⑧", "㉑"];
+
 export function hspEvidenceRule(mark: string): RequirementRule {
   const e = HSP_EVIDENCE[mark];
+  const required = HSP_EVIDENCE_REQUIRED_MARKS.includes(mark);
   return {
     id: `${HSP_EVIDENCE_RULE_PREFIX}${mark}`,
     name: `疎明資料 ${mark}（${e.item}）：${e.document}`,
     party: "applicant",
     categories: ALL,
-    level: "check",
-    note: "ポイント計算表で選んだ項目から導いた疎明資料。70点以上を確認できる資料があれば足りるため、提出するものを「判断」で必要に切り替える",
+    level: required ? "required" : "check",
+    note: required
+      ? "ポイント計算表で選んだ項目（資格・投資運用業等）から導いた疎明資料。選んだ以上、証する資料の提出が必要"
+      : "ポイント計算表で選んだ項目から導いた疎明資料。70点以上を確認できる資料があれば足りるため、提出するものを「判断」で必要に切り替える",
     verify: true,
   };
 }
