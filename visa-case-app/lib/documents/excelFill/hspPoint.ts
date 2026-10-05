@@ -41,10 +41,10 @@ export async function fillHspPointExcel(
   const rows = checkedRows(sheet, f.hspPointChecks);
   const selected = new Set(rows.map((r) => r.row));
   for (const r of def.rows) {
-    const cell = target.getCell(`${r.col ?? CHECK_COLUMN}${r.row}`);
-    if (selected.has(r.row)) cell.value = "■";
-    else if (r.blankInTemplate) cell.value = "□"; // ラジオボタン（フォーム部品）は書き出しで消えるため、選択欄を文字で示す
+    // ラジオボタン（フォーム部品）で選ぶ欄は、文字を書かない（様式上で選択してもらう）
+    if (selected.has(r.row) && !r.blankInTemplate) target.getCell(`${r.col ?? CHECK_COLUMN}${r.row}`).value = "■";
   }
+  const manual = rows.filter((r) => r.blankInTemplate);
 
   for (const [k, other] of Object.entries(HSP_POINT_SHEETS) as [HspPointSheetKey, (typeof HSP_POINT_SHEETS)[HspPointSheetKey]][]) {
     if (k === sheet) continue;
@@ -53,6 +53,9 @@ export async function fillHspPointExcel(
   }
 
   const est = estimateHspPoints(sheet, f.hspPointChecks);
+  if (manual.length > 0) {
+    warnings.push(`「${manual.map((r) => r.label).join("」「")}」は、様式の選択欄がラジオボタン（フォーム部品）で、差し込みでは選べません。様式上で選択してください。`);
+  }
   if (rows.length === 0) warnings.push("チェックを選んでいません。計算表の各項目は、様式上で記入してください。");
   if (est.totalWritable) {
     target.getCell(def.totalCell).value = est.total;
