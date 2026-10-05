@@ -42,12 +42,12 @@ export const DOCUMENT_TYPE_LABELS: Record<GeneratedDocumentType, string> = {
   transcription_aid: "転記補助シート",
 };
 
-export type GeneratedDocumentStatus = "draft" | "reviewed" | "final" | "archived";
+export type GeneratedDocumentStatus = "draft" | "reviewed" | "submitted" | "archived";
 
 export const GENERATED_STATUS_LABELS: Record<GeneratedDocumentStatus, string> = {
   draft: "行政書士確認前",
   reviewed: "行政書士確認済み",
-  final: "最終版",
+  submitted: "提出済み",
   archived: "保管",
 };
 
