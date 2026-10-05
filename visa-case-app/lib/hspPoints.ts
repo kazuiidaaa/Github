@@ -37,7 +37,7 @@ export function checkedRows(sheet: HspPointSheetKey, checks: readonly string[]):
 }
 
 /** 択一の区分（同じ区分で2つ以上選ぶと、通常は誤り） */
-const EXCLUSIVE_SECTIONS = ["職歴", "年収", "年齢", "地位"];
+const EXCLUSIVE_SECTIONS = ["職歴", "年収", "年齢", "地位", "資格"];
 
 export interface HspPointEstimate {
   /** 選んだ項目の、様式に印字された点数の単純合計 */
@@ -53,7 +53,7 @@ export interface HspPointEstimate {
 /**
  * 目安の合計点。選んだ項目に印字された点数の単純合計。
  * 様式の合計欄へは、totalWritable のときだけ書き込む（点数の印字がない項目や、択一の区分の重複があるときは、行政書士が確認して記入する）。
- * 研究実績の2つ以上の組み合わせ、特別加算の上限、年齢による年収の範囲などは判定しない（行政書士が、計算表の欄で確認する）。
+ * 研究実績の2つ以上の組み合わせ、年齢による年収の範囲などは判定しない（行政書士が、計算表の欄で確認する）。特別加算に上限はないため、選んだ分を、そのまま合計する。
  */
 export function estimateHspPoints(sheet: HspPointSheetKey, checks: readonly string[]): HspPointEstimate {
   const rows = checkedRows(sheet, checks);
@@ -78,7 +78,7 @@ export function hspPointConfirmLines(est: HspPointEstimate): string[] {
     est.totalWritable
       ? `合計欄へ、選んだ項目の印字点数の単純合計 ${est.total} 点を書き込みます。`
       : "合計欄は書き込みません。計算表で確認し、様式上で記入してください。",
-    "研究実績の2つ以上の組み合わせ・特別加算の上限・年齢による年収の範囲は、判定していません。",
+    "研究実績の2つ以上の組み合わせ・年齢による年収の範囲は、判定していません。",
     ...est.notes,
     "作成したファイルは、行政書士が内容を確認してから使用してください。",
   ];
@@ -122,7 +122,6 @@ const EVIDENCE_MARKS = Object.keys(HSP_EVIDENCE);
 
 /**
  * 選んだチェック欄から導く、疎明資料の番号（番号順、重複なし）。
- * 計算表の項目（資格・投資運用業等）のうち、チェック欄を持たないもの（⑧・㉑）は、導かれない。
  */
 export function evidenceNumbers(sheet: HspPointSheetKey, checks: readonly string[]): string[] {
   const found = new Set<string>();

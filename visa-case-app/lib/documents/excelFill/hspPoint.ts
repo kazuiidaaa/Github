@@ -39,7 +39,12 @@ export async function fillHspPointExcel(
   if (!target) throw new Error(`テンプレートにシートがありません: ${def.sheetName}`);
 
   const rows = checkedRows(sheet, f.hspPointChecks);
-  for (const r of rows) target.getCell(`${CHECK_COLUMN}${r.row}`).value = "■";
+  const selected = new Set(rows.map((r) => r.row));
+  for (const r of def.rows) {
+    const cell = target.getCell(`${r.col ?? CHECK_COLUMN}${r.row}`);
+    if (selected.has(r.row)) cell.value = "■";
+    else if (r.blankInTemplate) cell.value = "□"; // ラジオボタン（フォーム部品）は書き出しで消えるため、選択欄を文字で示す
+  }
 
   for (const [k, other] of Object.entries(HSP_POINT_SHEETS) as [HspPointSheetKey, (typeof HSP_POINT_SHEETS)[HspPointSheetKey]][]) {
     if (k === sheet) continue;
@@ -54,8 +59,8 @@ export async function fillHspPointExcel(
   } else if (rows.length > 0) {
     warnings.push("点数が印字されていない項目、または択一の区分の重複があるため、合計欄は書き込んでいません。計算表で確認し、合計欄を記入してください。");
   }
-  warnings.push(`選択した項目の印字点数の単純合計は ${est.total} 点です（目安）。${est.totalWritable ? "合計欄へ書き込みました。" : ""}研究実績の2つ以上の組み合わせ・特別加算の上限・年齢による年収の範囲は判定していません。計算表で確認してください。`);
+  warnings.push(`選択した項目の印字点数の単純合計は ${est.total} 点です（目安）。${est.totalWritable ? "合計欄へ書き込みました。" : ""}研究実績の2つ以上の組み合わせ・年齢による年収の範囲は判定していません。計算表で確認してください。`);
   warnings.push(...est.notes);
-  warnings.push("「資格」「投資運用業等」の欄、特別加算の試験研究費等の割合、申出人の署名・作成年月日は、案件情報にないため差し込んでいません。様式上で記入してください。");
+  warnings.push("特別加算の試験研究費等の割合、申出人の署名・作成年月日は、案件情報にないため差し込んでいません。様式上で記入してください。");
   return { buffer: Buffer.from(await wb.xlsx.writeBuffer()), warnings };
 }
