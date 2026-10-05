@@ -8,6 +8,7 @@ Copilot を使った検査を停止したため、外部へコードを送らな
 | Defender for DevOps | `.github/workflows/defender-for-devops.yml` | 構成・コードの検査 | 既存 |
 | Gitleaks | `.github/workflows/gitleaks.yml` | 秘密情報の混入 | 追加（警告のみ） |
 | OSV-Scanner | `.github/workflows/osv-scanner.yml` | 依存ライブラリの既知の脆弱性 | 追加（警告のみ） |
+| CI（lint・型検査・build・テスト） | `.github/workflows/ci.yml` | 品質の確認（セキュリティ検査ではない。Issue #177） | 追加（警告のみ） |
 | Dependabot | `.github/dependabot.yml` | 依存と Actions の更新の提案（週 1 回） | 追加 |
 
 ## 判断
