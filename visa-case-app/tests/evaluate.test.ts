@@ -336,3 +336,45 @@ describe("規則を引く在留資格の決め方", () => {
     expect(shouldShowNoRuleGuide("", "留学", "", TEST_SETS)).toBe(false);
   });
 });
+
+describe("高度専門職の規則（Issue #186）", () => {
+  const find = (procedureType: "coe" | "change" | "renewal", status: string) => {
+    const field = procedureType === "renewal" ? "currentStatus" : "targetStatus";
+    return evaluate(make({ procedureType, [field]: status } as Partial<CaseRecord>));
+  };
+
+  it("認定・変更・更新で、ポイント計算表とその疎明資料の2件を、必要書類として出す", () => {
+    for (const [procedureType, status] of [
+      ["coe", "高度専門職（1号ロ）"],
+      ["change", "高度専門職（1号イ）"],
+      ["change", "高度専門職（2号）"],
+      ["renewal", "高度専門職"],
+    ] as const) {
+      const ev = find(procedureType, status);
+      expect(ev.ruleSet?.id, `${procedureType}:${status}`).toMatch(/^hsp_/);
+      expect(ev.items.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence"]);
+      expect(ev.items.every((i) => i.effective === "required")).toBe(true);
+      expect(ev.ruleSet?.title).toContain("ポイント計算表・疎明資料のみ整備");
+    }
+  });
+
+  it("高度専門職2号の変更は2号の規則、1号の変更は1号の規則で引く（2号を先に照合する）", () => {
+    expect(find("change", "高度専門職（2号）").ruleSet?.id).toBe("hsp_change_2");
+    expect(find("change", "高度専門職（1号ハ）").ruleSet?.id).toBe("hsp_change");
+    expect(find("change", "高度専門職").ruleSet?.id).toBe("hsp_change");
+  });
+
+  it("高度専門職2号の更新は、手続がないため、規則に載せない（2号の変更・1号の規則のみ）", () => {
+    expect(RULE_SETS.some((r) => r.procedureType === "renewal" && r.residenceStatus.includes("2号"))).toBe(false);
+  });
+
+  it("他の在留資格の規則は、従来どおり（誤一致しない）", () => {
+    expect(find("coe", "技術・人文知識・国際業務").ruleSet?.id).toBe("gijinkoku_coe");
+    expect(find("change", "経営・管理").ruleSet?.id).toBe("keiei_kanri_change");
+    expect(find("renewal", "経営・管理").ruleSet?.id).toBe("keiei_kanri_renewal");
+  });
+
+  it("取得許可申請には、高度専門職の規則を足さない（取得の事由で判定する規則集合のまま）", () => {
+    expect(RULE_SETS.some((r) => r.procedureType === "acquisition" && r.id.startsWith("hsp_"))).toBe(false);
+  });
+});

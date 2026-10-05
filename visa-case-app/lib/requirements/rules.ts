@@ -901,6 +901,81 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
   ],
 };
 
+// 在留資格「高度専門職」。現時点で規則に載せているのは、ポイント計算表とその疎明資料のみ（Issue #186）。
+// 申請書・写真・パスポート等の他の提出書類は、一覧の提供後に追加する（それまでは、一覧が全部ではないことを title に示す）。
+// 手続ごとの提出の要否は、出入国在留管理庁の案内ページ（高度専門職）による。取得許可申請は、取得の事由で判定する別の規則集合
+// （ACQUISITION_BY_CAUSE）が在留資格を問わず適用され、高度専門職を希望する在留資格に選べないため、対象外とする。
+const HSP = "高度専門職";
+const HSP_SOURCE = {
+  title: "在留資格「高度専門職」ポイント計算表（出入国在留管理庁）",
+  url: "https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html",
+};
+const HSP_PARTIAL = "（ポイント計算表・疎明資料のみ整備。他の書類は未整備）";
+
+/** 疎明資料の番号（①〜㉑）と項目の対応は docs/hsp-point-evidence.md */
+const hspPointRules = (tableNote: string): RequirementRule[] => [
+  {
+    id: "hsp_point_table",
+    name: "ポイント計算表（高度専門職 第1号イ・ロ・ハのうち、活動の区分に応じたもの）",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: `${tableNote}。合計70点以上が必要。年収が300万円に満たないときは、他の項目の合計が70点以上でも、高度専門職外国人としては認められない`,
+    verify: true,
+  },
+  {
+    id: "hsp_point_evidence",
+    name: "ポイント計算表の疎明資料（ポイントの合計が70点以上あることを確認できる資料）",
+    party: "applicant",
+    categories: ALL,
+    level: "required",
+    note: "該当する全項目の資料は不要。審査の過程で、追加の資料を求められる場合がある。計算表の各項目の疎明資料の番号（①〜㉑）は docs/hsp-point-evidence.md",
+    verify: true,
+  },
+];
+
+export const HSP_COE: RuleSet = {
+  id: "hsp_coe",
+  title: `高度専門職 在留資格認定証明書交付申請${HSP_PARTIAL}`,
+  procedureType: "coe",
+  residenceStatus: HSP,
+  checkedAt: "2026-10-06",
+  sources: [HSP_SOURCE],
+  rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+};
+
+/** 2号の変更は、HSP_CHANGE より先に照合する（RULE_SETS の並び順）。所得・納税・社会保険の書類は #188 で追加する */
+export const HSP_CHANGE_2: RuleSet = {
+  id: "hsp_change_2",
+  title: `高度専門職2号への在留資格変更許可申請${HSP_PARTIAL}`,
+  procedureType: "change",
+  residenceStatus: "高度専門職（2号）",
+  checkedAt: "2026-10-06",
+  sources: [HSP_SOURCE],
+  rules: hspPointRules("1号イ・ロ・ハのいずれかのシート。要件：1号又は高度外国人材としての特定活動で3年以上在留し、70点以上であること"),
+};
+
+export const HSP_CHANGE: RuleSet = {
+  id: "hsp_change",
+  title: `高度専門職（1号）への在留資格変更許可申請${HSP_PARTIAL}`,
+  procedureType: "change",
+  residenceStatus: HSP,
+  checkedAt: "2026-10-06",
+  sources: [HSP_SOURCE],
+  rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+};
+
+/** 高度専門職2号は在留期限が無期限のため、更新の手続はない。更新は1号が対象 */
+export const HSP_RENEWAL: RuleSet = {
+  id: "hsp_renewal",
+  title: `高度専門職（1号）の在留期間更新許可申請${HSP_PARTIAL}`,
+  procedureType: "renewal",
+  residenceStatus: HSP,
+  checkedAt: "2026-10-06",
+  sources: [HSP_SOURCE],
+  rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -908,5 +983,10 @@ export const RULE_SETS: RuleSet[] = [
   KEIEI_KANRI_RENEWAL,
   KEIEI_KANRI_CHANGE,
   KEIEI_KANRI_COE,
+  // 高度専門職2号の変更は、1号（HSP_CHANGE）より先に照合する
+  HSP_CHANGE_2,
+  HSP_CHANGE,
+  HSP_COE,
+  HSP_RENEWAL,
   ACQUISITION_BY_CAUSE,
 ];

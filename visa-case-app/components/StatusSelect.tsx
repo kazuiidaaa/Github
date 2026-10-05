@@ -1,5 +1,5 @@
 import { inputClass } from "@/components/ui";
-import { ADVANCED_PROFESSIONAL_GRADES, ADVANCED_PROFESSIONAL_STATUS, baseResidenceStatus, RESIDENCE_STATUSES } from "@/lib/types";
+import { ADVANCED_PROFESSIONAL_GRADE_2, ADVANCED_PROFESSIONAL_GRADES, ADVANCED_PROFESSIONAL_STATUS, baseResidenceStatus, RESIDENCE_STATUSES } from "@/lib/types";
 
 /** 在留資格のプルダウンに添える説明文（初見でも選び方が分かるようにする） */
 export const STATUS_HINTS = {
@@ -13,13 +13,18 @@ export function StatusSelect({
   onChange,
   disabled,
   withGrade,
+  allowGrade2,
 }: {
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
-  /** 希望する（変更後の）在留資格の欄だけ true。高度専門職を選ぶと、号（イ・ロ・ハ）の選択を表示する */
+  /** 希望する（変更後の）在留資格の欄だけ true。高度専門職を選ぶと、号（イ・ロ・ハ。変更では2号も）の選択を表示する */
   withGrade?: boolean;
+  /** 在留資格変更許可申請のときだけ true。号の選択に「高度専門職（2号）」を加える */
+  allowGrade2?: boolean;
 }) {
+  // 2号が保存済みの案件は、手続を変えても値を失わないよう、選択肢に残す
+  const grades: readonly string[] = allowGrade2 || value === ADVANCED_PROFESSIONAL_GRADE_2 ? [...ADVANCED_PROFESSIONAL_GRADES, ADVANCED_PROFESSIONAL_GRADE_2] : ADVANCED_PROFESSIONAL_GRADES;
   const base = withGrade ? baseResidenceStatus(value) : value;
   // 過去に自由入力で保存した値も、選択肢として残して表示する
   const legacy = base && !(RESIDENCE_STATUSES as readonly string[]).includes(base);
@@ -46,7 +51,7 @@ export function StatusSelect({
         onChange={(e) => onChange(e.target.value || ADVANCED_PROFESSIONAL_STATUS)}
       >
         <option value="">号を選択してください（未選択でも保存できます）</option>
-        {ADVANCED_PROFESSIONAL_GRADES.map((g) => (
+        {grades.map((g) => (
           <option key={g} value={g}>
             {g}
           </option>

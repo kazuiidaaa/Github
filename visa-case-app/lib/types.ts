@@ -106,9 +106,17 @@ export const ADVANCED_PROFESSIONAL_GRADES = [
   "高度専門職（1号ハ）",
 ] as const;
 
+/**
+ * 高度専門職2号。在留資格変更許可申請（1号等からの変更後）でのみ選べる（認定・取得には2号の様式がない）。
+ * 認定の入国目的の選択肢（34個）には含まれないため、ADVANCED_PROFESSIONAL_GRADES には入れない。
+ */
+export const ADVANCED_PROFESSIONAL_GRADE_2 = "高度専門職（2号）";
+
 /** 号つきの値（例：「高度専門職（1号ロ）」）から、基本の在留資格（「高度専門職」）を返す。それ以外は、そのまま返す */
 export function baseResidenceStatus(value: string): string {
-  return (ADVANCED_PROFESSIONAL_GRADES as readonly string[]).includes(value) ? ADVANCED_PROFESSIONAL_STATUS : value;
+  return (ADVANCED_PROFESSIONAL_GRADES as readonly string[]).includes(value) || value === ADVANCED_PROFESSIONAL_GRADE_2
+    ? ADVANCED_PROFESSIONAL_STATUS
+    : value;
 }
 
 export const WORKFLOW_LABELS = {
