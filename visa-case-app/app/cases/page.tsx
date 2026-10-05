@@ -10,7 +10,19 @@ import { LoadingNotice } from "@/components/LoadingNotice";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
-import { applyFilter, DEFAULT_FILTER, isFilterActive, summarize, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
+import {
+  applyFilter,
+  DEFAULT_FILTER,
+  isFilterActive,
+  isSortKey,
+  nextSort,
+  PAGE_SIZE,
+  paginate,
+  sortState,
+  summarize,
+  type CaseFilter,
+  type SortColumn,
+} from "@/lib/caseMetrics";
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
@@ -27,8 +39,14 @@ function readFilter(p: URLSearchParams): CaseFilter {
     noCard: p.get("nocard") === "1",
     unconfirmed: p.get("unconfirmed") === "1",
     checksPending: p.get("checks") === "1",
-    sort: (p.get("sort") === "expiry" ? "expiry" : "updated") as SortKey,
+    sort: isSortKey(p.get("sort")) ? (p.get("sort") as CaseFilter["sort"]) : "updated",
   };
+}
+
+/** URL の page を読む。不正な値は 1 とする。 */
+function readPage(p: URLSearchParams): number {
+  const n = Number(p.get("page"));
+  return Number.isInteger(n) && n >= 1 ? n : 1;
 }
 
 function toQuery(f: CaseFilter): string {
@@ -44,6 +62,28 @@ function toQuery(f: CaseFilter): string {
   if (f.sort !== "updated") p.set("sort", f.sort);
   const s = p.toString();
   return s ? `?${s}` : "?";
+}
+
+/** 並び替えの見出し。押すと並び順を切り替える（aria-sort は th に付ける）。 */
+function SortHeader({ column, label, filter, onSort }: { column: SortColumn; label: string; filter: CaseFilter; onSort: (k: CaseFilter["sort"]) => void }) {
+  const st = sortState(filter.sort);
+  const current = st.column === column;
+  const dirLabel = column === "expiry" ? (st.dir === "asc" ? "近い順" : "遠い順") : st.dir === "asc" ? "昇順" : "降順";
+  return (
+    <th
+      scope="col"
+      className="whitespace-nowrap px-4 py-3"
+      aria-sort={current ? (st.dir === "asc" ? "ascending" : "descending") : undefined}
+    >
+      <button type="button" onClick={() => onSort(nextSort(filter.sort, column))} className="inline-flex items-center gap-1 font-bold hover:underline">
+        {label}
+        <span aria-hidden="true" className={current ? "" : "text-slate-400"}>
+          {current ? (st.dir === "asc" ? "▲" : "▼") : "↕"}
+        </span>
+        <span className="sr-only">{current ? `（現在：${dirLabel}。押すと並び順を反転）` : "（押すと並び替え）"}</span>
+      </button>
+    </th>
+  );
 }
 
 /** ダッシュボードのカードに対応する絞り込みを返す */
@@ -133,10 +173,17 @@ function CasesView() {
   const filter = useMemo(() => readFilter(new URLSearchParams(params.toString())), [params]);
   const summary = useMemo(() => summarize(cases), [cases]);
   const rows = useMemo(() => applyFilter(cases, filter), [cases, filter]);
+  const pageData = useMemo(() => paginate(rows, readPage(new URLSearchParams(params.toString()))), [rows, params]);
+  const shown = pageData.items;
   const active = isFilterActive(filter);
   const pendingCount = useMemo(() => cases.filter((c) => !hasResidenceCard(c)).length, [cases]);
 
-  const go = (f: CaseFilter) => router.replace(`/cases${toQuery(f)}`, { scroll: false });
+  // 絞り込み・並び順を変えたときは、1ページ目に戻す（page を付けない）。
+  const go = (f: CaseFilter, page = 1) => {
+    const q = toQuery(f);
+    const withPage = page > 1 ? `${q === "?" ? "?" : `${q}&`}page=${page}` : q;
+    router.replace(`/cases${withPage}`, { scroll: false });
+  };
 
   let empty = "";
   if (rows.length === 0) {
@@ -192,17 +239,28 @@ function CasesView() {
       )}
       {!filter.noCard && (
         <>
+      {loaded && (
+        <p className="mb-2 text-sm font-medium" role="status" aria-live="polite">
+          該当 {rows.length} 件（全 {cases.length} 件）
+          {pageData.totalPages > 1 && (
+            <span className="ml-2 font-normal text-slate-500">
+              {(pageData.page - 1) * PAGE_SIZE + 1}〜{(pageData.page - 1) * PAGE_SIZE + shown.length} 件目を表示
+            </span>
+          )}
+        </p>
+      )}
       <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
+          <caption className="sr-only">案件一覧</caption>
           <thead className="bg-slate-50 text-slate-600">
             <tr>
-              <th className="whitespace-nowrap px-4 py-3">案件名</th>
-              <th className="whitespace-nowrap px-4 py-3">申請人氏名</th>
-              <th className="whitespace-nowrap px-4 py-3">手続種別</th>
-              <th className="whitespace-nowrap px-4 py-3">在留資格</th>
-              <th className="whitespace-nowrap px-4 py-3">在留期限</th>
-              <th className="whitespace-nowrap px-4 py-3">状況</th>
-              <th className="whitespace-nowrap px-4 py-3">最終更新</th>
+              <SortHeader column="name" label="案件名" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <SortHeader column="applicant" label="申請人氏名" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <th scope="col" className="whitespace-nowrap px-4 py-3">手続種別</th>
+              <th scope="col" className="whitespace-nowrap px-4 py-3">在留資格</th>
+              <SortHeader column="expiry" label="在留期限" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <th scope="col" className="whitespace-nowrap px-4 py-3">状況</th>
+              <SortHeader column="updated" label="最終更新" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
             </tr>
           </thead>
           <tbody className="anim-stagger">
@@ -225,10 +283,10 @@ function CasesView() {
                 </td>
               </tr>
             )}
-            {rows.map(({ record: c, metrics: m }) => (
-              <tr key={c.id} className="border-t border-slate-100 align-top hover:bg-slate-50 transition-colors">
+            {shown.map(({ record: c, metrics: m }) => (
+              <tr key={c.id} className="relative border-t border-slate-100 align-top hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-medium">
-                  <Link href={`/cases/${c.id}`} className="text-blue-700 hover:underline">
+                  <Link href={`/cases/${c.id}`} className="text-blue-700 after:absolute after:inset-0 hover:underline">
                     {c.caseName}
                   </Link>
                 </td>
@@ -270,9 +328,9 @@ function CasesView() {
             )}
           </li>
         )}
-        {rows.map(({ record: c, metrics: m }) => (
-          <li key={c.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-            <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
+        {shown.map(({ record: c, metrics: m }) => (
+          <li key={c.id} className="relative rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+            <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 after:absolute after:inset-0 hover:underline">
               {c.caseName}
             </Link>
             <dl className="mt-3 grid grid-cols-[6rem_1fr] gap-y-2">
@@ -297,6 +355,29 @@ function CasesView() {
           </li>
         ))}
       </ul>
+      {pageData.totalPages > 1 && (
+        <nav aria-label="ページ移動" className="mt-4 flex items-center justify-center gap-4 text-sm">
+          <button
+            type="button"
+            disabled={pageData.page <= 1}
+            onClick={() => go(filter, pageData.page - 1)}
+            className="rounded-full border border-line-strong bg-white px-4 py-2 disabled:opacity-50"
+          >
+            前のページ
+          </button>
+          <span aria-current="page">
+            {pageData.page} / {pageData.totalPages} ページ
+          </span>
+          <button
+            type="button"
+            disabled={pageData.page >= pageData.totalPages}
+            onClick={() => go(filter, pageData.page + 1)}
+            className="rounded-full border border-line-strong bg-white px-4 py-2 disabled:opacity-50"
+          >
+            次のページ
+          </button>
+        </nav>
+      )}
         </>
       )}
     </div>

@@ -125,7 +125,13 @@ export function CaseFilters({
         </select>
         <select className={select} aria-label="並び順" value={filter.sort} onChange={(e) => change({ sort: e.target.value as SortKey })}>
           <option value="updated">並び順：最終更新が新しい順</option>
+          <option value="updatedAsc">並び順：最終更新が古い順</option>
           <option value="expiry">並び順：在留期限が近い順</option>
+          <option value="expiryDesc">並び順：在留期限が遠い順</option>
+          <option value="name">並び順：案件名（昇順）</option>
+          <option value="nameDesc">並び順：案件名（降順）</option>
+          <option value="applicant">並び順：申請人氏名（昇順）</option>
+          <option value="applicantDesc">並び順：申請人氏名（降順）</option>
         </select>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm">
