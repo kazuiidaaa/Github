@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { byteLength, clientKey, createRateLimiter, isDeclaredTooLarge } from "../lib/documents/officialFormGuard";
+import { byteLength, checkSharedRateLimit, clientKey, createRateLimiter, isDeclaredTooLarge } from "../lib/documents/officialFormGuard";
 
 // 値はすべてダミー。実案件の個人情報は書かない。
 
 const URL_ = "http://localhost/api/documents/official-form";
 
 /** Supabase の有効・無効を切り替えて、ルートを読み込み直す。getUser は、"good-token" のみ成功させる。 */
-async function loadRoute(supabaseEnabled: boolean) {
+type RpcResult = { data: unknown; error: unknown } | "throw";
+async function loadRoute(supabaseEnabled: boolean, rpc: () => RpcResult = () => ({ data: 0, error: null })) {
   vi.resetModules();
   vi.doMock("../lib/supabase", () => ({ isSupabaseEnabled: supabaseEnabled }));
   vi.doMock("../lib/env", () => ({
@@ -15,6 +16,11 @@ async function loadRoute(supabaseEnabled: boolean) {
   }));
   vi.doMock("@supabase/supabase-js", () => ({
     createClient: () => ({
+      rpc: async () => {
+        const r = rpc();
+        if (r === "throw") throw new Error("down");
+        return r;
+      },
       auth: {
         getUser: async (token: string) =>
           token === "good-token" ? { data: { user: { id: "u1" } }, error: null } : { data: { user: null }, error: new Error("invalid") },
@@ -73,12 +79,23 @@ describe("公式様式 API のレート制限", () => {
     for (let i = 0; i < 11; i++) await call(post, { "x-forwarded-for": "203.0.113.2" });
     expect((await call(post, { "x-forwarded-for": "203.0.113.3" })).status).toBe(400);
   });
-  it("ログイン済みは、ユーザー単位で数える（IP が違っても同じ枠）", async () => {
-    const post = await loadRoute(true);
-    for (let i = 0; i < 10; i++) {
-      await call(post, { authorization: "Bearer good-token", "x-forwarded-for": `198.51.100.${i}` });
+  it("Supabase 設定済みでは、共有ストアの判定に従う（超過は 429 と Retry-After）", async () => {
+    const post = await loadRoute(true, () => ({ data: 42, error: null }));
+    const res = await call(post, { authorization: "Bearer good-token" });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("42");
+  });
+  it("共有ストアが上限内なら、処理を続ける", async () => {
+    const post = await loadRoute(true, () => ({ data: 0, error: null }));
+    expect((await call(post, { authorization: "Bearer good-token" })).status).toBe(400);
+  });
+  it("共有ストアに接続できない場合は、制限を止めて処理を続ける", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    for (const r of ["throw", { data: null, error: new Error("x") }] as RpcResult[]) {
+      const post = await loadRoute(true, () => r);
+      expect((await call(post, { authorization: "Bearer good-token" })).status).toBe(400);
     }
-    expect((await call(post, { authorization: "Bearer good-token", "x-forwarded-for": "198.51.100.99" })).status).toBe(429);
+    spy.mockRestore();
   });
 });
 
@@ -113,6 +130,10 @@ describe("officialFormGuard", () => {
     expect(limiter("k", 1).ok).toBe(true);
     expect(limiter("k", 2).ok).toBe(false);
     expect(limiter("k", 1001).ok).toBe(true);
+  });
+  it("checkSharedRateLimit は、0 を許可、正の数を待ち秒数として返す", async () => {
+    expect(await checkSharedRateLimit(async () => ({ data: 0, error: null }))).toEqual({ ok: true });
+    expect(await checkSharedRateLimit(async () => ({ data: 7, error: null }))).toEqual({ ok: false, retryAfterSec: 7 });
   });
   it("clientKey は、ユーザー ID を優先し、無ければ IP の先頭を使う", () => {
     expect(clientKey("u1", new Headers({ "x-forwarded-for": "1.1.1.1" }))).toBe("user:u1");
