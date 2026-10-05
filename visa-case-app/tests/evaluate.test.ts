@@ -397,16 +397,15 @@ describe("高度専門職：選んだ項目から導く疎明資料の番号ご�
     const ev = withChecks(change1, { hspPointChecks: ["B:15", "B:20", "B:27", "B:72"] });
     expect(ev.items.map((i) => i.rule.id)).toEqual([
       "hsp_point_table",
-      "hsp_point_evidence",
       "hsp_point_evidence_①",
       "hsp_point_evidence_②",
       "hsp_point_evidence_③",
       "hsp_point_evidence_⑮",
     ]);
-    const children = ev.items.slice(2);
+    const children = ev.items.slice(1);
     expect(children.every((i) => i.effective === "check" && i.rule.level === "check")).toBe(true);
     expect(children[3].rule.name).toContain("日本語能力");
-    expect(ev.requiredCount).toBe(2);
+    expect(ev.requiredCount).toBe(1);
     // 未受領の「要確認」は、確認が必要な書類に出る
     expect(ev.toCheck.map((i) => i.rule.id)).toEqual(["hsp_point_evidence_①", "hsp_point_evidence_②", "hsp_point_evidence_③", "hsp_point_evidence_⑮"]);
   });
@@ -420,10 +419,18 @@ describe("高度専門職：選んだ項目から導く疎明資料の番号ご�
     const three = ev.items.find((i) => i.rule.id === "hsp_point_evidence_③")!;
     expect(one.state.status).toBe("received");
     expect(three.effective).toBe("required");
-    expect(ev.requiredCount).toBe(3);
-    // 未受領の必要書類：親の2件と、必要に切り替えた③（受領済みの①は含まない）
-    expect(ev.missing.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence", "hsp_point_evidence_③"]);
+    expect(ev.requiredCount).toBe(2);
+    // 未受領の必要書類：計算表と、必要に切り替えた③（受領済みの①は含まない）
+    expect(ev.missing.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence_③"]);
     expect(ev.toCheck).toEqual([]);
+  });
+
+  it("親の疎明資料に入力済みの状態があれば、番号ごとの行と並べて残す", () => {
+    const ev = withChecks(
+      { ...change1, requirementStates: { hsp_point_evidence: { status: "requested" } } },
+      { hspPointChecks: ["B:15"] },
+    );
+    expect(ev.items.map((i) => i.rule.id).slice(0, 3)).toEqual(["hsp_point_table", "hsp_point_evidence", "hsp_point_evidence_①"]);
   });
 
   it("使うシートが決まらない間（2号・号未選択）は出さない。シートを選ぶと出る", () => {

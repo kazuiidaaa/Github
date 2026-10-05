@@ -193,8 +193,11 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     }
 
     const state = c.requirementStates[rule.id] ?? NO_STATE;
-    items.push({ rule, result, effective: state.override ?? result, reason, state });
-    if (rule.id === "hsp_point_evidence") items.push(...hspEvidenceItems(c, ruleSet));
+    const evidence = rule.id === "hsp_point_evidence" ? hspEvidenceItems(c, ruleSet) : [];
+    // 番号ごとの疎明資料が出ているときは、親の1件は重複するため隠す。ただし、親に入力済みの状態（受領・期限・判断・メモ）があれば残す
+    const untouched = state.status === "not_received" && !state.override && !state.dueDate && !state.note;
+    if (!(evidence.length > 0 && untouched)) items.push({ rule, result, effective: state.override ?? result, reason, state });
+    items.push(...evidence);
   }
 
   return summarize(ruleSet, needsCategory, false, items);
