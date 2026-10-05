@@ -25,6 +25,7 @@ export const AUDIT_LABELS: Record<string, string> = {
   application_ready_marked: "申請準備完了にした",
   application_ready_reset: "申請準備完了を取り消した（チェック変更のため）",
   document_generated: "申請書類（内部確認シート）を生成",
+  document_updated: "生成文書（確認前の版）を更新",
   document_docx_exported: "生成文書をWordで出力",
   document_docx_downloaded: "生成文書のWordをダウンロード",
   document_pdf_exported: "生成文書をPDFで出力",

@@ -6,7 +6,7 @@ import { logAudit, newId } from "../store";
 import { localKey } from "../demo";
 import { supabase, usesSupabase } from "../supabase";
 import type { CaseRecord } from "../types";
-import { mergeCreated, sortDocuments } from "./merge";
+import { findEditableDraft, mergeCreated, sortDocuments } from "./merge";
 import { buildContent, titleOf } from "./snapshot";
 import { XLSX_MIME, requestOfficialXlsx } from "./officialFormClient";
 import { officialFormInputOf } from "./officialForms";
@@ -146,8 +146,44 @@ export function useGeneratedDocuments(caseId: string): {
   return { documents, loaded, error: err };
 }
 
-/** 選択した種類の文書を、現在の案件情報から新しい版として生成する。上書きはしない */
-export async function generateDocuments(record: CaseRecord, types: InternalDocumentType[]): Promise<void> {
+/**
+ * 確認前（draft）の版を、同じ行（id）のまま更新する。版番号は同じ案件・同じ種類の最大値の次へ進める。
+ * 確認済み以降の版は更新できない（DB の規則でも拒否される）。
+ */
+async function updateDraft(existing: GeneratedDocument, title: string, content: ContentJson): Promise<GeneratedDocument> {
+  if (existing.status !== "draft") throw new AppError("確認前の版のみ更新できます。");
+  let updated: GeneratedDocument;
+  if (usesSupabase()) {
+    const { data, error: e } = await db().rpc("update_draft_generated_document", {
+      p_id: existing.id,
+      p_title: title,
+      p_content: content,
+    });
+    if (e) throw toAppError(e);
+    updated = fromRow(data as Row);
+  } else {
+    const all = readLocal();
+    const version =
+      Math.max(0, ...all.filter((d) => d.caseId === existing.caseId && d.documentType === existing.documentType).map((d) => d.version)) + 1;
+    updated = { ...existing, title, content, version };
+    writeLocal(all.map((d) => (d.id === existing.id ? updated : d)));
+  }
+  logAudit(existing.caseId, "document_updated", {
+    type: existing.documentType,
+    format: existing.outputFormat,
+    fromVersion: existing.version,
+    version: updated.version,
+  });
+  return updated;
+}
+
+/**
+ * 選択した種類の文書を、現在の案件情報から生成する。
+ * 同じ種類・同じ出力形式に確認前の最新の版があれば、その版を更新する。
+ * なければ（確認済み以降が最新の場合を含む）、新しい版として追加する。確認済み以降の版は上書きしない。
+ * 生成・更新した版を返す。
+ */
+export async function generateDocuments(record: CaseRecord, types: InternalDocumentType[]): Promise<GeneratedDocument[]> {
   const created: GeneratedDocument[] = [];
   try {
     for (const type of types) {
@@ -157,7 +193,10 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
       const content = buildContent(record, type, new Date(), official?.warnings);
       const title = titleOf(record, type);
       let doc: GeneratedDocument;
-      if (usesSupabase()) {
+      const draft = findEditableDraft(byCase[record.id] ?? [], record.id, type, "html");
+      if (draft) {
+        doc = await updateDraft(draft, title, content);
+      } else if (usesSupabase()) {
         const { data, error: e } = await db().rpc("create_generated_document", {
           p_case_id: record.id,
           p_document_type: type,
@@ -184,7 +223,7 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
         writeLocal([...all, doc]);
       }
       created.push(doc);
-      logAudit(record.id, "document_generated", { type, version: doc.version });
+      if (!draft) logAudit(record.id, "document_generated", { type, version: doc.version });
       if (official) {
         // 保存した版（画面）から、エクセルを新しい版として保存する。画面の版には、注意と出典が残る
         const xlsx = await exportFile(doc, "xlsx", official.blob);
@@ -198,6 +237,7 @@ export async function generateDocuments(record: CaseRecord, types: InternalDocum
       emit();
     }
   }
+  return created;
 }
 
 /** 状態を変更する。内容（content_json）は変更しない */
@@ -279,8 +319,9 @@ async function buildFile(doc: GeneratedDocument): Promise<Blob> {
 }
 
 /**
- * 保存済みの内容（content_json）から、Word・PDF・エクセルを新しい版として出力する。
- * 元の版は変更しない。出力した版は「行政書士確認前」から始まる。
+ * 保存済みの内容（content_json）から、Word・PDF・エクセルを出力する。元の版は変更しない。
+ * 同じ種類・同じ形式に確認前の最新の版があれば、その版（行・保管庫のファイル）を更新する。
+ * なければ新しい版として追加する。出力した版は「行政書士確認前」から始まる。
  */
 export async function exportFile(
   source: GeneratedDocument,
@@ -288,12 +329,13 @@ export async function exportFile(
   /** すでに作ったファイルがあれば渡す（エクセルを二重に作らないため） */
   prebuilt?: Blob,
 ): Promise<GeneratedDocument> {
-  const id = newId();
+  const draft = findEditableDraft(byCase[source.caseId] ?? [], source.caseId, source.documentType, format);
+  const id = draft?.id ?? newId();
   const fresh: GeneratedDocument = {
     ...source,
     id,
     outputFormat: format,
-    storagePath: undefined,
+    storagePath: draft?.storagePath,
     status: "draft",
     reviewedAt: undefined,
     reviewedByName: undefined,
@@ -301,18 +343,37 @@ export async function exportFile(
   let created: GeneratedDocument;
   if (usesSupabase()) {
     if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
-    const path = `${source.organizationId}/${source.caseId}/${id}.${format}`;
+    const path = draft?.storagePath ?? `${source.organizationId}/${source.caseId}/${id}.${format}`;
     const blob = prebuilt ?? (await buildFile(fresh));
-    const up = await db().storage.from(FILE_BUCKET).upload(path, blob, { contentType: MIME[format] });
+    // 確認前の版の更新では、同じ保存先へ上書きする（上書きは、確認前の版のファイルのみ許可される）
+    const up = await db().storage.from(FILE_BUCKET).upload(path, blob, { contentType: MIME[format], upsert: !!draft });
     if (up.error) throw toAppError(up.error);
-    const { data, error: e } = await db().rpc("register_generated_file", {
-      p_source_id: source.id,
-      p_new_id: id,
-      p_output_format: format,
-      p_storage_path: path,
-    });
-    if (e) throw toAppError(e);
-    created = fromRow(data as Row);
+    if (draft) {
+      const { data, error: e } = await db().rpc("update_draft_generated_document", {
+        p_id: draft.id,
+        p_title: source.title,
+        p_content: source.content,
+      });
+      if (e) throw toAppError(e);
+      created = fromRow(data as Row);
+      logAudit(source.caseId, "document_updated", {
+        type: draft.documentType,
+        format,
+        fromVersion: draft.version,
+        version: created.version,
+      });
+    } else {
+      const { data, error: e } = await db().rpc("register_generated_file", {
+        p_source_id: source.id,
+        p_new_id: id,
+        p_output_format: format,
+        p_storage_path: path,
+      });
+      if (e) throw toAppError(e);
+      created = fromRow(data as Row);
+    }
+  } else if (draft) {
+    created = await updateDraft(draft, source.title, source.content);
   } else {
     const all = readLocal();
     const version =
@@ -322,9 +383,9 @@ export async function exportFile(
   }
   byCase = {
     ...byCase,
-    [source.caseId]: sorted([...(byCase[source.caseId] ?? []), created]),
+    [source.caseId]: mergeCreated(byCase[source.caseId] ?? [], [created]),
   };
-  logAudit(source.caseId, `document_${format}_exported`, { type: source.documentType, version: created.version });
+  logAudit(source.caseId, `document_${format}_exported`, { type: source.documentType, version: created.version, updated: !!draft });
   emit();
   return created;
 }
