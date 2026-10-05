@@ -14,6 +14,7 @@ import { EmploymentForm } from "@/components/EmploymentForm";
 import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { ApplicantForm } from "@/components/ApplicantForm";
+import { useToast } from "@/components/Toast";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
@@ -92,6 +93,7 @@ function DocumentRow({
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const record = useCase(id);
   const loaded = useStoreLoaded();
   const canEdit = useCan("edit");
@@ -126,6 +128,7 @@ export default function CaseDetailPage() {
       documents: removeDocumentOfType(c.documents, d.documentType),
     }));
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
+    toast.success(`${UPLOADED_DOCUMENT_LABELS[d.documentType]}を削除しました`);
   }
   const a = record.applicant;
   // タブ見出しの未対応表示。値が null のタブは表示しない（選択中のタブも表示する）。
@@ -173,7 +176,10 @@ export default function CaseDetailPage() {
             setDeleting(true);
             const ok = await deleteCase(record.id);
             setDeleting(false);
-            if (ok) router.push("/cases");
+            if (ok) {
+              toast.success("案件を削除しました");
+              router.push("/cases");
+            }
             else setConfirmingDelete(false);
           }}
         />

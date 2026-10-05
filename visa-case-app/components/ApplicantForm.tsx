@@ -209,7 +209,9 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
                   下書き保存
                 </Button>
                 <Button onClick={() => void confirm()}>確認済みにする</Button>
-                {message && <span className="text-green-700">{message}</span>}
+                <span role="status" className="text-green-700">
+                  {message}
+                </span>
               </div>
               <p className="mt-2 text-xs text-slate-500">
                 氏名・国籍・地域・生年月日・在留資格・在留期間の満了日（*）をすべて入力すると、確認済みにできます。
