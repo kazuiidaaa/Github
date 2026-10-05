@@ -11,7 +11,7 @@ const CHECK_COLUMN = "AF";
 
 /**
  * 案件で選んだチェック欄（□→■）を、号に応じたシートへ差し込み、ワークブックをバッファで返す。
- * 使わないシート（他の号のシート）は、出力から除く。点数・合計欄は、行政書士が計算表で確認して記入するため、書き込まない。
+ * 使わないシート（他の号のシート）は、出力から除く。合計欄には、選んだ項目の印字点数の合計を値で書き込む（点数の印字がない項目や、択一の区分の重複があるときは、行政書士が確認して記入するため、書き込まない）。
  * 注意：Edge ランタイムでは使えない（node:fs を使う）。
  */
 export async function fillHspPointExcel(
@@ -49,7 +49,12 @@ export async function fillHspPointExcel(
 
   const est = estimateHspPoints(sheet, f.hspPointChecks);
   if (rows.length === 0) warnings.push("チェックを選んでいません。計算表の各項目は、様式上で記入してください。");
-  warnings.push(`選択した項目の印字点数の単純合計は ${est.total} 点です（目安）。合計欄は書き込んでいません。研究実績・特別加算の上限や年齢による年収の範囲などを、計算表で確認し、合計欄を記入してください。`);
+  if (est.totalWritable) {
+    target.getCell(def.totalCell).value = est.total;
+  } else if (rows.length > 0) {
+    warnings.push("点数が印字されていない項目、または択一の区分の重複があるため、合計欄は書き込んでいません。計算表で確認し、合計欄を記入してください。");
+  }
+  warnings.push(`選択した項目の印字点数の単純合計は ${est.total} 点です（目安）。${est.totalWritable ? "合計欄へ書き込みました。" : ""}研究実績の2つ以上の組み合わせ・特別加算の上限・年齢による年収の範囲は判定していません。計算表で確認してください。`);
   warnings.push(...est.notes);
   warnings.push("「資格」「投資運用業等」の欄、特別加算の試験研究費等の割合、申出人の署名・作成年月日は、案件情報にないため差し込んでいません。様式上で記入してください。");
   return { buffer: Buffer.from(await wb.xlsx.writeBuffer()), warnings };

@@ -81,7 +81,7 @@ describe("使うシートの決定・目安の合計点", () => {
 });
 
 describe("fillHspPointExcel", () => {
-  it("選んだチェック欄だけが■になり、使わないシートは除かれる。点数・合計は書き込まない", async () => {
+  it("選んだチェック欄だけが■になり、使わないシートは除かれる。合計欄には合計点を書き込む", async () => {
     const { buffer, warnings } = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", [15, 20, 27]) });
     const wb = await open(buffer);
     const names = wb.worksheets.map((w) => w.name);
@@ -90,9 +90,44 @@ describe("fillHspPointExcel", () => {
     expect(names.some((n) => n.includes("疎明資料"))).toBe(true);
     const ws = sheetOf(wb, HSP_POINT_SHEETS.B.sheetName)!;
     for (const r of HSP_POINT_SHEETS.B.rows) expect(String(ws.getCell(`AF${r.row}`).value), `row ${r.row}`).toBe([15, 20, 27].includes(r.row) ? "■" : "□");
-    const tpl = sheetOf(await open(HSP_POINT_TEMPLATE_PATH), HSP_POINT_SHEETS.B.sheetName)!;
-    expect(String(ws.getCell("AI96").value ?? "")).toBe(String(tpl.getCell("AI96").value ?? "")); // 合計欄は元のまま
+    expect(ws.getCell(HSP_POINT_SHEETS.B.totalCell).value).toBe(70);
+    expect(warnings.join("\n")).toContain("合計欄へ書き込みました");
     expect(warnings.join("\n")).toContain("単純合計は 70 点");
+  });
+
+  it("合計欄は、各シートの「合計」の結合セルの左上で、元は空である", async () => {
+    const wb = await open(HSP_POINT_TEMPLATE_PATH);
+    for (const [key, def] of Object.entries(HSP_POINT_SHEETS)) {
+      const ws = sheetOf(wb, def.sheetName)!;
+      const c = ws.getCell(def.totalCell);
+      expect(c.master.address, key).toBe(def.totalCell);
+      expect(c.value ?? null, key).toBeNull();
+      const label = ws.getCell(`AF${Number(def.totalCell.replace("AI", ""))}`);
+      expect(String(label.value), key).toBe("合計");
+    }
+  });
+
+  it("点数の印字がない項目・択一の重複・未選択のときは、合計欄を書き込まず、警告する", async () => {
+    const cases: [string, number[]][] = [
+      ["点数の印字がない項目", [27, 40]],
+      ["択一の重複", [20, 21, 27]],
+    ];
+    for (const [name, rows] of cases) {
+      const { buffer, warnings } = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("B", rows) });
+      const ws = sheetOf(await open(buffer), HSP_POINT_SHEETS.B.sheetName)!;
+      expect(ws.getCell(HSP_POINT_SHEETS.B.totalCell).value ?? null, name).toBeNull();
+      expect(warnings.join("\n"), name).toContain("合計欄は書き込んでいません");
+    }
+    const empty = await fillHspPointExcel("高度専門職（1号ロ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: [] });
+    expect(sheetOf(await open(empty.buffer), HSP_POINT_SHEETS.B.sheetName)!.getCell(HSP_POINT_SHEETS.B.totalCell).value ?? null).toBeNull();
+    expect(estimateHspPoints("B", []).totalWritable).toBe(false);
+  });
+
+  it("1号イ・ハも、合計欄へ書き込む", async () => {
+    const a = await fillHspPointExcel("高度専門職（1号イ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("A", [14, 20, 24]) });
+    expect(sheetOf(await open(a.buffer), HSP_POINT_SHEETS.A.sheetName)!.getCell(HSP_POINT_SHEETS.A.totalCell).value).toBe(85);
+    const c = await fillHspPointExcel("高度専門職（1号ハ）", { ...EMPTY_FORM_DETAILS, hspPointChecks: checks("C", [14, 24]) });
+    expect(sheetOf(await open(c.buffer), HSP_POINT_SHEETS.C.sheetName)!.getCell(HSP_POINT_SHEETS.C.totalCell).value).toBe(75);
   });
 
   it("2号は、案件で選んだシートへ差し込む。シート未選択なら、差し込まずに警告する", async () => {
