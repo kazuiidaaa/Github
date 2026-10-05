@@ -73,3 +73,40 @@ export function sanitizePointChecks(raw: unknown): string[] {
   );
   return [...new Set(raw.filter((v): v is string => typeof v === "string" && valid.has(v)))];
 }
+
+/** 疎明資料の番号ごとの、計算表の項目と、疎明資料（基本例）。表は docs/hsp-point-evidence.md と同じ。番号と細目は、計算表の注記が正 */
+export const HSP_EVIDENCE: Record<string, { item: string; document: string }> = {
+  "①": { item: "学歴", document: "該当する学歴の卒業証明書・学位取得の証明書（⑱を提出する場合は不要）" },
+  "②": { item: "職歴", document: "従事しようとする業務の従事期間・内容を明らかにする資料（所属していた機関作成のもの）" },
+  "③": { item: "年収", document: "年収（契約機関・外国所属機関から受ける報酬の年額）を証する文書" },
+  "④": { item: "研究実績（特許）", document: "特許証の写し等" },
+  "⑤": { item: "研究実績（外国政府の補助金等を受けた研究）", document: "交付決定書の写し等" },
+  "⑥": { item: "研究実績（論文3本以上）", document: "論文のタイトル・著者名・掲載誌等を記載した文書（様式自由）。責任著者又は筆頭著者のものに限る" },
+  "⑦": { item: "研究実績（その他法務大臣が認めるもの）", document: "左記を証する文書" },
+  "⑧": { item: "資格", document: "日本の国家資格・IT告示の試験の合格証明書の写し等" },
+  "⑨": { item: "特別加算（イノベーション促進支援措置）", document: "補助金交付決定通知書の写し等" },
+  "⑩": { item: "特別加算（中小企業者）", document: "主たる事業を確認できる資料、資本金・従業員数を証する文書" },
+  "⑪": { item: "特別加算（国際競争力強化等の地方公共団体の支援措置）", document: "補助金交付決定通知書の写し等" },
+  "⑫": { item: "特別加算（試験研究費等が3％超の中小企業者）", document: "財務諸表の写し等" },
+  "⑬": { item: "特別加算（外国の資格・表彰等）", document: "左記を証する文書" },
+  "⑭": { item: "特別加算（日本の大学等の卒業・修了）", document: "卒業証明書・学位取得の証明書" },
+  "⑮": { item: "特別加算（日本語能力）", document: "卒業証明書・合格証明書等の写し" },
+  "⑯": { item: "特別加算（成長分野の先端プロジェクトに従事）", document: "補助金交付通知書の写し、所属機関の説明資料" },
+  "⑰": { item: "特別加算（指定の大学の卒業）", document: "大学が該当することを証する資料、卒業証明書又は学位取得の証明書" },
+  "⑱": { item: "特別加算（イノベーティブ・アジア事業の研修修了）", document: "JICAの研修修了証明書" },
+  "⑲": { item: "本邦で事業を経営し、1億円以上を投資", document: "資本金又は出資額を証する資料（株主名簿等）" },
+  "⑳": { item: "地位（活動機関の代表取締役・取締役等）", document: "左記であることを証する文書" },
+  "㉑": { item: "特別加算（投資運用業等に従事）", document: "所属機関の登録等を証する文書" },
+};
+
+const EVIDENCE_MARKS = Object.keys(HSP_EVIDENCE);
+
+/**
+ * 選んだチェック欄から導く、疎明資料の番号（番号順、重複なし）。
+ * 計算表の項目（資格・投資運用業等）のうち、チェック欄を持たないもの（⑧・㉑）は、導かれない。
+ */
+export function evidenceNumbers(sheet: HspPointSheetKey, checks: readonly string[]): string[] {
+  const found = new Set<string>();
+  for (const r of checkedRows(sheet, checks)) for (const m of r.evidence.split(" ")) if (m !== "") found.add(m);
+  return EVIDENCE_MARKS.filter((m) => found.has(m));
+}

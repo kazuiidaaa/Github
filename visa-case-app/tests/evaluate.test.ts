@@ -382,6 +382,64 @@ describe("高度専門職の規則（Issue #186）", () => {
   });
 });
 
+describe("高度専門職：選んだ項目から導く疎明資料の番号ごとの必要書類（Issue #186）", () => {
+  const withChecks = (over: Partial<CaseRecord>, details: Partial<CaseRecord["formDetails"]>) =>
+    evaluate(make({ ...over, formDetails: { ...EMPTY_FORM_DETAILS, ...details } }));
+  const change1 = { procedureType: "change", targetStatus: "高度専門職（1号ロ）" } as const;
+
+  it("項目を選んでいない間は、親の疎明資料1件のみ（従来と同じ）", () => {
+    const ids = withChecks(change1, {}).items.map((i) => i.rule.id);
+    expect(ids).toEqual(["hsp_point_table", "hsp_point_evidence"]);
+  });
+
+  it("選んだ項目の番号ごとに、親の疎明資料の直後へ「要確認」で出す。必要書類の件数には数えない", () => {
+    // B：修士(①)・職歴(②)・年収(③)・日本語能力Ⅰ(⑮)
+    const ev = withChecks(change1, { hspPointChecks: ["B:15", "B:20", "B:27", "B:72"] });
+    expect(ev.items.map((i) => i.rule.id)).toEqual([
+      "hsp_point_table",
+      "hsp_point_evidence",
+      "hsp_point_evidence_①",
+      "hsp_point_evidence_②",
+      "hsp_point_evidence_③",
+      "hsp_point_evidence_⑮",
+    ]);
+    const children = ev.items.slice(2);
+    expect(children.every((i) => i.effective === "check" && i.rule.level === "check")).toBe(true);
+    expect(children[3].rule.name).toContain("日本語能力");
+    expect(ev.requiredCount).toBe(2);
+    // 未受領の「要確認」は、確認が必要な書類に出る
+    expect(ev.toCheck.map((i) => i.rule.id)).toEqual(["hsp_point_evidence_①", "hsp_point_evidence_②", "hsp_point_evidence_③", "hsp_point_evidence_⑮"]);
+  });
+
+  it("収集状況と、行政書士の判断（必要への切り替え）は、番号ごとに持つ", () => {
+    const ev = withChecks(
+      { ...change1, requirementStates: { "hsp_point_evidence_①": { status: "received" }, "hsp_point_evidence_③": { status: "requested", override: "required" } } },
+      { hspPointChecks: ["B:15", "B:27"] },
+    );
+    const one = ev.items.find((i) => i.rule.id === "hsp_point_evidence_①")!;
+    const three = ev.items.find((i) => i.rule.id === "hsp_point_evidence_③")!;
+    expect(one.state.status).toBe("received");
+    expect(three.effective).toBe("required");
+    expect(ev.requiredCount).toBe(3);
+    // 未受領の必要書類：親の2件と、必要に切り替えた③（受領済みの①は含まない）
+    expect(ev.missing.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence", "hsp_point_evidence_③"]);
+    expect(ev.toCheck).toEqual([]);
+  });
+
+  it("使うシートが決まらない間（2号・号未選択）は出さない。シートを選ぶと出る", () => {
+    const grade2 = { procedureType: "change", targetStatus: "高度専門職（2号）" } as const;
+    const hasChild = (e: ReturnType<typeof evaluate>) => e.items.some((i) => i.rule.id.startsWith("hsp_point_evidence_"));
+    expect(hasChild(withChecks(grade2, { hspPointChecks: ["B:15"] }))).toBe(false);
+    expect(hasChild(withChecks(grade2, { hspPointChecks: ["B:15"], hspPointSheet: "B" }))).toBe(true);
+  });
+
+  it("更新は、現在の在留資格でシートを決める。他の在留資格の案件には出ない", () => {
+    expect(withChecks({ procedureType: "renewal", currentStatus: "高度専門職（1号ロ）" }, { hspPointChecks: ["B:15"] }).items.map((i) => i.rule.id)).toContain("hsp_point_evidence_①");
+    const other = evaluate(make({ procedureType: "renewal", currentStatus: "技術・人文知識・国際業務", formDetails: { ...EMPTY_FORM_DETAILS, hspPointChecks: ["B:15"] } }, "1"));
+    expect(other.items.some((i) => i.rule.id.startsWith("hsp_point_evidence_"))).toBe(false);
+  });
+});
+
 describe("高度専門職2号の変更の所得・納税・社会保険の書類（Issue #188）", () => {
   const ev = evaluate(make({ procedureType: "change", targetStatus: "高度専門職（2号）" }));
   const level = (id: string) => ev.items.find((i) => i.rule.id === id)?.effective;

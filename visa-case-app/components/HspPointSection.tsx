@@ -60,7 +60,7 @@ export function HspPointSection({
     <section className="rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="font-semibold">高度専門職のポイント計算表</h2>
       <p className="mb-4 mt-1 text-xs text-slate-500">
-        該当する項目を選ぶと、公式の計算表（エクセル）のチェック欄（■）へ差し込みます。点数・合計欄は書き込みません。該当の判断（大学・日本語能力・加算など）は、行政書士が資料で確認してください。疎明資料の番号（①〜㉑）は、各項目の右に表示します。
+        該当する項目を選ぶと、公式の計算表（エクセル）のチェック欄（■）へ差し込みます。点数・合計欄は書き込みません。該当の判断（大学・日本語能力・加算など）は、行政書士が資料で確認してください。疎明資料の番号（①〜㉑）は、各項目の右に表示します。項目を選ぶと、必要書類の一覧に、その番号ごとの疎明資料が「要確認」で出ます。
       </p>
       {resolution.kind === "needs_choice" || !resolution.fromGrade ? (
         <div className="mb-4 max-w-sm">

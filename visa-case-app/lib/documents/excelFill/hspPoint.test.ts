@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { EMPTY_FORM_DETAILS } from "../../formDetails";
-import { HSP_POINT_SHEETS, estimateHspPoints, pointCheckId, resolveHspPointSheet, sanitizePointChecks, type HspPointSheetKey } from "../../hspPoints";
+import { HSP_EVIDENCE, HSP_POINT_SHEETS, estimateHspPoints, evidenceNumbers, pointCheckId, resolveHspPointSheet, sanitizePointChecks, type HspPointSheetKey } from "../../hspPoints";
 import { HSP_POINT_TEMPLATE_PATH, fillHspPointExcel } from "./hspPoint";
 import { sheetKey } from "./renewalMapping";
 
@@ -47,6 +47,44 @@ describe("ポイント計算表の行の定義とテンプレートの整合", (
     for (const def of Object.values(HSP_POINT_SHEETS)) {
       for (const r of def.rows) expect(r.evidence).toMatch(/^([①-㉑]( [①-㉑])*)?$/);
     }
+  });
+});
+
+describe("疎明資料の番号", () => {
+  it("各行の番号は、様式のAL列（結合セルの範囲を含む）の番号と一致する。「直前の行と共通」ではない（⑮・⑰は、直前の⑭・⑯と異なる）", async () => {
+    const wb = await open(HSP_POINT_TEMPLATE_PATH);
+    for (const [key, def] of Object.entries(HSP_POINT_SHEETS)) {
+      const ws = sheetOf(wb, def.sheetName)!;
+      for (const r of def.rows) {
+        // 結合セルは、範囲内のどの行でも、左上のセルの値を返す
+        const sheetValue = String(ws.getCell(`AL${r.row}`).value ?? "").replace(/\s+/g, " ").trim();
+        expect(r.evidence, `${key}:${r.row} ${r.label}`).toBe(sheetValue);
+      }
+    }
+  });
+
+  it("番号の記載がない行は、年齢のみ", () => {
+    for (const def of Object.values(HSP_POINT_SHEETS)) {
+      expect(def.rows.filter((r) => r.evidence === "").map((r) => r.section)).toEqual(def.rows.filter((r) => r.section === "年齢").map((r) => r.section));
+    }
+  });
+
+  it("行に出る番号は、すべて、番号の表（①〜㉑）にある", () => {
+    for (const def of Object.values(HSP_POINT_SHEETS)) {
+      for (const r of def.rows) for (const m of r.evidence.split(" ").filter(Boolean)) expect(HSP_EVIDENCE[m], `${r.label} ${m}`).toBeDefined();
+    }
+    expect(Object.keys(HSP_EVIDENCE)).toHaveLength(21);
+  });
+
+  it("選んだ項目から、番号順・重複なしで導く。日本語能力は⑮、指定の大学は⑰、中小企業者の研究費は⑩⑫", () => {
+    // A：修士(①)・職歴(②)・年収(③)・日本語能力Ⅰ(⑮)・指定の大学Ⅰ(⑰)・中小企業者の研究費(⑩⑫)・年齢（番号なし）
+    expect(evidenceNumbers("A", checks("A", [15, 20, 24, 32, 51, 65, 73]))).toEqual(["①", "②", "③", "⑩", "⑫", "⑮", "⑰"]);
+    // 同じ番号の項目を複数選んでも、1つ（学歴の2項目→①）
+    expect(evidenceNumbers("A", checks("A", [14, 17]))).toEqual(["①"]);
+    // C：取締役(⑳)・投資運用業等(㉑)・1億円以上の投資(⑲)
+    expect(evidenceNumbers("C", checks("C", [33, 80, 81]))).toEqual(["⑲", "⑳", "㉑"]);
+    expect(evidenceNumbers("B", [])).toEqual([]);
+    expect(evidenceNumbers("B", checks("B", [35]))).toEqual([]);
   });
 });
 

@@ -1,6 +1,7 @@
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
+import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { isCollected } from "./progress";
-import { ACQUISITION_CAUSE_LABELS, RULE_SETS, type RequirementRule, type RuleSet } from "./rules";
+import { ACQUISITION_CAUSE_LABELS, RULE_SETS, hspEvidenceRule, type RequirementRule, type RuleSet } from "./rules";
 
 export type Result = "required" | "not_required" | "check";
 
@@ -61,15 +62,34 @@ export function statusForRules(
   return input.confirmedResidenceStatus || input.currentStatus;
 }
 
-function findRuleSet(c: CaseRecord, ruleSets: RuleSet[]): RuleSet | null {
+/** 案件から、規則を引くための在留資格を決める */
+function statusOfCase(c: CaseRecord): string {
   // 下書きの入力は正式なデータではないため、確認済みの場合のみ優先する
   const confirmed = c.applicant.confirmationStatus === "confirmed";
-  const status = statusForRules(c.procedureType, {
+  return statusForRules(c.procedureType, {
     currentStatus: c.currentStatus,
     targetStatus: c.targetStatus,
     confirmedResidenceStatus: confirmed ? c.applicant.residenceStatus : "",
   });
-  return matchRuleSet(c.procedureType, status, ruleSets);
+}
+
+function findRuleSet(c: CaseRecord, ruleSets: RuleSet[]): RuleSet | null {
+  return matchRuleSet(c.procedureType, statusOfCase(c), ruleSets);
+}
+
+/**
+ * 高度専門職：ポイント計算表で選んだ項目から導く、疎明資料の番号ごとの必要書類（Issue #186）。
+ * 使うシートが決まらない間、または項目を選んでいない間は、出さない（親の「疎明資料」1件のみ）。
+ */
+function hspEvidenceItems(c: CaseRecord, ruleSet: RuleSet): EvaluatedItem[] {
+  if (!ruleSet.id.startsWith("hsp_")) return [];
+  const resolution = resolveHspPointSheet(statusOfCase(c), c.formDetails.hspPointSheet);
+  if (resolution.kind !== "resolved") return [];
+  return evidenceNumbers(resolution.sheet, c.formDetails.hspPointChecks).map((mark) => {
+    const rule = hspEvidenceRule(mark);
+    const state = c.requirementStates[rule.id] ?? NO_STATE;
+    return { rule, result: rule.level, effective: state.override ?? rule.level, reason: `ポイント計算表で選んだ項目（${mark}）`, state };
+  });
 }
 
 /** 手続種別と在留資格（文字列）だけから、対応する規則があるかを判定する（案件作成画面の案内用） */
@@ -174,6 +194,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
 
     const state = c.requirementStates[rule.id] ?? NO_STATE;
     items.push({ rule, result, effective: state.override ?? result, reason, state });
+    if (rule.id === "hsp_point_evidence") items.push(...hspEvidenceItems(c, ruleSet));
   }
 
   return summarize(ruleSet, needsCategory, false, items);

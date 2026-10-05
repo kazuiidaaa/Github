@@ -1,4 +1,5 @@
 import type { FormDetails } from "../formDetails";
+import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
 // 必要書類の規則。プログラムから分離したデータとして保持し、改正時はここだけを修正する。
@@ -912,6 +913,25 @@ const HSP_SOURCE = {
 };
 const HSP_PARTIAL = "（ポイント計算表・疎明資料のみ整備。他の書類は未整備）";
 
+/**
+ * ポイント計算表で選んだ項目から導く、疎明資料の番号ごとの必要書類（Issue #186）。規則集合には載せず、evaluate が案件の入力から生成する。
+ * 疎明資料は、ポイントの合計が70点以上あることを確認できれば足り、該当する全項目の資料は不要なため、一律に必要とはせず「要確認」とする。
+ * 必要なものは、行政書士が「判断」で必要に切り替える。
+ */
+export const HSP_EVIDENCE_RULE_PREFIX = "hsp_point_evidence_";
+export function hspEvidenceRule(mark: string): RequirementRule {
+  const e = HSP_EVIDENCE[mark];
+  return {
+    id: `${HSP_EVIDENCE_RULE_PREFIX}${mark}`,
+    name: `疎明資料 ${mark}（${e.item}）：${e.document}`,
+    party: "applicant",
+    categories: ALL,
+    level: "check",
+    note: "ポイント計算表で選んだ項目から導いた疎明資料。70点以上を確認できる資料があれば足りるため、提出するものを「判断」で必要に切り替える",
+    verify: true,
+  };
+}
+
 /** 疎明資料の番号（①〜㉑）と項目の対応は docs/hsp-point-evidence.md */
 const hspPointRules = (tableNote: string): RequirementRule[] => [
   {
@@ -929,7 +949,7 @@ const hspPointRules = (tableNote: string): RequirementRule[] => [
     party: "applicant",
     categories: ALL,
     level: "required",
-    note: "該当する全項目の資料は不要。審査の過程で、追加の資料を求められる場合がある。計算表の各項目の疎明資料の番号（①〜㉑）は docs/hsp-point-evidence.md",
+    note: "該当する全項目の資料は不要。審査の過程で、追加の資料を求められる場合がある。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）",
     verify: true,
   },
 ];
