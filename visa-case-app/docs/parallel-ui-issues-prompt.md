@@ -1,7 +1,7 @@
 # UI・顧客体験改善 Issue の並列実装プロンプト
 
 対象リポジトリ：`kazuiidaaa/Github`（アプリ本体は `visa-case-app/`）
-対象 Issue：#131〜#135、#137、#140、#142（計8件）
+対象 Issue：#131〜#135、#137、#140、#142、#151〜#156（計14件）
 使い方：下の「貼り付け用プロンプト」を、新しい Claude Code セッションにそのまま貼り付けます。
 
 ## Issue 一覧と、重なるファイル
@@ -16,19 +16,29 @@
 | #137 | 指標カード・バッジの用語の定義 | `components/DashboardCards.tsx`、`app/page.tsx`、`app/cases/page.tsx`、`lib/dashboardMetrics.ts`（新規） | 中 |
 | #140 | 操作完了の通知（トースト） | `components/Toast.tsx`（新規）、`app/layout.tsx`、`app/cases/new/page.tsx`、`app/cases/[id]/page.tsx`、`components/UploadBox.tsx` | 中 |
 | #142 | ログインのパスワード再設定 | `app/login/page.tsx`、`lib/auth.ts` | 低〜中 |
+| #151 | 申請書類の作成前に、未解決の事項を警告し、該当タブへ誘導 | `app/cases/[id]/documents/page.tsx`、`lib/documents/`（判定関数） | 高 |
+| #152 | 利用上の注意の共通フッターと「ご利用にあたって」ページ | `components/Footer.tsx`（新規）、`app/layout.tsx`、`app/about/page.tsx`（新規） | 高 |
+| #153 | `confirm()` 5か所を共通の確認ダイアログに統一 | `components/ConfirmDialog.tsx`（新規）、`documents/page.tsx`、`documents/[docId]/page.tsx`、`ChecksPanel.tsx`、`RequirementsPanel.tsx`、`MembersPanel.tsx` | 中 |
+| #154 | 書類生成の結果・読み込み状態の支援技術への通知 | `documents/page.tsx`、`documents/[docId]/page.tsx`、各画面の「読み込み中」表示 | 中 |
+| #155 | 新規案件作成の離脱警告・まとめて登録の一時保存 | `app/cases/new/page.tsx`、`lib/`（一時保存の関数） | 中 |
+| #156 | 案件詳細「次に行うこと」を段階に応じた案内に | `app/cases/[id]/page.tsx`（概要タブ）、`lib/nextAction.ts`（新規） | 中 |
 
 同じファイルを変更する組：
-- `app/cases/[id]/page.tsx`：#131・#132・#140
+- `app/cases/[id]/page.tsx`：#131・#132・#140・#156
+- `app/cases/[id]/documents/page.tsx`：#151・#153・#154
 - `app/cases/page.tsx`：#134・#135・#137
 - `lib/caseMetrics.ts`：#134・#135
+- `app/layout.tsx`：#140・#152
+- `app/cases/new/page.tsx`：#140・#155
+- `components/Header.tsx`：#133・#152（フッターからの導線を Header にも置く場合）
 
-変更箇所は別々ですが、マージの順序によって競合が起きえます。推奨のマージ順：#133 → #131 → #132 → #140 → #134 → #135 → #137 → #142。
+変更箇所は別々ですが、マージの順序によって競合が起きえます。推奨のマージ順：#133 → #131 → #132 → #140 → #151 → #153 → #156 → #154 → #155 → #152 → #134 → #135 → #137 → #142。
 
 ## 貼り付け用プロンプト
 
 ````text
 あなたは、リポジトリ kazuiidaaa/Github（アプリ本体は visa-case-app/）の、親エージェントです。
-GitHub の Issue #131, #132, #133, #134, #135, #137, #140, #142 の8件を、サブエージェントに並列で実装させます。
+GitHub の Issue #131, #132, #133, #134, #135, #137, #140, #142, #151, #152, #153, #154, #155, #156 の14件を、サブエージェントに並列で実装させます。
 各 Issue の本文（現状・要件定義・作業プロンプト・受け入れ基準）が、実装の仕様です。
 
 ## 0. 守ること（リポジトリの規約）
@@ -43,7 +53,7 @@ GitHub の Issue #131, #132, #133, #134, #135, #137, #140, #142 の8件を、サ
 
 ## 1. 事前準備（親エージェントが、先に行う）
 1. `git fetch origin main` を実行し、最新の main を確認する。
-2. 8件の Issue を読み、既にブランチ・PR がないかを確認する（重複して着手しない）。
+2. 14件の Issue を読み、既にブランチ・PR がないかを確認する（重複して着手しない）。
 3. Issue ごとに、worktree を作る（同じ作業ディレクトリを共有させない）。
    例：
    git worktree add ../wt-issue-133 -b claude/issue-133-header-mobile origin/main
@@ -54,6 +64,12 @@ GitHub の Issue #131, #132, #133, #134, #135, #137, #140, #142 の8件を、サ
    git worktree add ../wt-issue-137 -b claude/issue-137-metric-definitions origin/main
    git worktree add ../wt-issue-140 -b claude/issue-140-toast origin/main
    git worktree add ../wt-issue-142 -b claude/issue-142-password-reset origin/main
+   git worktree add ../wt-issue-151 -b claude/issue-151-generate-precheck origin/main
+   git worktree add ../wt-issue-152 -b claude/issue-152-footer-notice origin/main
+   git worktree add ../wt-issue-153 -b claude/issue-153-confirm-dialog origin/main
+   git worktree add ../wt-issue-154 -b claude/issue-154-live-status origin/main
+   git worktree add ../wt-issue-155 -b claude/issue-155-new-case-guard origin/main
+   git worktree add ../wt-issue-156 -b claude/issue-156-next-action origin/main
 4. 各 worktree で、`cd visa-case-app && npm ci` を実行する。
 
 ## 2. gh コマンドの制限（先に知っておくこと）
@@ -61,7 +77,7 @@ GitHub の Issue #131, #132, #133, #134, #135, #137, #140, #142 の8件を、サ
   HTTP 403: GraphQL is not available from Claude Code sessions; use the REST API
 繰り返し試さず、GitHub の MCP ツール（mcp__github__*：issue_read、add_issue_comment、create_pull_request など）を使うか、`gh api repos/kazuiidaaa/Github/...` の REST API を使う。日本語の複数行の本文は、`gh api ... --input -` で JSON を標準入力から渡す（シェルの引用符で直接囲まない）。
 
-## 3. サブエージェントの起動（1回のメッセージで、8件を並列に起動する）
+## 3. サブエージェントの起動（1回のメッセージで、14件を並列に起動する）
 各サブエージェントに、担当 Issue 番号と、専用の worktree のパスだけを変えて、次の指示を渡す。
 
 「あなたの担当は Issue #<番号> です。作業ディレクトリは <worktree のパス> です。このディレクトリ配下でのみ作業し、他の worktree のファイルには触れないでください。
@@ -77,9 +93,9 @@ GitHub の Issue #131, #132, #133, #134, #135, #137, #140, #142 の8件を、サ
 10. 最後に、PR の番号・ブランチ名・検証結果（lint・型・build・test・目視確認）を、親エージェントへ報告してください。」
 
 ## 4. 親エージェントが、最後に行うこと
-1. 8件の完了後、重なるファイル（app/cases/[id]/page.tsx＝#131・#132・#140、app/cases/page.tsx＝#134・#135・#137、lib/caseMetrics.ts＝#134・#135）について、PR の差分を比べ、矛盾する変更がないかを確認する。矛盾がある場合は、リベースまたはマージによる解消方法を、利用者へ提示する（実際のマージは行わない）。
-2. 推奨のマージ順（#133 → #131 → #132 → #140 → #134 → #135 → #137 → #142）を、利用者へ伝える。
+1. 14件の完了後、重なるファイル（app/cases/[id]/page.tsx＝#131・#132・#140・#156、app/cases/[id]/documents/page.tsx＝#151・#153・#154、app/cases/page.tsx＝#134・#135・#137、lib/caseMetrics.ts＝#134・#135、app/layout.tsx＝#140・#152、app/cases/new/page.tsx＝#140・#155）について、PR の差分を比べ、矛盾する変更がないかを確認する。矛盾がある場合は、リベースまたはマージによる解消方法を、利用者へ提示する（実際のマージは行わない）。
+2. 推奨のマージ順（#133 → #131 → #132 → #140 → #151 → #153 → #156 → #154 → #155 → #152 → #134 → #135 → #137 → #142）を、利用者へ伝える。
 3. 各 PR に、@kazuiidaaa へのレビュー依頼が出ていることを確認する（出ていなければ依頼する）。
-4. 各 PR の番号・ブランチ名・競合の有無・検証結果を、一覧にして報告する。#142 は、Supabase 側の設定（再設定メールの遷移先URL）が必要なため、利用者の確認事項として、別に明記する。
+4. 各 PR の番号・ブランチ名・競合の有無・検証結果を、一覧にして報告する。#142 は、Supabase 側の設定（再設定メールの遷移先URL）が必要なため、利用者の確認事項として、別に明記する。#152 の「ご利用にあたって」ページは、法令・個人情報の取扱いに関する記載を含むため、行政書士（利用者）による文面の確認が必要であることを、別に明記する。#155 の一時保存が個人情報の観点で問題ないかの判断も、利用者の確認事項として明記する。
 5. PR は、自動でマージしない。
 ````
