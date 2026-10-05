@@ -19,7 +19,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseEnabled || demo) return;
     if (session === null && !onLogin) router.replace("/login");
-    if (session && onLogin) router.replace("/cases");
+    if (session && onLogin) router.replace("/");
   }, [session, onLogin, router, demo]);
 
   if (isMisconfigured) {

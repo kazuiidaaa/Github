@@ -56,7 +56,7 @@ export default function LoginPage() {
           className="w-full"
           onClick={() => {
             startDemo();
-            router.push("/cases");
+            router.push("/");
           }}
         >
           デモを試す
