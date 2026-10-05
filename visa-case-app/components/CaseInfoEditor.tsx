@@ -50,7 +50,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   if (!editing) {
     const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
     return (
-      <section className="rounded-lg border border-slate-200 bg-white p-6 text-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold">案件情報</h2>
           {canEdit && (
@@ -80,7 +80,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   }
 
   return (
-    <section className="space-y-5 rounded-lg border border-slate-200 bg-white p-6 text-sm">
+    <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 text-sm">
       <h2 className="font-semibold">案件情報の編集</h2>
       <Field label="案件名" required error={errors.caseName} hint="内部管理用です。正式な氏名としては扱いません。">
         <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />

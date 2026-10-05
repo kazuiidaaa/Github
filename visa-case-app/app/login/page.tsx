@@ -22,7 +22,7 @@ export default function LoginPage() {
 
   if (!isSupabaseEnabled) {
     return (
-      <div className="mx-auto max-w-md rounded-lg border border-slate-200 bg-white p-6 text-sm">
+      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <p className="mb-2 font-semibold">ログインは無効です</p>
         <p className="text-slate-600">
           Supabase の接続情報が未設定のため、仮データ方式で動作しています。ログインを使用する場合は、
@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 rounded-lg border border-slate-200 bg-white p-6">
+    <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
       <h1 className="text-center text-xl font-semibold">ログイン</h1>
       <Field label="メールアドレス">
         <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />

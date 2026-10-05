@@ -76,18 +76,18 @@ export default function DocumentPreviewPage() {
           ← 申請書類作成
         </Link>
         {stale && (
-          <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
             生成後に案件情報が更新されています。この版は生成時点の内容です。最新の内容で確認する場合は、再生成してください。
           </p>
         )}
         {doc.outputFormat !== "html" && (
-          <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">
+          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
             この版は{OUTPUT_FORMAT_LABELS[doc.outputFormat]}として出力・保存された版です。内容は変更できません。
           </p>
         )}
         {isOfficialForm(doc.documentType) && <OfficialFormNotice />}
         {doc.version < latest && (
-          <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
+          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
         )}
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && doc.status === "draft" && (

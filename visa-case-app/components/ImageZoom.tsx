@@ -70,7 +70,7 @@ export function ImageZoom({ src, alt, className = "" }: { src: string; alt: stri
     if (pointers.current.size < 2) pinch.current = null;
   }
 
-  const btn = "rounded border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-40";
+  const btn = "rounded-full border border-line-strong bg-white px-3 py-1 text-sm font-bold hover:bg-slate-50 disabled:opacity-40";
   return (
     <div>
       <div className="mb-2 flex items-center gap-2">

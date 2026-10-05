@@ -104,7 +104,7 @@ export function UploadBox({
   }
 
   return (
-    <section className={compact ? "" : "rounded-lg border border-slate-200 bg-white p-6"}>
+    <section className={compact ? "" : "rounded-2xl border border-slate-200 bg-white p-6"}>
       {!compact && (
         <>
           <h2 className="mb-1 font-semibold">{hasDocument ? `${label}を差し替える` : `${label}をアップロード`}</h2>
@@ -126,8 +126,8 @@ export function UploadBox({
           setDragging(false);
           handle(e.dataTransfer.files[0]);
         }}
-        className={`rounded-lg border-2 border-dashed text-center text-sm ${compact ? "p-4" : "p-10"} ${
-          dragging ? "border-slate-700 bg-slate-50" : "border-slate-300"
+        className={`rounded-2xl border-2 border-dashed text-center text-sm ${compact ? "p-4" : "p-10"} ${
+          dragging ? "border-slate-700 bg-slate-50" : "border-line-strong"
         }`}
       >
         {uploading ? (
@@ -138,7 +138,7 @@ export function UploadBox({
             <button
               type="button"
               onClick={() => input.current?.click()}
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 font-medium hover:bg-slate-50"
+              className="rounded-full border border-line-strong bg-white px-4 py-2 font-bold hover:bg-slate-50"
             >
               {hasDocument ? "差し替えるファイルを選択" : "ファイルを選択"}
             </button>

@@ -92,7 +92,7 @@ export default function NewCasePage() {
 
   if (!canEdit) {
     return (
-      <div className="max-w-xl rounded-lg border border-slate-200 bg-white p-6 text-sm">
+      <div className="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <p className="mb-3">案件を作成する権限がありません。事務所の所有者または管理者にご確認ください。</p>
         <Link href="/cases" className="text-blue-700 hover:underline">
           ← 案件一覧
@@ -120,18 +120,18 @@ export default function NewCasePage() {
             type="button"
             aria-pressed={bulk === m.v}
             onClick={() => setBulk(m.v)}
-            className={`rounded-md border px-3 py-1.5 ${bulk === m.v ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white hover:bg-slate-50"}`}
+            className={`rounded-full border px-4 py-1.5 font-bold ${bulk === m.v ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white hover:bg-slate-50"}`}
           >
             {m.label}
           </button>
         ))}
       </div>
       {bulk && (
-        <p className="mb-4 rounded-md bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+        <p className="mb-4 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
           同じ所属機関の複数の申請人について、手続種別と雇用・会社情報を1回入力し、人数分の案件をまとめて作成します。入管への申請は、申請人お一人につき1件の申請書が必要です。作成後の各案件は独立しており、以後は個別に編集します（案件間で情報は同期されません）。
         </p>
       )}
-      <form onSubmit={submit} className="space-y-5 rounded-lg border border-slate-200 bg-white p-6">
+      <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
         {!bulk && (
           <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">
             <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
@@ -156,7 +156,7 @@ export default function NewCasePage() {
           </Field>
         )}
         {showNoRuleGuide && (
-          <p role="note" className="rounded-md bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+          <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
             {`${notApplicableMessage()}案件は、このまま作成できます。`}
           </p>
         )}

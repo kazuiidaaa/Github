@@ -99,7 +99,7 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
   }
 
   return (
-    <section className="max-w-3xl rounded-lg border border-slate-200 bg-white p-6">
+    <section className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="mb-1 font-semibold">雇用・会社情報</h2>
       <p className="mb-5 text-xs text-slate-500">
         必要書類の判定に使用します。申請人の確認済み情報とは別に保存されます。

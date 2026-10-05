@@ -100,7 +100,7 @@ function ToneIcon({ tone }: { tone: Tone }) {
 
 export function Badge({ tone, icon = true, children }: { tone: Tone; icon?: boolean; children: ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${TONE_STYLES[tone]}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold ${TONE_STYLES[tone]}`}>
       {icon && <ToneIcon tone={tone} />}
       {children}
     </span>

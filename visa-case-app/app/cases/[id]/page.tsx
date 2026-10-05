@@ -153,7 +153,7 @@ export default function CaseDetailPage() {
         <div className="flex items-center gap-2">
         <Link
           href={`/cases/${record.id}/documents`}
-          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          className="rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
         >
           申請書類作成
         </Link>
@@ -195,7 +195,7 @@ export default function CaseDetailPage() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium ${
-              tab === t.key ? "border-b-2 border-slate-900" : "text-slate-500 hover:text-slate-800"
+              tab === t.key ? "border-b-2 border-accent text-foreground" : "text-slate-500 hover:text-slate-800"
             }`}
           >
             {t.label}
@@ -216,7 +216,7 @@ export default function CaseDetailPage() {
               <DeadlineBanner date={a.residenceExpiryDate} />
             ) : null;
           })()}
-          <section className="rounded-lg border border-slate-200 bg-white p-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="mb-4 flex items-center gap-2 font-semibold">
               申請人情報
               <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
@@ -253,7 +253,7 @@ export default function CaseDetailPage() {
           </section>
           <CaseInfoEditor record={record} canEdit={canEdit} />
           {!doc && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
               <p>次に行うこと：「書類」タブから在留カードを登録し、「申請人情報」タブで内容を入力してください。</p>
               {canEdit && (
                 <Button type="button" onClick={() => setTab("documents")}>
@@ -268,7 +268,7 @@ export default function CaseDetailPage() {
       {tab === "documents" && (
         <div className="space-y-6">
           {canEdit && !doc && (
-            <p className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <p className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
               最初に、在留カードを登録してください。登録後に、「申請人情報」タブで、原本を見ながら内容を入力します。
             </p>
           )}
@@ -284,7 +284,7 @@ export default function CaseDetailPage() {
           {canEdit && (
             <UploadBox caseId={record.id} documentType="photo" currentFileName={photo?.fileName} onUploaded={() => {}} />
           )}
-          <section className="rounded-lg border border-slate-200 bg-white">
+          <section className="rounded-2xl border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
             {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
             {record.documents.map((d) => (
@@ -301,7 +301,7 @@ export default function CaseDetailPage() {
       )}
 
       {!canEdit && tab !== "overview" && tab !== "documents" && (
-        <p className="mb-4 rounded-md bg-slate-100 p-3 text-sm text-slate-700">閲覧のみの権限です。内容を変更するには、事務所の所有者または管理者に役割の変更をご依頼ください。</p>
+        <p className="mb-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">閲覧のみの権限です。内容を変更するには、事務所の所有者または管理者に役割の変更をご依頼ください。</p>
       )}
       {/* 編集権限がない場合は、タブ内のすべての入力・操作を無効にする（最終的な拒否はデータベース側で行う） */}
       <fieldset disabled={!canEdit} className="m-0 min-w-0 border-0 p-0">

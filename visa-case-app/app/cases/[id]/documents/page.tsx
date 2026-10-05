@@ -112,12 +112,12 @@ export default function DocumentsPage() {
       </Link>
       <h1 className="text-2xl font-semibold">申請書類作成：{record.caseName}</h1>
 
-      <p className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
+      <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
         この文書は、現在保存されている案件情報から生成されます。出力後、行政書士が内容を確認してください。
         生成した文書は内部確認用であり、公式の申請様式ではありません（「公式申請様式」は、公式のエクセル様式へ案件情報を差し込んだ下書きです）。
       </p>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6 text-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <h2 className="mb-3 font-semibold">データ状態</h2>
         <dl className="grid grid-cols-[10rem_1fr] gap-y-2">
           <dt className="text-slate-500">申請人情報</dt>
@@ -131,7 +131,7 @@ export default function DocumentsPage() {
         </dl>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-3 font-semibold">出力内容</h2>
         <div className="space-y-2 text-sm">
           {INTERNAL_DOCUMENT_TYPES.map((t) => (
@@ -153,7 +153,7 @@ export default function DocumentsPage() {
         {officialSelected && (
           <div className="mt-4 space-y-2">
             {scopeWarnings.map((w) => (
-              <p key={w} role="alert" className="rounded-md bg-amber-50 p-3 text-sm font-medium text-amber-900">
+              <p key={w} role="alert" className="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
                 注意：{w}（生成はできます）
               </p>
             ))}
@@ -170,7 +170,7 @@ export default function DocumentsPage() {
         <p className="mt-3 text-xs text-slate-500">再生成しても過去の版は上書きされず、新しい版として保存されます。</p>
       </section>
 
-      <section ref={historyRef} className="scroll-mt-4 rounded-lg border border-slate-200 bg-white">
+      <section ref={historyRef} className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-3">
           <h2 className="font-semibold">生成履歴</h2>
           {archived.length > 0 && (

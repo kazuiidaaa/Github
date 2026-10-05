@@ -91,9 +91,9 @@
   --color-white: #2c2c2e;
 
   --color-slate-50: #252527;
-  --color-slate-100: #2c2c2e;
-  --color-slate-200: #3a3a3c;
-  --color-slate-300: #505054;
+  --color-slate-100: #353538;
+  --color-slate-200: #424245;
+  --color-slate-300: #58585c;
   --color-slate-400: #a1a1a6;
   --color-slate-500: #a8a8ad;
   --color-slate-600: #c7c7cc;
@@ -134,6 +134,24 @@
   --color-green-100: #0c3a44;
   --color-green-700: #6fd3e6;
   --color-green-800: #8fdcec;
+}
+
+/* 書類のプレビュー（紙の見た目）は、暗色表示でも白地に黒字のまま表示する */
+.paper {
+  color-scheme: light;
+  --color-white: #ffffff;
+  --color-slate-50: #f5f5f7;
+  --color-slate-100: #ececf0;
+  --color-slate-200: #d9d9de;
+  --color-slate-300: #bcbcc4;
+  --color-slate-400: #6e6e73;
+  --color-slate-500: #636366;
+  --color-slate-600: #48484a;
+  --color-slate-700: #3a3a3c;
+  --color-slate-800: #2c2c2e;
+  --color-slate-900: #1d1d1f;
+  --line-strong: #8a8a93;
+  --color-line-strong: #8a8a93;
 }
 
 body {
@@ -206,15 +224,34 @@ button:not(:disabled):active {
   animation: page-enter 0.28s var(--ease-apple) both;
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.anim-fade-in {
+  animation: fade-in 0.2s var(--ease-apple) both;
+}
+
 .anim-pop-in {
   animation: pop-in 0.2s var(--ease-apple) both;
 }
 
-/* 一覧などで、子要素を順に表示する（--i に順番を指定する） */
+/* 一覧などで、子要素を順に表示する（先頭の 8 件まで、30 ミリ秒ずつずらす） */
 .anim-stagger > * {
   animation: page-enter 0.28s var(--ease-apple) both;
-  animation-delay: calc(min(var(--i, 0), 8) * 30ms);
 }
+.anim-stagger > *:nth-child(2) { animation-delay: 30ms; }
+.anim-stagger > *:nth-child(3) { animation-delay: 60ms; }
+.anim-stagger > *:nth-child(4) { animation-delay: 90ms; }
+.anim-stagger > *:nth-child(5) { animation-delay: 120ms; }
+.anim-stagger > *:nth-child(6) { animation-delay: 150ms; }
+.anim-stagger > *:nth-child(7) { animation-delay: 180ms; }
+.anim-stagger > *:nth-child(n + 8) { animation-delay: 210ms; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

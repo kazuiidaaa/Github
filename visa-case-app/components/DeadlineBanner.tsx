@@ -5,7 +5,7 @@ export function DeadlineBanner({ date }: { date: string }) {
   const days = daysUntil(date);
   if (days === null) {
     return (
-      <p className="rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+      <p className="rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
         在留期間の満了日が未入力です。申請人情報を確認してください。
       </p>
     );
@@ -20,7 +20,7 @@ export function DeadlineBanner({ date }: { date: string }) {
   return (
     <div
       role="alert"
-      className={`rounded-md border p-4 ${
+      className={`rounded-xl border p-4 ${
         urgent ? "border-red-400 bg-red-50 text-red-900" : "border-slate-200 bg-white text-slate-800"
       }`}
     >
