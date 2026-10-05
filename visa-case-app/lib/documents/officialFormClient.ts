@@ -24,6 +24,7 @@ function base64ToBlob(b64: string): Blob {
 export async function requestOfficialXlsx(
   procedureType: CaseRecord["procedureType"],
   input: FormInput,
+  form?: "hspPoint",
 ): Promise<{ blob: Blob; warnings: string[] }> {
   // Supabase 設定済みのデモモードは、サーバーが必ず 401 にするため、送信せずに案内する（Issue #120）
   if (officialFormNeedsLogin(isDemo())) throw new AppError(OFFICIAL_FORM_LOGIN_REQUIRED);
@@ -36,11 +37,29 @@ export async function requestOfficialXlsx(
   }
   let res: Response;
   try {
-    res = await fetch("/api/documents/official-form", { method: "POST", headers, body: JSON.stringify({ procedureType, ...input }) });
+    res = await fetch("/api/documents/official-form", { method: "POST", headers, body: JSON.stringify({ procedureType, ...(form ? { form } : {}), ...input }) });
   } catch {
     throw new AppError("エクセルの生成に接続できませんでした。通信状況をご確認ください。");
   }
   const body = (await res.json().catch(() => null)) as { error?: string; warnings?: string[]; xlsxBase64?: string } | null;
   if (!res.ok || !body?.xlsxBase64) throw new AppError(body?.error ?? "エクセルの生成に失敗しました。");
   return { blob: base64ToBlob(body.xlsxBase64), warnings: body.warnings ?? [] };
+}
+
+/** ポイント計算表（高度専門職）を生成し、ブラウザでダウンロードする。保存前の入力でも、画面の内容から作れる */
+export async function downloadHspPointXlsx(
+  procedureType: CaseRecord["procedureType"],
+  input: FormInput,
+  fileName: string,
+): Promise<string[]> {
+  const { blob, warnings } = await requestOfficialXlsx(procedureType, input, "hspPoint");
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return warnings;
 }

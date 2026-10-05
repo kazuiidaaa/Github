@@ -11,6 +11,7 @@ import {
   type Relative,
   type WorkEntry,
 } from "@/lib/formDetails";
+import { HspPointSection } from "@/components/HspPointSection";
 import { describeCoeForm, HSP_ACTIVITIES, isAdvancedProfessional, resolveCoeForm } from "@/lib/hspForm";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
@@ -388,6 +389,13 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("dispatchPeriod")}
       </Section>
       )}
+
+      <HspPointSection
+        record={record}
+        status={record.procedureType === "renewal" ? record.currentStatus : record.targetStatus}
+        form={form}
+        onChange={set}
+      />
 
       <div className="flex items-center gap-3">
         <Button disabled={hasError} onClick={save}>

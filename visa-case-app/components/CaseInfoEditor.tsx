@@ -99,7 +99,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
       </Field>
       {needsTarget && (
         <Field label={targetStatusLabel(procedureType)} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
-          <StatusSelect value={targetStatus} onChange={setTargetStatus} withGrade />
+          <StatusSelect value={targetStatus} onChange={setTargetStatus} withGrade allowGrade2={procedureType === "change"} />
         </Field>
       )}
       <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
