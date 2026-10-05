@@ -7,6 +7,8 @@ import {
   CHANGE_FILL_ITEMS,
   CHANGE_PICK_ITEMS,
   CHANGE_TARGET_STATUS,
+  CHANGE_TARGET_STATUS_KEIEI_KANRI,
+  SHEET_CHANGE_APPLICANT_1,
   JOB_DESCRIPTION_LINES,
   MAX_RELATIVES,
   MAX_WORK_HISTORY,
@@ -41,12 +43,18 @@ export async function fillChangeExcel(
     return ws;
   };
 
+  // 経営・管理への変更は、第2表以降（様式Nの表）を使えないため、第1表（申請人用（変更）１）だけを差し込む（Issue #191）
+  const firstOnly = isKeieiKanri(targetStatus);
+  const first = sheetKey(SHEET_CHANGE_APPLICANT_1);
+  const inRange = (sheet: string) => !firstOnly || sheetKey(sheet) === first;
   for (const it of CHANGE_FILL_ITEMS) {
+    if (!inRange(it.sheet)) continue;
     const value = it.get(ctx);
     if (value === "") continue;
     sheetOf(it.sheet).getCell(it.cell).value = value;
   }
   for (const p of CHANGE_PICK_ITEMS) {
+    if (!inRange(p.sheet)) continue;
     const writes = p.writes[p.get(ctx)];
     if (!writes) continue;
     const ws = sheetOf(p.sheet);
@@ -57,6 +65,8 @@ export async function fillChangeExcel(
   return { buffer, warnings: buildWarnings(ctx) };
 }
 
+const isKeieiKanri = (targetStatus: string) => targetStatus.trim() === CHANGE_TARGET_STATUS_KEIEI_KANRI;
+
 function buildWarnings(c: ChangeCtx): string[] {
   const w: string[] = [];
   if (c.a.confirmationStatus !== "confirmed") {
@@ -64,6 +74,10 @@ function buildWarnings(c: ChangeCtx): string[] {
   }
   if (!c.targetStatus.trim()) {
     w.push("案件情報の「変更後の在留資格」が未入力のため、項目13「希望する在留資格」は空欄です。");
+  } else if (isKeieiKanri(c.targetStatus)) {
+    w.push(
+      `変更後の在留資格が「${CHANGE_TARGET_STATUS_KEIEI_KANRI}」のため、第1表（申請人用（変更）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。`,
+    );
   } else if (!c.targetStatus.includes(CHANGE_TARGET_STATUS)) {
     w.push(
       `この様式は、変更後の在留資格が「${CHANGE_TARGET_STATUS}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。`,

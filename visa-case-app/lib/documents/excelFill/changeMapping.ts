@@ -40,6 +40,8 @@ export { MAX_RELATIVES, MAX_WORK_HISTORY, JOB_DESCRIPTION_LINES, digitsOf, sheet
 
 /** 変更様式（申請人等作成用・所属機関等作成用の4枚）が対象とする在留資格 */
 export const CHANGE_TARGET_STATUS = "技術・人文知識・国際業務";
+/** 第1表のみ差し込む在留資格。第2表以降は、様式Nの表のため使えない（Issue #191） */
+export const CHANGE_TARGET_STATUS_KEIEI_KANRI = "経営・管理";
 
 const date = (v: string) => (v ? formatDate(v) : "");
 

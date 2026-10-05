@@ -19,10 +19,10 @@ export interface FillInput {
   targetStatus?: string;
 }
 
-type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails, targetStatus: string) => Promise<{ buffer: Buffer; warnings: string[] }>;
+type Filler = (a: Applicant, e: EmploymentInfo, f: FormDetails, targetStatus: string, currentStatus: string) => Promise<{ buffer: Buffer; warnings: string[] }>;
 
 export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
-  renewal: fillRenewalExcel,
+  renewal: (a, e, f, _targetStatus, currentStatus) => fillRenewalExcel(a, e, f, currentStatus),
   coe: fillCoeExcel,
   change: fillChangeExcel,
   // 取得様式は雇用情報を使わない。希望する在留資格（targetStatus）は案件の値を渡す
@@ -34,8 +34,8 @@ export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
  * 更新の様式で作り、対象外の注意を warnings の先頭へ加える。
  */
 export async function fillOfficialExcel(input: FillInput): Promise<{ buffer: Buffer; warnings: string[] }> {
-  const fill = FILLERS[input.procedureType] ?? fillRenewalExcel;
-  const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails, input.targetStatus ?? "");
+  const fill: Filler = FILLERS[input.procedureType] ?? ((a, e, f, _t, currentStatus) => fillRenewalExcel(a, e, f, currentStatus));
+  const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails, input.targetStatus ?? "", input.currentStatus);
   const scope = officialFormScopeWarnings({
     procedureType: input.procedureType,
     currentStatus: input.currentStatus,
