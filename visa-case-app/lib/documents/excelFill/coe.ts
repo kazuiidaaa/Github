@@ -1,6 +1,7 @@
 import path from "node:path";
 import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
+import { describeCoeForm, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
 import { ADVANCED_PROFESSIONAL_STATUS, type Applicant, type EmploymentInfo } from "../../types";
 import {
   COE_DIGIT_CHECKS,
@@ -9,11 +10,32 @@ import {
   COE_MAX_WORK_HISTORY,
   COE_PICK_ITEMS,
   COE_PURPOSE_LABELS,
+  COE_SHEET_APPLICANT_1,
 } from "./coeMapping";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
 
-/** 差し込み元テンプレート（リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
-export const COE_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "coe-application-form_930004030.xlsx");
+const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
+
+/** 差し込み元テンプレート（様式N。リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
+export const COE_TEMPLATE_PATH = officialPath("coe-application-form_930004030.xlsx");
+
+/** 様式ごとのテンプレート。高度専門職の号・行う活動から決まる様式を使う（lib/hspForm.ts） */
+export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
+  I: officialPath("coe-application-form-I_930004028.xlsx"),
+  L: officialPath("coe-application-form-L_930004032.xlsx"),
+  M: officialPath("coe-application-form-M_930004034.xlsx"),
+  N: COE_TEMPLATE_PATH,
+  U: officialPath("coe-application-form-U_930004059.xlsx"),
+};
+
+/**
+ * 差し込む範囲を決める。第2表以降（申請人用2・所属機関用）の対応表は様式Nのものだけなので、
+ * 様式N以外、および様式を特定できない高度専門職では、第1表だけを差し込む（Nの表を他の様式へ流用しない）。
+ */
+function planFill(r: CoeFormResolution): { form: CoeFormCode; firstSheetOnly: boolean } {
+  if (r.kind === "resolved") return { form: r.form, firstSheetOnly: r.form !== "N" };
+  return { form: "N", firstSheetOnly: r.kind !== "not_applicable" };
+}
 
 /**
  * 案件情報を、公式の在留資格認定証明書交付申請書（Excel）の対応欄へ差し込み、ワークブックをバッファで返す。
@@ -29,8 +51,10 @@ export async function fillCoeExcel(
   targetStatus = "",
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f, targetStatus };
+  const resolution = resolveCoeForm(targetStatus, f.hspActivity ?? "");
+  const plan = planFill(resolution);
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(COE_TEMPLATE_PATH);
+  await wb.xlsx.readFile(COE_TEMPLATE_PATHS[plan.form]);
 
   const sheets = new Map(wb.worksheets.map((ws) => [sheetKey(ws.name), ws]));
   const sheetOf = (name: string) => {
@@ -39,12 +63,16 @@ export async function fillCoeExcel(
     return ws;
   };
 
+  const first = sheetKey(COE_SHEET_APPLICANT_1);
+  const inRange = (sheet: string) => !plan.firstSheetOnly || sheetKey(sheet) === first;
   for (const it of COE_FILL_ITEMS) {
+    if (!inRange(it.sheet)) continue;
     const value = it.get(ctx);
     if (value === "") continue;
     sheetOf(it.sheet).getCell(it.cell).value = value;
   }
   for (const p of COE_PICK_ITEMS) {
+    if (!inRange(p.sheet)) continue;
     const writes = p.writes[p.get(ctx)];
     if (!writes) continue;
     const ws = sheetOf(p.sheet);
@@ -52,11 +80,16 @@ export async function fillCoeExcel(
   }
 
   const buffer = Buffer.from(await wb.xlsx.writeBuffer());
-  return { buffer, warnings: buildWarnings(ctx) };
+  return { buffer, warnings: buildWarnings(ctx, resolution) };
 }
 
-function buildWarnings(c: FillCtx): string[] {
+function buildWarnings(c: FillCtx, resolution: CoeFormResolution): string[] {
   const w: string[] = [];
+  if (resolution.kind === "resolved" && resolution.form !== "N") {
+    w.push(`様式 ${resolution.form} の第2表以降は未対応です。第1表のみ差し込んでいます。第2表以降は、様式上で記入してください。`);
+  } else if (resolution.kind === "activity_missing" || resolution.kind === "unknown") {
+    w.push(`${describeCoeForm(resolution)}様式Nの第1表のみ差し込んでいます。使う様式を確認し、必要なら別の様式へ転記してください。`);
+  }
   if (c.a.confirmationStatus !== "confirmed") {
     w.push("申請人情報が確定していません。すべての項目を、原本と照合してから使用してください。");
   }
