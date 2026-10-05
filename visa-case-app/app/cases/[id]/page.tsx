@@ -13,6 +13,7 @@ import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
 import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
+import { LoadingNotice } from "@/components/LoadingNotice";
 import { ApplicantForm } from "@/components/ApplicantForm";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
@@ -102,7 +103,7 @@ export default function CaseDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
 
-  if (!record && !loaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
+  if (!record && !loaded) return <LoadingNotice />;
 
   if (!record) {
     return (

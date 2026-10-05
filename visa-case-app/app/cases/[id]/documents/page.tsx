@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { LoadingNotice } from "@/components/LoadingNotice";
 import { Badge, Button } from "@/components/ui";
 import { changeStatus, generateDocuments, useGeneratedDocuments } from "@/lib/documents/store";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
@@ -35,6 +36,7 @@ export default function DocumentsPage() {
   const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => !isOfficialForm(t)));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [failure, setFailure] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [newIds, setNewIds] = useState<string[]>([]);
   const historyRef = useRef<HTMLElement>(null);
@@ -58,7 +60,7 @@ export default function DocumentsPage() {
     return () => clearTimeout(timer);
   }, [newIds]);
 
-  if (!record && !storeLoaded) return <p className="text-sm text-slate-500">読み込み中……</p>;
+  if (!record && !storeLoaded) return <LoadingNotice />;
   if (!record) {
     return (
       <div>
@@ -82,14 +84,16 @@ export default function DocumentsPage() {
   async function generate() {
     if (!record || selected.length === 0) return;
     setBusy(true);
-    setMessage("");
+    setMessage("生成中……");
+    setFailure("");
     knownIds.current = new Set(documents.map((d) => d.id));
     try {
       await generateDocuments(record, selected);
       setMessage("新しい版として生成しました。内容を確認してください。");
     } catch (e) {
       knownIds.current = null;
-      setMessage(`生成に失敗しました：${messageOf(e)}`);
+      setMessage("");
+      setFailure(`生成に失敗しました：${messageOf(e)}`);
     } finally {
       setBusy(false);
     }
@@ -98,10 +102,11 @@ export default function DocumentsPage() {
   async function archive(d: GeneratedDocument) {
     if (!confirm(`${DOCUMENT_TYPE_LABELS[d.documentType]} v${d.version} を保管にします。よろしいですか。`)) return;
     setMessage("");
+    setFailure("");
     try {
       await changeStatus(d, "archived", "");
     } catch (e) {
-      setMessage(`保管への変更に失敗しました：${messageOf(e)}`);
+      setFailure(`保管への変更に失敗しました：${messageOf(e)}`);
     }
   }
 
@@ -170,7 +175,13 @@ export default function DocumentsPage() {
             {busy ? "生成中……" : "生成して保存"}
           </Button>
           {!canEdit && <span className="text-sm text-slate-600">閲覧のみの権限のため、生成できません。</span>}
-          {message && <span className="text-sm text-slate-600">{message}</span>}
+          {/* 結果の表示要素は、結果が出る前から画面に置く（後から追加すると読み上げられない場合があるため） */}
+          <span role="status" className="text-sm text-slate-600">
+            {message}
+          </span>
+          <span role="alert" className="text-sm text-red-700">
+            {failure}
+          </span>
         </div>
         <p className="mt-3 text-xs text-slate-500">再生成しても過去の版は上書きされず、新しい版として保存されます。</p>
       </section>
@@ -185,7 +196,11 @@ export default function DocumentsPage() {
             </label>
           )}
         </div>
-        {error && <p className="px-6 py-3 text-sm text-red-700">{error}</p>}
+        {error && (
+          <p role="alert" className="px-6 py-3 text-sm text-red-700">
+            {error}　ページを再読み込みしてください。
+          </p>
+        )}
         {loaded && documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">生成された文書はありません。</p>}
         {loaded && documents.length > 0 && visible.length === 0 && (
           <p className="px-6 py-6 text-sm text-slate-500">表示する版はありません。保管済みの版は、上の選択で表示できます。</p>
@@ -198,6 +213,7 @@ export default function DocumentsPage() {
             }`}
           >
             <span>
+              {newIds.includes(d.id) && <span className="sr-only">新しい版：</span>}
               <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
                 {DOCUMENT_TYPE_LABELS[d.documentType]} v{d.version}
               </Link>

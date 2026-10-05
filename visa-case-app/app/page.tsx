@@ -78,8 +78,8 @@ export default function HomePage() {
       </div>
 
       {!loaded ? (
-        <p className="text-sm text-slate-500" role="status">
-          {error ? "案件を読み込めませんでした。時間をおいて再度お試しください。" : "読み込み中……"}
+        <p className="text-sm text-slate-500" role={error ? "alert" : "status"}>
+          {error ? "案件を読み込めませんでした。ページを再読み込みしてください。解決しない場合は、時間をおいて再度お試しください。" : "読み込み中……"}
         </p>
       ) : (
         <>
