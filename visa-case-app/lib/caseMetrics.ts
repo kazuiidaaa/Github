@@ -81,7 +81,63 @@ export function summarize(cases: CaseRecord[]): Summary {
   return s;
 }
 
-export type SortKey = "updated" | "expiry";
+export type SortKey =
+  | "updated"
+  | "updatedAsc"
+  | "expiry"
+  | "expiryDesc"
+  | "name"
+  | "nameDesc"
+  | "applicant"
+  | "applicantDesc";
+
+export const SORT_KEYS: SortKey[] = ["updated", "updatedAsc", "expiry", "expiryDesc", "name", "nameDesc", "applicant", "applicantDesc"];
+
+export function isSortKey(v: string | null): v is SortKey {
+  return v !== null && (SORT_KEYS as string[]).includes(v);
+}
+
+/** 表の見出し（列）と並び順の対応。asc は昇順（在留期限は近い順、最終更新は古い順）。 */
+export type SortColumn = "name" | "applicant" | "expiry" | "updated";
+export const SORT_COLUMNS: Record<SortColumn, { asc: SortKey; desc: SortKey }> = {
+  name: { asc: "name", desc: "nameDesc" },
+  applicant: { asc: "applicant", desc: "applicantDesc" },
+  expiry: { asc: "expiry", desc: "expiryDesc" },
+  updated: { asc: "updatedAsc", desc: "updated" },
+};
+
+/** 現在の並び順が、どの列の昇順・降順か。 */
+export function sortState(sort: SortKey): { column: SortColumn; dir: "asc" | "desc" } {
+  for (const column of Object.keys(SORT_COLUMNS) as SortColumn[]) {
+    if (SORT_COLUMNS[column].asc === sort) return { column, dir: "asc" };
+    if (SORT_COLUMNS[column].desc === sort) return { column, dir: "desc" };
+  }
+  return { column: "updated", dir: "desc" };
+}
+
+/** 見出しを押したときの次の並び順。現在の列なら向きを反転し、別の列なら昇順（最終更新のみ新しい順）から始める。 */
+export function nextSort(current: SortKey, column: SortColumn): SortKey {
+  const st = sortState(current);
+  if (st.column === column) return SORT_COLUMNS[column][st.dir === "asc" ? "desc" : "asc"];
+  return column === "updated" ? SORT_COLUMNS.updated.desc : SORT_COLUMNS[column].asc;
+}
+
+/** 1ページに表示する件数 */
+export const PAGE_SIZE = 50;
+
+export interface Page<T> {
+  items: T[];
+  /** 範囲内に補正した現在のページ（1始まり） */
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export function paginate<T>(items: T[], page: number, size: number = PAGE_SIZE): Page<T> {
+  const totalPages = Math.max(1, Math.ceil(items.length / size));
+  const p = Number.isFinite(page) ? Math.min(Math.max(1, Math.floor(page)), totalPages) : 1;
+  return { items: items.slice((p - 1) * size, p * size), page: p, totalPages, total: items.length };
+}
 
 export interface CaseFilter {
   query: string;
@@ -149,13 +205,28 @@ export function applyFilter(cases: CaseRecord[], f: CaseFilter): CaseRow[] {
       if (f.checksPending && !m.checksPending) return false;
       return true;
     });
+  const { column, dir } = sortState(f.sort);
+  const sign = dir === "asc" ? 1 : -1;
   rows.sort((a, b) => {
-    if (f.sort === "expiry") {
-      // 期限が近い順。期限未入力の案件は末尾に置く
-      const da = a.metrics.days ?? Number.POSITIVE_INFINITY;
-      const db = b.metrics.days ?? Number.POSITIVE_INFINITY;
-      if (da !== db) return da < db ? -1 : 1;
+    // 未入力の値は、昇順・降順のどちらでも末尾に置く
+    let cmp = 0;
+    if (column === "expiry") {
+      const da = a.metrics.days;
+      const db = b.metrics.days;
+      if (da !== db) {
+        if (da === null) return 1;
+        if (db === null) return -1;
+        cmp = da - db;
+      }
+    } else if (column === "name" || column === "applicant") {
+      const va = column === "name" ? a.record.caseName : a.record.applicant.legalName;
+      const vb = column === "name" ? b.record.caseName : b.record.applicant.legalName;
+      if (!va !== !vb) return va ? -1 : 1;
+      cmp = va.localeCompare(vb, "ja");
+    } else {
+      cmp = a.record.updatedAt.localeCompare(b.record.updatedAt);
     }
+    if (cmp !== 0) return cmp * sign;
     return b.record.updatedAt.localeCompare(a.record.updatedAt);
   });
   return rows;
