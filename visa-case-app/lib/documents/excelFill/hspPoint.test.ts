@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { EMPTY_FORM_DETAILS } from "../../formDetails";
-import { HSP_POINT_SHEETS, estimateHspPoints, pointCheckId, resolveHspPointSheet, sanitizePointChecks, type HspPointSheetKey } from "../../hspPoints";
+import { HSP_POINT_SHEETS, estimateHspPoints, hspPointConfirmLines, pointCheckId, resolveHspPointSheet, sanitizePointChecks, type HspPointSheetKey } from "../../hspPoints";
 import { HSP_POINT_TEMPLATE_PATH, fillHspPointExcel } from "./hspPoint";
 import { sheetKey } from "./renewalMapping";
 
@@ -72,6 +72,17 @@ describe("使うシートの決定・目安の合計点", () => {
     const unscored = estimateHspPoints("B", checks("B", [27, 40]));
     expect(unscored.unscored.map((r) => r.row)).toEqual([40]);
     expect(unscored.notes.join("\n")).toContain("点数が印字されていない項目");
+  });
+
+  it("ダウンロード前の確認の文言：合計欄の書き込み有無・判定していない事項・行政書士の確認を含む", () => {
+    const ok = hspPointConfirmLines(estimateHspPoints("B", checks("B", [15, 20, 27]))).join("\n");
+    expect(ok).toContain("合計欄へ、選んだ項目の印字点数の単純合計 70 点を書き込みます");
+    expect(ok).toContain("判定していません");
+    expect(ok).toContain("行政書士が内容を確認してから使用");
+    const dup = hspPointConfirmLines(estimateHspPoints("B", checks("B", [20, 21, 27]))).join("\n");
+    expect(dup).toContain("合計欄は書き込みません");
+    expect(dup).toContain("「職歴」は、1つだけ");
+    expect(hspPointConfirmLines(estimateHspPoints("B", [])).join("\n")).toContain("合計欄は書き込みません");
   });
 
   it("保存値から、存在しないチェックと重複を除く", () => {

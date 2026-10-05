@@ -72,6 +72,18 @@ export function estimateHspPoints(sheet: HspPointSheetKey, checks: readonly stri
   return { total, unscored, reachesPass: total >= HSP_PASS_POINTS, notes, totalWritable: rows.length > 0 && unscored.length === 0 && !duplicated };
 }
 
+/** ダウンロード前の確認で表示する注意（画面の確認ダイアログ用）。合計欄の書き込み有無と、判定していない事項、行政書士の確認を知らせる */
+export function hspPointConfirmLines(est: HspPointEstimate): string[] {
+  return [
+    est.totalWritable
+      ? `合計欄へ、選んだ項目の印字点数の単純合計 ${est.total} 点を書き込みます。`
+      : "合計欄は書き込みません。計算表で確認し、様式上で記入してください。",
+    "研究実績の2つ以上の組み合わせ・特別加算の上限・年齢による年収の範囲は、判定していません。",
+    ...est.notes,
+    "作成したファイルは、行政書士が内容を確認してから使用してください。",
+  ];
+}
+
 /** 保存値から、存在しないチェック（様式の改正や、別シートの値）を除く */
 export function sanitizePointChecks(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button, Field, inputClass } from "@/components/ui";
 import type { FormDetails } from "@/lib/formDetails";
-import { HSP_PASS_POINTS, HSP_POINT_SHEETS, estimateHspPoints, pointCheckId, resolveHspPointSheet, type HspPointSheetKey } from "@/lib/hspPoints";
+import { HSP_PASS_POINTS, HSP_POINT_SHEETS, estimateHspPoints, hspPointConfirmLines, pointCheckId, resolveHspPointSheet, type HspPointSheetKey } from "@/lib/hspPoints";
 import { useDemo } from "@/lib/demo";
 import { downloadHspPointXlsx } from "@/lib/documents/officialFormClient";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
@@ -31,6 +32,7 @@ export function HspPointSection({
 }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const needsLogin = officialFormNeedsLogin(useDemo());
   const resolution = resolveHspPointSheet(status, form.hspPointSheet);
   if (resolution.kind === "not_applicable") return null;
@@ -43,6 +45,7 @@ export function HspPointSection({
   }
 
   async function download() {
+    setConfirming(false);
     setBusy(true);
     setMessage("");
     try {
@@ -119,7 +122,7 @@ export function HspPointSection({
             </div>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button variant="secondary" disabled={busy || needsLogin} onClick={download}>
+            <Button variant="secondary" disabled={busy || needsLogin} onClick={() => setConfirming(true)}>
               ポイント計算表をダウンロード（エクセル）
             </Button>
             {needsLogin && <span className="text-xs text-amber-900">{OFFICIAL_FORM_LOGIN_REQUIRED}</span>}
@@ -128,6 +131,19 @@ export function HspPointSection({
             </span>
           </div>
         </>
+      )}
+      {confirming && estimate && (
+        <ConfirmDialog
+          title="ポイント計算表を作成します"
+          message={hspPointConfirmLines(estimate).map((line) => (
+            <span key={line} className="mt-1 block first:mt-0">
+              {line}
+            </span>
+          ))}
+          confirmLabel="確認して作成する"
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => void download()}
+        />
       )}
     </section>
   );
