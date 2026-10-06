@@ -6,6 +6,7 @@ import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
+import { applicantFieldId } from "@/lib/applicantFields";
 import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
@@ -66,6 +67,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     return (
       <Field label={label} required={opts.required} hint={opts.hint} error={errors[key as ApplicantField]}>
         <input
+          id={applicantFieldId(key)}
           className={inputClass}
           value={form[key]}
           placeholder={opts.placeholder}
@@ -80,6 +82,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     return (
       <Field label={label} required error={errors[key]}>
         <input
+          id={applicantFieldId(key)}
           type="date"
           className={inputClass}
           value={form[key]}
@@ -179,10 +182,10 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">{text("legalName", "氏名", { required: true, placeholder: "LI MING" })}</div>
           {text("nationality", "国籍・地域", { required: true, placeholder: "中国" })}
-          <ChoiceGroup legend="性別" options={GENDER_OPTIONS} value={form.gender} disabled={confirmed} onChange={(v) => set("gender", v)} hint="在留カードの「性別」欄の記載どおりに選びます。" />
+          <div id={applicantFieldId("gender")}><ChoiceGroup legend="性別" options={GENDER_OPTIONS} value={form.gender} disabled={confirmed} onChange={(v) => set("gender", v)} hint="在留カードの「性別」欄の記載どおりに選びます。" /></div>
           {date("dateOfBirth", "生年月日")}
           <div className="md:col-span-2">{text("address", "住居地")}</div>
-          <StatusSelect legend="在留資格" required error={errors.residenceStatus} hint={STATUS_HINTS.card} value={form.residenceStatus} disabled={confirmed} onChange={(v) => set("residenceStatus", v)} />
+          <StatusSelect id={applicantFieldId("residenceStatus")} legend="在留資格" required error={errors.residenceStatus} hint={STATUS_HINTS.card} value={form.residenceStatus} disabled={confirmed} onChange={(v) => set("residenceStatus", v)} />
           {date("residenceExpiryDate", "在留期間の満了日")}
           {text("residenceCardNumber", "在留カード番号")}
           {text("workRestriction", "就労制限", { placeholder: "例：就労制限なし" })}
