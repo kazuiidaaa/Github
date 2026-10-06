@@ -5,6 +5,8 @@ import { useState } from "react";
 import { PasswordField } from "@/components/PasswordField";
 import { Button, Field, inputClass } from "@/components/ui";
 import { requestPasswordReset, signIn, startDemo } from "@/lib/auth";
+import { useAuthErrorText } from "@/lib/i18n/authErrors";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import { isSupabaseEnabled } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -15,6 +17,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "reset">("login");
   const [sent, setSent] = useState(false);
   const router = useRouter();
+  const t = useT();
+  const tr = useAuthErrorText();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,10 +46,13 @@ export default function LoginPage() {
   if (!isSupabaseEnabled) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-sm">
-        <p className="mb-2 font-semibold">ログインは無効です</p>
+        <p className="mb-2 font-semibold">{t("auth.disabledTitle")}</p>
         <p className="text-slate-600">
-          Supabase の接続情報が未設定のため、仮データ方式で動作しています。ログインを使用する場合は、
-          <code>.env.local</code> に接続情報を設定してください（<code>supabase/README.md</code> を参照）。
+          {t("auth.disabledBody", { envFile: "{envFile}", readme: "{readme}" })
+            .split(/(\{envFile\}|\{readme\})/)
+            .map((part, i) =>
+              part === "{envFile}" ? <code key={i}>.env.local</code> : part === "{readme}" ? <code key={i}>supabase/README.md</code> : part,
+            )}
         </p>
       </div>
     );
@@ -54,28 +61,28 @@ export default function LoginPage() {
   if (mode === "reset") {
     return (
       <form onSubmit={submitReset} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
-        <h1 className="text-center text-xl font-semibold">パスワードの再設定</h1>
-        <p className="text-xs text-slate-500">登録したメールアドレスを入力してください。再設定用のリンクをメールでお送りします。</p>
+        <h1 className="text-center text-xl font-semibold">{t("auth.resetTitle")}</h1>
+        <p className="text-xs text-slate-500">{t("auth.resetIntro")}</p>
         <fieldset disabled={busy} className="space-y-5">
-          <Field label="メールアドレス">
+          <Field label={t("auth.email")}>
             <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
         </fieldset>
         {error && (
           <p role="alert" className="text-sm text-red-600">
-            {error}
+            {tr(error)}
           </p>
         )}
         {sent && (
           <p role="status" className="rounded-xl bg-slate-100 p-3 text-sm text-slate-800">
-            登録されている場合、再設定の案内をお送りします。
+            {t("auth.resetSent")}
           </p>
         )}
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? "送信中……" : "再設定のメールを送る"}
+          {busy ? t("auth.resetSending") : t("auth.resetSubmit")}
         </Button>
         <button type="button" onClick={() => switchMode("login")} className="block w-full text-center text-sm font-bold text-accent underline underline-offset-2">
-          ログイン画面へ戻る
+          {t("auth.backToLogin")}
         </button>
       </form>
     );
@@ -83,24 +90,24 @@ export default function LoginPage() {
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
-      <h1 className="text-center text-xl font-semibold">ログイン</h1>
-      <p className="text-xs text-slate-500">行政書士事務所の関係者向けのシステムです。事務所のメンバー以外の方は、ご利用いただけません。</p>
+      <h1 className="text-center text-xl font-semibold">{t("auth.loginTitle")}</h1>
+      <p className="text-xs text-slate-500">{t("auth.loginIntro")}</p>
       <fieldset disabled={busy} className="space-y-5">
-        <Field label="メールアドレス">
+        <Field label={t("auth.email")}>
           <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
-        <PasswordField label="パスワード" value={password} onChange={setPassword} autoComplete="current-password" />
+        <PasswordField label={t("auth.password")} value={password} onChange={setPassword} autoComplete="current-password" />
       </fieldset>
       {error && (
         <p role="alert" className="text-sm text-red-600">
-          {error}
+          {tr(error)}
         </p>
       )}
       <Button type="submit" disabled={busy} className="w-full">
-        {busy ? "確認中……" : "ログイン"}
+        {busy ? t("auth.loggingIn") : t("auth.login")}
       </Button>
       <button type="button" disabled={busy} onClick={() => switchMode("reset")} className="block w-full text-center text-sm font-bold text-accent underline underline-offset-2">
-        パスワードを忘れた場合
+        {t("auth.forgotPassword")}
       </button>
       <div className="border-t border-slate-200 pt-4">
         <Button
@@ -112,10 +119,10 @@ export default function LoginPage() {
             router.push("/");
           }}
         >
-          デモを試す
+          {t("auth.tryDemo")}
         </Button>
         <p className="mt-2 text-xs text-slate-500">
-          ログインせず、仮データで操作を試せます。入力した内容はサーバーに保存されず、デモを終了すると消去されます。
+          {t("auth.demoNote")}
         </p>
       </div>
     </form>

@@ -18,6 +18,8 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   labels: { en: "draft", ko: "draft" },
   home: { en: "draft", ko: "draft" },
   account: { en: "draft", ko: "draft" },
+  auth: { en: "draft", ko: "draft" },
+  about: { en: "draft", ko: "draft" },
 };
 
 /** 指定の言語に、確認前（下書き）の区分が1つでもあるか */
