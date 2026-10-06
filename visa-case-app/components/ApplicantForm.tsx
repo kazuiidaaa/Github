@@ -13,6 +13,7 @@ import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { getConfirmerName, logAudit, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
+import { APPLICANT_ZENKAKU, zenkakuHandlers, zenkakuModeOf } from "@/lib/zenkaku";
 import { useDocumentUrl } from "@/lib/useDocumentUrl";
 import type { Applicant, CaseRecord, DocumentRecord } from "@/lib/types";
 
@@ -75,6 +76,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           placeholder={opts.placeholder}
           disabled={confirmed}
           onChange={(e) => set(key, e.target.value)}
+          {...zenkakuHandlers(zenkakuModeOf(APPLICANT_ZENKAKU, key), (v) => set(key, v))}
         />
       </Field>
     );

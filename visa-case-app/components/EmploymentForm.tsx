@@ -9,6 +9,7 @@ import { DateField } from "@/components/DateField";
 import { CATEGORY_LABELS } from "@/lib/requirements/rules";
 import { logAudit, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
+import { EMPLOYMENT_ZENKAKU, zenkakuHandlers, zenkakuModeOf } from "@/lib/zenkaku";
 import type { CaseRecord, EmploymentInfo, OrgCategory } from "@/lib/types";
 
 const TEXT_FIELDS: { key: keyof EmploymentInfo; label: string; placeholder?: string }[] = [
@@ -44,6 +45,7 @@ export function EmploymentFields({
               placeholder={f.placeholder}
               value={form[f.key] as string}
               onChange={(e) => set(f.key, e.target.value as never)}
+              {...zenkakuHandlers(zenkakuModeOf(EMPLOYMENT_ZENKAKU, f.key), (v) => set(f.key, v as never))}
             />
           </Field>
           ),

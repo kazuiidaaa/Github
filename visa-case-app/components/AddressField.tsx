@@ -5,6 +5,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button, Field, inputClass, TONE_STYLES, ToneIcon, type Tone } from "@/components/ui";
 import { decideFill, postalCodeState, toPostalDigits } from "@/lib/postalCode";
 import { lookupPostalCode, type PostalLookupResult } from "@/lib/postalLookup";
+import { normalizeAddress, zenkakuHandlers } from "@/lib/zenkaku";
 
 type Notice = { tone: Tone; text: string } | null;
 
@@ -23,7 +24,8 @@ const NOTICES = {
  * 郵便番号は、この部品の中だけで扱い、保存しない（保存するのは、住所のみ）。
  * 入力済みの住所は、確認なしに上書きしない。通信の失敗・該当なしのときも、住所は手入力できる。
  *
- * normalize は、補った住所を保存する前に通す変換（全角変換 #223 などが使う）。省略時は、そのまま入れる。
+ * normalize は、住所を保存する前に通す変換。省略時は、半角を全角にする変換（lib/zenkaku.ts。Issue #223）。
+ * 補った住所は、すぐに変換して入れる。手入力の住所は、入力の確定時（IME の確定・欄を離れたとき）に変換する。入力途中は書き換えない。
  * id は、住所の入力欄の id（概要からのフォーカス移動などが使う）。
  */
 export function AddressField({
@@ -36,7 +38,7 @@ export function AddressField({
   hint,
   error,
   required,
-  normalize,
+  normalize = normalizeAddress,
   lookup = lookupPostalCode,
 }: {
   label: string;
@@ -60,7 +62,7 @@ export function AddressField({
   const noticeId = useId();
 
   function apply(found: string) {
-    onChange(normalize ? normalize(found) : found);
+    onChange(normalize(found));
     setNotice(NOTICES.filled);
     // 番地以降を続けて入力できるよう、住所の欄の末尾へ移す
     requestAnimationFrame(() => {
@@ -152,6 +154,7 @@ export function AddressField({
           placeholder={placeholder}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
+          {...zenkakuHandlers("full", (v) => onChange(normalize(v)))}
         />
       </Field>
       {pending !== null && (
