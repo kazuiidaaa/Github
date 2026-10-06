@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
+import { DateField } from "@/components/DateField";
 import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { applicantFieldId } from "@/lib/applicantFields";
 import { findDocumentOfType } from "@/lib/documentKinds";
@@ -83,14 +84,14 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
 
   function date(key: "dateOfBirth" | "residenceExpiryDate", label: string) {
     return (
-      <Field label={label} required error={errors[key]}>
-        <input
+      <Field label={label} required>
+        <DateField
           id={applicantFieldId(key)}
-          type="date"
           className={inputClass}
           value={form[key]}
           disabled={confirmed}
-          onChange={(e) => set(key, e.target.value)}
+          error={errors[key]}
+          onChange={(v) => set(key, v)}
         />
       </Field>
     );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AddressField } from "@/components/AddressField";
 import { Button, Field, inputClass } from "@/components/ui";
+import { DateField } from "@/components/DateField";
 import {
   EDUCATION_LEVELS,
   getFormDetailsWarnings,
@@ -74,9 +75,10 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         placeholder={opts.placeholder}
         onChange={(e) => set(key, e.target.value as never)}
       />
+    ) : opts.date ? (
+      <DateField className={inputClass} value={form[key]} error={errors[key]} onChange={(v) => set(key, v as never)} />
     ) : (
       <input
-        type={opts.date ? "date" : undefined}
         className={inputClass}
         value={form[key]}
         {...zk(key)}
@@ -86,7 +88,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
     );
     return (
       <div className={opts.wide || opts.area ? "md:col-span-2" : ""}>
-        <Field label={label} hint={opts.hint} error={errors[key]}>
+        <Field label={label} hint={opts.hint} error={opts.date ? undefined : errors[key]}>
           {input}
         </Field>
       </div>
@@ -278,7 +280,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
                   <input className={inputClass} value={r.name} onChange={(e) => updateRelative(r.id, { name: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.name, (v) => updateRelative(r.id, { name: v }))} />
                 </Field>
                 <Field label="生年月日">
-                  <input type="date" className={inputClass} value={r.dateOfBirth} onChange={(e) => updateRelative(r.id, { dateOfBirth: e.target.value })} />
+                  <DateField className={inputClass} value={r.dateOfBirth} onChange={(v) => updateRelative(r.id, { dateOfBirth: v })} />
                 </Field>
                 <Field label="国籍・地域">
                   <input className={inputClass} value={r.nationality} onChange={(e) => updateRelative(r.id, { nationality: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.nationality, (v) => updateRelative(r.id, { nationality: v }))} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { DateField } from "@/components/DateField";
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeadlineBanner } from "@/components/DeadlineBanner";
@@ -120,13 +121,12 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         </p>
         <label className="flex items-center gap-2">
           <span className="text-slate-600">申請予定日</span>
-          <input
-            type="date"
-            className={`${inputClass} w-44`}
+          <DateField
+            className={`${inputClass} w-40`}
             value={planned}
-            onChange={(e) => setPlanned(e.target.value)}
-            onBlur={() => {
-              if (plannedOk && planned !== record.plannedApplicationDate) {
+            onChange={setPlanned}
+            onBlur={(kind) => {
+              if (kind !== "incomplete" && plannedOk && planned !== record.plannedApplicationDate) {
                 change((c) => ({ ...c, plannedApplicationDate: planned }), "check_updated", {
                   plannedApplicationDate: planned,
                 });
