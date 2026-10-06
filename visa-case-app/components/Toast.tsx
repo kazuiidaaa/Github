@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { DEFAULT_LANG } from "@/lib/documents/lang";
+import { readUiLang, subscribeUiLang } from "@/lib/i18n/store";
+import { translate } from "@/lib/i18n/translate";
 
 type ToastKind = "success" | "error";
 type ToastItem = { id: number; kind: ToastKind; message: string };
@@ -64,6 +67,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastCard({ item, onClose }: { item: ToastItem; onClose: (id: number) => void }) {
+  // ToastProvider は LanguageProvider の外側にあるため、文脈ではなく、言語の保管庫から直接読む
+  const lang = useSyncExternalStore(subscribeUiLang, readUiLang, () => DEFAULT_LANG);
   const isError = item.kind === "error";
   return (
     <div
@@ -92,7 +97,7 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: (id: number) =
       <button
         type="button"
         onClick={() => onClose(item.id)}
-        aria-label={isError ? "エラーの通知を閉じる" : "通知を閉じる"}
+        aria-label={translate(lang, isError ? "common.closeErrorNotice" : "common.closeNotice")}
         className="-m-1 rounded-full p-1 hover:bg-slate-100"
       >
         <svg aria-hidden="true" viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

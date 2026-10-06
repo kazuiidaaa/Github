@@ -4,6 +4,7 @@ import { Inter, Noto_Sans_JP } from "next/font/google";
 import { AuthGate } from "@/components/AuthGate";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { PageTransition } from "@/components/PageTransition";
 import { StoreErrorBanner } from "@/components/StoreErrorBanner";
 import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="min-h-full flex flex-col">
         <ToastProvider>
+          <LanguageProvider>
           <Header />
           <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
             <AuthGate>
@@ -50,6 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </AuthGate>
           </main>
           <Footer />
+          </LanguageProvider>
         </ToastProvider>
       </body>
     </html>
