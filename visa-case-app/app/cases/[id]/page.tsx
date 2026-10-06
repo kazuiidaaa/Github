@@ -142,8 +142,13 @@ export default function CaseDetailPage() {
     const el = document.getElementById(pendingFocusId.current);
     if (!el) return;
     pendingFocusId.current = null;
-    el.scrollIntoView({ block: "center" });
-    el.focus();
+    // 選択式の欄（性別・在留資格）は、id が欄全体の枠にあるため、中の選択済み（または先頭）の項目へフォーカスする
+    const target = el.matches("input,select,textarea,button")
+      ? el
+      : (el.querySelector<HTMLElement>('[role="radio"][tabindex="0"]') ?? el.querySelector<HTMLElement>('[role="radio"]:not(:disabled)'));
+    if (!target) return;
+    target.scrollIntoView({ block: "center" });
+    target.focus();
   }, [tab, tabBarShown]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
