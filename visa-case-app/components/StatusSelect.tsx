@@ -9,12 +9,15 @@ export const STATUS_HINTS = {
 } as const;
 
 export function StatusSelect({
+  id,
   value,
   onChange,
   disabled,
   withGrade,
   allowGrade2,
 }: {
+  /** 最初の選択欄に付ける id（外からフォーカスを移すため） */
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
@@ -29,7 +32,7 @@ export function StatusSelect({
   // 過去に自由入力で保存した値も、選択肢として残して表示する
   const legacy = base && !(RESIDENCE_STATUSES as readonly string[]).includes(base);
   const select = (
-    <select className={inputClass} value={base} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+    <select id={id} className={inputClass} value={base} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
       <option value="">選択してください</option>
       {legacy && <option value={base}>{base}（登録済みの入力）</option>}
       {RESIDENCE_STATUSES.map((s) => (
