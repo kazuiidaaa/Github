@@ -1,5 +1,6 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { AppError } from "../errors";
 import { DEFAULT_LANG, type Lang } from "./lang";
 import { buildBlocks, footerLabel } from "./model";
 import type { GeneratedDocument } from "./types";
@@ -296,7 +297,15 @@ export async function buildPdf(
 
 const fontPromises = new Map<string, Promise<Uint8Array>>();
 
-/** 同じ生成元から配信するフォントを読み込む（初回のみ） */
+/**
+ * 日本語・韓国語フォント（Noto Sans JP / KR Regular、SIL Open Font License 1.1）の配信元。
+ * リポジトリの容量削減のため同梱せず、版（Sans2.004）を固定した jsDelivr から取得する。
+ */
+const FONT_BASE = "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@Sans2.004/Sans/SubsetOTF";
+export const JAPANESE_FONT_URL = `${FONT_BASE}/JP/NotoSansJP-Regular.otf`;
+export const KOREAN_FONT_URL = `${FONT_BASE}/KR/NotoSansKR-Regular.otf`;
+
+/** 外部の配信元からフォントを読み込む（初回のみ） */
 function loadFont(path: string): Promise<Uint8Array> {
   let p = fontPromises.get(path);
   if (!p) {
@@ -306,21 +315,22 @@ function loadFont(path: string): Promise<Uint8Array> {
         return r.arrayBuffer();
       })
       .then((b) => new Uint8Array(b))
-      .catch((e) => {
+      .catch(() => {
+        // 次回の再試行ができるように、失敗した取得は残さない。画面には、原因と対処が分かる文言を出す
         fontPromises.delete(path);
-        throw e;
+        throw new AppError("PDF に使うフォントを取得できませんでした。通信の状況を確認して、もう一度お試しください。");
       });
     fontPromises.set(path, p);
   }
   return p;
 }
 
-/** 日本語のフォントを読み込む（約5MB）。日本語・英語の出力で使う。韓国語では、漢字・かなの代わりとしても使う */
+/** 日本語のフォントを読み込む（約4.5MB）。日本語・英語の出力で使う。韓国語では、漢字・かなの代わりとしても使う */
 export function loadJapaneseFont(): Promise<Uint8Array> {
-  return loadFont("/fonts/NotoSansJP-Regular.ttf");
+  return loadFont(JAPANESE_FONT_URL);
 }
 
-/** 韓国語のフォントを読み込む（約2.4MB。韓国語の出力のときだけ） */
+/** 韓国語のフォントを読み込む（約4.6MB。韓国語の出力のときだけ） */
 export function loadKoreanFont(): Promise<Uint8Array> {
-  return loadFont("/fonts/NotoSansKR-Regular.ttf");
+  return loadFont(KOREAN_FONT_URL);
 }

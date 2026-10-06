@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import fontkit from "@pdf-lib/fontkit";
-import { readFileSync } from "node:fs";
+import { loadJapaneseFontForTest, loadKoreanFontForTest } from "./helpers/fonts";
 import { PDFArray, PDFDict, PDFDocument, PDFName, PDFNumber, PDFRawStream, decodePDFRawStream } from "pdf-lib";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NO_SOURCE, SOURCE_HINTS, buildClientGuide, cautionsOf, requirementNameCell } from "../lib/documents/clientGuide";
@@ -462,8 +462,8 @@ describe("Word の出力", () => {
   });
 });
 
-const jpFont = new Uint8Array(readFileSync("public/fonts/NotoSansJP-Regular.ttf"));
-const krFont = new Uint8Array(readFileSync("public/fonts/NotoSansKR-Regular.ttf"));
+const jpFont = await loadJapaneseFontForTest();
+const krFont = await loadKoreanFontForTest();
 
 describe("PDF の出力", () => {
   it("日本語・英語・韓国語のいずれも、PDF にできる", async () => {
@@ -563,9 +563,11 @@ describe("PDF の出力", () => {
       if (!krSet.has(ch.codePointAt(0)!) && !jpSet.has(ch.codePointAt(0)!)) missing.add(ch);
     }
     expect([...missing]).toEqual([]);
-    // ハングルは韓国語のフォント、かな・漢字は日本語のフォントで描く
+    // ハングルは韓国語のフォントで描く。配信元の韓国語フォント（OTF）は、かな・漢字も含むため、それらはどちらで描かれてもよい
     const set = new FontSet([kr, jp]);
-    expect(set.runs("김민준 山田").map((r) => r.font === kr)).toEqual([true, false]);
+    const runs = set.runs("김민준 山田");
+    expect(runs[0].font).toBe(kr);
+    expect(runs.map((r) => r.text).join("")).toBe("김민준 山田");
     expect(set.widthOfTextAtSize("김민준 山田", 10)).toBeGreaterThan(0);
   });
 });

@@ -1,15 +1,16 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import fontkit from "@pdf-lib/fontkit";
-import { readFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
-import { beforeAll, describe, expect, it } from "vitest";
+import { loadJapaneseFontForTest } from "./helpers/fonts";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { buildBlocks } from "../lib/documents/model";
-import { buildPdf, wrapText } from "../lib/documents/pdf";
+import { buildPdf, loadJapaneseFont, wrapText } from "../lib/documents/pdf";
+import { AppError } from "../lib/errors";
 import { buildContent } from "../lib/documents/snapshot";
 import type { GeneratedDocument } from "../lib/documents/types";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
-const font = new Uint8Array(readFileSync("public/fonts/NotoSansJP-Regular.ttf"));
+const font = await loadJapaneseFontForTest();
 
 function record(extra: Partial<CaseRecord> = {}): CaseRecord {
   return {
@@ -109,5 +110,27 @@ describe("wrapText", () => {
 
   it("改行を保持する", () => {
     expect(wrapText("a\nb", f, 10, 100)).toEqual(["a", "b"]);
+  });
+});
+
+describe("loadJapaneseFont", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("取得に失敗したときは、原因が分かる文言のエラーにし、次回は再取得する", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    await expect(loadJapaneseFont()).rejects.toBeInstanceOf(AppError);
+    await expect(loadJapaneseFont()).rejects.toThrow("フォントを取得できませんでした");
+
+    const ok = vi.fn().mockResolvedValue(new Response(new Uint8Array([1, 2, 3])));
+    vi.stubGlobal("fetch", ok);
+    expect((await loadJapaneseFont()).length).toBe(3);
+    expect(ok).toHaveBeenCalledTimes(1);
+  });
+
+  it("配信元が失敗（404など）を返したときも、同じ文言のエラーにする", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 404 })));
+    // 前のテストで成功した取得が残っているため、別の配信元は使えない。取得済みでないフォント（韓国語）で確認する
+    const { loadKoreanFont } = await import("../lib/documents/pdf");
+    await expect(loadKoreanFont()).rejects.toThrow("フォントを取得できませんでした");
   });
 });
