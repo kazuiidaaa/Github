@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { Badge } from "@/components/ui";
+import { Badge, ToneIcon, TONE_STYLES, type Tone } from "@/components/ui";
 
 export type ChoiceOption = {
   value: string;
@@ -13,11 +13,15 @@ export type ChoiceOption = {
   /** true にすると、一覧表示で先頭の「よく使う項目」にも並ぶ */
   featured?: boolean;
   disabled?: boolean;
+  /** 指定すると、選択中のボタンを、この状態の色と図形（`Badge` と同じ）で表示する。未指定は、通常の選択色（チェック印） */
+  tone?: Tone;
 };
 
 export type ChoiceGroupProps = {
   /** グループの名前（`<legend>`）。画面に表示する */
   legend: string;
+  /** true にすると、`<legend>` を画面には出さず、読み上げ用にのみ残す（表の見出しなど、別の見出しがある場所で使う） */
+  hideLegend?: boolean;
   options: readonly ChoiceOption[];
   /** 選択中の値。未選択は空文字 */
   value: string;
@@ -109,6 +113,7 @@ function CheckIcon() {
  */
 export function ChoiceGroup({
   legend,
+  hideLegend,
   options,
   value,
   onChange,
@@ -167,7 +172,9 @@ export function ChoiceGroup({
     const off = disabled || o.disabled;
     const shape = isList ? "rounded-xl px-3 py-2 text-left" : "rounded-full px-4 py-2 text-center";
     const tone = checked
-      ? "border-accent bg-accent text-accent-text"
+      ? o.tone
+        ? `border-current ring-1 ring-current ${TONE_STYLES[o.tone]}`
+        : "border-accent bg-accent text-accent-text"
       : "border-line-strong bg-white text-slate-800 hover:bg-slate-100";
     return (
       <button
@@ -184,7 +191,7 @@ export function ChoiceGroup({
         onKeyDown={(e) => onKeyDown(e, o.value)}
         className={`inline-flex min-h-[44px] items-center gap-2 border text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60 ${shape} ${tone} ${isList ? "w-full" : ""}`}
       >
-        {checked && <CheckIcon />}
+        {checked && (o.tone ? <ToneIcon tone={o.tone} /> : <CheckIcon />)}
         <span className="flex flex-col">
           <span>{o.label}</span>
           {o.hint && <span className="text-xs font-medium opacity-80">{o.hint}</span>}
@@ -195,7 +202,7 @@ export function ChoiceGroup({
 
   return (
     <fieldset className="min-w-0 border-0 p-0" disabled={disabled} aria-describedby={describedBy}>
-      <legend className="mb-1 flex items-center gap-2 p-0 text-sm font-bold">
+      <legend className={hideLegend ? "sr-only" : "mb-1 flex items-center gap-2 p-0 text-sm font-bold"}>
         {legend}
         {required && <Badge tone="red" icon={false}>必須</Badge>}
       </legend>

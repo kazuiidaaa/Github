@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Button, Field, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
 import type { CustomRequirement } from "@/lib/types";
+
+const PARTY_OPTIONS: ChoiceOption[] = [
+  { value: "applicant", label: "申請人" },
+  { value: "organization", label: "所属機関" },
+];
+const REQUIRED_OPTIONS: ChoiceOption[] = [
+  { value: "required", label: "必須" },
+  { value: "optional", label: "任意" },
+];
 
 export type CustomRequirementInput = Pick<CustomRequirement, "name" | "party" | "isRequired" | "dueDate" | "note">;
 
@@ -37,19 +47,14 @@ export function CustomRequirementForm({
       <Field label="書類名" required error={error}>
         <input className={inputClass} value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="提出者">
-          <select className={inputClass} value={party} onChange={(e) => setParty(e.target.value as CustomRequirement["party"])}>
-            <option value="applicant">申請人</option>
-            <option value="organization">所属機関</option>
-          </select>
-        </Field>
-        <Field label="必須・任意">
-          <select className={inputClass} value={isRequired ? "required" : "optional"} onChange={(e) => setIsRequired(e.target.value === "required")}>
-            <option value="required">必須</option>
-            <option value="optional">任意</option>
-          </select>
-        </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ChoiceGroup legend="提出者" options={PARTY_OPTIONS} value={party} onChange={(v) => setParty(v as CustomRequirement["party"])} />
+        <ChoiceGroup
+          legend="必須・任意"
+          options={REQUIRED_OPTIONS}
+          value={isRequired ? "required" : "optional"}
+          onChange={(v) => setIsRequired(v === "required")}
+        />
         <Field label="期限">
           <input type="date" className={inputClass} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </Field>
