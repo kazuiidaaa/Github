@@ -4,7 +4,7 @@ import type { Lang } from "./lang";
 // ご案内書類に載せる、規則（lib/requirements/rules.ts）の書類名の訳表。
 // キーは、規則の書類名（日本語の原文）そのもの。保存済みの content_json の書類名から、表示・出力の時点で引く。
 // 訳文は、行政書士が依頼者へお渡しする前に確認する（docs/client-guide-languages.md）。
-// 訳表にない書類名は、日本語の原文のまま載せ、「訳文は未確認」の目印を付ける（lib/documents/clientGuideText.ts）。
+// 表示の書式（訳文（原文）／原文（Not translated））は、clientGuide.ts の requirementNameCell が決める。
 
 type Translated = readonly [en: string, ko: string];
 

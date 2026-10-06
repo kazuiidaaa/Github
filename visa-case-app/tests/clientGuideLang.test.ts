@@ -182,11 +182,19 @@ describe("規則の書類名の訳", () => {
       for (const lang of OTHER_LANGS) {
         const cell = requirementNameCell(r.id, r.name, lang);
         expect(cell.untranslated).toBe(true);
-        expect(cell.text.startsWith(r.name)).toBe(true);
-        expect(cell.text).toContain(CLIENT_GUIDE_TEXTS[lang].untranslatedMark);
+        expect(cell.text).toBe(`${r.name}（${CLIENT_GUIDE_TEXTS[lang].untranslatedMark}）`);
       }
       expect(requirementNameCell(r.id, r.name, "ja")).toEqual({ text: r.name, untranslated: false });
     }
+  });
+
+  it("訳がある書類名は「訳文（原文）」、訳がない書類名は「原文（目印）」。目印の文言は言語ごと", () => {
+    expect(requirementNameCell("passport_card", "旅券（パスポート）の写し", "en").text).toBe("Copy of the passport（旅券（パスポート）の写し）");
+    expect(requirementNameCell("passport_card", "世帯全員の住民票", "ko").text).toBe("세대원 전원의 주민표（世帯全員の住民票）");
+    expect(requirementNameCell("hsp_point_evidence_①", "疎明資料 ①（学歴）：卒業証明書", "en").text).toBe("疎明資料 ①（学歴）：卒業証明書（Not translated）");
+    expect(requirementNameCell("hsp_point_evidence_①", "疎明資料 ①（学歴）：卒業証明書", "ko").text).toBe("疎明資料 ①（学歴）：卒業証明書（번역 미확인）");
+    // 日本語を選んだ場合は、併記しない
+    expect(requirementNameCell("passport_card", "旅券（パスポート）の写し", "ja").text).toBe("旅券（パスポート）の写し");
   });
 
   it("目印は、画面・出力の構成（表と注記）に出る", () => {
@@ -201,7 +209,7 @@ describe("規則の書類名の訳", () => {
     for (const lang of OTHER_LANGS) {
       const blocks = buildBlocks(doc, lang);
       const table = blocks.find((b) => b.kind === "table");
-      expect(table?.kind === "table" && table.rows[0][0]).toBe(`新設の規則の書類（訳表にない）\n${CLIENT_GUIDE_TEXTS[lang].untranslatedMark}`);
+      expect(table?.kind === "table" && table.rows[0][0]).toBe(`新設の規則の書類（訳表にない）（${CLIENT_GUIDE_TEXTS[lang].untranslatedMark}）`);
       expect(blocks).toContainEqual({ kind: "note", text: CLIENT_GUIDE_TEXTS[lang].untranslatedNote });
     }
     expect(JSON.stringify(buildBlocks(doc, "ja"))).not.toContain("untranslated");
@@ -316,8 +324,8 @@ describe("英語・韓国語の表示", () => {
 
   it("規則の書類名は訳し、訳表にある書類には目印を付けない", () => {
     const en = JSON.stringify(buildBlocks(make(), "en"));
-    expect(en).toContain("Passport and Residence Card (to be presented)");
-    expect(en).not.toContain(CLIENT_GUIDE_TEXTS.en.untranslatedMark);
+    expect(en).toContain("Passport and Residence Card (to be presented)（パスポート及び在留カード（提示））");
+    expect(en).not.toContain(`（${CLIENT_GUIDE_TEXTS.en.untranslatedMark}）`);
     expect(JSON.stringify(buildBlocks(make(), "ko"))).toContain("여권 및 재류카드(제시)");
   });
 
