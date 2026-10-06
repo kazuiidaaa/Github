@@ -119,3 +119,22 @@ docs/client-guide-languages.md（#251）は、依頼者向けの案内書類の�
 - 英語・韓国語の訳文は、行政書士の確認前（`reviewStatus.ts` はすべて draft）。
 
 第2段階・順1（#257）の確認：型検査、lint、全テスト（69 ファイル・718 件）、ビルド：通過。開発サーバーの実画面（ホーム、案件一覧、案件の新規登録）で、3言語を切り替え、幅 1280 と 375 のどちらでも横のはみ出しがなく、画面のエラーが出ないことを確認した。確認できなかった項目：Supabase に接続した状態の確認（上と同じ）、案件詳細・書類の画面での共通部品の表示（各画面の Issue で確認する）。
+
+## 第2段階・順7：書類の生成と履歴（#267）
+- 区分：`documents`（`lib/i18n/messages/documents.ts`）。対象は、`/cases/[id]/documents` の本文、`UnresolvedNote`、`OfficialFormNotice`（書類のプレビュー画面 `/cases/[id]/documents/[docId]` も、この2部品を使うため、表示言語に連動する。`DocumentSheet` は未変更）。
+- 表示用の対応は、`lib/i18n/documentsView.ts` に集約した。元の日本語の定数・関数（`lib/documents/types.ts`、`precheck.ts`、`officialForms.ts`、`lib/errors.ts`、`lib/documentKinds.ts`）は変更していない。
+  - 書類の種類・状態・出力形式：`useDocumentLabels()`。キーの型は、元の型（`GeneratedDocumentType` など）で、値の追加時に訳の漏れを `tsc` が検出する。
+  - 公式様式の注意：`OFFICIAL_NOTICE_KEYS`（元の `OFFICIAL_FORM_NOTICES` と日本語が一致することを試験で確認）。
+  - 対象外の注意：`scopeWarningsText()`。判定は元の `officialFormScopeWarnings` を使い、文面だけを手続種別のキーで引く。
+  - 事前チェック（データ状態）：`precheckRowsText()`。元の `precheckRows` の返り値（key・tone・unresolved・tab）を使い、文面は、入力（`PrecheckInput`）から決まる種別で引く。全入力の組み合わせで、日本語の出力が元の関数と一致することを試験で確認している。
+  - エラー文：`errorText()`。エラーが種別・コードを持たず（`AppError` は文言のみ）、文字列でしか区別できないため、既知の文言の完全一致で引く（`ERROR_TEXT_KEYS`）。一致しない文言は日本語のまま表示する。`lib/errors.ts`・`lib/documents/store.ts`・API ルートの文言を変更した場合は、`ERROR_TEXT_KEYS` も直す必要がある（`lib/errors.ts` の文言は試験で網羅を確認）。「生成文書の読み込みに失敗しました：」の前置きは、理由を分けて訳す。
+- 画面の状態として保持する通知（「生成中」「生成しました」「失敗」）は、表示した時点の言語の文字列を持つ。表示中に言語を切り替えても、その通知は切り替わらない（次の操作で更新される）。
+- 書類の出力（Word・PDF・エクセル）の言語、案内書類の言語選択は、変更していない。
+- 小さな画面で、生成履歴の行が横にはみ出していたため（日本語でも発生）、行を折り返す指定にした。
+- 英語・韓国語の訳文の件数（行政書士の確認待ち）：`documents` 98件（言語ごと）。
+- 確認してほしい訳：
+  - 公式書式・入管庁に関わる語：「出入国在留管理庁」（Immigration Services Agency of Japan／출입국재류관리청）、「公式申請様式」（Official application form／공식 신청 서식）、「在留資格認定証明書交付申請」（application for a Certificate of Eligibility／체류자격 인정 증명서 교부 신청）、「在留資格変更許可申請」「在留資格取得許可申請」「在留期間更新許可申請」（対象外の注意の本文。在留資格名「技術・人文知識・国際業務」は日本語のまま）。
+  - 書類名：「案件確認シート」（Case confirmation sheet）、「申請人情報一覧」（Applicant information list）、「必要書類チェックリスト」（Required documents checklist）、「理由書ドラフト」（Statement of reasons (draft)）、「転記補助シート」（Transcription aid sheet）、「高度専門職ポイント計算表」（Highly Skilled Professional points calculation sheet）、「ご案内書類」（Client guide）。
+  - 状態：「行政書士確認前／確認済み」（Pending scrivener review／Reviewed by scrivener）、「保管」（Archived。画面の操作は Archive）。
+  - 「申請人」（applicant／신청인）、「申請前チェック」（Pre-application checks／신청 전 점검）、「監査ログ」（audit log／감사 로그）。
+  - 韓国語の「{label} v{version}을(를) 보관합니다」は、書類名の末尾の音によらず使える形にした（自然さの確認を希望）。
