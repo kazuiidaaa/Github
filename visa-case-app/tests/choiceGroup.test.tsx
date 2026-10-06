@@ -135,3 +135,24 @@ describe("ChoiceGroup の絞り込みと見出し", () => {
     expect(s[s.length - 1].heading).toBe("");
   });
 });
+
+describe("ChoiceGroup の「未選択に戻す」（任意の引数 onClear）", () => {
+  it("onClear を指定しない既存の呼び出しは、ボタンも読み上げ領域も出さない", () => {
+    const m = html({ value: "a" });
+    expect(m).not.toContain("未選択に戻す");
+    expect(m).not.toContain('role="status"');
+  });
+  it("onClear があり、選択中のときだけ、ボタンを出す。文言は変えられる", () => {
+    expect(html({ value: "a", onClear: () => {} })).toContain("未選択に戻す");
+    expect(html({ value: "a", onClear: () => {}, clearLabel: "解除する" })).toContain("解除する");
+    expect(html({ value: "", onClear: () => {} })).not.toContain("未選択に戻す");
+  });
+  it("無効のときは、選択中でも出さない", () => {
+    expect(html({ value: "a", disabled: true, onClear: () => {} })).not.toContain("未選択に戻す");
+  });
+  it("項目の選択状態（aria-checked・Tab の停止点）は変わらない", () => {
+    const m = html({ value: "a", onClear: () => {} });
+    expect(m.match(/aria-checked="true"/g)).toHaveLength(1);
+    expect(m.match(/role="radio"/g)).toHaveLength(3);
+  });
+});

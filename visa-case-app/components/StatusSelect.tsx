@@ -114,6 +114,9 @@ export function StatusSelect({
         disabled={disabled}
         hint="号を選択してください（未選択でも保存できます）"
         variant="segment"
+        // 号なしの値（高度専門職）へ戻す。保存される値は、号を選ぶ前と同じ
+        onClear={() => onChange(ADVANCED_PROFESSIONAL_STATUS)}
+        clearLabel="号を未選択に戻す"
       />
     </div>
   );
