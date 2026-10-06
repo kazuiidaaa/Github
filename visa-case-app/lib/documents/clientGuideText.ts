@@ -37,7 +37,7 @@ export interface ClientGuideTexts {
   footer: (statusLabel: string) => string;
   /** Word の文書の説明 */
   docDescription: string;
-  /** 訳がない書類名に付ける目印 */
+  /** 訳がない書類名に付ける目印（原文のあとに、全角の括弧で付ける） */
   untranslatedMark: string;
   untranslatedNote: string;
   cautions: {
@@ -127,9 +127,9 @@ export const CLIENT_GUIDE_TEXTS: Record<Lang, ClientGuideTexts> = {
     reviewed: (name, at) => `Reviewed by: ${name} / ${at}`,
     footer: (s) => `${s} / Guidance for clients`,
     docDescription: "Guidance for clients",
-    untranslatedMark: "(Japanese original. The translation has not been verified.)",
+    untranslatedMark: "Not translated",
     untranslatedNote:
-      "For items marked \"The translation has not been verified\", the Japanese original is shown. Please ask the person in charge about these items.",
+      "Items marked \"Not translated\" are shown in the Japanese original only. Please ask the person in charge about these items.",
     cautions: {
       copy: "Submit a copy",
       original: "Submit the original",
@@ -165,9 +165,9 @@ export const CLIENT_GUIDE_TEXTS: Record<Lang, ClientGuideTexts> = {
     reviewed: (name, at) => `확인: ${name} / ${at}`,
     footer: (s) => `${s} / 의뢰인 안내`,
     docDescription: "의뢰인 안내",
-    untranslatedMark: "(일본어 원문, 번역 미확인)",
+    untranslatedMark: "번역 미확인",
     untranslatedNote:
-      "'번역 미확인'으로 표시된 항목은 일본어 원문을 그대로 기재했습니다. 해당 항목은 담당자에게 문의해 주십시오.",
+      "'번역 미확인'으로 표시된 항목은 일본어 원문만 기재했습니다. 해당 항목은 담당자에게 문의해 주십시오.",
     cautions: {
       copy: "사본으로 제출",
       original: "원본으로 제출",

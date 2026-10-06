@@ -86,15 +86,17 @@ export function buildClientGuide(c: CaseRecord, includeReceived = false): Client
 }
 
 /**
- * 書類名を、指定の言語で表示する形にする。
- * 規則の書類名で訳がないものは、日本語の原文に「訳文は未確認」の目印を付ける。
- * 行政書士が追加した書類名（自由記述）は、翻訳せず、原文のまま載せる。
+ * 書類名を、指定の言語で表示する形にする（画面・Word・PDF で共通。併記の書式は、ここだけで決める）。
+ * 規則の書類名は、役所の窓口などで日本語の名称を伝えられるよう、訳文のあとに日本語の原文を併記する。
+ * - 訳がある：「訳文（原文）」
+ * - 訳がない：「原文（Not translated）」（目印は、言語ごと）
+ * 日本語を選んだ場合と、行政書士が追加した書類名（自由記述）は、翻訳せず、原文のまま載せる。
  */
 export function requirementNameCell(id: string, name: string, lang: Lang): { text: string; untranslated: boolean } {
   if (lang === "ja" || !isRuleItemId(id)) return { text: name, untranslated: false };
   const t = translatedRequirementName(name, lang);
-  if (t) return { text: t, untranslated: false };
-  return { text: `${name}\n${CLIENT_GUIDE_TEXTS[lang].untranslatedMark}`, untranslated: true };
+  if (t) return { text: `${t}（${name}）`, untranslated: false };
+  return { text: `${name}（${CLIENT_GUIDE_TEXTS[lang].untranslatedMark}）`, untranslated: true };
 }
 
 /** Word・PDF・画面で共通に使う、ご案内書類の構成。保存済みの content_json だけから作る。lang は、表示・出力の言語（保存はしない） */
