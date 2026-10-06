@@ -1,4 +1,5 @@
 import { daysUntil, isValidDate } from "../format";
+import { jaT, type T } from "../i18n/caseRequirements";
 import { evaluate } from "../requirements/evaluate";
 import { progressOf } from "../requirements/progress";
 import type { CaseRecord } from "../types";
@@ -10,59 +11,60 @@ export interface Reference {
 
 const NONE: Reference = { text: "", tone: "none" };
 
-function filled(value: string): Reference {
-  return value.trim() ? { text: "入力あり", tone: "ok" } : { text: "未入力", tone: "warn" };
+function filled(t: T, value: string): Reference {
+  return value.trim() ? { text: t("caseChecks.refFilled"), tone: "ok" } : { text: t("caseChecks.refEmpty"), tone: "warn" };
 }
 
 /**
  * 項目の確認の参考にする表示。状態（passed など）は決めず、法的な判断も行わない。
+ * 文言は、訳表（caseChecks 区分）から t で引く。省略時は日本語（元の出力と同じ）。
  */
-export function referenceFor(c: CaseRecord, key: string): Reference {
+export function referenceFor(c: CaseRecord, key: string, t: T = jaT): Reference {
   const a = c.applicant;
   switch (key) {
     case "applicant.legal_name":
-      return filled(a.legalName);
+      return filled(t, a.legalName);
     case "applicant.nationality":
-      return filled(a.nationality);
+      return filled(t, a.nationality);
     case "applicant.date_of_birth":
-      return filled(a.dateOfBirth);
+      return filled(t, a.dateOfBirth);
     case "applicant.residence_status":
-      return filled(a.residenceStatus);
+      return filled(t, a.residenceStatus);
     case "applicant.residence_expiry":
-      return filled(a.residenceExpiryDate);
+      return filled(t, a.residenceExpiryDate);
     case "applicant.confirmed":
       return a.confirmationStatus === "confirmed"
-        ? { text: "確認済みの記録あり", tone: "ok" }
-        : { text: "未確認", tone: "warn" };
+        ? { text: t("caseChecks.refConfirmedRecord"), tone: "ok" }
+        : { text: t("caseChecks.refUnconfirmed"), tone: "warn" };
     case "document.all_received":
     case "document.no_missing": {
       const ev = evaluate(c);
       if (!ev.ruleSet && c.customRequirements.length === 0) {
-        return { text: "必要書類の規則が未整備です（手動で確認）", tone: "none" };
+        return { text: t("caseChecks.refNoRules"), tone: "none" };
       }
       const today = new Date().toISOString().slice(0, 10);
       const p = progressOf(ev, c.customRequirements, today);
-      const overdue = p.overdue.length > 0 ? `／期限超過${p.overdue.length}件` : "";
+      const overdue = p.overdue.length > 0 ? t("caseChecks.refProgressOverdue", { count: p.overdue.length }) : "";
       return {
-        text: `必要${p.requiredCount}件／収集済み${p.receivedCount}件／不足${p.missing.length}件${overdue}`,
+        text: t("caseChecks.refProgress", { required: p.requiredCount, received: p.receivedCount, missing: p.missing.length, overdue }),
         tone: p.missing.length > 0 ? "warn" : "ok",
       };
     }
     case "deadline.expiry_checked": {
       const days = daysUntil(a.residenceExpiryDate);
-      if (days === null) return { text: "満了日が未入力", tone: "warn" };
-      if (days < 0) return { text: `満了日を${-days}日超過`, tone: "warn" };
-      if (days === 0) return { text: "本日が満了日（オンライン申請不可）", tone: "warn" };
-      return { text: `残り${days}日`, tone: days < 30 ? "warn" : "ok" };
+      if (days === null) return { text: t("caseChecks.refExpiryUnknown"), tone: "warn" };
+      if (days < 0) return { text: t("caseChecks.refExpiryPassed", { days: -days }), tone: "warn" };
+      if (days === 0) return { text: t("caseChecks.refExpiryToday"), tone: "warn" };
+      return { text: t("caseChecks.refExpiryRemaining", { days }), tone: days < 30 ? "warn" : "ok" };
     }
     case "deadline.planned_date_checked": {
-      if (!c.plannedApplicationDate) return { text: "申請予定日が未入力", tone: "warn" };
+      if (!c.plannedApplicationDate) return { text: t("caseChecks.refPlannedUnset"), tone: "warn" };
       const planned = daysUntil(c.plannedApplicationDate);
       const expiry = daysUntil(a.residenceExpiryDate);
       if (planned !== null && expiry !== null && planned >= expiry) {
-        return { text: "申請予定日が満了日以降です", tone: "warn" };
+        return { text: t("caseChecks.refPlannedAfter"), tone: "warn" };
       }
-      return { text: `申請予定日：${c.plannedApplicationDate}`, tone: "ok" };
+      return { text: t("caseChecks.refPlanned", { date: c.plannedApplicationDate }), tone: "ok" };
     }
     default:
       return NONE;
