@@ -7,21 +7,25 @@ import { useEffect, useRef, useState } from "react";
 import { EmploymentFields, hasEmploymentDateError } from "@/components/EmploymentForm";
 import { AcceptedDateField } from "@/components/AcceptedDateField";
 import { ChoiceGroup } from "@/components/ChoiceGroup";
-import { PROCEDURE_OPTIONS, STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
+import { PROCEDURE_OPTIONS, StatusSelect, useStatusHints } from "@/components/StatusSelect";
+import { noRuleMessage, procedureDescriptionText, targetStatusLegend } from "@/lib/i18n/caseNew";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import { Button, Field, inputClass } from "@/components/ui";
 import { hasAcceptedDateError } from "@/lib/acceptedDate";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
-import { notApplicableMessage, shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
+import { shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
 import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type EmploymentInfo, type ProcedureType } from "@/lib/types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, procedureNeedsTarget, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 import { CASE_MEMO_ZENKAKU, zenkakuHandlers } from "@/lib/zenkaku";
 
 export default function NewCasePage() {
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
+  const hints = useStatusHints();
   const canEdit = useCan("edit");
   const [caseName, setCaseName] = useState("");
   const [procedureType, setProcedureType] = useState<ProcedureType | "">("");
@@ -103,25 +107,26 @@ export default function NewCasePage() {
   // 必要書類の判定（evaluate）と同じ基準で、規則が未整備かを判定する
   const showNoRuleGuide = shouldShowNoRuleGuide(procedureType, currentStatus, targetStatus);
 
-  const description = PROCEDURE_TYPES.find((p) => p.value === procedureType)?.description;
+  const description = procedureDescriptionText(t, procedureType);
+  const targetLegend = targetStatusLegend(t, procedureType);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
     const bulkNames = bulk ? buildBulkCaseNames(groupName, names) : [];
     if (bulk) {
-      if (!groupName.trim()) next.groupName = "グループ名を入力してください。";
-      else if (groupName.length > 100) next.groupName = "グループ名は100文字以内で入力してください。";
-      if (names.length === 0) next.names = "案件を1件以上登録してください。";
-      else if (bulkNames.some((n) => n.length > 100)) next.names = "案件名は100文字以内で入力してください（グループ名に（行番号）が加わった長さを含みます）。";
-      if (hasEmploymentDateError(employment)) next.employment = "雇用開始日が正しくありません。存在する日付を、年4桁・月・日の順に入力してください。";
+      if (!groupName.trim()) next.groupName = t("caseNew.errGroupNameRequired");
+      else if (groupName.length > 100) next.groupName = t("caseNew.errGroupNameTooLong");
+      if (names.length === 0) next.names = t("caseNew.errNamesEmpty");
+      else if (bulkNames.some((n) => n.length > 100)) next.names = t("caseNew.errNamesTooLong");
+      if (hasEmploymentDateError(employment)) next.employment = t("caseNew.errEmploymentDate");
     } else {
-      if (!caseName.trim()) next.caseName = "案件名を入力してください。";
-      if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
+      if (!caseName.trim()) next.caseName = t("caseNew.errCaseNameRequired");
+      if (caseName.length > 100) next.caseName = t("caseNew.errCaseNameTooLong");
     }
-    if (!procedureType) next.procedureType = "手続種別を選択してください。";
-    if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
-    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日が正しくありません。存在する日付を、年4桁・月・日の順に入力してください。";
+    if (!procedureType) next.procedureType = t("caseNew.errProcedureRequired");
+    if (needsTarget && !targetStatus.trim()) next.targetStatus = t("caseNew.errTargetRequired", { label: targetLegend });
+    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = t("caseNew.errAcceptedDate");
     setErrors(next);
     if (Object.keys(next).length > 0 || !procedureType) return;
 
@@ -159,13 +164,13 @@ export default function NewCasePage() {
     if (bulk) {
       bulkNames.forEach(create);
       clearNewCaseDraft();
-      toast.success(`${bulkNames.length}件の案件を作成しました`);
+      toast.success(t("caseNew.createdBulk", { count: bulkNames.length }));
       router.push("/cases");
       return;
     }
     const id = create(caseName.trim());
     clearNewCaseDraft();
-    toast.success("案件を作成しました");
+    toast.success(t("caseNew.created"));
     // 作成直後は、次に行う書類の登録へ誘導するため「書類」タブを開く
     router.push(`/cases/${id}?tab=documents`);
   }
@@ -173,9 +178,9 @@ export default function NewCasePage() {
   if (!canEdit) {
     return (
       <div className="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-sm">
-        <p className="mb-3">案件を作成する権限がありません。事務所の所有者または管理者にご確認ください。</p>
+        <p className="mb-3">{t("caseNew.noPermission")}</p>
         <Link href="/cases" className="text-blue-700 hover:underline">
-          ← 案件一覧
+          {t("caseNew.backToList")}
         </Link>
       </div>
     );
@@ -193,19 +198,17 @@ export default function NewCasePage() {
           }
         }}
       >
-        ← 案件一覧
+        {t("caseNew.backToList")}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold">新規案件作成</h1>
-      <p className="mb-6 text-sm text-slate-600">
-        案件の入口情報のみ登録します。氏名・生年月日・在留期限などの正式情報は、案件作成後に「申請人情報」タブで、原本を確認しながら入力します。
-      </p>
-      <div className="mb-4 flex gap-1 text-sm" role="group" aria-label="登録方法">
+      <h1 className="mt-2 text-2xl font-semibold">{t("caseNew.title")}</h1>
+      <p className="mb-6 text-sm text-slate-600">{t("caseNew.intro")}</p>
+      <div className="mb-4 flex flex-wrap gap-1 text-sm" role="group" aria-label={t("caseNew.modeAria")}>
         {[
-          { v: false, label: "1件ずつ登録" },
-          { v: true, label: "複数人をまとめて登録" },
+          { v: false, label: t("caseNew.modeSingle") },
+          { v: true, label: t("caseNew.modeBulk") },
         ].map((m) => (
           <button
-            key={m.label}
+            key={String(m.v)}
             type="button"
             aria-pressed={bulk === m.v}
             onClick={() => setBulk(m.v)}
@@ -217,20 +220,20 @@ export default function NewCasePage() {
       </div>
       {bulk && (
         <p className="mb-4 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
-          同じ所属機関の複数の申請人について、手続種別と雇用・会社情報を1回入力し、人数分の案件をまとめて作成します。入管への申請は、申請人お一人につき1件の申請書が必要です。作成後の各案件は独立しており、以後は個別に編集します（案件間で情報は同期されません）。
+          {t("caseNew.bulkNote")}
         </p>
       )}
       {restored && (
         <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
-          <span>前回の入力を復元しました。（案件メモは復元されません）</span>
+          <span>{t("caseNew.restored")}</span>
           <Button type="button" variant="secondary" onClick={clearInput}>
-            入力をクリア
+            {t("caseNew.restoredClear")}
           </Button>
         </div>
       )}
       <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
         <ChoiceGroup
-          legend="手続種別"
+          legend={t("caseNew.procedureLegend")}
           required
           options={PROCEDURE_OPTIONS}
           value={procedureType}
@@ -239,25 +242,25 @@ export default function NewCasePage() {
           hint={description}
         />
         {!bulk && (
-          <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">
+          <Field label={t("caseNew.caseNameLabel")} required error={errors.caseName} hint={t("caseNew.caseNameHint")}>
             <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
           </Field>
         )}
         {/* 手続種別を選ぶまで在留資格の欄は出さない。非表示の間も入力値は保持し、再表示で戻る（保存は表示中の欄のみ） */}
         {procedureType === "" ? (
           <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
-            手続種別を選ぶと、必要な項目が表示されます。
+            {t("caseNew.procedureNote")}
           </p>
         ) : (
           <div className="anim-fade-in space-y-5">
-            <StatusSelect legend="現在の在留資格" hint={STATUS_HINTS.current} value={currentStatus} onChange={setCurrentStatus} />
+            <StatusSelect legend={t("caseNew.currentStatusLegend")} hint={hints.current} value={currentStatus} onChange={setCurrentStatus} />
             {needsTarget && (
               <div className="anim-fade-in">
                 <StatusSelect
-                  legend={targetStatusLabel(procedureType)}
+                  legend={targetLegend}
                   required
                   error={errors.targetStatus}
-                  hint={STATUS_HINTS.target}
+                  hint={hints.target}
                   value={targetStatus}
                   onChange={setTargetStatus}
                   withGrade
@@ -270,41 +273,41 @@ export default function NewCasePage() {
         <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
         {showNoRuleGuide && (
           <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
-            {`${notApplicableMessage()}案件は、このまま作成できます。`}
+            {t("caseNew.noRuleGuide", { message: noRuleMessage(t) })}
           </p>
         )}
-        <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
+        <Field label={t("caseNew.memoLabel")} hint={t("caseNew.memoHint")}>
           <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} {...zenkakuHandlers(CASE_MEMO_ZENKAKU, setMemo)} />
         </Field>
         {bulk && (
           <>
             <div>
-              <h2 className="mb-1 text-sm font-semibold">雇用・会社情報（全員に共通）</h2>
-              <p className="mb-3 text-xs text-slate-500">入力した内容が、作成する各案件にそれぞれ設定されます。</p>
+              <h2 className="mb-1 text-sm font-semibold">{t("caseNew.employmentHeading")}</h2>
+              <p className="mb-3 text-xs text-slate-500">{t("caseNew.employmentNote")}</p>
               <EmploymentFields form={employment} set={(k, v) => setEmployment((f) => ({ ...f, [k]: v }))} />
               {errors.employment && <p className="mt-2 text-sm text-red-600">{errors.employment}</p>}
             </div>
-            <Field label="グループ名" required error={errors.groupName} hint="例：〇〇株式会社 技術・人文知識・国際業務 変更 2名（所属機関・手続種別・人数など。空欄の行の案件名は「グループ名（行番号）」になります）">
+            <Field label={t("caseNew.groupNameLabel")} required error={errors.groupName} hint={t("caseNew.groupNameHint")}>
               <input className={inputClass} value={groupName} onChange={(e) => setGroupName(e.target.value)} />
             </Field>
-            <Field label="申請人（案件名）" error={errors.names} hint="任意です。空欄の行は「グループ名（行番号）」を案件名にします。入力した行は、その入力を案件名にします。案件名は内部管理用で、正式な氏名としては扱いません。">
+            <Field label={t("caseNew.namesLabel")} error={errors.names} hint={t("caseNew.namesHint")}>
               <div className="space-y-2">
                 {names.map((n, i) => (
                   <div key={i} className="flex gap-2">
                     <input
                       className={inputClass}
-                      aria-label={`案件名 ${i + 1}`}
-                      placeholder="空欄の場合は「グループ名（行番号）」"
+                      aria-label={t("caseNew.namesRowAria", { n: i + 1 })}
+                      placeholder={t("caseNew.namesPlaceholder")}
                       value={n}
                       onChange={(e) => setNames((l) => l.map((x, j) => (j === i ? e.target.value : x)))}
                     />
                     <Button type="button" variant="secondary" disabled={names.length <= 1} onClick={() => setNames((l) => l.filter((_, j) => j !== i))}>
-                      削除
+                      {t("caseNew.namesDelete")}
                     </Button>
                   </div>
                 ))}
                 <Button type="button" variant="secondary" onClick={() => setNames((l) => [...l, ""])}>
-                  行を追加
+                  {t("caseNew.namesAdd")}
                 </Button>
               </div>
             </Field>
@@ -312,9 +315,9 @@ export default function NewCasePage() {
         )}
         <div className="flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={() => (dirty ? setLeaveOpen(true) : router.push("/cases"))}>
-            キャンセル
+            {t("caseNew.cancel")}
           </Button>
-          <Button type="submit">{bulk ? `${names.length}件を作成` : "作成"}</Button>
+          <Button type="submit">{bulk ? t("caseNew.submitBulk", { count: names.length }) : t("caseNew.submit")}</Button>
         </div>
       </form>
       {leaveOpen && <ConfirmLeaveDialog onCancel={() => setLeaveOpen(false)} onConfirm={leave} />}

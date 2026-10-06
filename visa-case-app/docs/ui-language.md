@@ -119,3 +119,18 @@ docs/client-guide-languages.md（#251）は、依頼者向けの案内書類の�
 - 英語・韓国語の訳文は、行政書士の確認前（`reviewStatus.ts` はすべて draft）。
 
 第2段階・順1（#257）の確認：型検査、lint、全テスト（69 ファイル・718 件）、ビルド：通過。開発サーバーの実画面（ホーム、案件一覧、案件の新規登録）で、3言語を切り替え、幅 1280 と 375 のどちらでも横のはみ出しがなく、画面のエラーが出ないことを確認した。確認できなかった項目：Supabase に接続した状態の確認（上と同じ）、案件詳細・書類の画面での共通部品の表示（各画面の Issue で確認する）。
+
+## 第2段階・順5（#263）：案件の新規登録
+- 区分：`caseNew`（/cases/new の本文。54件）、`employment`（EmploymentForm の文言。28件。案件詳細（順6）と共有し、順6の担当は、この区分を使う）。
+- 設計の判断：
+  - 手続名、在留資格名、高度専門職の号は、日本語のまま表示する。手続の説明文（`PROCEDURE_TYPES` の `description`）のみ、`caseNew` の訳表から引く（`lib/i18n/caseNew.ts` の `procedureDescriptionText`）。
+  - `targetStatusLabel`（`lib/types.ts`）、`notApplicableMessage`（`lib/requirements/evaluate.ts`）、`CATEGORY_LABELS`（`lib/requirements/rules.ts`）は、書類・判定・テストが使うため変更しない。画面用に、`lib/i18n/caseNew.ts` の `targetStatusLegend`、`noRuleMessage`、`CATEGORY_KEYS` を足した。日本語の出力は、元と一致することをテスト（`tests/caseNewMessages.test.ts`）で確認している。
+  - `STATUS_HINTS`・`DATE_INVALID_MESSAGE` は、このページと EmploymentForm で、`useStatusHints()`・`useDateInvalidMessage()` に切り替えた。
+  - まとめて登録で生成される案件名「グループ名（行番号）」は、保存される案件の内容のため、日本語（全角括弧）のまま。案内文では、同じ形（グループ名（行番号））で説明している。`lib/bulkCaseNames.ts`・`lib/newCaseDraft.ts` には、画面に出る文言がなく、変更していない。
+- 訳の件数（英語・韓国語。言語ごと。行政書士の確認待ち）：`caseNew` 54、`employment` 28。計82件。
+- 行政書士に確認してほしい訳：
+  - 案件 = "case" / 사건、手続種別 = "procedure type" / 절차 종류、所属機関 = 소속기관、受任日 = "date of engagement" / 수임일。
+  - 在留期間の更新 = "extension of the period of stay" / 체류기간 연장、認定証明書 = "certificate of eligibility" / 사증발급인정서、上陸の手続 = "landing procedures" / 상륙 절차。
+  - 所属機関のカテゴリー 1 から 4 の説明（法定調書合計表 = "statutory report summary" / 법정조서합계표）。
+  - 源泉所得税の納期の特例 = "special exception on the payment deadline of withholding income tax" / 원천소득세 납기 특례。
+  - 規則の未整備の案内（`noRuleMessage`）の言い回し。
