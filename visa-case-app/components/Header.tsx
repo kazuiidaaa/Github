@@ -19,7 +19,7 @@ export function Header() {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/75 backdrop-blur-xl backdrop-saturate-150">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 lg:flex-nowrap lg:justify-between lg:px-6 lg:py-4">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 max-md:gap-y-1 max-md:py-2 lg:flex-nowrap lg:justify-between lg:px-6 lg:py-4">
         <span className="contents lg:flex lg:items-center lg:gap-6">
         <Link href="/" aria-label="在留資格案件管理（ホームへ）" className="order-1 text-lg font-bold lg:order-none">
           在留資格案件管理
@@ -47,9 +47,13 @@ export function Header() {
           <ThemeToggle />
         </span>
         {demo ? (
-          <span className="order-5 ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 text-sm lg:order-none lg:ml-0 lg:flex-nowrap lg:justify-start lg:gap-3">
-            <span className="rounded-xl bg-amber-100 lg:rounded-full px-3 py-1 text-xs font-bold text-amber-800">
-              デモ：仮データ（サーバーには保存されません）
+          <span className="order-5 ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 text-sm lg:order-none lg:ml-0 max-md:flex-nowrap lg:flex-nowrap lg:justify-start lg:gap-3">
+            <span
+              title="デモ：仮データ（サーバーには保存されません）"
+              className="rounded-xl bg-amber-100 lg:rounded-full px-3 py-1 text-xs font-bold text-amber-800 max-md:shrink-0 max-md:whitespace-nowrap"
+            >
+              <span className="md:hidden">デモ中</span>
+              <span className="max-md:hidden">デモ：仮データ（サーバーには保存されません）</span>
             </span>
             <button
               onClick={() => {
@@ -62,8 +66,12 @@ export function Header() {
             </button>
           </span>
         ) : !isSupabaseEnabled ? (
-          <span className="order-5 ml-auto rounded-xl bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 lg:order-none lg:ml-0 lg:rounded-full">
-            試作版：仮データ（このブラウザ内にのみ保存）
+          <span
+            title="試作版：仮データ（このブラウザ内にのみ保存）"
+            className="order-5 ml-auto rounded-xl bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 max-md:whitespace-nowrap lg:order-none lg:ml-0 lg:rounded-full"
+          >
+            <span className="md:hidden">試作版：仮データ</span>
+            <span className="max-md:hidden">試作版：仮データ（このブラウザ内にのみ保存）</span>
           </span>
         ) : (
           session && (
@@ -71,7 +79,7 @@ export function Header() {
               <Link
                 href="/account"
                 title={session.user.email}
-                className="block min-w-0 max-w-[14rem] truncate font-bold text-blue-700 hover:underline lg:max-w-none"
+                className="block min-w-0 max-w-[14rem] truncate font-bold text-blue-700 max-md:max-w-[6.5rem] hover:underline lg:max-w-none"
               >
                 {session.user.email}
               </Link>

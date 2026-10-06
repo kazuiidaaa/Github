@@ -54,3 +54,12 @@
 - ホームの最上部に「要対応」を置く。在留期限が過ぎた案件と30日以内の案件を、期限が過ぎた案件を先頭に、期限の近い順で示す（最大10件。残りは「すべて見る」で案件一覧へ）。抽出と並び順は `lib/urgentCases.ts`。
 - 各行に、案件名・申請人名・期限（`ExpiryBadge`）・次に行うこと（`lib/nextAction.ts`）を示す。該当がないときは「期限が迫る案件はありません。」と1行で示す。
 - 件数カード（`lib/dashboardMetrics.ts`）の定義は変更していない。下段は「最近更新した案件」のみ。
+
+## 書体（Issue #216）
+- 画面の書体は、Apple 端末ではシステム書体にする。英数字は San Francisco（`-apple-system`）、日本語はヒラギノ角ゴ ProN、予備はヒラギノ角ゴシック（`Hiragino Sans`）。
+- Apple 以外の端末では、Inter（英数字）と Noto Sans JP（日本語）を使う。どちらも `next/font` で、500・600・700 のみを読み込む。
+- Apple の書体は、利用許諾の都合で Web へ同梱できない。端末に入っているものを名前で指定する。
+- 先に書いた書体が端末にある場合、ブラウザーは後ろの書体を取得しない。`next/font` の事前読み込み（`preload`）は止めている。
+- 等幅（`--font-mono`）も、同じ指定を使う。定義は `app/globals.css` の `--font-sans`。
+- ヒラギノ角ゴ ProN の太さは W3・W6 の2種類のため、本文の 500 が細く見える場合は、`"Hiragino Sans"` を `"Hiragino Kaku Gothic ProN"` より先に書く。
+- 書類のプレビュー（`paper`）、PDF、Word、Excel の書体は変更しない。`paper` は Noto Sans JP を明示して指定している。

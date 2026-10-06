@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Badge, Button } from "@/components/ui";
 import { CustomRequirementForm, type CustomRequirementInput } from "@/components/CustomRequirementForm";
 import { findDocumentOfType } from "@/lib/documentKinds";
@@ -38,19 +39,20 @@ function CellLabel({ children }: { children: string }) {
   return <span className="mb-1 block text-xs text-slate-500 md:hidden">{children}</span>;
 }
 
-const selectClass = "rounded-xl border border-line-strong bg-white px-2 py-1 text-xs";
+const STATUS_OPTIONS: ChoiceOption[] = REQUIREMENT_STATUSES.map((st) => ({ value: st, label: REQUIREMENT_STATUS_LABELS[st] }));
+
+/** 行政書士の判断。空文字は「規則どおり」（上書きなし）を表す */
+const OVERRIDE_OPTIONS: ChoiceOption[] = [
+  { value: "default", label: "規則どおり" },
+  { value: "required", label: "必要とする" },
+  { value: "not_required", label: "不要とする" },
+];
 
 function StatusSelect({ label, value, onChange }: { label: string; value: RequirementStatus; onChange: (v: RequirementStatus) => void }) {
-  return (
-    <select aria-label={`${label} 状態`} className={selectClass} value={value} onChange={(e) => onChange(e.target.value as RequirementStatus)}>
-      {REQUIREMENT_STATUSES.map((st) => (
-        <option key={st} value={st}>
-          {REQUIREMENT_STATUS_LABELS[st]}
-        </option>
-      ))}
-    </select>
-  );
+  return <ChoiceGroup legend={`${label} 状態`} hideLegend options={STATUS_OPTIONS} value={value} onChange={(v) => onChange(v as RequirementStatus)} />;
 }
+
+const selectClass = "rounded-xl border border-line-strong bg-white px-2 py-1 text-xs";
 
 function DueInput({ label, value, overdue, onChange }: { label: string; value?: string; overdue: boolean; onChange: (v: string) => void }) {
   return (
@@ -387,18 +389,15 @@ function Row({
       </td>
       <td className={TD_CLASS}>
         <CellLabel>行政書士の判断</CellLabel>
-        <select
-          aria-label={`${rule.name} 行政書士の判断`}
-          className={selectClass}
-          value={state.override ?? ""}
-          onChange={(e) =>
-            onPatch(rule.id, { override: (e.target.value || undefined) as RequirementState["override"] }, "requirement_overridden")
+        <ChoiceGroup
+          legend={`${rule.name} 行政書士の判断`}
+          hideLegend
+          options={OVERRIDE_OPTIONS}
+          value={state.override ?? "default"}
+          onChange={(v) =>
+            onPatch(rule.id, { override: (v === "default" ? undefined : v) as RequirementState["override"] }, "requirement_overridden")
           }
-        >
-          <option value="">規則どおり</option>
-          <option value="required">必要とする</option>
-          <option value="not_required">不要とする</option>
-        </select>
+        />
         {state.override && (
           <input
             className="mt-2 w-full rounded-xl border border-line-strong px-2 py-1 text-xs"
