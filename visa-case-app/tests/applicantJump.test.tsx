@@ -16,7 +16,7 @@ function makeRecord(): CaseRecord {
     id: "c1", caseName: "案件", procedureType: "renewal", currentStatus: "", targetStatus: "", memo: "",
     workflowStatus: "preparing", acceptedDate: "", createdAt: "", updatedAt: "",
     applicant: { ...EMPTY_APPLICANT }, employment: { ...EMPTY_EMPLOYMENT }, formDetails: { ...EMPTY_FORM_DETAILS },
-    requirementStates: {}, customRequirements: [], plannedApplicationDate: "", checkMemo: "", checks: [], documents: [],
+    requirementStates: {}, customRequirements: [], plannedApplicationDate: "", acceptedDate: "", checkMemo: "", checks: [], documents: [],
   };
 }
 

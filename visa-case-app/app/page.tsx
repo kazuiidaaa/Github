@@ -6,12 +6,14 @@ import { HomeMetricCards } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { applyFilter, DEFAULT_FILTER, summarize, type CaseRow } from "@/lib/caseMetrics";
+import { urgentCases } from "@/lib/urgentCases";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 
 const LIST_SIZE = 5;
+const URGENT_SIZE = 10;
 
-function CaseList({ rows, empty, showExpiry }: { rows: CaseRow[]; empty: string; showExpiry: boolean }) {
+function CaseList({ rows, empty }: { rows: CaseRow[]; empty: string }) {
   if (rows.length === 0) {
     return <p className="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">{empty}</p>;
   }
@@ -26,13 +28,7 @@ function CaseList({ rows, empty, showExpiry }: { rows: CaseRow[]; empty: string;
             <WorkflowBadge status={c.workflowStatus} />
           </div>
           <p className="mt-1 text-slate-600">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</p>
-          <div className="mt-2">
-            {showExpiry ? (
-              <ExpiryBadge date={c.applicant.residenceExpiryDate} />
-            ) : (
-              <p className="text-xs text-slate-500">最終更新 {formatDateTime(c.updatedAt)}</p>
-            )}
-          </div>
+          <p className="mt-2 text-xs text-slate-500">最終更新 {formatDateTime(c.updatedAt)}</p>
         </li>
       ))}
     </ul>
@@ -46,10 +42,8 @@ export default function HomePage() {
   const canEdit = useCan("edit");
 
   const summary = useMemo(() => summarize(cases), [cases]);
-  const urgent = useMemo(
-    () => applyFilter(cases, { ...DEFAULT_FILTER, within30: true, sort: "expiry" }).slice(0, LIST_SIZE),
-    [cases],
-  );
+  const urgentAll = useMemo(() => urgentCases(cases), [cases]);
+  const urgent = urgentAll.slice(0, URGENT_SIZE);
   const recent = useMemo(() => applyFilter(cases, DEFAULT_FILTER).slice(0, LIST_SIZE), [cases]);
 
   return (
@@ -74,21 +68,48 @@ export default function HomePage() {
         </p>
       ) : (
         <>
+          <section aria-label="要対応の案件" className="mb-8">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-lg">要対応（在留期限が過ぎた案件・30日以内の案件）</h2>
+              {urgentAll.length > 0 && (
+                <Link href="/cases?within30=1&sort=expiry" className="shrink-0 text-sm font-bold text-blue-700 hover:underline">
+                  すべて見る（{urgentAll.length} 件）
+                </Link>
+              )}
+            </div>
+            {urgentAll.length === 0 ? (
+              <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">期限が迫る案件はありません。</p>
+            ) : (
+              <ul className="anim-stagger space-y-3">
+                {urgent.map(({ record: c, nextMessage }) => (
+                  <li key={c.id} className="rounded-2xl border border-line-strong bg-white p-4 text-sm">
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                      <div>
+                        <Link href={`/cases/${c.id}`} className="font-bold text-blue-700 hover:underline">
+                          {c.caseName}
+                        </Link>
+                        <p className="mt-1 text-slate-600">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</p>
+                        <div className="mt-2">
+                          <ExpiryBadge date={c.applicant.residenceExpiryDate} />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-600">次に行うこと</p>
+                        <p className="mt-1 text-slate-800">{nextMessage}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
           <section aria-label="対応が必要な件数" className="mb-8">
             <h2 className="mb-3 text-sm text-slate-600">対応が必要な件数（{summary.total} 件中）</h2>
             <HomeMetricCards summary={summary} />
           </section>
 
-          <div className="grid gap-8 md:grid-cols-2">
-            <section aria-label="在留期限が近い案件">
-              <div className="mb-3 flex items-baseline justify-between">
-                <h2 className="text-lg">在留期限が近い案件</h2>
-                <Link href="/cases?within30=1&sort=expiry" className="text-sm font-bold text-blue-700 hover:underline">
-                  すべて見る
-                </Link>
-              </div>
-              <CaseList rows={urgent} empty="期限が30日以内の案件はありません。" showExpiry />
-            </section>
+          <div>
             <section aria-label="最近更新した案件">
               <div className="mb-3 flex items-baseline justify-between">
                 <h2 className="text-lg">最近更新した案件</h2>
@@ -99,7 +120,6 @@ export default function HomePage() {
               <CaseList
                 rows={recent}
                 empty={canEdit ? "案件がありません。「新規案件」から作成してください。" : "案件がありません。"}
-                showExpiry={false}
               />
             </section>
           </div>
