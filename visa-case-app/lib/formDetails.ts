@@ -516,7 +516,7 @@ export const DATE_FIELD_KEYS = [
   "deportationLastDate",
 ] as const satisfies readonly FormFieldKey[];
 
-const DATE_MESSAGE = "日付をカレンダーから選び直してください。";
+const DATE_MESSAGE = "存在する日付を、年4桁・月・日の順に入力してください（例：2000/01/31）。";
 
 /**
  * 日付の形式のみ確認する（公式様式の項目は、確定の前提としない）。

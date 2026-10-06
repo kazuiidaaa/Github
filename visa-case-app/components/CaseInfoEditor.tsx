@@ -38,7 +38,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
     if (!caseName.trim()) next.caseName = "案件名を入力してください。";
     else if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
     if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
-    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日をカレンダーから選び直してください。";
+    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日が正しくありません。存在する日付を、年4桁・月・日の順に入力してください。";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
