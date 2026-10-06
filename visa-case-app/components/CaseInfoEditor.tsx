@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
+import { ChoiceGroup } from "@/components/ChoiceGroup";
+import { PROCEDURE_OPTIONS, procedureDescription, STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { logAudit, updateCase } from "@/lib/store";
 import { PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type CaseRecord, type ProcedureType } from "@/lib/types";
@@ -85,22 +86,26 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
       <Field label="案件名" required error={errors.caseName} hint="内部管理用です。正式な氏名としては扱いません。">
         <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
       </Field>
-      <Field label="手続種別" required hint={PROCEDURE_TYPES.find((p) => p.value === procedureType)?.description}>
-        <select className={inputClass} value={procedureType} onChange={(e) => setProcedureType(e.target.value as ProcedureType)}>
-          {PROCEDURE_TYPES.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="現在の在留資格" hint={STATUS_HINTS.current}>
-        <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
-      </Field>
+      <ChoiceGroup
+        legend="手続種別"
+        required
+        options={PROCEDURE_OPTIONS}
+        value={procedureType}
+        onChange={(v) => setProcedureType(v as ProcedureType)}
+        hint={procedureDescription(procedureType)}
+      />
+      <StatusSelect legend="現在の在留資格" hint={STATUS_HINTS.current} value={currentStatus} onChange={setCurrentStatus} />
       {needsTarget && (
-        <Field label={targetStatusLabel(procedureType)} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
-          <StatusSelect value={targetStatus} onChange={setTargetStatus} withGrade allowGrade2={procedureType === "change"} />
-        </Field>
+        <StatusSelect
+          legend={targetStatusLabel(procedureType)}
+          required
+          error={errors.targetStatus}
+          hint={STATUS_HINTS.target}
+          value={targetStatus}
+          onChange={setTargetStatus}
+          withGrade
+          allowGrade2={procedureType === "change"}
+        />
       )}
       <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
         <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} />
