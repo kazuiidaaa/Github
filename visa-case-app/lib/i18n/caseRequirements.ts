@@ -4,17 +4,14 @@ import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE } from "@/lib/hspPoints";
 import type { MessageKey } from "./messages";
 import { ruleDocumentName, ruleText } from "./ruleTexts";
-import { translate, type MessageParams } from "./translate";
+import { jaT, type T } from "./jaT";
 
 /**
  * 案件詳細「必要書類」タブで、規則（lib/requirements/rules.ts）と判定（lib/requirements/evaluate.ts）の文言を、
  * 言語に合わせて引く関数。規則・判定の日本語の定数は、書類の出力・案内書類の訳表・試験が使うため変更しない。
  * evaluate の reason（日本語）も、ここの reasonText に日本語の翻訳関数を渡して作るため、日本語の出力は変わらない。
  */
-export type T = (key: MessageKey, params?: MessageParams) => string;
-
-/** 日本語（原文）の翻訳関数。lib/ の関数が、日本語の文言を作るときに使う */
-export const jaT: T = (key, params) => translate("ja", key, params);
+export { jaT, type T };
 
 /** 判定の理由。evaluate が、reason（日本語）とあわせて持つ */
 export type ReasonCode =

@@ -1,5 +1,6 @@
 import { sanitizePointChecks } from "./hspPoints";
 import { isValidDate } from "./format";
+import { jaT, type T } from "./i18n/jaT";
 import type { ProcedureType } from "./types";
 
 // 公式の在留期間更新許可申請書（技術・人文知識・国際業務）にあって、
@@ -516,18 +517,17 @@ export const DATE_FIELD_KEYS = [
   "deportationLastDate",
 ] as const satisfies readonly FormFieldKey[];
 
-const DATE_MESSAGE = "存在する日付を、年4桁・月・日の順に入力してください（例：2000/01/31）。";
 
 /**
  * 日付の形式のみ確認する（公式様式の項目は、確定の前提としない）。
  * layout を渡すと、その様式で表示しない項目（labels にないもの）は確認しない
  * （画面にない項目の誤りで、保存できなくなることを避ける）。
  */
-export function validateFormDetails(f: FormDetails, layout?: FormLayout): FormDetailsErrors {
+export function validateFormDetails(f: FormDetails, layout?: FormLayout, t: T = jaT): FormDetailsErrors {
   const errors: FormDetailsErrors = {};
   for (const k of DATE_FIELD_KEYS) {
     if (layout && !layout.labels[k]) continue;
-    if (f[k] && !isValidDate(f[k])) errors[k] = DATE_MESSAGE;
+    if (f[k] && !isValidDate(f[k])) errors[k] = t("caseForm.dateInvalid");
   }
   return errors;
 }
@@ -536,11 +536,11 @@ export function validateFormDetails(f: FormDetails, layout?: FormLayout): FormDe
  * 保存は妨げないが、確認を促す注意（エラーではない）。
  * 直近の出入国歴で、入国年月日が出国年月日より後になっている場合。
  */
-export function getFormDetailsWarnings(f: FormDetails): string[] {
+export function getFormDetailsWarnings(f: FormDetails, t: T = jaT): string[] {
   const warnings: string[] = [];
   const { entryHistoryLastFrom: from, entryHistoryLastTo: to } = f;
   if (from && to && isValidDate(from) && isValidDate(to) && from > to) {
-    warnings.push("直近の出入国歴で、入国年月日が出国年月日より後になっています。日付を確認してください（保存はできます）。");
+    warnings.push(t("caseForm.warnEntryDates"));
   }
   return warnings;
 }

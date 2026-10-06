@@ -1,3 +1,4 @@
+import { jaT, type T } from "./i18n/jaT";
 import { ADVANCED_PROFESSIONAL_GRADES, baseResidenceStatus, ADVANCED_PROFESSIONAL_STATUS } from "./types";
 
 /** 高度専門職の「行う活動」（申請書の様式の選択に使う）。在留資格の表記と同じ文字列で保存する */
@@ -51,17 +52,17 @@ export function resolveCoeForm(targetStatus: string, activity: string): CoeFormR
 }
 
 /** 画面に表示する案内文。resolved 以外は、利用者が次に何をするかを示す */
-export function describeCoeForm(r: CoeFormResolution): string {
+export function describeCoeForm(r: CoeFormResolution, t: T = jaT): string {
   switch (r.kind) {
     case "not_applicable":
       return "";
     case "grade_missing":
-      return "案件情報の「希望する在留資格」で、号（イ・ロ・ハ）を選択してください。";
+      return t("caseForm.coeGradeMissing");
     case "activity_missing":
-      return "行う活動を選択すると、使う様式が決まります。";
+      return t("caseForm.coeActivityMissing");
     case "unknown":
-      return `様式を特定できません（${r.grade}・${r.activity}）。入管庁の案内ページで、使う様式を確認してください。`;
+      return t("caseForm.coeUnknown", { grade: r.grade, activity: r.activity });
     case "resolved":
-      return `使う様式：様式 ${r.form}`;
+      return t("caseForm.coeResolved", { form: r.form });
   }
 }
