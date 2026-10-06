@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AddressField } from "@/components/AddressField";
 import { Button, Field, inputClass } from "@/components/ui";
 import { DateField } from "@/components/DateField";
 import {
@@ -48,9 +49,17 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function text(key: TextKey, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean } = {}) {
+  function text(key: TextKey, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean; address?: boolean } = {}) {
     const label = layout.labels[key];
     if (!label) return null; // この様式にない項目は表示しない
+    // 日本の住所は、郵便番号から前半を補える（本国の住所は対象外）
+    if (opts.address) {
+      return (
+        <div className="md:col-span-2">
+          <AddressField label={label} hint={opts.hint} error={errors[key]} value={form[key]} onChange={(v) => set(key, v as never)} />
+        </div>
+      );
+    }
     const input = opts.area ? (
       <textarea
         className={inputClass}
@@ -327,15 +336,15 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("itQualification", { hint: "資格名または試験名。ない場合は空欄。" })}
         {text("legalRepName")}
         {text("legalRepRelationship")}
-        {text("legalRepAddress", { wide: true })}
+        {text("legalRepAddress", { address: true })}
         {text("legalRepPhone")}
         {text("guarantorName")}
         {text("guarantorRelationship")}
-        {text("guarantorAddress", { wide: true })}
+        {text("guarantorAddress", { address: true })}
         {text("guarantorPhone")}
         {text("guarantorMobilePhone")}
         {text("agentName")}
-        {text("agentAddress", { wide: true })}
+        {text("agentAddress", { address: true })}
         {text("agentAffiliation")}
         {text("agentPhone")}
       </Section>
@@ -384,7 +393,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("dispatchCorporateNumber")}
         {text("dispatchBranchName")}
         {text("dispatchInsuranceNumber")}
-        {text("dispatchAddress", { wide: true })}
+        {text("dispatchAddress", { address: true })}
         {text("dispatchPhone")}
         {text("dispatchCapital")}
         {text("dispatchAnnualSales")}
