@@ -1,5 +1,4 @@
 import path from "node:path";
-import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
@@ -14,6 +13,7 @@ import {
   sheetKey,
   type FillCtx,
 } from "./renewalMapping";
+import { fillWorkbook } from "./fillWorkbook";
 
 /** 差し込み元テンプレート（リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
 export const RENEWAL_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "renewal-application-form_930004095.xlsx");
@@ -34,31 +34,12 @@ export async function fillRenewalExcel(
   const firstOnly = isKeieiKanri(currentStatus) || isKeieiKanri(a.residenceStatus);
   const first = sheetKey(SHEET_APPLICANT_1);
   const inRange = (sheet: string) => !firstOnly || sheetKey(sheet) === first;
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(RENEWAL_TEMPLATE_PATH);
-
-  const sheets = new Map(wb.worksheets.map((ws) => [sheetKey(ws.name), ws]));
-  const sheetOf = (name: string) => {
-    const ws = sheets.get(sheetKey(name));
-    if (!ws) throw new Error(`テンプレートにシートがありません: ${name}`);
-    return ws;
-  };
-
-  for (const it of RENEWAL_FILL_ITEMS) {
-    if (!inRange(it.sheet)) continue;
-    const value = it.get(ctx);
-    if (value === "") continue;
-    sheetOf(it.sheet).getCell(it.cell).value = value;
-  }
-  for (const p of RENEWAL_PICK_ITEMS) {
-    if (!inRange(p.sheet)) continue;
-    const writes = p.writes[p.get(ctx)];
-    if (!writes) continue;
-    const ws = sheetOf(p.sheet);
-    for (const [cell, value] of Object.entries(writes)) ws.getCell(cell).value = value === "" ? null : value;
-  }
-
-  const buffer = Buffer.from(await wb.xlsx.writeBuffer());
+  const buffer = await fillWorkbook(
+    RENEWAL_TEMPLATE_PATH,
+    ctx,
+    RENEWAL_FILL_ITEMS.filter((it) => inRange(it.sheet)),
+    RENEWAL_PICK_ITEMS.filter((p) => inRange(p.sheet)),
+  );
   return { buffer, warnings: buildWarnings(ctx, firstOnly) };
 }
 

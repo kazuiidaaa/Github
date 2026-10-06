@@ -1,5 +1,4 @@
 import path from "node:path";
-import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
 import { describeCoeForm, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
 import { ADVANCED_PROFESSIONAL_STATUS, type Applicant, type EmploymentInfo } from "../../types";
@@ -13,6 +12,7 @@ import {
   COE_SHEET_APPLICANT_1,
 } from "./coeMapping";
 import { COE_TABLE2, type Table2Mapping } from "./coeTable2";
+import { fillWorkbook } from "./fillWorkbook";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
 
 const KEIEI_KANRI = "経営・管理";
@@ -59,34 +59,12 @@ export async function fillCoeExcel(
   const ctx: FillCtx = { a, e, f, targetStatus };
   const resolution = resolveCoeForm(targetStatus, f.hspActivity ?? "");
   const plan = planFill(resolution, targetStatus);
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(COE_TEMPLATE_PATHS[plan.form]);
-
-  const sheets = new Map(wb.worksheets.map((ws) => [sheetKey(ws.name), ws]));
-  const sheetOf = (name: string) => {
-    const ws = sheets.get(sheetKey(name));
-    if (!ws) throw new Error(`テンプレートにシートがありません: ${name}`);
-    return ws;
-  };
-
   const first = sheetKey(COE_SHEET_APPLICANT_1);
   const table2 = plan.form === "N" ? null : COE_TABLE2[plan.form];
   const firstOnly = <T extends { sheet: string }>(xs: T[]) => (table2 || plan.firstOnly ? xs.filter((x) => sheetKey(x.sheet) === first) : xs);
   const fillItems = [...firstOnly(COE_FILL_ITEMS), ...(table2 && !plan.firstOnly ? table2.fill : [])];
   const pickItems = [...firstOnly(COE_PICK_ITEMS), ...(table2 && !plan.firstOnly ? table2.pick : [])];
-  for (const it of fillItems) {
-    const value = it.get(ctx);
-    if (value === "") continue;
-    sheetOf(it.sheet).getCell(it.cell).value = value;
-  }
-  for (const p of pickItems) {
-    const writes = p.writes[p.get(ctx)];
-    if (!writes) continue;
-    const ws = sheetOf(p.sheet);
-    for (const [cell, value] of Object.entries(writes)) ws.getCell(cell).value = value === "" ? null : value;
-  }
-
-  const buffer = Buffer.from(await wb.xlsx.writeBuffer());
+  const buffer = await fillWorkbook(COE_TEMPLATE_PATHS[plan.form], ctx, fillItems, pickItems);
   return { buffer, warnings: buildWarnings(ctx, resolution, plan.form === "N" || plan.firstOnly ? null : COE_TABLE2[plan.form]) };
 }
 
