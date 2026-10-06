@@ -1,5 +1,6 @@
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
+import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
 import { isCollected } from "./progress";
 import { ACQUISITION_CAUSE_LABELS, RULE_SETS, hspEvidenceRule, type RequirementRule, type RuleSet } from "./rules";
 
@@ -12,6 +13,8 @@ export interface EvaluatedItem {
   /** 行政書士の上書きを反映した判定 */
   effective: Result;
   reason: string;
+  /** reason の元。画面で、表示言語に合わせて組み立て直すために持つ */
+  reasonCode: ReasonCode;
   state: RequirementState;
 }
 
@@ -88,7 +91,8 @@ function hspEvidenceItems(c: CaseRecord, ruleSet: RuleSet): EvaluatedItem[] {
   return evidenceNumbers(resolution.sheet, c.formDetails.hspPointChecks).map((mark) => {
     const rule = hspEvidenceRule(mark);
     const state = c.requirementStates[rule.id] ?? NO_STATE;
-    return { rule, result: rule.level, effective: state.override ?? rule.level, reason: `ポイント計算表で選んだ項目（${mark}）`, state };
+    const reasonCode: ReasonCode = { kind: "hspMark", mark };
+    return { rule, result: rule.level, effective: state.override ?? rule.level, reason: reasonText(jaT, reasonCode), reasonCode, state };
   });
 }
 
@@ -155,18 +159,17 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
       const causes = rule.causes ?? [];
       // 事由が未選択の間は、全事由に共通の書類のみ判定する
       if (needsCause && causes.length < Object.keys(ACQUISITION_CAUSE_LABELS).length) continue;
-      const label = needsCause ? "" : ACQUISITION_CAUSE_LABELS[cause];
       let result: Result;
-      let reason: string;
+      let reasonCode: ReasonCode;
       if (!needsCause && !causes.includes(cause)) {
         result = "not_required";
-        reason = `取得の事由「${label}」では原則不要`;
+        reasonCode = { kind: "causeNotRequired", cause };
       } else {
         result = rule.level;
-        reason = needsCause ? "全事由共通" : `取得の事由「${label}」で${rule.level === "required" ? "必要" : "要確認"}`;
+        reasonCode = needsCause ? { kind: "causeCommon" } : { kind: "causeLevel", cause, level: rule.level };
       }
       const state = c.requirementStates[rule.id] ?? NO_STATE;
-      items.push({ rule, result, effective: state.override ?? result, reason, state });
+      items.push({ rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
     }
     return summarize(ruleSet, false, needsCause, items);
   }
@@ -180,23 +183,24 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     if (needsCategory && categories.length < 4) continue;
 
     let result: Result;
-    let reason: string;
+    let reasonCode: ReasonCode;
     if (!needsCategory && !categories.includes(category)) {
       result = "not_required";
-      reason = `カテゴリー${category}では原則不要`;
+      reasonCode = { kind: "categoryNotRequired", category };
     } else if (rule.when && !c.employment[rule.when]) {
       result = "not_required";
-      reason = rule.note ? `条件に該当しないため不要（${rule.note}）` : "条件に該当しないため不要";
+      reasonCode = { kind: "conditionNotMet", note: rule.note };
     } else {
       result = rule.level;
-      reason = needsCategory ? "全カテゴリー共通" : `カテゴリー${category}で${rule.level === "required" ? "必要" : "要確認"}`;
+      reasonCode = needsCategory ? { kind: "categoryCommon" } : { kind: "categoryLevel", category, level: rule.level };
     }
+    const reason = reasonText(jaT, reasonCode);
 
     const state = c.requirementStates[rule.id] ?? NO_STATE;
     const evidence = rule.id === "hsp_point_evidence" ? hspEvidenceItems(c, ruleSet) : [];
     // 番号ごとの疎明資料が出ているときは、親の1件は重複するため隠す。ただし、親に入力済みの状態（受領・期限・判断・メモ）があれば残す
     const untouched = state.status === "not_received" && !state.override && !state.dueDate && !state.note;
-    if (!(evidence.length > 0 && untouched)) items.push({ rule, result, effective: state.override ?? result, reason, state });
+    if (!(evidence.length > 0 && untouched)) items.push({ rule, result, effective: state.override ?? result, reason, reasonCode, state });
     items.push(...evidence);
   }
 

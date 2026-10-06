@@ -8,13 +8,17 @@ import { Badge, Button } from "@/components/ui";
 import { CustomRequirementForm, type CustomRequirementInput } from "@/components/CustomRequirementForm";
 import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime, todayString } from "@/lib/format";
+import { noRuleMessage } from "@/lib/i18n/caseNew";
+import { reasonText, requirementName, requirementNote } from "@/lib/i18n/caseRequirements";
+import { useLang, useT } from "@/lib/i18n/LanguageProvider";
+import { useLabels } from "@/lib/i18n/labels";
+import { ruleText } from "@/lib/i18n/ruleTexts";
 import { evaluate, type EvaluatedItem, type Result } from "@/lib/requirements/evaluate";
 import { isOverdue, progressOf } from "@/lib/requirements/progress";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSave } from "@/lib/useAutoSave";
 import {
   REQUIREMENT_STATUSES,
-  REQUIREMENT_STATUS_LABELS,
   type CaseRecord,
   type CustomRequirement,
   type DocumentRecord,
@@ -22,9 +26,13 @@ import {
   type RequirementStatus,
 } from "@/lib/types";
 
-const RESULT_LABEL: Record<Result, string> = { required: "必要", not_required: "不要", check: "要確認" };
+const RESULT_KEY = {
+  required: "caseRequirements.resultRequired",
+  not_required: "caseRequirements.resultNotRequired",
+  check: "caseRequirements.resultCheck",
+} as const satisfies Record<Result, string>;
 const RESULT_TONE: Record<Result, "red" | "gray" | "yellow"> = { required: "red", not_required: "gray", check: "yellow" };
-const PARTY_LABEL = { applicant: "申請人", organization: "所属機関" } as const;
+const PARTY_KEY = { applicant: "caseRequirements.partyApplicant", organization: "caseRequirements.partyOrganization" } as const;
 
 // 狭い画面幅（md 未満）では、表の行をカード状に縦積みして表示する。
 // 同じ要素を表示用に2重に描画すると、入力欄の状態（理由の自動保存）が二重になるため、
@@ -40,31 +48,26 @@ function CellLabel({ children }: { children: string }) {
   return <span className="mb-1 block text-xs text-slate-500 md:hidden">{children}</span>;
 }
 
-const STATUS_OPTIONS: ChoiceOption[] = REQUIREMENT_STATUSES.map((st) => ({ value: st, label: REQUIREMENT_STATUS_LABELS[st] }));
-
-/** 行政書士の判断。空文字は「規則どおり」（上書きなし）を表す */
-const OVERRIDE_OPTIONS: ChoiceOption[] = [
-  { value: "default", label: "規則どおり" },
-  { value: "required", label: "必要とする" },
-  { value: "not_required", label: "不要とする" },
-];
-
 function StatusSelect({ label, value, onChange }: { label: string; value: RequirementStatus; onChange: (v: RequirementStatus) => void }) {
-  return <ChoiceGroup legend={`${label} 状態`} hideLegend options={STATUS_OPTIONS} value={value} onChange={(v) => onChange(v as RequirementStatus)} />;
+  const t = useT();
+  const labels = useLabels();
+  const options: ChoiceOption[] = REQUIREMENT_STATUSES.map((st) => ({ value: st, label: labels.requirementStatus(st) }));
+  return <ChoiceGroup legend={t("caseRequirements.statusAria", { label })} hideLegend options={options} value={value} onChange={(v) => onChange(v as RequirementStatus)} />;
 }
 
 const selectClass = "rounded-xl border border-line-strong bg-white px-2 py-1 text-xs";
 
 function DueInput({ label, value, overdue, onChange }: { label: string; value?: string; overdue: boolean; onChange: (v: string) => void }) {
+  const t = useT();
   return (
     <div>
       <DateField
-        aria-label={`${label} 期限`}
+        aria-label={t("caseRequirements.dueAria", { label })}
         className={`${selectClass} w-32 ${overdue ? "border-red-400 bg-red-50" : ""}`}
         value={value ?? ""}
         onChange={onChange}
       />
-      {overdue && <p className="mt-1 text-xs font-medium text-red-700">期限超過</p>}
+      {overdue && <p className="mt-1 text-xs font-medium text-red-700">{t("caseRequirements.overdue")}</p>}
     </div>
   );
 }
@@ -78,6 +81,8 @@ export function RequirementsPanel({
   onGoEmployment: () => void;
   onGoDocuments: () => void;
 }) {
+  const t = useT();
+  const { lang } = useLang();
   const ev = evaluate(record);
   const today = todayString();
   const progress = progressOf(ev, record.customRequirements, today);
@@ -120,10 +125,16 @@ export function RequirementsPanel({
     logAudit(record.id, action, { requirementId: id, ...change });
   }
 
+  /** 進捗の項目（規則の書類、または追加した書類）の表示名。規則の書類は訳し、追加した書類は入力のまま */
+  function nameOf(i: { key: string; name: string }): string {
+    const item = ev.items.find((x) => x.rule.id === i.key);
+    return item ? requirementName(t, lang, item.rule) : i.name;
+  }
+
   async function copyMissing() {
-    const lines = progress.missing.map((i) => `・${i.name}${i.dueDate ? `（期限：${i.dueDate}）` : ""}`);
+    const lines = progress.missing.map((i) => `・${nameOf(i)}${i.dueDate ? t("caseRequirements.dueSuffix", { date: i.dueDate }) : ""}`);
     try {
-      await navigator.clipboard.writeText(`不足している書類\n${lines.join("\n")}`);
+      await navigator.clipboard.writeText(`${t("caseRequirements.copyHeader")}\n${lines.join("\n")}`);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -134,21 +145,21 @@ export function RequirementsPanel({
     <div className="space-y-5">
       <div className="rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
         <p className="font-medium">
-          表示される書類は管理用の候補です。申請時の必要書類は、最新の公式案内および個別案件を確認してください。
+          {t("caseRequirements.candidateNotice")}
         </p>
         {ev.ruleSet && (
           <>
             <p className="mt-2">
-              {ev.ruleSet.title}（規則の確認日：{ev.ruleSet.checkedAt}）
+              {t("caseRequirements.ruleSetHeading", { title: ruleText(lang, ev.ruleSet.title), date: ev.ruleSet.checkedAt })}
             </p>
             <p className="mt-1">
-              判定は参考情報です。法令・運用の改正により変わる場合があるため、最終的な要否は出典と最新の案内で確認してください。
+              {t("caseRequirements.referenceNotice")}
             </p>
             <ul className="mt-1 list-inside list-disc">
               {ev.ruleSet.sources.map((s) => (
                 <li key={s.url}>
                   <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-700 underline">
-                    {s.title}
+                    {ruleText(lang, s.title)}
                   </a>
                 </li>
               ))}
@@ -157,44 +168,45 @@ export function RequirementsPanel({
         )}
       </div>
 
-      {!ev.ruleSet && <p className="rounded-xl bg-slate-100 p-4 text-sm text-slate-700">{ev.notApplicableReason}</p>}
+      {!ev.ruleSet && <p className="rounded-xl bg-slate-100 p-4 text-sm text-slate-700">{noRuleMessage(t)}</p>}
 
       {ev.ruleSet && ev.needsCategory && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
-          所属機関のカテゴリーが未入力のため、全カテゴリー共通の書類のみ表示しています。
+          {t("caseRequirements.needsCategory")}
           <button onClick={onGoEmployment} className="ml-2 underline">
-            「雇用・会社」タブで入力する
+            {t("caseRequirements.needsCategoryAction")}
           </button>
         </p>
       )}
 
       {ev.ruleSet && ev.needsCause && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
-          取得の事由が未選択のため、全事由に共通の書類のみ表示しています。事由別の書類は、事由の選択後に判定します（「公式様式項目」タブで取得の事由を選択）。
+          {t("caseRequirements.needsCause")}
         </p>
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
         <p>
-          必要書類：{progress.requiredCount}件／受領済み：{progress.receivedCount}件／
-          <span className={progress.missing.length > 0 ? "font-semibold text-red-700" : "text-green-700"}>不足：{progress.missing.length}件</span>
-          {progress.overdue.length > 0 && <span className="ml-2 font-semibold text-red-700">（期限超過：{progress.overdue.length}件）</span>}
-          {ev.toCheck.length > 0 && <span className="ml-2 text-yellow-800">（要確認：{ev.toCheck.length}件）</span>}
+          {t("caseRequirements.summaryRequired", { count: progress.requiredCount })}
+          {t("caseRequirements.summaryReceived", { count: progress.receivedCount })}
+          <span className={progress.missing.length > 0 ? "font-semibold text-red-700" : "text-green-700"}>{t("caseRequirements.summaryMissing", { count: progress.missing.length })}</span>
+          {progress.overdue.length > 0 && <span className="ml-2 font-semibold text-red-700">{t("caseRequirements.summaryOverdue", { count: progress.overdue.length })}</span>}
+          {ev.toCheck.length > 0 && <span className="ml-2 text-yellow-800">{t("caseRequirements.summaryToCheck", { count: ev.toCheck.length })}</span>}
         </p>
         {progress.missing.length > 0 && (
           <div className="mt-3">
             <ul className="list-inside list-disc text-slate-700">
               {progress.missing.map((i) => (
                 <li key={i.key}>
-                  {i.name}
-                  {i.dueDate && <span className="ml-1 text-xs text-slate-500">（期限：{i.dueDate}）</span>}
+                  {nameOf(i)}
+                  {i.dueDate && <span className="ml-1 text-xs text-slate-500">{t("caseRequirements.dueSuffix", { date: i.dueDate })}</span>}
                 </li>
               ))}
             </ul>
             <button onClick={() => void copyMissing()} className="mt-2 rounded-full border border-line-strong px-3 py-1 font-bold hover:bg-slate-50">
-              不足書類をコピー
+              {t("caseRequirements.copyMissing")}
             </button>
-            {copied && <span className="ml-2 text-green-700">コピーしました。</span>}
+            {copied && <span className="ml-2 text-green-700">{t("caseRequirements.copied")}</span>}
           </div>
         )}
       </section>
@@ -204,12 +216,12 @@ export function RequirementsPanel({
           <table className={TABLE_CLASS}>
             <thead className={THEAD_CLASS}>
               <tr>
-                <th className="px-4 py-3">書類</th>
-                <th className="px-4 py-3">提出者</th>
-                <th className="px-4 py-3">判定</th>
-                <th className="px-4 py-3">状態</th>
-                <th className="px-4 py-3">期限</th>
-                <th className="px-4 py-3">行政書士の判断</th>
+                <th className="px-4 py-3">{t("caseRequirements.colDocument")}</th>
+                <th className="px-4 py-3">{t("caseRequirements.colParty")}</th>
+                <th className="px-4 py-3">{t("caseRequirements.colResult")}</th>
+                <th className="px-4 py-3">{t("caseRequirements.colStatus")}</th>
+                <th className="px-4 py-3">{t("caseRequirements.colDue")}</th>
+                <th className="px-4 py-3">{t("caseRequirements.colJudgment")}</th>
               </tr>
             </thead>
             <tbody className={TBODY_CLASS}>
@@ -230,28 +242,28 @@ export function RequirementsPanel({
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">追加した書類</h3>
+          <h3 className="text-sm font-semibold">{t("caseRequirements.customHeading")}</h3>
           {!adding && (
             <Button variant="secondary" onClick={() => setAdding(true)}>
-              書類を追加
+              {t("caseRequirements.addDocument")}
             </Button>
           )}
         </div>
         {adding && <CustomRequirementForm onSubmit={addCustom} onCancel={() => setAdding(false)} />}
         {record.customRequirements.length === 0 && !adding && (
-          <p className="text-sm text-slate-500">規則にない書類は、「書類を追加」から登録できます。</p>
+          <p className="text-sm text-slate-500">{t("caseRequirements.customEmpty")}</p>
         )}
         {record.customRequirements.length > 0 && (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
             <table className={TABLE_CLASS}>
               <thead className={THEAD_CLASS}>
                 <tr>
-                  <th className="px-4 py-3">書類</th>
-                  <th className="px-4 py-3">提出者</th>
-                  <th className="px-4 py-3">必須・任意</th>
-                  <th className="px-4 py-3">状態</th>
-                  <th className="px-4 py-3">期限</th>
-                  <th className="px-4 py-3">操作</th>
+                  <th className="px-4 py-3">{t("caseRequirements.colDocument")}</th>
+                  <th className="px-4 py-3">{t("caseRequirements.colParty")}</th>
+                  <th className="px-4 py-3">{t("caseRequirements.colRequired")}</th>
+                  <th className="px-4 py-3">{t("caseRequirements.colStatus")}</th>
+                  <th className="px-4 py-3">{t("caseRequirements.colDue")}</th>
+                  <th className="px-4 py-3">{t("caseRequirements.colActions")}</th>
                 </tr>
               </thead>
               <tbody className={TBODY_CLASS}>
@@ -269,19 +281,19 @@ export function RequirementsPanel({
                         {r.note && <p className="mt-1 text-xs text-slate-500">{r.note}</p>}
                       </td>
                       <td className={`${TD_CLASS} md:whitespace-nowrap`}>
-                        <CellLabel>提出者</CellLabel>
-                        {PARTY_LABEL[r.party]}
+                        <CellLabel>{t("caseRequirements.colParty")}</CellLabel>
+                        {t(PARTY_KEY[r.party])}
                       </td>
                       <td className={`${TD_CLASS} md:whitespace-nowrap`}>
-                        <CellLabel>必須・任意</CellLabel>
-                        {r.isRequired ? "必須" : "任意"}
+                        <CellLabel>{t("caseRequirements.colRequired")}</CellLabel>
+                        {r.isRequired ? t("caseRequirements.isRequired") : t("caseRequirements.isOptional")}
                       </td>
                       <td className={TD_CLASS}>
-                        <CellLabel>状態</CellLabel>
+                        <CellLabel>{t("caseRequirements.colStatus")}</CellLabel>
                         <StatusSelect label={r.name} value={r.status} onChange={(v) => patchCustom(r.id, { status: v }, "requirement_status_changed")} />
                       </td>
                       <td className={TD_CLASS}>
-                        <CellLabel>期限</CellLabel>
+                        <CellLabel>{t("caseRequirements.colDue")}</CellLabel>
                         <DueInput
                           label={r.name}
                           value={r.dueDate}
@@ -290,12 +302,12 @@ export function RequirementsPanel({
                         />
                       </td>
                       <td className={`${TD_CLASS} md:whitespace-nowrap`}>
-                        <CellLabel>操作</CellLabel>
+                        <CellLabel>{t("caseRequirements.colActions")}</CellLabel>
                         <button onClick={() => setEditingId(r.id)} className="mr-3 text-blue-700 underline">
-                          編集
+                          {t("caseRequirements.edit")}
                         </button>
                         <button onClick={() => setRemoving(r)} className="text-red-700 underline">
-                          削除
+                          {t("caseRequirements.delete")}
                         </button>
                       </td>
                     </tr>
@@ -309,10 +321,10 @@ export function RequirementsPanel({
 
       {removing && (
         <ConfirmDialog
-          title="必要書類の削除"
-          message={`追加した必要書類「${removing.name}」を、この案件から削除します。入力済みの状態・期限・メモも消え、元に戻せません。`}
-          note="操作の記録（監査ログ）には、書類名が残ります。"
-          confirmLabel="削除する"
+          title={t("caseRequirements.removeTitle")}
+          message={t("caseRequirements.removeMessage", { name: removing.name })}
+          note={t("caseRequirements.removeNote")}
+          confirmLabel={t("caseRequirements.removeConfirm")}
           tone="caution"
           onCancel={() => setRemoving(null)}
           onConfirm={() => removeCustom(removing)}
@@ -337,62 +349,73 @@ function Row({
   onGoDocuments: () => void;
 }) {
   const { rule, state } = item;
+  const t = useT();
+  const { lang } = useLang();
+  const ruleName = requirementName(t, lang, rule);
   const [note, setNote] = useState(state.note ?? "");
   const flushNote = useAutoSave(note, state.note ?? "", (v) => onPatch(rule.id, { note: v }, "requirement_note"));
   return (
     <tr className={TR_CLASS}>
       <td className={TD_CLASS}>
-        <p className={item.effective === "not_required" ? "text-slate-400" : ""}>{rule.name}</p>
+        <p className={item.effective === "not_required" ? "text-slate-400" : ""}>{ruleName}</p>
         <p className="mt-1 text-xs text-slate-500">
-          {item.reason}
-          {rule.note ? `／${rule.note}` : ""}
+          {rule.note
+            ? t("caseRequirements.reasonWithNote", {
+                reason: reasonText(t, item.reasonCode, (n) => requirementNote(lang, n)),
+                note: requirementNote(lang, rule.note),
+              })
+            : reasonText(t, item.reasonCode, (n) => requirementNote(lang, n))}
         </p>
-        {rule.verify && <Badge tone="yellow">内容要確認</Badge>}
+        {rule.verify && <Badge tone="yellow">{t("caseRequirements.verifyBadge")}</Badge>}
         {rule.id === "photo" && (
           <div className="mt-2 text-xs">
             {photo ? (
               <p className="text-green-700">
-                「書類」タブに登録済み：{photo.fileName}（{formatDateTime(photo.uploadedAt)}）
+                {t("caseRequirements.photoRegistered", { file: photo.fileName, at: formatDateTime(photo.uploadedAt) })}
               </p>
             ) : (
-              <p className="text-slate-500">「書類」タブには未登録です。</p>
+              <p className="text-slate-500">{t("caseRequirements.photoNotRegistered")}</p>
             )}
             <button type="button" onClick={onGoDocuments} className="mt-1 text-blue-700 underline">
-              「書類」タブで確認する
+              {t("caseRequirements.photoGoDocuments")}
             </button>
           </div>
         )}
       </td>
       <td className={`${TD_CLASS} md:whitespace-nowrap`}>
-        <CellLabel>提出者</CellLabel>
-        {PARTY_LABEL[rule.party]}
+        <CellLabel>{t("caseRequirements.colParty")}</CellLabel>
+        {t(PARTY_KEY[rule.party])}
       </td>
       <td className={`${TD_CLASS} md:whitespace-nowrap`}>
-        <CellLabel>判定</CellLabel>
-        <Badge tone={RESULT_TONE[item.result]}>{RESULT_LABEL[item.result]}</Badge>
+        <CellLabel>{t("caseRequirements.colResult")}</CellLabel>
+        <Badge tone={RESULT_TONE[item.result]}>{t(RESULT_KEY[item.result])}</Badge>
         {state.override && (
-          <p className="mt-1 text-xs text-slate-500">→ {RESULT_LABEL[item.effective]}（上書き）</p>
+          <p className="mt-1 text-xs text-slate-500">{t("caseRequirements.overrideNote", { result: t(RESULT_KEY[item.effective]) })}</p>
         )}
       </td>
       <td className={TD_CLASS}>
-        <CellLabel>状態</CellLabel>
-        <StatusSelect label={rule.name} value={state.status} onChange={(v) => onPatch(rule.id, { status: v }, "requirement_status_changed")} />
+        <CellLabel>{t("caseRequirements.colStatus")}</CellLabel>
+        <StatusSelect label={ruleName} value={state.status} onChange={(v) => onPatch(rule.id, { status: v }, "requirement_status_changed")} />
       </td>
       <td className={TD_CLASS}>
-        <CellLabel>期限</CellLabel>
+        <CellLabel>{t("caseRequirements.colDue")}</CellLabel>
         <DueInput
-          label={rule.name}
+          label={ruleName}
           value={state.dueDate}
           overdue={item.effective === "required" && isOverdue(state.status, state.dueDate, today)}
           onChange={(v) => onPatch(rule.id, { dueDate: v || undefined }, "requirement_due_changed")}
         />
       </td>
       <td className={TD_CLASS}>
-        <CellLabel>行政書士の判断</CellLabel>
+        <CellLabel>{t("caseRequirements.colJudgment")}</CellLabel>
         <ChoiceGroup
-          legend={`${rule.name} 行政書士の判断`}
+          legend={t("caseRequirements.judgmentAria", { label: ruleName })}
           hideLegend
-          options={OVERRIDE_OPTIONS}
+          options={[
+            { value: "default", label: t("caseRequirements.overrideDefault") },
+            { value: "required", label: t("caseRequirements.overrideRequired") },
+            { value: "not_required", label: t("caseRequirements.overrideNotRequired") },
+          ]}
           value={state.override ?? "default"}
           onChange={(v) =>
             onPatch(rule.id, { override: (v === "default" ? undefined : v) as RequirementState["override"] }, "requirement_overridden")
@@ -401,7 +424,7 @@ function Row({
         {state.override && (
           <input
             className="mt-2 w-full rounded-xl border border-line-strong px-2 py-1 text-xs"
-            placeholder="理由を記録"
+            placeholder={t("caseRequirements.reasonPlaceholder")}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onBlur={flushNote}
