@@ -2,11 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Button, Field, inputClass } from "@/components/ui";
 import { messageOf } from "@/lib/errors";
 import { assignableRoles, canRemoveMember, ROLE_LABELS, ROLES, type Role } from "@/lib/permissions";
 import { addMember, listMembers, removeMember, setMemberRole } from "@/lib/store";
 import type { MemberInfo } from "@/lib/supabaseBackend";
+
+function roleOptions(roles: readonly Role[]): ChoiceOption[] {
+  return roles.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
+}
 
 /** メンバー管理（所有者・管理者のみ表示）。権限の最終判定はデータベース側で行われる */
 export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; myUserId: string; onChanged: () => void }) {
@@ -87,19 +92,14 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
               </td>
               <td className="md:table-cell md:px-3 md:py-2">
                 {myRole === "owner" ? (
-                  <select
-                    className="rounded-xl border border-line-strong bg-white px-2 py-1 text-sm"
-                    aria-label={`${m.email}の役割`}
+                  <ChoiceGroup
+                    legend={`${m.email}の役割`}
+                    hideLegend
+                    options={roleOptions(ROLES)}
                     value={m.role}
                     disabled={busy}
-                    onChange={(e) => void run(() => setMemberRole(m.userId, e.target.value), "役割を変更しました。")}
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>
-                        {ROLE_LABELS[r]}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => void run(() => setMemberRole(m.userId, v), "役割を変更しました。")}
+                  />
                 ) : (
                   (ROLE_LABELS[m.role as Role] ?? m.role)
                 )}
@@ -133,15 +133,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
           </Field>
         </div>
         <div>
-          <Field label="役割">
-            <select className={inputClass} value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              {addable.map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <ChoiceGroup legend="役割" options={roleOptions(addable)} value={role} onChange={(v) => setRole(v as Role)} />
         </div>
         <Button type="submit" disabled={busy || !email.trim()}>
           追加
