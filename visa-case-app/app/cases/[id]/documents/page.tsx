@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { UnresolvedNote } from "@/components/documents/UnresolvedNote";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { Badge, Button } from "@/components/ui";
@@ -173,16 +174,7 @@ export default function DocumentsPage() {
             <OfficialFormNotice />
           </div>
         )}
-        {precheckNotes.length > 0 && (
-          <div role="note" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
-            <p>注意：次の事項が未解決です（生成はできます）。生成した書類は、行政書士が内容を確認してから使用してください。</p>
-            <ul className="mt-1 list-disc pl-5">
-              {precheckNotes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <UnresolvedNote count={precheckNotes.length} />
         <div className="mt-4 flex items-center gap-3">
           <Button onClick={() => void generate()} disabled={busy || selected.length === 0 || !canEdit}>
             {busy ? "生成中……" : "生成して保存"}
