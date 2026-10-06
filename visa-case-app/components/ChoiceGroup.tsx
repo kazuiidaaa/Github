@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Badge, ToneIcon, TONE_STYLES, type Tone } from "@/components/ui";
 
 export type ChoiceOption = {
@@ -40,6 +40,14 @@ export type ChoiceGroupProps = {
   searchable?: boolean;
   /** 一覧表示で、先頭の見出しに使う名前。既定は「よく使う項目」 */
   featuredLabel?: string;
+  /**
+   * 指定すると、選択中のとき、項目の下に「未選択に戻す」ボタンを出す（任意の選択のための引数）。
+   * 押すと呼ばれ、呼び出し側が未選択の値（空文字など）にする。無効（disabled）のときと、未選択のときは出さない。
+   * 未指定の既存の呼び出しは、これまでと同じ（選択済みの項目を押しても、何も変わらない）。
+   */
+  onClear?: () => void;
+  /** 「未選択に戻す」ボタンの文言。既定は「未選択に戻す」 */
+  clearLabel?: string;
 };
 
 export const SEGMENT_MAX = 6;
@@ -110,6 +118,7 @@ function CheckIcon() {
  * タップ・クリックで選ぶ部品（単一選択）。ブラウザ標準のプルダウン（select）の代わりに使う。
  * 少数は横並びのボタン、多数は見出し付きの一覧と絞り込み欄で表示する。
  * `<fieldset>`／`<legend>` で名前を付け、各項目は role="radio"（aria-checked）。矢印キーで移動と選択、Space・Enter で選択。
+ * 解除できる欄（onClear 指定）は、選択済みの項目を押し直しても変わらず、別の「未選択に戻す」ボタンで解除する（ラジオボタンの標準の動きを保つため）。
  */
 export function ChoiceGroup({
   legend,
@@ -124,10 +133,15 @@ export function ChoiceGroup({
   variant = "auto",
   searchable,
   featuredLabel,
+  onClear,
+  clearLabel = "未選択に戻す",
 }: ChoiceGroupProps) {
   const uid = useId();
   const [query, setQuery] = useState("");
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+  // 解除したあと、押したボタンが消えるため、フォーカスを先頭の項目へ戻す。読み上げ用に結果も知らせる
+  const [cleared, setCleared] = useState(false);
+  const wantFocus = useRef(false);
 
   const isList = variant === "list" || (variant === "auto" && options.length > SEGMENT_MAX);
   const showSearch = isList && (searchable ?? true);
@@ -146,9 +160,26 @@ export function ChoiceGroup({
   const errorId = `${uid}-error`;
   const describedBy = error ? errorId : hint ? hintId : undefined;
 
+  const canClear = !!onClear && !disabled && !!value;
+
+  useEffect(() => {
+    if (wantFocus.current && !value && tabStop) {
+      wantFocus.current = false;
+      refs.current[tabStop]?.focus();
+    }
+  }, [value, tabStop]);
+
   function choose(v: string) {
     if (disabled || v === value) return;
+    setCleared(false);
     onChange(v);
+  }
+
+  function clear() {
+    if (!canClear) return;
+    wantFocus.current = true;
+    setCleared(true);
+    onClear?.();
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLButtonElement>, v: string) {
@@ -253,6 +284,21 @@ export function ChoiceGroup({
           <div className="flex flex-wrap gap-2">{visible.map(renderOption)}</div>
         )}
       </div>
+
+      {canClear && (
+        <button
+          type="button"
+          onClick={clear}
+          className="mt-2 inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100"
+        >
+          {clearLabel}
+        </button>
+      )}
+      {onClear && (
+        <p role="status" className="sr-only">
+          {cleared && !value ? `${legend}の選択を解除しました。未選択です` : ""}
+        </p>
+      )}
 
       {!value && !disabled && (
         <p className="mt-1 flex items-center gap-1 text-xs font-bold text-slate-600">

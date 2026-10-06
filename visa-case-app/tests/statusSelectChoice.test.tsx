@@ -93,3 +93,38 @@ describe("手続種別", () => {
     expect(procedureDescription("")).toBeUndefined();
   });
 });
+
+describe("高度専門職の号を未選択へ戻す（Issue #214 追加対応）", () => {
+  const clear = "号を未選択に戻す";
+  it("号が選ばれているときだけ、「未選択に戻す」ボタンを出す", () => {
+    expect(html({ value: "高度専門職（1号ロ）", withGrade: true })).toContain(clear);
+    expect(html({ value: ADVANCED_PROFESSIONAL_GRADE_2, withGrade: true })).toContain(clear);
+  });
+  it("未選択のときは出さず、「選択してください」を示す", () => {
+    const m = html({ value: "高度専門職", withGrade: true });
+    expect(m).not.toContain(clear);
+    expect(m).toContain("選択してください");
+  });
+  it("無効のときは出さない（解除できない）", () => {
+    expect(html({ value: "高度専門職（1号イ）", withGrade: true, disabled: true })).not.toContain(clear);
+  });
+  it("号の欄がない場合（在留資格だけ）には出さない", () => {
+    expect(html({ value: "留学", withGrade: true })).not.toContain(clear);
+    expect(html({ value: "高度専門職（1号イ）" })).not.toContain(clear);
+  });
+  it("号の欄は必須ではない（必須の表示を出さない）", () => {
+    const m = html({ value: "高度専門職（1号イ）", withGrade: true });
+    const grade = m.slice(m.indexOf("高度専門職の号"));
+    expect(grade).not.toContain("必須");
+    expect(grade).not.toContain("aria-required");
+  });
+  it("解除は、通常のボタンである（Tab で止まり、Space・Enter で押せる）。ラジオの項目にはしない", () => {
+    const m = html({ value: "高度専門職（1号イ）", withGrade: true });
+    expect(m).toMatch(/<button type="button"[^>]*>号を未選択に戻す<\/button>/);
+    // ラジオは、在留資格 29 件と号 3 件のまま
+    expect(m.match(/role="radio"/g)).toHaveLength(RESIDENCE_STATUSES.length + 3);
+  });
+  it("結果を読み上げるための領域（role=status）を出す", () => {
+    expect(html({ value: "高度専門職（1号イ）", withGrade: true })).toMatch(/<p role="status" class="sr-only"><\/p>/);
+  });
+});
