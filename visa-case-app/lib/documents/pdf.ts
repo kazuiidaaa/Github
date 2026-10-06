@@ -1,5 +1,6 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { AppError } from "../errors";
 import { DEFAULT_LANG, type Lang } from "./lang";
 import { buildBlocks, footerLabel } from "./model";
 import type { GeneratedDocument } from "./types";
@@ -314,9 +315,10 @@ function loadFont(path: string): Promise<Uint8Array> {
         return r.arrayBuffer();
       })
       .then((b) => new Uint8Array(b))
-      .catch((e) => {
+      .catch(() => {
+        // 次回の再試行ができるように、失敗した取得は残さない。画面には、原因と対処が分かる文言を出す
         fontPromises.delete(path);
-        throw e;
+        throw new AppError("PDF に使うフォントを取得できませんでした。通信の状況を確認して、もう一度お試しください。");
       });
     fontPromises.set(path, p);
   }
