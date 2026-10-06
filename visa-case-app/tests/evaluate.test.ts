@@ -20,6 +20,7 @@ function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withho
     formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
+    acceptedDate: "",
     plannedApplicationDate: "",
     checkMemo: "",
     checks: [],

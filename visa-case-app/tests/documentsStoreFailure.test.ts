@@ -33,6 +33,7 @@ const record: CaseRecord = {
   formDetails: { ...EMPTY_FORM_DETAILS },
   requirementStates: {},
   customRequirements: [],
+  acceptedDate: "",
   plannedApplicationDate: "",
   checkMemo: "",
   checks: [],

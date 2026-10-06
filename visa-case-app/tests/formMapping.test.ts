@@ -29,6 +29,7 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
     formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
+    acceptedDate: "",
     plannedApplicationDate: "",
     checkMemo: "",
     checks: [],

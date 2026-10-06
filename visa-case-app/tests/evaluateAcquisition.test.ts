@@ -22,6 +22,7 @@ function make(cause: Cause, over: Partial<CaseRecord> = {}, category: OrgCategor
     formDetails: { ...EMPTY_FORM_DETAILS, acquisitionCause: cause },
     requirementStates: {},
     customRequirements: [],
+    acceptedDate: "",
     plannedApplicationDate: "",
     checkMemo: "",
     checks: [],
