@@ -7,7 +7,7 @@ import type { Applicant, EmploymentInfo } from "./types";
 
 /**
  * full：日本語の文章の欄。半角のカナ・英数字・記号・空白をすべて全角にする。
- * kana：半角のカナのみ全角にする（氏名・国籍・出生地など、ローマ字で書かれることがある欄）。英数字・記号・空白は、そのまま。
+ * kana：半角のカナのみ全角にする（氏名・国籍、国外の住所・地名など、ローマ字で書かれることがある欄）。英数字・記号・空白は、そのまま。
  * none：変換しない（番号・電話・日付・数量・ローマ字氏名など。既定）。
  */
 export type ZenkakuMode = "full" | "kana" | "none";
@@ -78,12 +78,13 @@ type FormDetailsTextKey = {
 
 export const FORM_DETAILS_ZENKAKU = {
   // 申請人等作成用1
+  // 国外の住所・地名は、ローマ字・英数字・ハイフンをそのままにする（半角カナのみ全角）
   placeOfBirth: "kana",
+  homeAddress: "kana",
+  visaApplicationPlace: "kana",
   occupation: "full",
-  homeAddress: "full",
   contactInJapan: "full",
   portOfEntry: "full",
-  visaApplicationPlace: "full",
   renewalReason: "full",
   changeReason: "full",
   criminalDetail: "full",

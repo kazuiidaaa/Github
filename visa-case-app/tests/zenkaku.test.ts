@@ -96,7 +96,7 @@ describe("変換する欄・しない欄", () => {
 
   it("住所・会社名・メモに当たる欄は full", () => {
     expect(modeOf(APPLICANT_ZENKAKU, "address")).toBe("full");
-    for (const k of ["homeAddress", "legalRepAddress", "agentAddress", "dispatchAddress", "guarantorAddress"]) {
+    for (const k of ["legalRepAddress", "agentAddress", "dispatchAddress", "guarantorAddress", "contactInJapan"]) {
       expect(modeOf(FORM_DETAILS_ZENKAKU, k), k).toBe("full");
     }
     expect(modeOf(EMPLOYMENT_ZENKAKU, "companyAddress")).toBe("full");
@@ -112,6 +112,16 @@ describe("変換する欄・しない欄", () => {
     }
     expect(modeOf(APPLICANT_ZENKAKU, "nationality")).toBe("kana");
     expect(modeOf(RELATIVE_ZENKAKU, "name")).toBe("kana");
+  });
+  it("国外の住所・地名（本国における居住地・査証申請予定地）は kana で、ローマ字・英数字・ハイフンはそのまま", () => {
+    for (const k of ["homeAddress", "visaApplicationPlace"]) {
+      expect(modeOf(FORM_DETAILS_ZENKAKU, k), k).toBe("kana");
+    }
+    const kana = (s: string) => commitZenkaku(s, modeOf(FORM_DETAILS_ZENKAKU, "homeAddress"));
+    expect(kana("12-3 Example St., Test City")).toBe("12-3 Example St., Test City");
+    expect(kana("ﾃｽﾄｺｸ 12-3 Test")).toBe("テストコク 12-3 Test");
+    // 日本の住所は、ハイフンを全角「－」にそろえる（現状どおり）
+    expect(commitZenkaku("1-2-3", modeOf(APPLICANT_ZENKAKU, "address"))).toBe("１－２－３");
   });
   it("番号・電話・日付・ローマ字氏名・数量・期間は、変換しない（none）", () => {
     for (const k of ["legalName", "residenceCardNumber", "dateOfBirth", "residenceExpiryDate", "gender"]) {
