@@ -5,16 +5,17 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Button, Field, inputClass } from "@/components/ui";
 import { messageOf } from "@/lib/errors";
-import { assignableRoles, canRemoveMember, ROLE_LABELS, ROLES, type Role } from "@/lib/permissions";
+import { useAccountText } from "@/lib/i18n/accountText";
+import { useT } from "@/lib/i18n/LanguageProvider";
+import { assignableRoles, canRemoveMember, ROLES, type Role } from "@/lib/permissions";
 import { addMember, listMembers, removeMember, setMemberRole } from "@/lib/store";
 import type { MemberInfo } from "@/lib/supabaseBackend";
 
-function roleOptions(roles: readonly Role[]): ChoiceOption[] {
-  return roles.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
-}
-
 /** メンバー管理（所有者・管理者のみ表示）。権限の最終判定はデータベース側で行われる */
 export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; myUserId: string; onChanged: () => void }) {
+  const t = useT();
+  const text = useAccountText();
+  const roleOptions = (roles: readonly Role[]): ChoiceOption[] => roles.map((r) => ({ value: r, label: text.role(r) }));
   const [members, setMembers] = useState<MemberInfo[] | null>(null);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
@@ -52,27 +53,27 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
       await reload();
       onChanged();
     } catch (e) {
-      setMsg(messageOf(e));
+      setMsg(text.error(messageOf(e)));
     }
     setBusy(false);
   }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6">
-      <h2 className="mb-2 font-semibold">メンバー管理</h2>
+      <h2 className="mb-2 font-semibold">{t("account.members_title")}</h2>
       <p className="mb-4 text-xs text-slate-500">
-        所有者：すべての操作。管理者：案件の削除とメンバーの追加・削除（担当者・閲覧のみ）。担当者：案件の作成・編集（削除は不可）。閲覧のみ：閲覧だけ。
+        {t("account.members_roles")}
       </p>
       {error && (
         <p role="alert" className="mb-3 text-sm text-red-700">
-          {error}
+          {text.error(error)}
         </p>
       )}
       <table className="mb-5 block w-full text-left text-sm md:table">
         <thead className="hidden bg-slate-50 text-slate-600 md:table-header-group">
           <tr>
-            <th className="px-3 py-2">メールアドレス</th>
-            <th className="px-3 py-2">役割</th>
+            <th className="px-3 py-2">{t("account.members_colEmail")}</th>
+            <th className="px-3 py-2">{t("account.members_colRole")}</th>
             <th className="px-3 py-2" />
           </tr>
         </thead>
@@ -80,7 +81,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
           {members === null && !error && (
             <tr className="block md:table-row">
               <td colSpan={3} className="block px-3 py-4 text-slate-500 md:table-cell" role="status">
-                読み込み中……
+                {t("common.loading")}
               </td>
             </tr>
           )}
@@ -88,20 +89,20 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
             <tr key={m.userId} className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 px-3 py-2 md:table-row md:p-0">
               <td className="w-full break-all md:table-cell md:w-auto md:px-3 md:py-2">
                 {m.email}
-                {m.userId === myUserId && <span className="ml-2 text-xs text-slate-500">（あなた）</span>}
+                {m.userId === myUserId && <span className="ml-2 text-xs text-slate-500">{t("account.members_you")}</span>}
               </td>
               <td className="md:table-cell md:px-3 md:py-2">
                 {myRole === "owner" ? (
                   <ChoiceGroup
-                    legend={`${m.email}の役割`}
+                    legend={t("account.members_roleOf", { email: m.email })}
                     hideLegend
                     options={roleOptions(ROLES)}
                     value={m.role}
                     disabled={busy}
-                    onChange={(v) => void run(() => setMemberRole(m.userId, v), "役割を変更しました。")}
+                    onChange={(v) => void run(() => setMemberRole(m.userId, v), t("account.members_roleChanged"))}
                   />
                 ) : (
-                  (ROLE_LABELS[m.role as Role] ?? m.role)
+                  text.role(m.role)
                 )}
               </td>
               <td className="ml-auto md:table-cell md:px-3 md:py-2 md:text-right">
@@ -111,7 +112,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
                     disabled={busy}
                     onClick={() => setRemoving(m)}
                   >
-                    削除
+                    {t("account.members_remove")}
                   </Button>
                 )}
               </td>
@@ -124,35 +125,35 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
         className="flex flex-wrap items-end gap-3"
         onSubmit={(e) => {
           e.preventDefault();
-          void run(() => addMember(email.trim(), role), "メンバーを追加しました。").then(() => setEmail(""));
+          void run(() => addMember(email.trim(), role), t("account.members_added")).then(() => setEmail(""));
         }}
       >
         <div className="min-w-64 flex-1">
-          <Field label="追加するメンバーのメールアドレス" hint="すでにこのシステムのアカウントがある方に限ります。">
+          <Field label={t("account.members_addEmail")} hint={t("account.members_addHint")}>
             <input type="email" required className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
         </div>
         <div>
-          <ChoiceGroup legend="役割" options={roleOptions(addable)} value={role} onChange={(v) => setRole(v as Role)} />
+          <ChoiceGroup legend={t("account.members_roleLegend")} options={roleOptions(addable)} value={role} onChange={(v) => setRole(v as Role)} />
         </div>
         <Button type="submit" disabled={busy || !email.trim()}>
-          追加
+          {t("account.members_add")}
         </Button>
       </form>
       {msg && <p className="mt-2 text-sm text-slate-700">{msg}</p>}
       {removing && (
         <ConfirmDialog
-          title="メンバーの削除"
-          message={`${removing.email} を事務所から削除します。この方は、事務所の案件を見られなくなります。`}
-          note="この方のアカウント自体は削除されません。再び追加すれば、見られるようになります。操作の記録（監査ログ）が残ります。"
-          confirmLabel="削除する"
+          title={t("account.members_removeTitle")}
+          message={t("account.members_removeMessage", { email: removing.email })}
+          note={t("account.members_removeNote")}
+          confirmLabel={t("account.members_removeConfirm")}
           tone="caution"
           busy={busy}
           onCancel={() => setRemoving(null)}
           onConfirm={() => {
             const target = removing;
             setRemoving(null);
-            void run(() => removeMember(target.userId), "メンバーを削除しました。");
+            void run(() => removeMember(target.userId), t("account.members_removed"));
           }}
         />
       )}

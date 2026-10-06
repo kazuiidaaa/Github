@@ -13,43 +13,50 @@ import { Button } from "@/components/ui";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
 import { DEFAULT_LANG, LANGS, LANG_LABELS, isLang, readStoredLang, storeLang, type Lang } from "@/lib/documents/lang";
-import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
-import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
+import { officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
+import { isOfficialForm } from "@/lib/documents/types";
 import { useDemo } from "@/lib/demo";
+import { useLang, useT } from "@/lib/i18n/LanguageProvider";
+import { errorText, useDocumentLabels } from "@/lib/i18n/documentsView";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { getConfirmerName, useCan, useCase } from "@/lib/store";
 
 type StatusChange = "reviewed" | "submitted" | "archived";
 
-/** 状態変更の確認ダイアログの内容。影響は changeStatus（lib/documents/store.ts）の実際の処理に即して書く */
-const STATUS_CONFIRM: Record<StatusChange, { title: string; message: string; note: string; label: string }> = {
+/** 状態変更の確認ダイアログの文言のキー。影響は changeStatus（lib/documents/store.ts）の実際の処理に即して書く */
+const STATUS_CONFIRM: Record<StatusChange, { title: MessageKey; message: MessageKey; note: MessageKey; label: MessageKey }> = {
   reviewed: {
-    title: "行政書士確認済みにする",
-    message: "この版を、行政書士が内容を確認した版として記録します。確認者の名前と確認日時が、書類に表示されます。",
-    note: "操作の記録（監査ログ）が残ります。",
-    label: "確認済みにする",
+    title: "documentView.reviewedTitle",
+    message: "documentView.reviewedMessage",
+    note: "documentView.reviewedNote",
+    label: "documentView.reviewedLabel",
   },
   submitted: {
-    title: "提出済みにする",
-    message: "この版を、入管へ提出した版として記録します。",
-    note: "操作の記録（監査ログ）が残ります。",
-    label: "提出済みにする",
+    title: "documentView.submittedTitle",
+    message: "documentView.submittedMessage",
+    note: "documentView.submittedNote",
+    label: "documentView.submittedLabel",
   },
   archived: {
-    title: "書類を保管にする",
-    message: "この版を保管にします。書類の一覧では初期状態で非表示になります。",
-    note: "「保管済みを表示」にすると見られます。画面から保管を取り消す操作はありません。操作の記録（監査ログ）が残ります。",
-    label: "保管にする",
+    title: "documentView.archivedTitle",
+    message: "documentView.archivedMessage",
+    note: "documentView.archivedNote",
+    label: "documentView.archivedLabel",
   },
 };
 
 export default function DocumentPreviewPage() {
   const { id, docId } = useParams<{ id: string; docId: string }>();
+  const t = useT();
+  const { lang: screenLang } = useLang();
+  const docLabels = useDocumentLabels();
   const record = useCase(id);
   const canEdit = useCan("edit");
   const needsLogin = officialFormNeedsLogin(useDemo());
   const { documents, loaded, error } = useGeneratedDocuments(id);
   const doc = documents.find((d) => d.id === docId);
-  const [message, setMessage] = useState("");
+  // 失敗の種類と理由（日本語）を持ち、表示のたびに現在の言語へ引き直す
+  const [failure, setFailure] = useState<{ kind: "file" | "status"; reason: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [asking, setAsking] = useState<StatusChange | null>(null);
   // ご案内書類の表示・出力の言語。直前に選んだ言語を既定にする。案件・保存済みの内容には書き込まない
@@ -59,9 +66,9 @@ export default function DocumentPreviewPage() {
   if (!doc) {
     return loaded ? (
       <div>
-        <p className="mb-4">文書が見つかりません。</p>
+        <p className="mb-4">{t("documentView.notFound")}</p>
         <Link href={`/cases/${id}/documents`} className="text-blue-700 hover:underline">
-          ← 申請書類作成
+          {t("documentView.back")}
         </Link>
       </div>
     ) : (
@@ -84,7 +91,7 @@ export default function DocumentPreviewPage() {
   async function file(mode: "docx" | "pdf" | "xlsx" | "download") {
     if (!doc) return;
     setBusy(true);
-    setMessage("");
+    setFailure(null);
     try {
       if (mode === "download") {
         await downloadFile(doc, outLang);
@@ -95,7 +102,7 @@ export default function DocumentPreviewPage() {
         router.push(`/cases/${id}/documents/${created.id}`);
       }
     } catch (e) {
-      setMessage(`ファイルの出力に失敗しました：${messageOf(e)}`);
+      setFailure({ kind: "file", reason: messageOf(e) });
     } finally {
       setBusy(false);
     }
@@ -106,9 +113,9 @@ export default function DocumentPreviewPage() {
     if (!doc) return;
     try {
       await changeStatus(doc, status, status === "reviewed" ? await getConfirmerName() : "");
-      setMessage("");
+      setFailure(null);
     } catch (e) {
-      setMessage(`変更に失敗しました：${messageOf(e)}`);
+      setFailure({ kind: "status", reason: messageOf(e) });
     }
   }
 
@@ -118,88 +125,98 @@ export default function DocumentPreviewPage() {
       <style>{`@media print { header { display: none; } }`}</style>
       <div className="mb-4 space-y-3 print:hidden">
         <Link href={`/cases/${id}/documents`} className="text-sm text-blue-700 hover:underline">
-          ← 申請書類作成
+          {t("documentView.back")}
         </Link>
         {stale && (
           <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-            生成後に案件情報が更新されています。この版は生成時点の内容です。最新の内容で確認する場合は、再生成してください。
+            {t("documentView.stale")}
           </p>
         )}
         {doc.outputFormat !== "html" && (
           <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
-            この版は{OUTPUT_FORMAT_LABELS[doc.outputFormat]}として出力・保存された版です。内容は変更できません。
+            {t("documentView.outputNote", { format: docLabels.outputFormat(doc.outputFormat) })}
           </p>
         )}
         {isOfficialForm(doc.documentType) && <OfficialFormNotice />}
+        {/* 画面の言語と書類の言語は別。画面を日本語以外にしたときに、書類の言語が変わらないことを示す */}
+        {screenLang !== "ja" && (
+          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
+            {t(
+              doc.documentType !== "client_guide"
+                ? "documentView.langNoticeJa"
+                : langChoosable
+                  ? "documentView.langNoticeGuide"
+                  : "documentView.langNoticeSaved",
+            )}
+          </p>
+        )}
         {langChoosable && (
           <div className="space-y-2">
             <ChoiceGroup
-              legend="案内書の言語"
+              legend={t("documentView.guideLangLegend")}
               options={LANGS.map((l) => ({ value: l, label: LANG_LABELS[l] }))}
               value={lang}
               onChange={chooseLang}
-              hint="切り替えると、画面の表示と、Word・PDF の出力の言語が変わります。保存済みの内容は変わりません。"
+              hint={t("documentView.guideLangHint")}
             />
             {lang !== "ja" && (
               <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-                訳文は、行政書士が内容を確認してから、依頼者へお渡しください。書類名は、訳文のあとに日本語の原文を併記します。訳がないものは、原文のあとに「Not translated」などの目印を付けています。備考・宛名・氏名は、翻訳しません。
+                {t("documentView.guideLangNotice")}
               </p>
             )}
           </div>
         )}
         {doc.version < latest && (
-          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
+          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{t("documentView.newerVersion", { latest })}</p>
         )}
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && doc.status === "draft" && (
-            <Button onClick={() => setAsking("reviewed")}>
-              行政書士確認済みにする
-            </Button>
+            <Button onClick={() => setAsking("reviewed")}>{t("documentView.markReviewed")}</Button>
           )}
           {canEdit && doc.status === "reviewed" && (
-            <Button onClick={() => setAsking("submitted")}>提出済みにする</Button>
+            <Button onClick={() => setAsking("submitted")}>{t("documentView.markSubmitted")}</Button>
           )}
           {canEdit && doc.status !== "archived" && (
             <Button variant="secondary" onClick={() => setAsking("archived")}>
-              保管にする
+              {t("documentView.markArchived")}
             </Button>
           )}
           {doc.outputFormat !== "html" ? (
             <Button variant="secondary" disabled={busy} onClick={() => void file("download")}>
-              {OUTPUT_FORMAT_LABELS[doc.outputFormat]}をダウンロード
+              {t("documentView.download", { format: docLabels.outputFormat(doc.outputFormat) })}
             </Button>
           ) : isOfficialForm(doc.documentType) ? (
             <Button variant="secondary" disabled={busy || !canEdit || needsLogin} onClick={() => void file("xlsx")}>
-              {busy ? "出力中……" : "エクセル出力"}
+              {busy ? t("documentView.exporting") : t("documentView.exportXlsx")}
             </Button>
           ) : (
             <>
               <Button variant="secondary" disabled={busy || !canEdit} onClick={() => void file("docx")}>
-                {busy ? "出力中……" : "Word出力"}
+                {busy ? t("documentView.exporting") : t("documentView.exportDocx")}
               </Button>
               <Button variant="secondary" disabled={busy || !canEdit} onClick={() => void file("pdf")}>
-                {busy ? "出力中……" : "PDF出力"}
+                {busy ? t("documentView.exporting") : t("documentView.exportPdf")}
               </Button>
             </>
           )}
           <Button variant="secondary" onClick={() => window.print()}>
-            印刷
+            {t("documentView.print")}
           </Button>
           {needsLogin && isOfficialForm(doc.documentType) && (
-            <span className="text-sm text-amber-900">{OFFICIAL_FORM_LOGIN_REQUIRED}</span>
+            <span className="text-sm text-amber-900">{t("documents.officialLoginRequired")}</span>
           )}
           <span role="alert" className="text-sm text-red-700">
-            {message}
+            {failure && t(failure.kind === "file" ? "documentView.fileFailed" : "documentView.statusFailed", { reason: errorText(t, failure.reason) })}
           </span>
         </div>
       </div>
       {doc.documentType === "client_guide" ? <ClientGuideSheet doc={doc} lang={outLang} /> : <DocumentSheet doc={doc} />}
       {asking && (
         <ConfirmDialog
-          title={STATUS_CONFIRM[asking].title}
-          message={STATUS_CONFIRM[asking].message}
-          note={STATUS_CONFIRM[asking].note}
-          confirmLabel={STATUS_CONFIRM[asking].label}
+          title={t(STATUS_CONFIRM[asking].title)}
+          message={t(STATUS_CONFIRM[asking].message)}
+          note={t(STATUS_CONFIRM[asking].note)}
+          confirmLabel={t(STATUS_CONFIRM[asking].label)}
           onCancel={() => setAsking(null)}
           onConfirm={() => void run(asking)}
         />
