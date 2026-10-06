@@ -1,11 +1,11 @@
 "use client";
 
-import { DateField } from "@/components/DateField";
 import { ImageZoom } from "@/components/ImageZoom";
 import { useState } from "react";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
+import { DateField } from "@/components/DateField";
 import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { applicantFieldId } from "@/lib/applicantFields";
 import { findDocumentOfType } from "@/lib/documentKinds";

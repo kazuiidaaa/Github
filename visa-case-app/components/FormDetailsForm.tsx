@@ -1,8 +1,8 @@
 "use client";
 
-import { DateField } from "@/components/DateField";
 import { useState } from "react";
-import { Button, Field, inputClass } from "@/components/ui";
+import { Button, Field, inputClass } from "@/components/ui";import { DateField } from "@/components/DateField";
+
 import {
   EDUCATION_LEVELS,
   getFormDetailsWarnings,
@@ -51,15 +51,6 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   function text(key: TextKey, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean } = {}) {
     const label = layout.labels[key];
     if (!label) return null; // この様式にない項目は表示しない
-    if (opts.date) {
-      return (
-        <div className={opts.wide ? "md:col-span-2" : ""}>
-          <Field label={label} hint={opts.hint}>
-            <DateField className={inputClass} value={form[key]} error={errors[key]} onChange={(v) => set(key, v as never)} />
-          </Field>
-        </div>
-      );
-    }
     const input = opts.area ? (
       <textarea
         className={inputClass}
@@ -68,6 +59,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         placeholder={opts.placeholder}
         onChange={(e) => set(key, e.target.value as never)}
       />
+    ) : opts.date ? (
+      <DateField className={inputClass} value={form[key]} error={errors[key]} onChange={(v) => set(key, v as never)} />
     ) : (
       <input
         className={inputClass}
@@ -78,7 +71,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
     );
     return (
       <div className={opts.wide || opts.area ? "md:col-span-2" : ""}>
-        <Field label={label} hint={opts.hint} error={errors[key]}>
+        <Field label={label} hint={opts.hint} error={opts.date ? undefined : errors[key]}>
           {input}
         </Field>
       </div>
