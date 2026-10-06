@@ -1,5 +1,6 @@
 "use client";
 
+import { AddressField } from "@/components/AddressField";
 import { ImageZoom } from "@/components/ImageZoom";
 import { useState } from "react";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
@@ -184,7 +185,9 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           {text("nationality", "国籍・地域", { required: true, placeholder: "中国" })}
           <div id={applicantFieldId("gender")}><ChoiceGroup legend="性別" options={GENDER_OPTIONS} value={form.gender} disabled={confirmed} onChange={(v) => set("gender", v)} hint="在留カードの「性別」欄の記載どおりに選びます。" /></div>
           {date("dateOfBirth", "生年月日")}
-          <div className="md:col-span-2">{text("address", "住居地")}</div>
+          <div className="md:col-span-2">
+            <AddressField id={applicantFieldId("address")} label="住居地" value={form.address} disabled={confirmed} onChange={(v) => set("address", v)} />
+          </div>
           <StatusSelect id={applicantFieldId("residenceStatus")} legend="在留資格" required error={errors.residenceStatus} hint={STATUS_HINTS.card} value={form.residenceStatus} disabled={confirmed} onChange={(v) => set("residenceStatus", v)} />
           {date("residenceExpiryDate", "在留期間の満了日")}
           {text("residenceCardNumber", "在留カード番号")}

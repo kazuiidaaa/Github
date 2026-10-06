@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AddressField } from "@/components/AddressField";
 import { Button, Field, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/requirements/rules";
@@ -31,7 +32,10 @@ export function EmploymentFields({
   const dateError = hasEmploymentDateError(form);
   return (
       <div className="grid gap-4 md:grid-cols-2">
-        {TEXT_FIELDS.map((f) => (
+        {TEXT_FIELDS.map((f) =>
+          f.key === "companyAddress" ? (
+            <AddressField key={f.key} label={f.label} value={form.companyAddress} onChange={(v) => set("companyAddress", v)} />
+          ) : (
           <Field key={f.key} label={f.label}>
             <input
               className={inputClass}
@@ -40,7 +44,8 @@ export function EmploymentFields({
               onChange={(e) => set(f.key, e.target.value as never)}
             />
           </Field>
-        ))}
+          ),
+        )}
         <Field label="雇用開始日" error={dateError ? "日付をカレンダーから選び直してください。" : undefined}>
           <input
             type="date"
