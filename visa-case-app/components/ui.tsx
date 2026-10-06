@@ -47,9 +47,9 @@ export function Field({
 export const inputClass =
   "w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/40";
 
-type Tone = "green" | "yellow" | "red" | "gray" | "blue";
+export type Tone = "green" | "yellow" | "red" | "gray" | "blue";
 
-const TONE_STYLES: Record<Tone, string> = {
+export const TONE_STYLES: Record<Tone, string> = {
   green: "bg-green-100 text-green-800",
   yellow: "bg-yellow-100 text-yellow-800",
   red: "bg-red-100 text-red-800",
@@ -58,7 +58,7 @@ const TONE_STYLES: Record<Tone, string> = {
 };
 
 /** 色だけに頼らないよう、状態ごとに形の違う図形を併記する（完了＝丸に印、注意＝三角、要対応＝ひし形、未了＝破線の丸、情報＝丸に点）。 */
-function ToneIcon({ tone }: { tone: Tone }) {
+export function ToneIcon({ tone }: { tone: Tone }) {
   const common = { "aria-hidden": true, viewBox: "0 0 12 12", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.6 } as const;
   switch (tone) {
     case "green":

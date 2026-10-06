@@ -1,6 +1,7 @@
 import { evaluate } from "../requirements/evaluate";
 import { progressOf } from "../requirements/progress";
 import { sortChecks } from "../checks/definitions";
+import { buildClientGuide } from "./clientGuide";
 import { buildTranscription } from "./formMapping";
 import { HSP_POINT_FORM, officialFormInputOf, officialFormSpecFor } from "./officialForms";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type CaseRecord } from "../types";
@@ -9,6 +10,7 @@ import {
   NOTICES,
   OFFICIAL_FORM_NOTICES,
   TRANSCRIPTION_NOTICES,
+  CLIENT_GUIDE_NOTICES,
   type BuildableDocumentType,
   type ContentJson,
   type SnapshotRequirement,
@@ -63,6 +65,8 @@ export function buildContent(
   now: Date = new Date(),
   /** 公式様式（Excel）のみ。差し込みエンジン（API）が返した warnings。生成時点の注意として、そのまま保存する */
   officialFormWarnings: string[] = [],
+  /** ご案内書類のみ。受領済み・確認済みの書類も載せるか */
+  options: { includeReceived?: boolean } = {},
 ): ContentJson {
   const a = c.applicant;
   const e = c.employment;
@@ -150,6 +154,9 @@ export function buildContent(
         },
         notices: [...OFFICIAL_FORM_NOTICES, NOTICES[1]],
       };
+    case "client_guide":
+      // 依頼者へ渡す文書のため、案件の内部情報（メモ・申請前チェック等）は含めない
+      return { ...base, memo: "", clientGuide: buildClientGuide(c, !!options.includeReceived), notices: [...CLIENT_GUIDE_NOTICES] };
     case "transcription_aid":
       return {
         ...base,
