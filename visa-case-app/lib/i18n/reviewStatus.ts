@@ -18,6 +18,7 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   labels: { en: "draft", ko: "draft" },
   home: { en: "draft", ko: "draft" },
   account: { en: "draft", ko: "draft" },
+  caseList: { en: "draft", ko: "draft" },
   auth: { en: "draft", ko: "draft" },
   about: { en: "draft", ko: "draft" },
 };
