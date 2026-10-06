@@ -225,14 +225,19 @@ async function saveVersion(
  * なければ（確認済み以降が最新の場合を含む）、新しい版として追加する。確認済み以降の版は上書きしない。
  * 生成・更新した版を返す。
  */
-export async function generateDocuments(record: CaseRecord, types: InternalDocumentType[]): Promise<GeneratedDocument[]> {
+export async function generateDocuments(
+  record: CaseRecord,
+  types: InternalDocumentType[],
+  /** ご案内書類のみ。受領済み・確認済みの書類も載せるか */
+  options: { includeReceived?: boolean } = {},
+): Promise<GeneratedDocument[]> {
   const created: GeneratedDocument[] = [];
   try {
     for (const type of types) {
       // 公式様式（Excel）は、先にエクセルを作る（失敗した場合は、版を作らない）。
       // 差し込みの warnings は、生成時点の注意として content_json に保存する
       const official = isOfficialForm(type) ? await requestOfficialXlsx(record.procedureType, officialFormInputOf(record)) : undefined;
-      const content = buildContent(record, type, new Date(), official?.warnings);
+      const content = buildContent(record, type, new Date(), official?.warnings, options);
       const title = titleOf(record, type);
       const { doc, updated } = await saveVersion(record.id, type, title, content);
       created.push(doc);

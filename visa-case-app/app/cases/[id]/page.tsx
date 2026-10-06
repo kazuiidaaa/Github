@@ -252,13 +252,14 @@ export default function CaseDetailPage() {
 
       <div id="case-tabpanel" role="tabpanel" aria-labelledby={`case-tab-${tab}`}>
       {tab === "overview" && (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {(() => {
             const level = expiryLevel(daysUntil(a.residenceExpiryDate));
             return level === "urgent" || level === "overdue" ? (
               <DeadlineBanner date={a.residenceExpiryDate} />
             ) : null;
           })()}
+          <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
           <section className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="mb-4 flex items-center gap-2 font-semibold">
               申請人情報
@@ -295,7 +296,6 @@ export default function CaseDetailPage() {
             )}
           </section>
           <CaseInfoEditor record={record} canEdit={canEdit} />
-          <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
         </div>
       )}
 
