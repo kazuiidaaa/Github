@@ -292,6 +292,8 @@ export interface CaseRecord {
   formDetails: FormDetails;
   requirementStates: Record<string, RequirementState>;
   customRequirements: CustomRequirement[];
+  /** 受任日（YYYY-MM-DD）。行政書士が依頼を受けた日。未定なら空（任意項目） */
+  acceptedDate: string;
   /** 申請予定日（YYYY-MM-DD）。未定なら空 */
   plannedApplicationDate: string;
   /** 申請前チェック全体に対する行政書士メモ */

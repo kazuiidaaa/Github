@@ -41,6 +41,7 @@ function baseCase(
     formDetails: { ...EMPTY_FORM_DETAILS },
     requirementStates: {},
     customRequirements: [],
+    acceptedDate: "",
     plannedApplicationDate: "",
     checkMemo: "",
     checks: [],
@@ -82,6 +83,7 @@ export function buildDemoSeedCases(now: Date = new Date()): CaseRecord[] {
     updatedAgoDays: 0,
   });
   a.workflowStatus = "review_required";
+  a.acceptedDate = dateString(now, -30);
   a.plannedApplicationDate = dateString(now, 60);
 
   const b = baseCase(now, {
@@ -96,6 +98,7 @@ export function buildDemoSeedCases(now: Date = new Date()): CaseRecord[] {
   b.applicant = { ...b.applicant, confirmationStatus: "confirmed", confirmedAt: b.updatedAt, confirmedBy: "サンプル担当者" };
   b.requirementStates = allRequiredReviewed(b);
   b.checks = checks("passed", b.updatedAt);
+  b.acceptedDate = dateString(now, -20);
   b.plannedApplicationDate = dateString(now, 100);
 
   const c = baseCase(now, {
@@ -110,6 +113,7 @@ export function buildDemoSeedCases(now: Date = new Date()): CaseRecord[] {
   c.applicant = { ...c.applicant, confirmationStatus: "confirmed", confirmedAt: c.updatedAt, confirmedBy: "サンプル担当者" };
   const first = Object.keys(allRequiredReviewed(c)).slice(0, 2);
   c.requirementStates = Object.fromEntries(first.map((id) => [id, { status: "received" } as RequirementState]));
+  c.acceptedDate = dateString(now, -45);
   c.plannedApplicationDate = dateString(now, 7);
 
   return [a, b, c];

@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { EmploymentFields, hasEmploymentDateError } from "@/components/EmploymentForm";
+import { AcceptedDateField } from "@/components/AcceptedDateField";
 import { ChoiceGroup } from "@/components/ChoiceGroup";
 import { PROCEDURE_OPTIONS, STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
+import { hasAcceptedDateError } from "@/lib/acceptedDate";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
@@ -25,6 +27,7 @@ export default function NewCasePage() {
   const [currentStatus, setCurrentStatus] = useState("");
   const [targetStatus, setTargetStatus] = useState("");
   const [memo, setMemo] = useState("");
+  const [acceptedDate, setAcceptedDate] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   // まとめて登録：雇用・会社情報を1回入力し、申請人（案件名）を複数人分入力する
   const [bulk, setBulk] = useState(false);
@@ -37,7 +40,7 @@ export default function NewCasePage() {
   const [hydrated, setHydrated] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const allowLeave = useRef(false);
-  const dirty = isNewCaseDirty({ caseName, procedureType, currentStatus, targetStatus, memo, groupName, names, employment });
+  const dirty = isNewCaseDirty({ caseName, procedureType, currentStatus, targetStatus, memo, groupName, names, employment }) || acceptedDate !== "";
 
   useEffect(() => {
     // 同じタブでの再読み込み後に、前回の入力を復元する（サーバー描画との不一致を避けるため、表示後に読む）
@@ -88,6 +91,7 @@ export default function NewCasePage() {
     setCurrentStatus("");
     setTargetStatus("");
     setMemo("");
+    setAcceptedDate("");
     setGroupName("");
     setNames([...INITIAL_BULK_NAMES]);
     setEmployment({ ...EMPTY_EMPLOYMENT });
@@ -116,6 +120,7 @@ export default function NewCasePage() {
     }
     if (!procedureType) next.procedureType = "手続種別を選択してください。";
     if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
+    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日をカレンダーから選び直してください。";
     setErrors(next);
     if (Object.keys(next).length > 0 || !procedureType) return;
 
@@ -129,6 +134,7 @@ export default function NewCasePage() {
         currentStatus: currentStatus.trim(),
         targetStatus: needsTarget ? targetStatus.trim() : "",
         memo,
+        acceptedDate,
         workflowStatus: "preparing",
         createdAt: now,
         updatedAt: now,
@@ -249,6 +255,7 @@ export default function NewCasePage() {
             allowGrade2={procedureType === "change"}
           />
         )}
+        <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
         {showNoRuleGuide && (
           <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
             {`${notApplicableMessage()}案件は、このまま作成できます。`}

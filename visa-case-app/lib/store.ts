@@ -64,6 +64,7 @@ function migrateLocal(c: LegacyCase): CaseRecord {
     formDetails: normalizeFormDetails((c as { formDetails?: unknown }).formDetails),
     requirementStates: migrateStates(c.requirementStates),
     customRequirements: c.customRequirements ?? [],
+    acceptedDate: c.acceptedDate ?? "",
     plannedApplicationDate: c.plannedApplicationDate ?? "",
     checkMemo: c.checkMemo ?? "",
     checks: c.checks ?? [],
