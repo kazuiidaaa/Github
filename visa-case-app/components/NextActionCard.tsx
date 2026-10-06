@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import { decideNextAction, type NextActionTarget } from "@/lib/nextAction";
 import type { CaseRecord } from "@/lib/types";
 
@@ -13,20 +16,21 @@ export function NextActionCard({
   canEdit: boolean;
   onGoTab: (target: Exclude<NextActionTarget, "generate">) => void;
 }) {
+  const t = useT();
   const a = decideNextAction(record);
   const buttonClass =
     "rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover";
   return (
     <section
-      aria-label="次に行うこと"
+      aria-label={t("dialog.nextAction_aria")}
       className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <p className="text-xs font-bold">
-            進み具合：{a.total}段階中 {a.step}段階目
+            {t("dialog.nextAction_progress", { total: a.total, step: a.step })}
           </p>
-          <p>次に行うこと：{a.message}</p>
+          <p>{t("dialog.nextAction_prefix", { message: a.message })}</p>
         </div>
         {canEdit &&
           (a.target === "generate" ? (

@@ -7,11 +7,18 @@ import { useToast } from "@/components/Toast";
 import { ConfirmDocumentReplaceDialog } from "@/components/ConfirmDocumentReplaceDialog";
 import { FORMAT_LABEL_BY_DOCUMENT_TYPE, MAX_FILE_BYTES, validateDocumentFile } from "@/lib/documentValidation";
 import { logAudit, newId, updateCase, uploadDocumentFile } from "@/lib/store";
-import { PHOTO_GUIDANCE, UPLOADED_DOCUMENT_LABELS, replaceDocumentOfType } from "@/lib/documentKinds";
+import { PHOTO_GUIDANCE, replaceDocumentOfType } from "@/lib/documentKinds";
+import { useLang, useT } from "@/lib/i18n/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { photoAspectWarning } from "@/lib/photoAspect";
 import type { DocumentRecord } from "@/lib/types";
 
 const MAX_INLINE_BYTES = 1_000_000;
+
+const DOCUMENT_NAME_KEYS: Record<DocumentRecord["documentType"], MessageKey> = {
+  residence_card: "display.docResidenceCard",
+  photo: "display.docPhoto",
+};
 
 function readAsDataUrl(file: File): Promise<string | undefined> {
   if (file.size > MAX_INLINE_BYTES) return Promise.resolve(undefined);
@@ -40,6 +47,8 @@ export function UploadBox({
   compact?: boolean;
 }) {
   const toast = useToast();
+  const t = useT();
+  const { lang } = useLang();
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -49,7 +58,7 @@ export function UploadBox({
   const [notice, setNotice] = useState("");
   const hasDocument = currentFileName !== undefined;
   const isPhoto = documentType === "photo";
-  const label = UPLOADED_DOCUMENT_LABELS[documentType];
+  const label = t(DOCUMENT_NAME_KEYS[documentType]);
   const accept = isPhoto ? ".jpg,.jpeg,.png" : ".jpg,.jpeg,.png,.pdf";
 
   async function upload(file: File) {
@@ -82,12 +91,12 @@ export function UploadBox({
       }));
       logAudit(caseId, hasDocument ? "document_replaced" : "document_uploaded", { documentType });
       setNotice(aspectWarning);
-      toast.success(hasDocument ? `${label}を差し替えました` : `${label}をアップロードしました`);
+      toast.success(t(hasDocument ? "display.replacedToast" : "display.uploadedToast", { label }));
       onUploaded(hasDocument);
     } catch (e) {
       logAudit(caseId, "document_upload_failed", undefined, "failure");
-      setError(`アップロードに失敗しました：${messageOf(e)}`);
-      toast.error(`${label}のアップロードに失敗しました`);
+      setError(t("display.uploadFailed", { reason: messageOf(e) }));
+      toast.error(t("display.uploadFailedToast", { label }));
       setFailed(file);
     } finally {
       setUploading(null);
@@ -111,11 +120,11 @@ export function UploadBox({
     <section className={compact ? "" : "rounded-2xl border border-slate-200 bg-white p-6"}>
       {!compact && (
         <>
-          <h2 className="mb-1 font-semibold">{hasDocument ? `${label}を差し替える` : `${label}をアップロード`}</h2>
+          <h2 className="mb-1 font-semibold">{t(hasDocument ? "display.uploadReplaceTitle" : "display.uploadNewTitle", { label })}</h2>
           <p className="mb-4 text-xs text-slate-500">
-            {isPhoto
-              ? `${PHOTO_GUIDANCE}試作版のため、実在の個人情報はアップロードしないでください。`
-              : "OCRは行いません。アップロード後、原本を見ながら申請人情報を入力します。試作版のため、実在の個人情報はアップロードしないでください。"}
+            {isPhoto ? PHOTO_GUIDANCE : t("display.uploadNoteCard")}
+            {lang === "ja" ? "" : " "}
+            {t("display.uploadNotePrototype")}
           </p>
         </>
       )}
@@ -135,16 +144,16 @@ export function UploadBox({
         }`}
       >
         {uploading ? (
-          <p className="text-slate-700">{uploading.name}　アップロード中……</p>
+          <p className="text-slate-700">{t("display.uploading", { name: uploading.name })}</p>
         ) : (
           <>
-            <p className={`${compact ? "mb-2" : "mb-3"} text-slate-600`}>ファイルをここにドロップ、または</p>
+            <p className={`${compact ? "mb-2" : "mb-3"} text-slate-600`}>{t("display.dropHere")}</p>
             <button
               type="button"
               onClick={() => input.current?.click()}
               className="rounded-full border border-line-strong bg-white px-4 py-2 font-bold hover:bg-slate-50"
             >
-              {hasDocument ? "差し替えるファイルを選択" : "ファイルを選択"}
+              {t(hasDocument ? "display.chooseReplaceFile" : "display.chooseFile")}
             </button>
             <input
               ref={input}
@@ -158,7 +167,7 @@ export function UploadBox({
             />
             {!compact && (
               <p className="mt-3 text-xs text-slate-500">
-                対応形式：{FORMAT_LABEL_BY_DOCUMENT_TYPE[documentType]}　最大サイズ：{MAX_FILE_BYTES / 1024 / 1024}MB
+                {t("display.formatAndSize", { formats: FORMAT_LABEL_BY_DOCUMENT_TYPE[documentType], size: MAX_FILE_BYTES / 1024 / 1024 })}
               </p>
             )}
           </>
@@ -184,7 +193,7 @@ export function UploadBox({
       )}
       {failed && !uploading && (
         <div className="mt-2 flex gap-2">
-          <Button onClick={() => void upload(failed)}>再試行</Button>
+          <Button onClick={() => void upload(failed)}>{t("display.retry")}</Button>
           <Button
             variant="secondary"
             onClick={() => {
@@ -192,7 +201,7 @@ export function UploadBox({
               setError("");
             }}
           >
-            キャンセル
+            {t("display.cancel")}
           </Button>
         </div>
       )}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Summary } from "@/lib/caseMetrics";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import { HOME_METRIC_KEYS, metricsFor, type CardKey, type MetricDefinition } from "@/lib/dashboardMetrics";
 
 export type { CardKey };
@@ -30,6 +31,7 @@ function CardShell({
   onInfo: () => void;
   children: (body: React.ReactNode) => React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div className={`${className} relative w-36 shrink-0 snap-start md:w-auto`}>
       {children(
@@ -42,7 +44,7 @@ function CardShell({
         type="button"
         onClick={onInfo}
         aria-expanded={infoOpen}
-        aria-label={`${metric.label}の説明を${infoOpen ? "閉じる" : "表示する"}`}
+        aria-label={t(infoOpen ? "display.metricInfoHide" : "display.metricInfoShow", { label: metric.label })}
         className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 md:hidden"
       >
         <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold leading-none">
@@ -70,6 +72,7 @@ function MetricRow({
   renderCard: (m: MetricDefinition, info: { open: boolean; toggle: () => void }) => React.ReactNode;
   className?: string;
 }) {
+  const t = useT();
   const [infoKey, setInfoKey] = useState<CardKey | null>(null);
   const rowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -87,7 +90,7 @@ function MetricRow({
       </div>
       {shown && (
         <p role="status" className="mt-2 rounded-xl border border-line-strong px-3 py-2 text-xs leading-relaxed text-slate-600 md:hidden">
-          <span className="font-bold">{shown.label}</span>：{shown.description}
+          <span className="font-bold">{shown.label}</span>{t("display.metricLabelDescJoin")}{shown.description}
         </p>
       )}
     </div>

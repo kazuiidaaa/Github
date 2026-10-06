@@ -1,7 +1,8 @@
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import { ADVANCED_PROFESSIONAL_GRADE_2, ADVANCED_PROFESSIONAL_GRADES, ADVANCED_PROFESSIONAL_STATUS, baseResidenceStatus, PROCEDURE_TYPES, RESIDENCE_STATUSES } from "@/lib/types";
 
-/** 在留資格の選択肢に添える説明文（初見でも選び方が分かるようにする） */
+/** 在留資格の選択肢に添える説明文（日本語）。呼び出し元が props として渡す。表示言語に合わせるときは、useStatusHints() を使う */
 export const STATUS_HINTS = {
   current: "在留カードの「在留資格」欄の記載から選びます。例：技術・人文知識・国際業務",
   target: "変更後（または取得したい）在留資格を選びます。例：技術・人文知識・国際業務",
@@ -27,15 +28,26 @@ export const FEATURED_RESIDENCE_STATUSES: readonly string[] = [
 export const LEGACY_GROUP = "登録済みの入力";
 const OTHER_GROUP = "その他";
 
+/** 選択肢の見出し・注記の文言。省略時は日本語（既存の呼び出し・テストと同じ）。在留資格名そのものは、訳さない */
+export type ResidenceOptionText = { other: string; legacyGroup: string; legacyLabel: (value: string) => string };
+
+/** 表示言語に合わせた、STATUS_HINTS と同じ形の説明文。呼び出し元（各画面）が hint として渡す */
+export function useStatusHints(): { current: string; target: string; card: string } {
+  const t = useT();
+  return { current: t("input.statusSelect_hintCurrent"), target: t("input.statusSelect_hintTarget"), card: t("input.statusSelect_hintCard") };
+}
+
 /**
  * 在留資格の選択肢。よく使う項目を先頭に、残りは「その他」にまとめる。
  * 過去に自由入力で保存された値（legacy）は、選択肢として残す。
  */
-export function residenceStatusOptions(legacy?: string): ChoiceOption[] {
+export function residenceStatusOptions(legacy?: string, text?: ResidenceOptionText): ChoiceOption[] {
+  const otherGroup = text?.other ?? OTHER_GROUP;
+  const legacyGroup = text?.legacyGroup ?? LEGACY_GROUP;
   const known: readonly string[] = RESIDENCE_STATUSES;
   const featured = FEATURED_RESIDENCE_STATUSES.filter((s) => known.includes(s)).map((s) => ({ value: s, label: s, featured: true }));
-  const rest = RESIDENCE_STATUSES.filter((s) => !FEATURED_RESIDENCE_STATUSES.includes(s)).map((s) => ({ value: s, label: s, group: OTHER_GROUP }));
-  const old = legacy ? [{ value: legacy, label: `${legacy}（登録済みの入力）`, group: LEGACY_GROUP }] : [];
+  const rest = RESIDENCE_STATUSES.filter((s) => !FEATURED_RESIDENCE_STATUSES.includes(s)).map((s) => ({ value: s, label: s, group: otherGroup }));
+  const old = legacy ? [{ value: legacy, label: text ? text.legacyLabel(legacy) : `${legacy}（登録済みの入力）`, group: legacyGroup }] : [];
   return [...featured, ...old, ...rest];
 }
 
@@ -74,24 +86,30 @@ export function StatusSelect({
   withGrade?: boolean;
   /** 在留資格変更許可申請のときだけ true。号の選択に「高度専門職（2号）」を加える */
   allowGrade2?: boolean;
-  /** 欄の名前（画面に表示する）。未指定は「在留資格」 */
+  /** 欄の名前（画面に表示する）。未指定は「在留資格」（表示言語に合わせて訳す） */
   legend?: string;
   required?: boolean;
   hint?: string;
   error?: string;
 }) {
+  const t = useT();
   // 2号が保存済みの案件は、手続を変えても値を失わないよう、選択肢に残す
   const withGrade2 = !!allowGrade2 || value === ADVANCED_PROFESSIONAL_GRADE_2;
   const base = withGrade ? baseResidenceStatus(value) : value;
   // 過去に自由入力で保存した値も、選択肢として残して表示する
   const legacy = base && !(RESIDENCE_STATUSES as readonly string[]).includes(base) ? base : undefined;
-  const name = legend ?? "在留資格";
+  const name = legend ?? t("input.statusSelect_legend");
+  const optionText: ResidenceOptionText = {
+    other: t("input.statusSelect_groupOther"),
+    legacyGroup: t("input.statusSelect_groupLegacy"),
+    legacyLabel: (value) => t("input.statusSelect_legacyLabel", { value }),
+  };
   const main = (
     // id は、外から該当の欄へフォーカスを移すための目印（フォーカスは、中の選択済み・先頭の項目へ入る）
     <div id={id}>
     <ChoiceGroup
       legend={name}
-      options={residenceStatusOptions(legacy)}
+      options={residenceStatusOptions(legacy, optionText)}
       value={base}
       onChange={onChange}
       disabled={disabled}
@@ -107,16 +125,16 @@ export function StatusSelect({
     <div className="space-y-3">
       {main}
       <ChoiceGroup
-        legend="高度専門職の号"
+        legend={t("input.statusSelect_gradeLegend")}
         options={gradeOptions(withGrade2)}
         value={value === ADVANCED_PROFESSIONAL_STATUS ? "" : value}
         onChange={onChange}
         disabled={disabled}
-        hint="号を選択してください（未選択でも保存できます）"
+        hint={t("input.statusSelect_gradeHint")}
         variant="segment"
         // 号なしの値（高度専門職）へ戻す。保存される値は、号を選ぶ前と同じ
         onClear={() => onChange(ADVANCED_PROFESSIONAL_STATUS)}
-        clearLabel="号を未選択に戻す"
+        clearLabel={t("input.statusSelect_gradeClear")}
       />
     </div>
   );

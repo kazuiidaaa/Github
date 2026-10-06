@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Field, inputClass } from "@/components/ui";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 /** パスワード欄。「表示する」ボタンで、入力内容の表示・非表示を切り替える。 */
 export function PasswordField({
@@ -17,6 +18,7 @@ export function PasswordField({
   onChange: (v: string) => void;
   autoComplete: "current-password" | "new-password";
 }) {
+  const t = useT();
   const [shown, setShown] = useState(false);
   return (
     <div>
@@ -38,7 +40,7 @@ export function PasswordField({
         onClick={() => setShown(!shown)}
         className="mt-1 rounded-full px-2 py-1 text-xs font-bold text-accent underline underline-offset-2"
       >
-        {shown ? "表示を隠す" : "表示する"}
+        {shown ? t("input.passwordField_hide") : t("input.passwordField_show")}
       </button>
     </div>
   );

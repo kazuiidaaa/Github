@@ -12,6 +12,10 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   common: { en: "draft", ko: "draft" },
   header: { en: "draft", ko: "draft" },
   footer: { en: "draft", ko: "draft" },
+  input: { en: "draft", ko: "draft" },
+  dialog: { en: "draft", ko: "draft" },
+  display: { en: "draft", ko: "draft" },
+  labels: { en: "draft", ko: "draft" },
 };
 
 /** 指定の言語に、確認前（下書き）の区分が1つでもあるか */
