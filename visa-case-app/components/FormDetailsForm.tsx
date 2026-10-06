@@ -16,6 +16,7 @@ import { HspPointSection } from "@/components/HspPointSection";
 import { describeCoeForm, HSP_ACTIVITIES, isAdvancedProfessional, resolveCoeForm } from "@/lib/hspForm";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
+import { FORM_DETAILS_ZENKAKU, RELATIVE_ZENKAKU, WORK_ENTRY_ZENKAKU, zenkakuHandlers, zenkakuModeOf } from "@/lib/zenkaku";
 import type { CaseRecord } from "@/lib/types";
 
 type TextKey = {
@@ -48,6 +49,11 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  // 日本語の文章の欄のみ、入力の確定時に半角を全角へ変換する（番号・電話・日付などは、変換しない。lib/zenkaku.ts）
+  function zk(key: TextKey) {
+    return zenkakuHandlers(zenkakuModeOf(FORM_DETAILS_ZENKAKU, key), (v) => set(key, v as never));
+  }
+
   function text(key: TextKey, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean; address?: boolean } = {}) {
     const label = layout.labels[key];
     if (!label) return null; // この様式にない項目は表示しない
@@ -63,6 +69,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       <textarea
         className={inputClass}
         rows={3}
+        {...zk(key)}
         value={form[key]}
         placeholder={opts.placeholder}
         onChange={(e) => set(key, e.target.value as never)}
@@ -72,6 +79,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         type={opts.date ? "date" : undefined}
         className={inputClass}
         value={form[key]}
+        {...zk(key)}
         placeholder={opts.placeholder}
         onChange={(e) => set(key, e.target.value as never)}
       />
@@ -264,19 +272,19 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
               <div key={r.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-3">
                 <p className="text-xs font-medium text-slate-500 md:col-span-3">{i + 1} 人目</p>
                 <Field label="続柄">
-                  <input className={inputClass} value={r.relationship} onChange={(e) => updateRelative(r.id, { relationship: e.target.value })} />
+                  <input className={inputClass} value={r.relationship} onChange={(e) => updateRelative(r.id, { relationship: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.relationship, (v) => updateRelative(r.id, { relationship: v }))} />
                 </Field>
                 <Field label="氏名">
-                  <input className={inputClass} value={r.name} onChange={(e) => updateRelative(r.id, { name: e.target.value })} />
+                  <input className={inputClass} value={r.name} onChange={(e) => updateRelative(r.id, { name: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.name, (v) => updateRelative(r.id, { name: v }))} />
                 </Field>
                 <Field label="生年月日">
                   <input type="date" className={inputClass} value={r.dateOfBirth} onChange={(e) => updateRelative(r.id, { dateOfBirth: e.target.value })} />
                 </Field>
                 <Field label="国籍・地域">
-                  <input className={inputClass} value={r.nationality} onChange={(e) => updateRelative(r.id, { nationality: e.target.value })} />
+                  <input className={inputClass} value={r.nationality} onChange={(e) => updateRelative(r.id, { nationality: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.nationality, (v) => updateRelative(r.id, { nationality: v }))} />
                 </Field>
                 <Field label="勤務先名称・通学先名称">
-                  <input className={inputClass} value={r.workplace} onChange={(e) => updateRelative(r.id, { workplace: e.target.value })} />
+                  <input className={inputClass} value={r.workplace} onChange={(e) => updateRelative(r.id, { workplace: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.workplace, (v) => updateRelative(r.id, { workplace: v }))} />
                 </Field>
                 <Field label={layout.livesTogetherLabel ?? "同居の有無"}>
                   <select className={inputClass} value={r.livesTogether} onChange={(e) => updateRelative(r.id, { livesTogether: e.target.value as Relative["livesTogether"] })}>
@@ -361,7 +369,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
                 <input className={inputClass} placeholder="YYYY-MM（在職中は空）" value={w.leftOn} onChange={(e) => updateWork(w.id, { leftOn: e.target.value })} />
               </Field>
               <Field label="勤務先名称">
-                <input className={inputClass} value={w.employer} onChange={(e) => updateWork(w.id, { employer: e.target.value })} />
+                <input className={inputClass} value={w.employer} onChange={(e) => updateWork(w.id, { employer: e.target.value })} {...zenkakuHandlers(WORK_ENTRY_ZENKAKU.employer, (v) => updateWork(w.id, { employer: v }))} />
               </Field>
               <div className="flex items-end">
                 <Button variant="danger" onClick={() => set("workHistory", form.workHistory.filter((x) => x.id !== w.id))}>

@@ -8,6 +8,7 @@ import { Button, Field, inputClass } from "@/components/ui";
 import { hasAcceptedDateError, isAcceptedAfterPlanned } from "@/lib/acceptedDate";
 import { formatDate } from "@/lib/format";
 import { logAudit, updateCase } from "@/lib/store";
+import { CASE_MEMO_ZENKAKU, zenkakuHandlers } from "@/lib/zenkaku";
 import { PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type CaseRecord, type ProcedureType } from "@/lib/types";
 
 export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdit: boolean }) {
@@ -124,7 +125,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
       )}
       <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} plannedApplicationDate={record.plannedApplicationDate} />
       <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
-        <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} />
+        <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} {...zenkakuHandlers(CASE_MEMO_ZENKAKU, setMemo)} />
       </Field>
       <div className="flex justify-end gap-3">
         <Button type="button" variant="secondary" onClick={() => setEditing(false)}>

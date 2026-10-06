@@ -17,6 +17,7 @@ import { notApplicableMessage, shouldShowNoRuleGuide } from "@/lib/requirements/
 import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type EmploymentInfo, type ProcedureType } from "@/lib/types";
+import { CASE_MEMO_ZENKAKU, zenkakuHandlers } from "@/lib/zenkaku";
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -273,7 +274,7 @@ export default function NewCasePage() {
           </p>
         )}
         <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
-          <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} />
+          <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} {...zenkakuHandlers(CASE_MEMO_ZENKAKU, setMemo)} />
         </Field>
         {bulk && (
           <>
