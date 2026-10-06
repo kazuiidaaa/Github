@@ -228,11 +228,6 @@ export default function NewCasePage() {
         </div>
       )}
       <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
-        {!bulk && (
-          <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">
-            <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
-          </Field>
-        )}
         <ChoiceGroup
           legend="手続種別"
           required
@@ -242,18 +237,34 @@ export default function NewCasePage() {
           error={errors.procedureType}
           hint={description}
         />
-        <StatusSelect legend="現在の在留資格" hint={STATUS_HINTS.current} value={currentStatus} onChange={setCurrentStatus} />
-        {needsTarget && (
-          <StatusSelect
-            legend={targetStatusLabel(procedureType)}
-            required
-            error={errors.targetStatus}
-            hint={STATUS_HINTS.target}
-            value={targetStatus}
-            onChange={setTargetStatus}
-            withGrade
-            allowGrade2={procedureType === "change"}
-          />
+        {!bulk && (
+          <Field label="案件名" required error={errors.caseName} hint="例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）">
+            <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
+          </Field>
+        )}
+        {/* 手続種別を選ぶまで在留資格の欄は出さない。非表示の間も入力値は保持し、再表示で戻る（保存は表示中の欄のみ） */}
+        {procedureType === "" ? (
+          <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+            手続種別を選ぶと、必要な項目が表示されます。
+          </p>
+        ) : (
+          <div className="anim-fade-in space-y-5">
+            <StatusSelect legend="現在の在留資格" hint={STATUS_HINTS.current} value={currentStatus} onChange={setCurrentStatus} />
+            {needsTarget && (
+              <div className="anim-fade-in">
+                <StatusSelect
+                  legend={targetStatusLabel(procedureType)}
+                  required
+                  error={errors.targetStatus}
+                  hint={STATUS_HINTS.target}
+                  value={targetStatus}
+                  onChange={setTargetStatus}
+                  withGrade
+                  allowGrade2={procedureType === "change"}
+                />
+              </div>
+            )}
+          </div>
         )}
         <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
         {showNoRuleGuide && (
