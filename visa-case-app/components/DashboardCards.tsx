@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Summary } from "@/lib/caseMetrics";
 import { useT } from "@/lib/i18n/LanguageProvider";
+import { useMetricText } from "@/lib/i18n/metrics";
 import { HOME_METRIC_KEYS, metricsFor, type CardKey, type MetricDefinition } from "@/lib/dashboardMetrics";
 
 export type { CardKey };
@@ -32,11 +33,12 @@ function CardShell({
   children: (body: React.ReactNode) => React.ReactNode;
 }) {
   const t = useT();
+  const { label, description } = useMetricText()(metric.key);
   return (
     <div className={`${className} relative w-36 shrink-0 snap-start md:w-auto`}>
       {children(
         <>
-          <span className="block pr-7 text-xs text-slate-500 md:pr-0">{metric.label}</span>
+          <span className="block pr-7 text-xs text-slate-500 md:pr-0">{label}</span>
           <span className="mt-1 block text-2xl font-semibold">{summary[metric.field]}</span>
         </>,
       )}
@@ -44,7 +46,7 @@ function CardShell({
         type="button"
         onClick={onInfo}
         aria-expanded={infoOpen}
-        aria-label={t(infoOpen ? "display.metricInfoHide" : "display.metricInfoShow", { label: metric.label })}
+        aria-label={t(infoOpen ? "display.metricInfoHide" : "display.metricInfoShow", { label })}
         className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 md:hidden"
       >
         <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold leading-none">
@@ -52,7 +54,7 @@ function CardShell({
         </span>
       </button>
       <p id={descId} className="hidden px-4 pb-4 text-xs leading-relaxed text-slate-500 md:block">
-        {metric.description}
+        {description}
       </p>
     </div>
   );
@@ -73,6 +75,7 @@ function MetricRow({
   className?: string;
 }) {
   const t = useT();
+  const metricText = useMetricText();
   const [infoKey, setInfoKey] = useState<CardKey | null>(null);
   const rowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -80,6 +83,7 @@ function MetricRow({
     el?.parentElement?.scrollIntoView?.({ inline: "center", block: "nearest" });
   }, [activeKey]);
   const shown = metrics.find((m) => m.key === infoKey);
+  const shownText = shown ? metricText(shown.key) : null;
   return (
     <div className={className}>
       <div
@@ -88,9 +92,9 @@ function MetricRow({
       >
         {metrics.map((m) => renderCard(m, { open: infoKey === m.key, toggle: () => setInfoKey(infoKey === m.key ? null : m.key) }))}
       </div>
-      {shown && (
+      {shown && shownText && (
         <p role="status" className="mt-2 rounded-xl border border-line-strong px-3 py-2 text-xs leading-relaxed text-slate-600 md:hidden">
-          <span className="font-bold">{shown.label}</span>{t("display.metricLabelDescJoin")}{shown.description}
+          <span className="font-bold">{shownText.label}</span>{t("display.metricLabelDescJoin")}{shownText.description}
         </p>
       )}
     </div>
