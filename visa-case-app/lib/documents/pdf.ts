@@ -229,10 +229,17 @@ export async function buildPdf(doc: GeneratedDocument, fontBytes: Uint8Array): P
 
 let fontPromise: Promise<Uint8Array> | null = null;
 
-/** 同じ生成元から配信する日本語フォントを読み込む（初回のみ。約5MB） */
+/**
+ * 日本語フォント（Noto Sans JP Regular、SIL Open Font License 1.1）の配信元。
+ * リポジトリの容量削減のため同梱せず、版（Sans2.004）を固定した jsDelivr から取得する。
+ */
+export const JAPANESE_FONT_URL =
+  "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@Sans2.004/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf";
+
+/** 日本語フォントを外部の配信元から読み込む（初回のみ。約4.5MB） */
 export function loadJapaneseFont(): Promise<Uint8Array> {
   if (!fontPromise) {
-    fontPromise = fetch("/fonts/NotoSansJP-Regular.ttf")
+    fontPromise = fetch(JAPANESE_FONT_URL)
       .then((r) => {
         if (!r.ok) throw new Error("font");
         return r.arrayBuffer();

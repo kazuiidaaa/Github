@@ -1,15 +1,27 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import fontkit from "@pdf-lib/fontkit";
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { beforeAll, describe, expect, it } from "vitest";
 import { buildBlocks } from "../lib/documents/model";
-import { buildPdf, wrapText } from "../lib/documents/pdf";
+import { buildPdf, JAPANESE_FONT_URL, wrapText } from "../lib/documents/pdf";
 import { buildContent } from "../lib/documents/snapshot";
 import type { GeneratedDocument } from "../lib/documents/types";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
-const font = new Uint8Array(readFileSync("public/fonts/NotoSansJP-Regular.ttf"));
+// フォントは同梱しないため、初回のみ配信元から取得して node_modules/.cache に保存し、以降は再利用する
+async function loadFont(): Promise<Uint8Array> {
+  const file = "node_modules/.cache/fonts/NotoSansJP-Regular.otf";
+  if (!existsSync(file)) {
+    const res = await fetch(JAPANESE_FONT_URL);
+    if (!res.ok) throw new Error(`フォントを取得できません: ${res.status}`);
+    mkdirSync("node_modules/.cache/fonts", { recursive: true });
+    writeFileSync(file, new Uint8Array(await res.arrayBuffer()));
+  }
+  return new Uint8Array(readFileSync(file));
+}
+
+const font = await loadFont();
 
 function record(extra: Partial<CaseRecord> = {}): CaseRecord {
   return {
