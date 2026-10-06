@@ -13,7 +13,7 @@ import {
   sheetKey,
 } from "./changeMapping";
 
-// 方式は renewal.test.ts と同じ（docs/phase11-renewal-fill-engine.md、本様式は docs/phase11-change-fill-engine.md）。
+// 方式は renewal.test.ts と同じ（docs/phase11-fill-engines.md の更新編、本様式は同変更編）。
 // 値はすべてダミー。実案件の個人情報は書かない。
 
 const applicant: Applicant = {

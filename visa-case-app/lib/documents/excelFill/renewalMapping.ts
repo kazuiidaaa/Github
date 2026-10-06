@@ -6,7 +6,7 @@ import type { Applicant, EmploymentInfo } from "../../types";
  * 公式の在留期間更新許可申請書（別記第三十号の二様式・Excel）の「入力欄」のセル座標と、案件DBの対応表。
  *
  * 項目番号・項目名・取得元は lib/documents/formMapping.ts の SHEETS に合わせている。
- * 座標の特定方法・シート名の扱い・対象外の項目は docs/phase11-renewal-fill-engine.md に記録している。
+ * 座標の特定方法・シート名の扱い・対象外の項目は docs/phase11-fill-engines.md（更新編） に記録している。
  * 様式が改正された場合は、docs の手順で座標を再特定し、このファイルを更新する（tests も更新する）。
  */
 

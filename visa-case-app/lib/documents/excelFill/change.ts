@@ -1,5 +1,4 @@
 import path from "node:path";
-import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
@@ -16,6 +15,7 @@ import {
   sheetKey,
   type ChangeCtx,
 } from "./changeMapping";
+import { fillWorkbook } from "./fillWorkbook";
 
 /** 差し込み元テンプレート（リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
 export const CHANGE_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "change-application-form_930004065.xlsx");
@@ -33,35 +33,16 @@ export async function fillChangeExcel(
   targetStatus: string,
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: ChangeCtx = { a, e, f, targetStatus };
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(CHANGE_TEMPLATE_PATH);
-
-  const sheets = new Map(wb.worksheets.map((ws) => [sheetKey(ws.name), ws]));
-  const sheetOf = (name: string) => {
-    const ws = sheets.get(sheetKey(name));
-    if (!ws) throw new Error(`テンプレートにシートがありません: ${name}`);
-    return ws;
-  };
-
   // 経営・管理への変更は、第2表以降（様式Nの表）を使えないため、第1表（申請人用（変更）１）だけを差し込む（Issue #191）
   const firstOnly = isKeieiKanri(targetStatus);
   const first = sheetKey(SHEET_CHANGE_APPLICANT_1);
   const inRange = (sheet: string) => !firstOnly || sheetKey(sheet) === first;
-  for (const it of CHANGE_FILL_ITEMS) {
-    if (!inRange(it.sheet)) continue;
-    const value = it.get(ctx);
-    if (value === "") continue;
-    sheetOf(it.sheet).getCell(it.cell).value = value;
-  }
-  for (const p of CHANGE_PICK_ITEMS) {
-    if (!inRange(p.sheet)) continue;
-    const writes = p.writes[p.get(ctx)];
-    if (!writes) continue;
-    const ws = sheetOf(p.sheet);
-    for (const [cell, value] of Object.entries(writes)) ws.getCell(cell).value = value === "" ? null : value;
-  }
-
-  const buffer = Buffer.from(await wb.xlsx.writeBuffer());
+  const buffer = await fillWorkbook(
+    CHANGE_TEMPLATE_PATH,
+    ctx,
+    CHANGE_FILL_ITEMS.filter((it) => inRange(it.sheet)),
+    CHANGE_PICK_ITEMS.filter((p) => inRange(p.sheet)),
+  );
   return { buffer, warnings: buildWarnings(ctx) };
 }
 

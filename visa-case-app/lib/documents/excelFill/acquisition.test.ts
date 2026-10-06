@@ -7,7 +7,7 @@ import { ACQUISITION_FILL_ITEMS, ACQUISITION_PICK_ITEMS, SHEET_ACQUISITION } fro
 import { fillOfficialExcel } from "./index";
 import { sheetKey } from "./renewalMapping";
 
-// テストの書き方は docs/phase11-renewal-fill-engine.md、本様式の判断は docs/phase11-acquisition-fill-engine.md を参照。
+// テストの書き方は docs/phase11-fill-engines.md の更新編、本様式の判断は同取得編を参照。
 // 値はすべてダミー。実案件の個人情報は書かない。
 
 const applicant: Applicant = {

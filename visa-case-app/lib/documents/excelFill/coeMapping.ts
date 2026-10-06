@@ -14,7 +14,7 @@ import {
  *
  * 項目番号・項目名は lib/formDetails.ts の FORM_LAYOUTS.coe（原本の項番）に合わせている。
  * 更新・変更の様式とは項番が異なる（申請人用1は 5〜21、申請人用2は 22〜27、所属機関用の実務経験年数以降は 8・9・10・12）。
- * 座標の特定方法・シート名の扱い・対象外の項目は docs/phase11-renewal-fill-engine.md（方式）と docs/phase11-coe-fill-engine.md（認定の判断）。
+ * 座標の特定方法・シート名の扱い・対象外の項目は docs/phase11-fill-engines.md（更新編が方式、認定編が認定の判断）。
  * 様式が改正された場合は、docs の手順で座標を再特定し、このファイルを更新する（tests も更新する）。
  *
  * 更新（renewalMapping.ts）と共通の型・関数は import し、様式ごとに異なる小さな補助関数だけをここに持つ

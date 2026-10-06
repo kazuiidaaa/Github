@@ -4,7 +4,7 @@ import type { ProcedureType } from "./types";
 
 // 公式の在留期間更新許可申請書（技術・人文知識・国際業務）にあって、
 // 申請人情報・雇用情報の既存項目にない入力項目。項目番号は公式様式のもの。
-// 根拠：docs/phase9-official-forms-research.md
+// 根拠：docs/official-forms-research.md（更新編）
 
 export interface Relative {
   id: string;
@@ -87,7 +87,7 @@ export interface FormDetails {
   dispatchCapital: string;
   dispatchAnnualSales: string;
   dispatchPeriod: string;
-  // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/phase14-acquisition-forms-research.md
+  // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
   /** 11 その他の場合の内容 */
@@ -106,7 +106,7 @@ export interface FormDetails {
   guarantorMobilePhone: string;
 
   // 在留資格認定証明書交付申請（別記第六号の三様式）に固有の項目（Issue #85）。
-  // 根拠：docs/phase13-coe-forms-research.md
+  // 根拠：docs/official-forms-research.md（認定編）
   /** 9 日本における連絡先 */
   contactInJapan: string;
   /** 12 入国予定年月日 */
@@ -254,7 +254,7 @@ export type FormDetailsErrors = Partial<Record<keyof FormDetails, string>>;
 // ここの FormLayout から取得する。FormLayout に項目名がないフィールドは、その手続では表示しない。
 //
 // 新しい様式は、FORM_LAYOUTS に自分の手続種別の1エントリを追加するだけでよい（取得は #87 で追加）。
-// 追加の手順は docs/phase12-change-forms-research.md の「項目番号表の仕組み」。
+// 追加の手順は docs/official-forms-research.md（変更編） の「項目番号表の仕組み」。
 // ---------------------------------------------------------------------------
 
 export type FormFieldKey = keyof FormDetails;
@@ -455,7 +455,7 @@ const COE_LAYOUT: FormLayout = {
  * 別記第三十六号様式（Issue #87）。用紙は1枚で、職歴・所属機関等・学歴の欄はない（sectionTitles に書かず、表示しない）。
  * 項番は更新・変更と異なる（出生地5、取得の事由11、在留の理由12、身元保証人16、代理人17）。
  * COMMON_LABELS は展開せず、原本（docs/official/acquisition-application-form_930004121.xlsx）の項番を直接書く。
- * 代理人（17）の携帯電話番号は、項目を追加しない（docs/phase14-acquisition-forms-research.md の3章）。
+ * 代理人（17）の携帯電話番号は、項目を追加しない（docs/official-forms-research.md（取得編） の3章）。
  */
 const ACQUISITION_LAYOUT: FormLayout = {
   formName: "在留資格取得許可申請書",

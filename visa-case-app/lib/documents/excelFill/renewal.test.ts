@@ -13,7 +13,7 @@ import {
   sheetKey,
 } from "./renewalMapping";
 
-// テストの書き方（#80・#84・#86・#88 も同じ方式）は docs/phase11-renewal-fill-engine.md を参照。
+// テストの書き方（#80・#84・#86・#88 も同じ方式）は docs/phase11-fill-engines.md（更新編） を参照。
 // 値はすべてダミー。実案件の個人情報は書かない。
 
 const applicant: Applicant = {

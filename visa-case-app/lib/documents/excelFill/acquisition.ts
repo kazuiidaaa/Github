@@ -1,9 +1,8 @@
 import path from "node:path";
-import ExcelJS from "exceljs";
 import type { FormDetails } from "../../formDetails";
 import type { Applicant } from "../../types";
 import { ACQUISITION_FILL_ITEMS, ACQUISITION_PICK_ITEMS, MAX_RELATIVES, type AcquisitionCtx } from "./acquisitionMapping";
-import { sheetKey } from "./renewalMapping";
+import { fillWorkbook } from "./fillWorkbook";
 
 /** 差し込み元テンプレート（リポジトリ同梱。Node.js ランタイムで、ファイルシステム経由で読み込む） */
 export const ACQUISITION_TEMPLATE_PATH = path.join(process.cwd(), "docs", "official", "acquisition-application-form_930004121.xlsx");
@@ -21,29 +20,7 @@ export async function fillAcquisitionExcel(
   targetStatus = "",
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: AcquisitionCtx = { a, f, targetStatus };
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(ACQUISITION_TEMPLATE_PATH);
-
-  const sheets = new Map(wb.worksheets.map((ws) => [sheetKey(ws.name), ws]));
-  const sheetOf = (name: string) => {
-    const ws = sheets.get(sheetKey(name));
-    if (!ws) throw new Error(`テンプレートにシートがありません: ${name}`);
-    return ws;
-  };
-
-  for (const it of ACQUISITION_FILL_ITEMS) {
-    const value = it.get(ctx);
-    if (value === "") continue;
-    sheetOf(it.sheet).getCell(it.cell).value = value;
-  }
-  for (const p of ACQUISITION_PICK_ITEMS) {
-    const writes = p.writes[p.get(ctx)];
-    if (!writes) continue;
-    const ws = sheetOf(p.sheet);
-    for (const [cell, value] of Object.entries(writes)) ws.getCell(cell).value = value === "" ? null : value;
-  }
-
-  const buffer = Buffer.from(await wb.xlsx.writeBuffer());
+  const buffer = await fillWorkbook(ACQUISITION_TEMPLATE_PATH, ctx, ACQUISITION_FILL_ITEMS, ACQUISITION_PICK_ITEMS);
   return { buffer, warnings: buildWarnings(ctx) };
 }
 

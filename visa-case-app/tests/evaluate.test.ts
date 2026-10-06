@@ -157,7 +157,7 @@ describe("在留資格変更許可申請（技術・人文知識・国際業務�
   ];
   const ALWAYS_CHECK = ["vocational_school_certificate", "dispatch_pledge", "dispatch_contract_documents"];
 
-  // docs/phase12-change-requirements-research.md の4章の表と照合した期待値（カテゴリー × 納期の特例）
+  // docs/requirements-research.md（変更編） の4章の表と照合した期待値（カテゴリー × 納期の特例）
   const EXPECTED: Record<string, { required: string[]; check: string[]; special?: string[] }> = {
     "": { required: COMMON, check: ALWAYS_CHECK },
     "1": { required: [...COMMON, "category1_proof"], check: ALWAYS_CHECK },

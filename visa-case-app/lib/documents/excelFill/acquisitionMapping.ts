@@ -6,9 +6,9 @@ import type { Applicant } from "../../types";
  * 公式の在留資格取得許可申請書（別記第三十六号様式・Excel）の「入力欄」のセル座標と、案件DBの対応表。
  *
  * 座標は、テンプレート（docs/official/acquisition-application-form_930004121.xlsx）の
- * ロック解除セルを機械的に列挙して特定した（手順は docs/phase11-renewal-fill-engine.md）。
- * 項目番号・取得元は docs/phase14-acquisition-forms-research.md の対応表と、FORM_LAYOUTS.acquisition に合わせている。
- * 対象外の項目・設計判断は docs/phase11-acquisition-fill-engine.md に記録している。
+ * ロック解除セルを機械的に列挙して特定した（手順は docs/phase11-fill-engines.md（更新編））。
+ * 項目番号・取得元は docs/official-forms-research.md（取得編） の対応表と、FORM_LAYOUTS.acquisition に合わせている。
+ * 対象外の項目・設計判断は docs/phase11-fill-engines.md（取得編） に記録している。
  * 取得様式は雇用情報を前提にしないため、入力に EmploymentInfo は含めない。
  */
 
