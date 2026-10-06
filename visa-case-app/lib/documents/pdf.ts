@@ -1,9 +1,10 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { DEFAULT_LANG, type Lang } from "./lang";
 import { buildBlocks, footerLabel } from "./model";
 import type { GeneratedDocument } from "./types";
 
-// 保存済みの content_json だけから PDF を作る。日本語フォントは呼び出し側が渡す（埋め込みは使用文字のみ）。
+// 保存済みの content_json だけから PDF を作る。日本語・韓国語のフォントは呼び出し側が渡す（フォント全体を埋め込む）。
 // 改ページは行・表の行の単位で行い、表の見出し行は次のページにも繰り返す。
 
 const A4 = { w: 595.28, h: 841.89 };
@@ -24,8 +25,58 @@ function clean(t: string): string {
   return t.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").replace(/\t/g, " ");
 }
 
+/** 文字列の幅を測れるもの（PDFFont、または複数のフォントをまとめた FontSet） */
+export interface TextMeasurer {
+  widthOfTextAtSize(text: string, size: number): number;
+}
+
+/**
+ * 複数のフォントを、文字ごとに使い分ける。最初のフォントに無い文字は、次のフォントで描く。
+ * 韓国語のご案内書類で、ハングルは韓国語のフォント、漢字・かなは日本語のフォントで描くために使う。
+ * どのフォントにも無い文字は、最初のフォントで描く（欠けた字形になる）。
+ */
+export class FontSet implements TextMeasurer {
+  private sets: Set<number>[];
+
+  constructor(private fonts: PDFFont[]) {
+    this.sets = fonts.map((f) => new Set(f.getCharacterSet()));
+  }
+
+  private indexOf(ch: string): number {
+    if (this.fonts.length === 1) return 0;
+    const cp = ch.codePointAt(0) ?? 0;
+    const i = this.sets.findIndex((s) => s.has(cp));
+    return i < 0 ? 0 : i;
+  }
+
+  /** 同じフォントで描ける文字ごとに区切る */
+  runs(text: string): { font: PDFFont; text: string }[] {
+    const out: { font: PDFFont; text: string; i: number }[] = [];
+    for (const ch of text) {
+      const i = this.indexOf(ch);
+      const last = out[out.length - 1];
+      if (last && last.i === i) last.text += ch;
+      else out.push({ font: this.fonts[i], text: ch, i });
+    }
+    return out;
+  }
+
+  widthOfTextAtSize(text: string, size: number): number {
+    if (this.fonts.length === 1) return this.fonts[0].widthOfTextAtSize(text, size);
+    return this.runs(text).reduce((w, r) => w + r.font.widthOfTextAtSize(r.text, size), 0);
+  }
+
+  drawText(page: PDFPage, text: string, o: { x: number; y: number; size: number; color: ReturnType<typeof rgb> }) {
+    let x = o.x;
+    for (const r of this.runs(text)) {
+      page.drawText(r.text, { x, y: o.y, size: o.size, font: r.font, color: o.color });
+      x += r.font.widthOfTextAtSize(r.text, o.size);
+    }
+  }
+}
+
 /** 指定の幅に収まるように、文字単位で折り返す。英単語は可能なら空白で折る */
-export function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+export function wrapText(text: string, font: TextMeasurer, size: number, maxWidth: number): string[] {
   const lines: string[] = [];
   for (const raw of text.split("\n")) {
     const paragraph = clean(raw);
@@ -62,13 +113,13 @@ export function wrapText(text: string, font: PDFFont, size: number, maxWidth: nu
 
 class Writer {
   pdf: PDFDocument;
-  font: PDFFont;
+  font: FontSet;
   page!: PDFPage;
   y = 0;
   pages: PDFPage[] = [];
   contentWidth = A4.w - MARGIN * 2;
 
-  constructor(pdf: PDFDocument, font: PDFFont) {
+  constructor(pdf: PDFDocument, font: FontSet) {
     this.pdf = pdf;
     this.font = font;
     this.newPage();
@@ -92,8 +143,8 @@ class Writer {
   /** 太字の代わりに、わずかにずらして2回描く */
   draw(text: string, x: number, y: number, size: number, color = BLACK, bold = false) {
     if (!text) return;
-    this.page.drawText(text, { x, y, size, font: this.font, color });
-    if (bold) this.page.drawText(text, { x: x + 0.35, y, size, font: this.font, color });
+    this.font.drawText(this.page, text, { x, y, size, color });
+    if (bold) this.font.drawText(this.page, text, { x: x + 0.35, y, size, color });
   }
 
   /** 折り返した行を、ページをまたいで描く */
@@ -166,23 +217,39 @@ class Writer {
     this.pages.forEach((p, i) => {
       const t = `${label}　${i + 1} / ${n}`;
       const w = this.font.widthOfTextAtSize(t, 8);
-      p.drawText(t, { x: (A4.w - w) / 2, y: MARGIN - 8, size: 8, font: this.font, color: GRAY });
+      this.font.drawText(p, t, { x: (A4.w - w) / 2, y: MARGIN - 8, size: 8, color: GRAY });
     });
   }
 }
 
-/** PDF を作る。fontBytes は日本語に対応した TrueType/OpenType フォント */
-export async function buildPdf(doc: GeneratedDocument, fontBytes: Uint8Array): Promise<Blob> {
+/**
+ * PDF を作る。fontBytes は、文書の言語に対応した TrueType/OpenType フォント（日本語・英語は日本語のフォント、韓国語は韓国語のフォント）。
+ * fallbackFontBytes は、fontBytes に無い文字（韓国語の文書に含まれる漢字・かななど）を描くためのフォント。
+ * lang は、ご案内書類（client_guide）の言語。それ以外の文書は、日本語のみ。
+ */
+export async function buildPdf(
+  doc: GeneratedDocument,
+  fontBytes: Uint8Array,
+  lang: Lang = DEFAULT_LANG,
+  fallbackFontBytes: Uint8Array[] = [],
+): Promise<Blob> {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
-  const font = await pdf.embedFont(fontBytes, { subset: true });
+  // subset: true は使わない。fontkit の絞り込みが、Noto Sans の字形データを途中で切ってしまい、
+  // 文字が欠ける（日本語・英語・韓国語のいずれも、PDF で一部の文字が描かれない）ため。
+  // フォント全体を埋め込む（PDF は数 MB になる。圧縮される）。docs/client-guide-languages.md を参照
+  // locl（地域別の字形の置換）も切る。置換後の字形は、pdf-lib が幅を登録しない（既定の幅 1 em になる）ため、
+  // 英数字だけの文（日時など）で、数字の間隔が広がる
+  const embedded = [];
+  for (const bytes of [fontBytes, ...fallbackFontBytes]) embedded.push(await pdf.embedFont(bytes, { subset: false, features: { locl: false } }));
+  const font = new FontSet(embedded);
   pdf.setTitle(`${doc.title} v${doc.version}`);
   pdf.setSubject("内部確認用（公式様式ではありません）");
   pdf.setCreator("在留資格案件管理");
   pdf.setProducer("在留資格案件管理");
   const w = new Writer(pdf, font);
 
-  for (const b of buildBlocks(doc)) {
+  for (const b of buildBlocks(doc, lang)) {
     switch (b.kind) {
       case "eyebrow":
         w.lines(b.text, 9, GRAY);
@@ -222,33 +289,46 @@ export async function buildPdf(doc: GeneratedDocument, fontBytes: Uint8Array): P
         break;
     }
   }
-  w.footers(footerLabel(doc));
+  w.footers(footerLabel(doc, lang));
   const bytes = await pdf.save();
   return new Blob([bytes as BlobPart], { type: "application/pdf" });
 }
 
-let fontPromise: Promise<Uint8Array> | null = null;
+const fontPromises = new Map<string, Promise<Uint8Array>>();
 
 /**
- * 日本語フォント（Noto Sans JP Regular、SIL Open Font License 1.1）の配信元。
+ * 日本語・韓国語フォント（Noto Sans JP / KR Regular、SIL Open Font License 1.1）の配信元。
  * リポジトリの容量削減のため同梱せず、版（Sans2.004）を固定した jsDelivr から取得する。
  */
-export const JAPANESE_FONT_URL =
-  "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@Sans2.004/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf";
+const FONT_BASE = "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@Sans2.004/Sans/SubsetOTF";
+export const JAPANESE_FONT_URL = `${FONT_BASE}/JP/NotoSansJP-Regular.otf`;
+export const KOREAN_FONT_URL = `${FONT_BASE}/KR/NotoSansKR-Regular.otf`;
 
-/** 日本語フォントを外部の配信元から読み込む（初回のみ。約4.5MB） */
-export function loadJapaneseFont(): Promise<Uint8Array> {
-  if (!fontPromise) {
-    fontPromise = fetch(JAPANESE_FONT_URL)
+/** 外部の配信元からフォントを読み込む（初回のみ） */
+function loadFont(path: string): Promise<Uint8Array> {
+  let p = fontPromises.get(path);
+  if (!p) {
+    p = fetch(path)
       .then((r) => {
         if (!r.ok) throw new Error("font");
         return r.arrayBuffer();
       })
       .then((b) => new Uint8Array(b))
       .catch((e) => {
-        fontPromise = null;
+        fontPromises.delete(path);
         throw e;
       });
+    fontPromises.set(path, p);
   }
-  return fontPromise;
+  return p;
+}
+
+/** 日本語のフォントを読み込む（約4.5MB）。日本語・英語の出力で使う。韓国語では、漢字・かなの代わりとしても使う */
+export function loadJapaneseFont(): Promise<Uint8Array> {
+  return loadFont(JAPANESE_FONT_URL);
+}
+
+/** 韓国語のフォントを読み込む（約4.6MB。韓国語の出力のときだけ） */
+export function loadKoreanFont(): Promise<Uint8Array> {
+  return loadFont(KOREAN_FONT_URL);
 }

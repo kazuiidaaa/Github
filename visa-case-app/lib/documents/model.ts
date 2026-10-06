@@ -1,4 +1,6 @@
 import { buildClientGuideBlocks } from "./clientGuide";
+import { CLIENT_GUIDE_TEXTS } from "./clientGuideText";
+import { DEFAULT_LANG, type Lang } from "./lang";
 import { hspSelectionSummary } from "./hspSummary";
 import { formatDate, formatDateTime } from "../format";
 import { CHECK_STATUS_LABELS, CHECK_TYPE_LABELS, REQUIREMENT_STATUS_LABELS } from "../types";
@@ -31,25 +33,36 @@ function kv(rows: [string, string | undefined][]): Block {
 }
 
 /** 文書の種類ごとの、見出し上の位置づけ */
-export function eyebrowOf(type: GeneratedDocument["documentType"]): string {
-  if (type === "client_guide") return "依頼者向けのご案内（行政書士の確認前は、下書きです）";
+export function eyebrowOf(type: GeneratedDocument["documentType"], lang: Lang = DEFAULT_LANG): string {
+  if (type === "client_guide") return CLIENT_GUIDE_TEXTS[lang].eyebrow;
   if (type === "official_application_form" || type === "hsp_point_sheet") return "公式様式への差し込み（下書き。提出前に原本と照合）";
   return type === "transcription_aid" ? "転記補助用（公式様式ではありません）" : "内部確認用（公式様式ではありません）";
 }
 
-export function buildBlocks(doc: GeneratedDocument): Block[] {
+/**
+ * 文書の構成を作る。lang は、依頼者向けのご案内書類（client_guide）の表示・出力の言語。
+ * それ以外の文書は、日本語のみ（lang は無視する）。
+ */
+export function buildBlocks(doc: GeneratedDocument, lang: Lang = DEFAULT_LANG): Block[] {
   const c = doc.content;
   const type = doc.documentType;
   const out: Block[] = [];
 
   if (type === "client_guide") {
-    return buildClientGuideBlocks(doc, eyebrowOf(type), {
-      kind: "status",
-      meta: `版：v${doc.version}　生成日時：${formatDateTime(c.generatedAt)}`,
-      label: GENERATED_STATUS_LABELS[doc.status],
-      confirmed: doc.status !== "draft",
-      reviewed: doc.reviewedAt ? `確認：${doc.reviewedByName ?? ""}／${formatDateTime(doc.reviewedAt)}` : "",
-    });
+    const t = CLIENT_GUIDE_TEXTS[lang];
+    return buildClientGuideBlocks(
+      doc,
+      eyebrowOf(type, lang),
+      {
+        kind: "status",
+        meta: t.meta(doc.version, formatDateTime(c.generatedAt)),
+        label: t.generatedStatus[doc.status],
+        confirmed: doc.status !== "draft",
+        // 確認者の氏名は、翻訳せず、原文のまま
+        reviewed: doc.reviewedAt ? t.reviewed(doc.reviewedByName ?? "", formatDateTime(doc.reviewedAt)) : "",
+      },
+      lang,
+    );
   }
 
   out.push({
@@ -221,7 +234,10 @@ export function buildBlocks(doc: GeneratedDocument): Block[] {
 }
 
 /** 各ページの下部に表示する文言（ページ番号は出力側で付ける） */
-export function footerLabel(doc: GeneratedDocument): string {
-  if (doc.documentType === "client_guide") return `${GENERATED_STATUS_LABELS[doc.status]}／依頼者向けのご案内`;
+export function footerLabel(doc: GeneratedDocument, lang: Lang = DEFAULT_LANG): string {
+  if (doc.documentType === "client_guide") {
+    const t = CLIENT_GUIDE_TEXTS[lang];
+    return t.footer(t.generatedStatus[doc.status]);
+  }
   return `${GENERATED_STATUS_LABELS[doc.status]}／${(doc.documentType === "official_application_form" || doc.documentType === "hsp_point_sheet") ? "下書き" : "内部確認用"}`;
 }

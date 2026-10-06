@@ -1,27 +1,15 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import fontkit from "@pdf-lib/fontkit";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
+import { loadJapaneseFontForTest } from "./helpers/fonts";
 import { beforeAll, describe, expect, it } from "vitest";
 import { buildBlocks } from "../lib/documents/model";
-import { buildPdf, JAPANESE_FONT_URL, wrapText } from "../lib/documents/pdf";
+import { buildPdf, wrapText } from "../lib/documents/pdf";
 import { buildContent } from "../lib/documents/snapshot";
 import type { GeneratedDocument } from "../lib/documents/types";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
 
-// フォントは同梱しないため、初回のみ配信元から取得して node_modules/.cache に保存し、以降は再利用する
-async function loadFont(): Promise<Uint8Array> {
-  const file = "node_modules/.cache/fonts/NotoSansJP-Regular.otf";
-  if (!existsSync(file)) {
-    const res = await fetch(JAPANESE_FONT_URL);
-    if (!res.ok) throw new Error(`フォントを取得できません: ${res.status}`);
-    mkdirSync("node_modules/.cache/fonts", { recursive: true });
-    writeFileSync(file, new Uint8Array(await res.arrayBuffer()));
-  }
-  return new Uint8Array(readFileSync(file));
-}
-
-const font = await loadFont();
+const font = await loadJapaneseFontForTest();
 
 function record(extra: Partial<CaseRecord> = {}): CaseRecord {
   return {
@@ -68,13 +56,14 @@ async function pagesOf(blob: Blob): Promise<number> {
 }
 
 describe("buildPdf", () => {
-  it("PDF形式で出力し、日本語フォントを埋め込む", async () => {
+  it("PDF形式で出力し、日本語フォントを（全体で）埋め込む", async () => {
     const blob = await buildPdf(doc(record()), font);
     const bytes = new Uint8Array(await blob.arrayBuffer());
     expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
     expect(blob.type).toBe("application/pdf");
-    // 全体のフォント（約5MB）ではなく、使用した文字だけを埋め込む
-    expect(bytes.length).toBeLessThan(1_000_000);
+    // フォント全体を埋め込む。pdf-lib（fontkit）の文字の絞り込み（subset）は、字形データが途中で切れて、文字が欠けるため使わない
+    // （字形が読み出せることは、tests/clientGuideLang.test.ts で確認する）
+    expect(bytes.length).toBeGreaterThan(1_000_000);
   });
 
   it("内容が多い場合は複数ページに分割する", async () => {

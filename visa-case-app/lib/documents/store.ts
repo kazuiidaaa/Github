@@ -6,6 +6,7 @@ import { logAudit, newId } from "../store";
 import { localKey } from "../demo";
 import { supabase, usesSupabase } from "../supabase";
 import type { CaseRecord } from "../types";
+import { DEFAULT_LANG, type Lang } from "./lang";
 import { findEditableDraft, mergeCreated, sortDocuments } from "./merge";
 import { buildContent, titleOf } from "./snapshot";
 import { XLSX_MIME, requestOfficialXlsx } from "./officialFormClient";
@@ -342,8 +343,11 @@ function saveBlob(blob: Blob, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-/** 保存済みの内容から、出力形式に応じたファイルを作る。現在の案件情報は参照しない */
-async function buildFile(doc: GeneratedDocument): Promise<Blob> {
+/**
+ * 保存済みの内容から、出力形式に応じたファイルを作る。現在の案件情報は参照しない。
+ * lang は、ご案内書類（client_guide）の言語。保存はしない（ファイルの中身にだけ反映する）
+ */
+async function buildFile(doc: GeneratedDocument, lang: Lang = DEFAULT_LANG): Promise<Blob> {
   if (doc.outputFormat === "xlsx") {
     // 保存した入力値の写しから作る（現在の案件情報は参照しない）
     const o = doc.content.officialForm;
@@ -351,11 +355,15 @@ async function buildFile(doc: GeneratedDocument): Promise<Blob> {
     return (await requestOfficialXlsx(doc.content.case.procedureType, o.input, o.kind === "hspPoint" ? "hspPoint" : undefined)).blob;
   }
   if (doc.outputFormat === "pdf") {
-    const { buildPdf, loadJapaneseFont } = await import("./pdf");
-    return buildPdf(doc, await loadJapaneseFont());
+    const { buildPdf, loadJapaneseFont, loadKoreanFont } = await import("./pdf");
+    // 韓国語は、ハングルを持つフォントを先に使い、漢字・かな（氏名など）は日本語のフォントで補う
+    if (doc.documentType === "client_guide" && lang === "ko") {
+      return buildPdf(doc, await loadKoreanFont(), lang, [await loadJapaneseFont()]);
+    }
+    return buildPdf(doc, await loadJapaneseFont(), lang);
   }
   const { buildDocx } = await import("./docx");
-  return buildDocx(doc);
+  return buildDocx(doc, lang);
 }
 
 /**
@@ -368,6 +376,8 @@ export async function exportFile(
   format: FileFormat,
   /** すでに作ったファイルがあれば渡す（エクセルを二重に作らないため） */
   prebuilt?: Blob,
+  /** ご案内書類の言語（ファイルの中身だけに反映し、版の内容には保存しない） */
+  lang: Lang = DEFAULT_LANG,
 ): Promise<GeneratedDocument> {
   const draft = findEditableDraft(byCase[source.caseId] ?? [], source.caseId, source.documentType, format);
   const id = draft?.id ?? newId();
@@ -384,7 +394,7 @@ export async function exportFile(
   if (usesSupabase()) {
     if (!source.organizationId) throw new AppError("文書の情報が不足しています。画面を読み込み直してください。");
     const path = draft?.storagePath ?? `${source.organizationId}/${source.caseId}/${id}.${format}`;
-    const blob = prebuilt ?? (await buildFile(fresh));
+    const blob = prebuilt ?? (await buildFile(fresh, lang));
     // 確認前の版の更新では、同じ保存先へ上書きする（上書きは、確認前の版のファイルのみ許可される）
     const up = await db().storage.from(FILE_BUCKET).upload(path, blob, { contentType: MIME[format], upsert: !!draft });
     if (up.error) throw toAppError(up.error);
@@ -431,7 +441,7 @@ export async function exportFile(
 }
 
 /** ファイルをダウンロードする。Supabase 利用時は短時間有効な署名付きURLを使う */
-export async function downloadFile(doc: GeneratedDocument): Promise<void> {
+export async function downloadFile(doc: GeneratedDocument, lang: Lang = DEFAULT_LANG): Promise<void> {
   if (usesSupabase()) {
     if (!doc.storagePath) throw new AppError("ファイルの保存先が見つかりません。");
     const { data, error: e } = await db()
@@ -445,7 +455,7 @@ export async function downloadFile(doc: GeneratedDocument): Promise<void> {
     a.click();
     a.remove();
   } else {
-    saveBlob(await buildFile(doc), fileNameOf(doc));
+    saveBlob(await buildFile(doc, lang), fileNameOf(doc));
   }
   logAudit(doc.caseId, `document_${doc.outputFormat}_downloaded`, { type: doc.documentType, version: doc.version });
 }
