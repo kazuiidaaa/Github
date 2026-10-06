@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { messageOf } from "@/lib/errors";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
+import { UnresolvedNote } from "@/components/documents/UnresolvedNote";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { Badge, Button } from "@/components/ui";
@@ -35,7 +36,8 @@ export default function DocumentsPage() {
   const canEdit = useCan("edit");
   const needsLogin = officialFormNeedsLogin(useDemo());
   const { documents, loaded, error } = useGeneratedDocuments(id);
-  const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => !isOfficialForm(t)));
+  const [selected, setSelected] = useState<InternalDocumentType[]>(INTERNAL_DOCUMENT_TYPES.filter((t) => !isOfficialForm(t) && t !== "client_guide"));
+  const [includeReceived, setIncludeReceived] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [failure, setFailure] = useState("");
@@ -87,7 +89,7 @@ export default function DocumentsPage() {
     setMessage("生成中……");
     setFailure("");
     try {
-      const touched = await generateDocuments(record, selected);
+      const touched = await generateDocuments(record, selected, { includeReceived });
       setNewIds(touched.map((d) => d.id));
       setMessage("生成しました（確認前の版がある場合は、その版を更新しました）。内容を確認してください。");
     } catch (e) {
@@ -163,6 +165,17 @@ export default function DocumentsPage() {
             {DOCUMENT_TYPE_LABELS.reason_statement}（今後対応）
           </label>
         </div>
+        {selected.includes("client_guide") && (
+          <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3 text-sm">
+            <p>
+              ご案内書類には、「必要」と判定された書類のうち、未受領・依頼済みのものを載せます。依頼者へ渡す前に、行政書士が内容を確認してください。
+            </p>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={includeReceived} onChange={(e) => setIncludeReceived(e.target.checked)} />
+              受領済みの書類も載せる
+            </label>
+          </div>
+        )}
         {officialSelected && (
           <div className="mt-4 space-y-2">
             {scopeWarnings.map((w) => (
@@ -173,16 +186,7 @@ export default function DocumentsPage() {
             <OfficialFormNotice />
           </div>
         )}
-        {precheckNotes.length > 0 && (
-          <div role="note" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
-            <p>注意：次の事項が未解決です（生成はできます）。生成した書類は、行政書士が内容を確認してから使用してください。</p>
-            <ul className="mt-1 list-disc pl-5">
-              {precheckNotes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <UnresolvedNote count={precheckNotes.length} />
         <div className="mt-4 flex items-center gap-3">
           <Button onClick={() => void generate()} disabled={busy || selected.length === 0 || !canEdit}>
             {busy ? "生成中……" : "生成して保存"}

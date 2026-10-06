@@ -120,3 +120,15 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
   from pg_constraint
   where conrelid = 'public.generated_documents'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%document_type%';
   ```
+
+## 0022(生成文書:ご案内書類)
+
+- `supabase/migrations/0022_client_guide.sql`:`generated_documents.document_type` の許可する値に `client_guide` を追加します(制約の付け直しのみ。既存のデータ・ポリシー・トリガーは変更しません)。0021 の実行後に SQL Editor で実行します。
+- 実行しない場合、「申請書類作成」で「ご案内書類」を生成すると、保存に失敗します(既存の文書の生成は、従来どおり動作します)。
+- 実行後の確認:次の結果に `client_guide` が含まれていれば完了です。
+
+  ```sql
+  select pg_get_constraintdef(oid)
+  from pg_constraint
+  where conrelid = 'public.generated_documents'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%document_type%';
+  ```

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { EmploymentFields, hasEmploymentDateError } from "@/components/EmploymentForm";
-import { STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
+import { ChoiceGroup } from "@/components/ChoiceGroup";
+import { PROCEDURE_OPTIONS, STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
@@ -226,23 +227,27 @@ export default function NewCasePage() {
             <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
           </Field>
         )}
-        <Field label="手続種別" required error={errors.procedureType} hint={description}>
-          <select className={inputClass} value={procedureType} onChange={(e) => setProcedureType(e.target.value as ProcedureType | "")}>
-            <option value="">選択してください</option>
-            {PROCEDURE_TYPES.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="現在の在留資格" hint={STATUS_HINTS.current}>
-          <StatusSelect value={currentStatus} onChange={setCurrentStatus} />
-        </Field>
+        <ChoiceGroup
+          legend="手続種別"
+          required
+          options={PROCEDURE_OPTIONS}
+          value={procedureType}
+          onChange={(v) => setProcedureType(v as ProcedureType)}
+          error={errors.procedureType}
+          hint={description}
+        />
+        <StatusSelect legend="現在の在留資格" hint={STATUS_HINTS.current} value={currentStatus} onChange={setCurrentStatus} />
         {needsTarget && (
-          <Field label={targetStatusLabel(procedureType)} required error={errors.targetStatus} hint={STATUS_HINTS.target}>
-            <StatusSelect value={targetStatus} onChange={setTargetStatus} withGrade allowGrade2={procedureType === "change"} />
-          </Field>
+          <StatusSelect
+            legend={targetStatusLabel(procedureType)}
+            required
+            error={errors.targetStatus}
+            hint={STATUS_HINTS.target}
+            value={targetStatus}
+            onChange={setTargetStatus}
+            withGrade
+            allowGrade2={procedureType === "change"}
+          />
         )}
         {showNoRuleGuide && (
           <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">

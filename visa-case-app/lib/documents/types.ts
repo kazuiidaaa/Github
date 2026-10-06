@@ -9,7 +9,8 @@ export type GeneratedDocumentType =
   | "reason_statement"
   | "official_application_form"
   | "transcription_aid"
-  | "hsp_point_sheet";
+  | "hsp_point_sheet"
+  | "client_guide";
 
 /**
  * 「申請書類作成」画面で新規に生成できる文書。
@@ -21,6 +22,7 @@ export const INTERNAL_DOCUMENT_TYPES = [
   "applicant_summary",
   "application_checklist",
   "official_application_form",
+  "client_guide",
 ] as const;
 export type InternalDocumentType = (typeof INTERNAL_DOCUMENT_TYPES)[number];
 
@@ -47,6 +49,7 @@ export const DOCUMENT_TYPE_LABELS: Record<GeneratedDocumentType, string> = {
   official_application_form: "公式申請様式",
   transcription_aid: "転記補助シート",
   hsp_point_sheet: "高度専門職ポイント計算表",
+  client_guide: "ご案内書類",
 };
 
 export type GeneratedDocumentStatus = "draft" | "reviewed" | "submitted" | "archived";
@@ -116,6 +119,31 @@ export interface OfficialFormContent {
   input: { applicant: Applicant; employment: EmploymentInfo; formDetails: FormDetails; currentStatus: string; targetStatus?: string };
 }
 
+/** 依頼者向けのご案内書類（お願いする書類のご案内）の内容。生成時点の写し */
+export interface ClientGuideContent {
+  /** 宛名（申請人の氏名。未入力の場合は案件名） */
+  addressee: string;
+  /** 受領済み・確認済みの書類も載せたか */
+  includeReceived: boolean;
+  items: {
+    id: string;
+    name: string;
+    party: "applicant" | "organization";
+    /** 取得先・取得方法の目安 */
+    source: string;
+    status: RequirementStatus;
+    dueDate?: string;
+    /** 提出時の注意（原本・写し、発行日の条件など。規則に定めがある場合のみ） */
+    cautions: string[];
+  }[];
+}
+
+/** ご案内書類に付ける注意書き（依頼者に渡す文書のため、内部確認用の注意書きは使わない） */
+export const CLIENT_GUIDE_NOTICES = [
+  "この書類は、行政書士による確認前の案内です。内容は、確認の際に変更になることがあります。",
+  "申請の可否、許可の見込み、必要書類の最終判断を示すものではありません。",
+];
+
 /** 生成時点の案件情報の写し。生成後に案件が変わっても、この内容は変わらない */
 export interface ContentJson {
   schemaVersion: 1;
@@ -178,6 +206,7 @@ export interface ContentJson {
   };
   transcription?: TranscriptionContent;
   officialForm?: OfficialFormContent;
+  clientGuide?: ClientGuideContent;
   memo: string;
   notices: string[];
 }

@@ -122,7 +122,7 @@ export async function buildDocx(doc: GeneratedDocument): Promise<Blob> {
 
   const document = new Document({
     title: `${doc.title} v${doc.version}`,
-    description: "内部確認用（公式様式ではありません）",
+    description: doc.documentType === "client_guide" ? "依頼者向けのご案内" : "内部確認用（公式様式ではありません）",
     styles: { default: { document: { run: { font: FONT, size: 21 } } } },
     sections: [
       {

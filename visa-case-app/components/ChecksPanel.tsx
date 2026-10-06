@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeadlineBanner } from "@/components/DeadlineBanner";
+import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { missingChecks, sortChecks, unresolvedCount } from "@/lib/checks/definitions";
 import { referenceFor, validPlannedDate } from "@/lib/checks/reference";
@@ -25,6 +26,11 @@ const STATUS_TONE: Record<CheckStatus, "gray" | "green" | "yellow" | "red"> = {
   failed: "red",
   not_applicable: "gray",
 };
+const STATUS_OPTIONS: ChoiceOption[] = (Object.keys(CHECK_STATUS_LABELS) as CheckStatus[]).map((s) => ({
+  value: s,
+  label: CHECK_STATUS_LABELS[s],
+  tone: STATUS_TONE[s],
+}));
 const TYPES: CheckType[] = ["applicant", "document", "deadline", "manual"];
 
 export function ChecksPanel({ record }: { record: CaseRecord }) {
@@ -220,7 +226,7 @@ function CheckRow({
   const ref = referenceFor(record, check.key);
   const flushNote = useAutoSave(note, check.note, (v) => onPatch(check.key, { note: v }));
   return (
-    <li className="grid gap-2 px-6 py-3 text-sm md:grid-cols-[1fr_11rem]">
+    <li className="grid gap-2 px-6 py-3 text-sm md:grid-cols-[1fr_22rem]">
       <div>
         <p>{check.name}</p>
         {ref.text && (
@@ -236,20 +242,14 @@ function CheckRow({
         />
         {check.checkedAt && <p className="mt-1 text-xs text-slate-400">最終確認：{formatDateTime(check.checkedAt)}</p>}
       </div>
-      <div className="flex items-start gap-2">
-        <select
-          className="rounded-xl border border-line-strong bg-white px-2 py-1"
-          aria-label={`${check.name} 状態`}
+      <div className="flex flex-wrap items-start gap-2">
+        <ChoiceGroup
+          legend={`${check.name} 状態`}
+          hideLegend
+          options={STATUS_OPTIONS}
           value={check.status}
-          onChange={(e) => onPatch(check.key, { status: e.target.value as CheckStatus })}
-        >
-          {(Object.keys(CHECK_STATUS_LABELS) as CheckStatus[]).map((s) => (
-            <option key={s} value={s}>
-              {CHECK_STATUS_LABELS[s]}
-            </option>
-          ))}
-        </select>
-        <Badge tone={STATUS_TONE[check.status]}>{CHECK_STATUS_LABELS[check.status]}</Badge>
+          onChange={(v) => onPatch(check.key, { status: v as CheckStatus })}
+        />
         {check.type === "manual" && (
           <button onClick={onRemove} className="text-xs text-red-700 hover:underline">
             削除

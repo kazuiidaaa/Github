@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { messageOf } from "@/lib/errors";
+import { ClientGuideSheet } from "@/components/documents/ClientGuideSheet";
 import { DocumentSheet } from "@/components/documents/DocumentSheet";
 import { OfficialFormNotice } from "@/components/documents/OfficialFormNotice";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -163,7 +164,7 @@ export default function DocumentPreviewPage() {
           </span>
         </div>
       </div>
-      <DocumentSheet doc={doc} />
+      {doc.documentType === "client_guide" ? <ClientGuideSheet doc={doc} /> : <DocumentSheet doc={doc} />}
       {asking && (
         <ConfirmDialog
           title={STATUS_CONFIRM[asking].title}
