@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
@@ -15,6 +15,7 @@ import { FormDetailsForm } from "@/components/FormDetailsForm";
 import { RequirementsPanel } from "@/components/RequirementsPanel";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { ApplicantForm } from "@/components/ApplicantForm";
+import { MissingValue } from "@/components/MissingValue";
 import { NextActionCard } from "@/components/NextActionCard";
 import { useToast } from "@/components/Toast";
 import { UploadBox } from "@/components/UploadBox";
@@ -22,6 +23,7 @@ import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { UPLOADED_DOCUMENT_LABELS, findDocumentOfType, removeDocumentOfType } from "@/lib/documentKinds";
 import { expiryLevel } from "@/lib/caseMetrics";
+import { canJumpToApplicantField } from "@/lib/applicantFields";
 import { unresolvedCount } from "@/lib/checks/definitions";
 import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
 import { evaluate } from "@/lib/requirements/evaluate";
@@ -129,6 +131,25 @@ export default function CaseDetailPage() {
     // 選択中のタブが見える位置へ、タブバーだけを横にスクロールする
     document.getElementById(`case-tab-${tab}`)?.scrollIntoView({ inline: "nearest", block: "nearest" });
   }, [tab, tabBarShown]);
+  // 概要の「未入力」から移動するとき、タブの描画後にフォーカスする欄の id
+  const pendingFocusId = useRef<string | null>(null);
+  function jumpToField(id: string) {
+    pendingFocusId.current = id;
+    setTab("applicant");
+  }
+  useEffect(() => {
+    if (tab !== "applicant" || !pendingFocusId.current) return;
+    const el = document.getElementById(pendingFocusId.current);
+    if (!el) return;
+    pendingFocusId.current = null;
+    // 選択式の欄（性別・在留資格）は、id が欄全体の枠にあるため、中の選択済み（または先頭）の項目へフォーカスする
+    const target = el.matches("input,select,textarea,button")
+      ? el
+      : (el.querySelector<HTMLElement>('[role="radio"][tabindex="0"]') ?? el.querySelector<HTMLElement>('[role="radio"]:not(:disabled)'));
+    if (!target) return;
+    target.scrollIntoView({ block: "center" });
+    target.focus();
+  }, [tab, tabBarShown]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DocumentRecord | null>(null);
@@ -160,6 +181,7 @@ export default function CaseDetailPage() {
     toast.success(`${UPLOADED_DOCUMENT_LABELS[d.documentType]}を削除しました`);
   }
   const a = record.applicant;
+  const jump = canJumpToApplicantField(canEdit, a.confirmationStatus) ? jumpToField : undefined;
   // タブ見出しの未対応表示。値が null のタブは表示しない（選択中のタブも表示する）。
   const tabIndicators: Partial<Record<Tab, string>> = {};
   if (a.confirmationStatus !== "confirmed") tabIndicators.applicant = "未確認";
@@ -268,26 +290,27 @@ export default function CaseDetailPage() {
               </Badge>
             </h2>
             <dl className="grid grid-cols-1 gap-y-1 text-sm md:grid-cols-[10rem_1fr] md:gap-y-3">
+              {/* 未入力の項目は、編集できるときのみ、入力欄へ移動するボタンにする */}
               <dt className="text-slate-500">氏名</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.legalName || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.legalName || <MissingValue field="legalName" label="氏名" onJump={jump} />}</dd>
               <dt className="text-slate-500">国籍・地域</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.nationality || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.nationality || <MissingValue field="nationality" label="国籍・地域" onJump={jump} />}</dd>
               <dt className="text-slate-500">生年月日</dt>
-              <dd className="mb-2 break-words md:mb-0">{formatDate(a.dateOfBirth)}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.dateOfBirth ? formatDate(a.dateOfBirth) : <MissingValue field="dateOfBirth" label="生年月日" onJump={jump} />}</dd>
               <dt className="text-slate-500">性別</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.gender || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.gender || <MissingValue field="gender" label="性別" onJump={jump} />}</dd>
               <dt className="text-slate-500">住居地</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.address || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.address || <MissingValue field="address" label="住居地" onJump={jump} />}</dd>
               <dt className="text-slate-500">在留資格</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <MissingValue field="residenceStatus" label="在留資格" onJump={jump} />}</dd>
               <dt className="text-slate-500">在留期間の満了日</dt>
               <dd className="mb-2 md:mb-0">
-                <ExpiryBadge date={a.residenceExpiryDate} />
+                {a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : <MissingValue field="residenceExpiryDate" label="在留期間の満了日" onJump={jump} />}
               </dd>
               <dt className="text-slate-500">在留カード番号</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <MissingValue field="residenceCardNumber" label="在留カード番号" onJump={jump} />}</dd>
               <dt className="text-slate-500">就労制限</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <span className="text-slate-400">未入力</span>}</dd>
+              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <MissingValue field="workRestriction" label="就労制限" onJump={jump} />}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
               <p className="mt-4 text-sm text-green-700">

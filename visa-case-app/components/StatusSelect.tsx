@@ -54,6 +54,7 @@ export function procedureDescription(value: string): string | undefined {
 }
 
 export function StatusSelect({
+  id,
   value,
   onChange,
   disabled,
@@ -64,6 +65,8 @@ export function StatusSelect({
   hint,
   error,
 }: {
+  /** 最初の選択欄に付ける id（外からフォーカスを移すため） */
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
@@ -84,6 +87,8 @@ export function StatusSelect({
   const legacy = base && !(RESIDENCE_STATUSES as readonly string[]).includes(base) ? base : undefined;
   const name = legend ?? "在留資格";
   const main = (
+    // id は、外から該当の欄へフォーカスを移すための目印（フォーカスは、中の選択済み・先頭の項目へ入る）
+    <div id={id}>
     <ChoiceGroup
       legend={name}
       options={residenceStatusOptions(legacy)}
@@ -95,6 +100,7 @@ export function StatusSelect({
       error={error}
       variant="list"
     />
+    </div>
   );
   if (!withGrade || base !== ADVANCED_PROFESSIONAL_STATUS) return main;
   return (
