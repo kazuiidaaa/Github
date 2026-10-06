@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { AcceptedDateField } from "@/components/AcceptedDateField";
 import { ChoiceGroup } from "@/components/ChoiceGroup";
 import { PROCEDURE_OPTIONS, procedureDescription, STATUS_HINTS, StatusSelect } from "@/components/StatusSelect";
 import { Button, Field, inputClass } from "@/components/ui";
+import { hasAcceptedDateError, isAcceptedAfterPlanned } from "@/lib/acceptedDate";
+import { formatDate } from "@/lib/format";
 import { logAudit, updateCase } from "@/lib/store";
 import { PROCEDURE_TYPES, procedureNeedsTarget, targetStatusLabel, type CaseRecord, type ProcedureType } from "@/lib/types";
 
@@ -14,6 +17,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   const [currentStatus, setCurrentStatus] = useState(record.currentStatus);
   const [targetStatus, setTargetStatus] = useState(record.targetStatus);
   const [memo, setMemo] = useState(record.memo);
+  const [acceptedDate, setAcceptedDate] = useState(record.acceptedDate);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const needsTarget = procedureNeedsTarget(procedureType);
@@ -24,6 +28,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
     setCurrentStatus(record.currentStatus);
     setTargetStatus(record.targetStatus);
     setMemo(record.memo);
+    setAcceptedDate(record.acceptedDate);
     setErrors({});
     setEditing(true);
   }
@@ -33,6 +38,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
     if (!caseName.trim()) next.caseName = "案件名を入力してください。";
     else if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
     if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
+    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日をカレンダーから選び直してください。";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
@@ -43,8 +49,10 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
       currentStatus: currentStatus.trim(),
       targetStatus: needsTarget ? targetStatus.trim() : "",
       memo,
+      acceptedDate,
     }));
-    logAudit(record.id, "case_info_saved");
+    // 日付の値は監査ログに残さず、変更された項目名のみを記録する
+    logAudit(record.id, "case_info_saved", acceptedDate !== record.acceptedDate ? { acceptedDate } : undefined);
     setEditing(false);
   }
 
@@ -73,6 +81,13 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
               <dd>{record.targetStatus}</dd>
             </>
           )}
+          <dt className="text-slate-500">受任日</dt>
+          <dd>
+            {record.acceptedDate ? formatDate(record.acceptedDate) : "未入力"}
+            {isAcceptedAfterPlanned(record.acceptedDate, record.plannedApplicationDate) && (
+              <span className="ml-2 text-xs font-bold text-amber-800">注意：申請予定日より後です</span>
+            )}
+          </dd>
           <dt className="text-slate-500">メモ</dt>
           <dd className="whitespace-pre-wrap">{record.memo || "-"}</dd>
         </dl>
@@ -107,6 +122,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
           allowGrade2={procedureType === "change"}
         />
       )}
+      <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} plannedApplicationDate={record.plannedApplicationDate} />
       <Field label="案件メモ" hint="内部メモです。AI処理や判定には使用しません。">
         <textarea className={inputClass} rows={3} value={memo} onChange={(e) => setMemo(e.target.value)} />
       </Field>

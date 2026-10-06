@@ -35,6 +35,7 @@ function make(over: Partial<CaseRecord> & { expiry?: string; name?: string; conf
     documents: [],
     checks: [],
     customRequirements: [],
+    acceptedDate: "",
     plannedApplicationDate: "",
     checkMemo: "",
   };

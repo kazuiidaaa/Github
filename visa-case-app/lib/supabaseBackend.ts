@@ -98,6 +98,7 @@ interface CaseRow {
   target_status: string | null;
   memo: string | null;
   workflow_status: WorkflowStatus;
+  accepted_date: string | null;
   planned_application_date: string | null;
   check_memo: string | null;
   created_at: string;
@@ -272,6 +273,7 @@ export async function loadAll(): Promise<CaseRecord[]> {
     formDetails: normalizeFormDetails((Array.isArray(r.form_details) ? r.form_details[0] : r.form_details)?.data),
     requirementStates: toRequirementStates(r.requirement_states),
     customRequirements: toCustomRequirements(r.custom_requirements),
+    acceptedDate: r.accepted_date ?? "",
     plannedApplicationDate: r.planned_application_date ?? "",
     checkMemo: r.check_memo ?? "",
     checks: toChecks(r.case_checks),
@@ -294,6 +296,7 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       target_status: c.targetStatus || null,
       memo: c.memo || null,
       workflow_status: c.workflowStatus,
+      accepted_date: c.acceptedDate || null,
       planned_application_date: c.plannedApplicationDate || null,
       check_memo: c.checkMemo || null,
       created_by: uid,

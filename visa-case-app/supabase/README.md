@@ -120,3 +120,19 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
   from pg_constraint
   where conrelid = 'public.generated_documents'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%document_type%';
   ```
+
+## 0023(案件:受任日)
+
+- `supabase/migrations/0023_accepted_date.sql`:`cases` に、受任日の列 `accepted_date`(日付、未入力可)を追加します。既存の案件は未入力のままで、既存のデータ・ポリシー・トリガーは変更しません。
+- 実行の順序:先に #224 の `0022_client_guide.sql` を実行し、その後に `0023_accepted_date.sql` を、SQL Editor で実行します。0022 が未実行の環境でも 0023 の内容は 0022 に依存しませんが、番号順に実行してください。
+- 実行しない場合、最新のアプリで案件を保存すると、列がないため失敗します(新規案件の作成、案件情報の保存、申請予定日など案件の他の項目の保存を含みます)。実行前に、最新のアプリを公開しないでください。公開済みの場合は、先に実行してください。
+- 実行後の確認:次の SQL が、1行(`accepted_date`、`date`)を返すことを確認します。
+
+  ```sql
+  select column_name, data_type
+  from information_schema.columns
+  where table_schema = 'public' and table_name = 'cases' and column_name = 'accepted_date';
+  ```
+
+  その後、画面で案件情報の「受任日」を入力して保存し、再読み込み後も残ることを確認してください。
+
