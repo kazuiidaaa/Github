@@ -119,3 +119,19 @@ docs/client-guide-languages.md（#251）は、依頼者向けの案内書類の�
 - 英語・韓国語の訳文は、行政書士の確認前（`reviewStatus.ts` はすべて draft）。
 
 第2段階・順1（#257）の確認：型検査、lint、全テスト（69 ファイル・718 件）、ビルド：通過。開発サーバーの実画面（ホーム、案件一覧、案件の新規登録）で、3言語を切り替え、幅 1280 と 375 のどちらでも横のはみ出しがなく、画面のエラーが出ないことを確認した。確認できなかった項目：Supabase に接続した状態の確認（上と同じ）、案件詳細・書類の画面での共通部品の表示（各画面の Issue で確認する）。
+
+## 第2段階・順4：案件一覧（#262）
+- 区分：`caseList`（`lib/i18n/messages/caseList.ts`）。対象は、`app/cases/page.tsx`、`components/CaseFilters.tsx`（検索欄、絞り込み、並び順、まとめてアップロードの入口、ページ送り）。
+- 設計の判断：
+  - 書類・監査記録・テストが使う `lib/caseMetrics.ts`、`lib/types.ts`（`getTargetStatusDisplay`）の日本語は、変更しない。画面の表示のときだけ、`lib/i18n/caseList.ts`（並び順の選択肢、変更後／希望の見出し、並び替えの向き）で引く。日本語の出力が元の関数と一致することは、`tests/caseListMessages.test.ts` で確認している。
+  - 状態の選択肢は `useLabels().workflow`、期限の表示は `ExpiryBadge`（既存）を使う。区分の重複は作らない。
+  - 氏名、案件名、在留資格名、手続名（`PROCEDURE_TYPES`）は、訳さない。
+  - 「読み込めませんでした」等の文言は、この画面内にあるため、`lib/errors.ts` には触れず、`caseList` 区分で扱った。
+- 訳の件数（英語・韓国語。言語ごと）：`caseList` 65。行政書士の確認待ち（`reviewStatus.ts` は draft）。
+- 担当外のため未対応：指標カード（`components/DashboardCards.tsx`、`lib/dashboardMetrics.ts`）の名称・説明は日本語のまま。ホームと共用のため、ホームの Issue 側での対応が必要。
+- 確認してほしい訳：
+  - 韓国語の「案件」を「사건」とした（ヘッダーの既存の訳「체류자격 사건 관리」に合わせた）。
+  - 「在留資格」は、英語で "Status of residence"、韓国語で「체류자격」。「在留カード」は、韓国語で「재류카드」（#257 の訳に合わせた）。
+  - 「状況」を "Progress"・「진행 상황」、「確認未了」を "not yet confirmed"・「확인 미완료」とした。
+  - 「申請前チェック」を "Pre-filing checks"・「신청 전 점검」とした。
+  - 「期限の表示は業務上の注意喚起です。…」の注意書きの英語・韓国語（申請の可否や許可の見込みを示さない旨）。
