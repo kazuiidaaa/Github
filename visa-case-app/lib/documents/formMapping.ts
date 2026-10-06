@@ -7,7 +7,7 @@ import type { TranscriptionContent, TranscriptionItem, TranscriptionMode } from 
  * 公式の在留期間更新許可申請書（技術・人文知識・国際業務）の項目と、案件DBの対応表。
  * 項目番号と項目名は、入管庁の公式様式の表記に合わせる。
  * 様式が改正された場合は、このファイルの FORM_META と SHEETS を点検・更新する。
- * 根拠：docs/phase9-official-forms-research.md
+ * 根拠：docs/official-forms-research.md（更新編）
  */
 export const FORM_META = {
   formName: "別記第三十号の二様式（第二十一条関係）在留期間更新許可申請書",

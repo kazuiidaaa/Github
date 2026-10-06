@@ -161,7 +161,7 @@ export const GIJINKOKU_RENEWAL: RuleSet = {
 };
 
 // 在留資格認定証明書交付申請。カテゴリーは更新・変更と同じ所属機関の区分。
-// 根拠・差異は docs/phase13-coe-requirements-research.md を参照。調査に基づく提案であり、行政書士の最終確認を要する。
+// 根拠・差異は docs/requirements-research.md（認定編） を参照。調査に基づく提案であり、行政書士の最終確認を要する。
 export const GIJINKOKU_COE: RuleSet = {
   id: "gijinkoku_coe",
   title: "技術・人文知識・国際業務 在留資格認定証明書交付申請",
@@ -317,7 +317,7 @@ export const GIJINKOKU_COE: RuleSet = {
 
 // 在留資格変更許可申請（技術・人文知識・国際業務への変更）。
 // 入管庁の提出書類チェックシート（変更・表1／表2）に基づく提案であり、行政書士の確認前の内容。
-// 判断待ちの事項は docs/phase12-change-requirements-research.md に記録する。
+// 判断待ちの事項は docs/requirements-research.md（変更編） に記録する。
 const C34: Category[] = ["3", "4"];
 
 export const GIJINKOKU_CHANGE: RuleSet = {
@@ -492,7 +492,7 @@ export const GIJINKOKU_CHANGE: RuleSet = {
 
 // 在留資格取得許可申請。必要書類は所属機関のカテゴリーではなく「取得の事由」で決まる。
 // 出典は行政書士提供の実務資料（解説記事に基づく。入管庁の公式資料の逐語確認ではない）。
-// そのため、すべて verify: true とし、行政書士が公式情報で確認した後に外す。根拠・確認事項は docs/phase14-acquisition-requirements-research.md を参照。
+// そのため、すべて verify: true とし、行政書士が公式情報で確認した後に外す。根拠・確認事項は docs/requirements-research.md（取得編） を参照。
 // 希望する在留資格（targetStatus）の種類・有無に依存しない（anyResidenceStatus）。
 const ALL_CAUSES: AcquisitionCause[] = ["nationalityLoss", "birth", "other"];
 

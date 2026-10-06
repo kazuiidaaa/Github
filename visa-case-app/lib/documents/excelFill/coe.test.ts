@@ -14,7 +14,7 @@ import {
 } from "./coeMapping";
 import { sheetKey } from "./renewalMapping";
 
-// テストの書き方は docs/phase11-renewal-fill-engine.md、認定の判断は docs/phase11-coe-fill-engine.md を参照。
+// テストの書き方は docs/phase11-fill-engines.md の更新編、認定の判断は同認定編を参照。
 // 値はすべてダミー。実案件の個人情報は書かない。
 
 const applicant: Applicant = {
