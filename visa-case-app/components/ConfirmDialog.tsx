@@ -2,6 +2,7 @@
 
 import { useId, useRef, type ReactNode } from "react";
 import { useDialogA11y } from "@/lib/useDialogA11y";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import { Button } from "./ui";
 
 /**
@@ -30,6 +31,7 @@ export function ConfirmDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const t = useT();
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   // 処理中は、Escape で閉じない
@@ -44,7 +46,7 @@ export function ConfirmDialog({
         {note && <p className="mt-3 text-xs text-slate-500">{note}</p>}
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" onClick={onCancel} disabled={busy} data-autofocus>
-            キャンセル
+            {t("dialog.confirm_cancel")}
           </Button>
           <Button variant={tone === "caution" ? "danger" : "primary"} onClick={onConfirm} disabled={busy}>
             {confirmLabel}

@@ -3,20 +3,22 @@
 import { useId, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button, Field, inputClass, TONE_STYLES, ToneIcon, type Tone } from "@/components/ui";
+import { useT } from "@/lib/i18n/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { decideFill, postalCodeState, toPostalDigits } from "@/lib/postalCode";
 import { lookupPostalCode, type PostalLookupResult } from "@/lib/postalLookup";
 import { normalizeAddress, zenkakuHandlers } from "@/lib/zenkaku";
 
-type Notice = { tone: Tone; text: string } | null;
+type Notice = { tone: Tone; key: MessageKey } | null;
 
 const NOTICES = {
-  loading: { tone: "gray", text: "住所を検索しています。" },
-  invalid: { tone: "yellow", text: "郵便番号は、7桁の数字で入力してください。" },
-  notFound: { tone: "yellow", text: "該当が見つかりませんでした。住所は手入力してください。" },
-  unavailable: { tone: "yellow", text: "住所を取得できませんでした。住所は手入力してください。" },
-  unconfigured: { tone: "gray", text: "郵便番号からの自動入力は、設定されていません。住所は手入力できます。" },
-  filled: { tone: "green", text: "住所の前半を入れました。番地以降を続けて入力してください。" },
-  same: { tone: "green", text: "入力済みの住所に、すでに含まれています。" },
+  loading: { tone: "gray", key: "input.addressField_loading" },
+  invalid: { tone: "yellow", key: "input.addressField_invalid" },
+  notFound: { tone: "yellow", key: "input.addressField_notFound" },
+  unavailable: { tone: "yellow", key: "input.addressField_unavailable" },
+  unconfigured: { tone: "gray", key: "input.addressField_unconfigured" },
+  filled: { tone: "green", key: "input.addressField_filled" },
+  same: { tone: "green", key: "input.addressField_same" },
 } satisfies Record<string, NonNullable<Notice>>;
 
 /**
@@ -53,6 +55,7 @@ export function AddressField({
   normalize?: (address: string) => string;
   lookup?: (zip: string) => Promise<PostalLookupResult>;
 }) {
+  const t = useT();
   const [zip, setZip] = useState("");
   const [notice, setNotice] = useState<Notice>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -110,7 +113,7 @@ export function AddressField({
         <span className="mt-0.5 shrink-0">
           <ToneIcon tone={notice.tone} />
         </span>
-        {notice.text}
+        {t(notice.key)}
       </span>
     );
 
@@ -118,7 +121,7 @@ export function AddressField({
     <div>
       <div className="mb-3">
         <label htmlFor={zipId} className="mb-1 block text-sm font-bold">
-          郵便番号
+          {t("input.addressField_zipLabel")}
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -127,7 +130,7 @@ export function AddressField({
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
-            placeholder="例：1000001"
+            placeholder={t("input.addressField_zipPlaceholder")}
             maxLength={12}
             value={zip}
             disabled={disabled}
@@ -135,11 +138,11 @@ export function AddressField({
             onChange={(e) => onZipChange(e.target.value)}
           />
           <Button type="button" variant="secondary" disabled={disabled} onClick={() => void search(zip)}>
-            住所を入れる
+            {t("input.addressField_search")}
           </Button>
         </div>
         <p className="mt-1 text-xs text-slate-500">
-          7桁の数字を入れると、住所の前半（都道府県・市区町村・町域）が入ります。郵便番号は保存しません。
+          {t("input.addressField_zipHelp")}
         </p>
         <p id={noticeId} role="status" className="mt-1 min-h-6">
           {noticeView}
@@ -159,10 +162,10 @@ export function AddressField({
       </Field>
       {pending !== null && (
         <ConfirmDialog
-          title="住所を置き換えますか"
-          message={`入力済みの住所を、郵便番号から見つかった「${pending}」に置き換えます。`}
-          note="置き換えた後も、住所の欄で編集できます。番地以降は、入力し直してください。"
-          confirmLabel="置き換える"
+          title={t("input.addressField_replaceTitle")}
+          message={t("input.addressField_replaceMessage", { address: pending })}
+          note={t("input.addressField_replaceNote")}
+          confirmLabel={t("input.addressField_replaceConfirm")}
           onCancel={() => setPending(null)}
           onConfirm={() => {
             const found = pending;

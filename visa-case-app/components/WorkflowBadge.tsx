@@ -1,4 +1,7 @@
-import { WORKFLOW_LABELS, type WorkflowStatus } from "@/lib/types";
+"use client";
+
+import { useLabels } from "@/lib/i18n/labels";
+import type { WorkflowStatus } from "@/lib/types";
 import { Badge } from "./ui";
 
 type Tone = "green" | "yellow" | "gray";
@@ -11,8 +14,9 @@ const TONES: Partial<Record<WorkflowStatus, Tone>> = {
 
 /** 案件のワークフロー状態。色に加えて図形とテキストで示す。 */
 export function WorkflowBadge({ status }: { status: WorkflowStatus }) {
+  const labels = useLabels();
   const tone = TONES[status] ?? "gray";
   return (
-    <Badge tone={tone}>{WORKFLOW_LABELS[status]}</Badge>
+    <Badge tone={tone}>{labels.workflow(status)}</Badge>
   );
 }

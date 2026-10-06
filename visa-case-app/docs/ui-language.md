@@ -97,6 +97,16 @@ docs/client-guide-languages.md（#251）は、依頼者向けの案内書類の�
 
 画面ごとの訳は、第2段階以降（docs/future-considerations.md の 4）。
 
+## 第2段階・順1：共通部品の訳（#257）
+- 訳表の区分は、担当の重なりを避けるため、`input`（入力・選択の部品）、`dialog`（確認・案内の部品）、`display`（期限・状態・取り込み・指標の部品）、`labels`（状態のラベル）の4つとした（#257 の本文案の `shared` を細分した）。
+- 書類の出力・監査記録・テストが使う日本語の定数（`lib/types.ts` のラベル、`lib/caseMetrics.ts` の期限の文言、`lib/dateInput.ts` の `DATE_INVALID_MESSAGE` など）は、変更しない。画面の表示のときだけ、言語に合わせて引く仕組みを追加した。
+  - `useLabels()`（`lib/i18n/labels.ts`）：案件の状態、必要書類の収集状況、確認の状態・種別、書類の状態。キーの型は `lib/types.ts` の型で、値の追加時に訳の漏れが型検査で分かる。
+  - `lib/i18n/expiry.ts`：期限の表示。日本語の出力は、元の関数と一致することをテストで確認している。
+  - `useStatusHints()`、`useDateInvalidMessage()`：入力部品の補助文。
+- 在留資格名、高度専門職の号、手続名は、法令用語であり、保存値でもあるため、訳さない（日本語のまま表示）。
+- 呼び出し元が部品へ渡す文言（props）と、`lib/` の関数が返す日本語（次に行うこと、指標の名称、書類の検証メッセージなど）は、各画面の Issue で扱う。呼び出し元が `STATUS_HINTS`・`DATE_INVALID_MESSAGE` を渡している箇所は、各画面の Issue で、上の `useStatusHints()`・`useDateInvalidMessage()` に切り替える。
+- 英語・韓国語の訳文の件数（行政書士の確認待ち）：`input` 42、`dialog` 39、`display` 29、`labels` 18。計128件（言語ごと）。
+
 ## 確認の結果
 確認した項目（2026-10-06、仮データ方式で実画面を確認）：
 - 型検査（`tsc --noEmit`）、`npm run lint`、`npm run test`（66 ファイル・695 件）、`npm run build`：すべて通った。
@@ -107,3 +117,5 @@ docs/client-guide-languages.md（#251）は、依頼者向けの案内書類の�
 - Supabase に接続した状態での、保存・取得と、別のブラウザへの引き継ぎ。確認用の Supabase 環境がなく、マイグレーション 0024 も未実行のため。保存・取得・失敗時の動きは、モックを使ったテスト（`tests/i18nPreferences.test.ts`、`tests/languageProvider.test.tsx`）で確認したのみ。
 - 行ごとのアクセス制御（他の利用者の行を読み書きできないこと）の実機での確認。
 - 英語・韓国語の訳文は、行政書士の確認前（`reviewStatus.ts` はすべて draft）。
+
+第2段階・順1（#257）の確認：型検査、lint、全テスト（69 ファイル・718 件）、ビルド：通過。開発サーバーの実画面（ホーム、案件一覧、案件の新規登録）で、3言語を切り替え、幅 1280 と 375 のどちらでも横のはみ出しがなく、画面のエラーが出ないことを確認した。確認できなかった項目：Supabase に接続した状態の確認（上と同じ）、案件詳細・書類の画面での共通部品の表示（各画面の Issue で確認する）。

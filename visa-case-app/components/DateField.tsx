@@ -2,7 +2,13 @@
 
 import { useId, useState } from "react";
 import { inputClass } from "@/components/ui";
-import { DATE_INVALID_MESSAGE, dateValueToText, normalizeDateText, parseDateText } from "@/lib/dateInput";
+import { dateValueToText, normalizeDateText, parseDateText } from "@/lib/dateInput";
+import { useT } from "@/lib/i18n/LanguageProvider";
+
+/** 表示言語に合わせた、日付が正しくないときの案内。呼び出し元の検証（error に渡す文言）で使う */
+export function useDateInvalidMessage(): string {
+  return useT()("input.dateField_invalid");
+}
 
 /**
  * 日付の入力欄。数字のキーボードで「年（4桁）・月・日」を直接入力する。
@@ -37,6 +43,7 @@ export function DateField({
   onBlur?: (kind: "empty" | "incomplete" | "complete") => void;
   "aria-label"?: string;
 }) {
+  const t = useT();
   const errorId = useId();
   const [text, setText] = useState(() => dateValueToText(value));
   const [touched, setTouched] = useState(false);
@@ -48,7 +55,7 @@ export function DateField({
 
   const state = parseDateText(text);
   const own =
-    state.kind === "complete" && !state.valid ? DATE_INVALID_MESSAGE : state.kind === "incomplete" && touched ? DATE_INVALID_MESSAGE : undefined;
+    state.kind === "complete" && !state.valid ? t("input.dateField_invalid") : state.kind === "incomplete" && touched ? t("input.dateField_invalid") : undefined;
   const message = error ?? own;
 
   function handleChange(raw: string) {
@@ -73,7 +80,7 @@ export function DateField({
         type="text"
         inputMode="numeric"
         autoComplete="off"
-        placeholder="例 2000/01/31"
+        placeholder={t("input.dateField_placeholder")}
         maxLength={10}
         className={className}
         value={text}

@@ -3,6 +3,7 @@
 import { DateField } from "@/components/DateField";
 import { Field, inputClass } from "@/components/ui";
 import { isAcceptedAfterPlanned } from "@/lib/acceptedDate";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 /**
  * 受任日（行政書士が依頼を受けた日）の入力欄。任意項目。
@@ -19,15 +20,16 @@ export function AcceptedDateField({
   /** 警告の判定に使う申請予定日。新規作成時は未定のため空 */
   plannedApplicationDate?: string;
 }) {
+  const t = useT();
   const afterPlanned = isAcceptedAfterPlanned(value, plannedApplicationDate);
   return (
     <div>
-      <Field label="受任日" hint="依頼を受けた日です。任意で、あとから入力できます。過去の日付も入力できます。">
+      <Field label={t("input.acceptedDateField_label")} hint={t("input.acceptedDateField_hint")}>
         <DateField className={`${inputClass} md:w-56`} value={value} onChange={onChange} />
       </Field>
       {afterPlanned && (
         <p role="note" className="mt-2 rounded-xl bg-amber-50 p-3 text-xs font-bold leading-relaxed text-amber-900">
-          注意：受任日が、申請予定日（{plannedApplicationDate}）より後になっています。このまま保存できます。
+          {t("input.acceptedDateField_warning", { date: plannedApplicationDate })}
         </p>
       )}
     </div>

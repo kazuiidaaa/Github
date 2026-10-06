@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Badge, ToneIcon, TONE_STYLES, type Tone } from "@/components/ui";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export type ChoiceOption = {
   value: string;
@@ -38,7 +39,7 @@ export type ChoiceGroupProps = {
   variant?: "auto" | "segment" | "list";
   /** 一覧表示での絞り込み入力欄。既定は、一覧表示のとき true */
   searchable?: boolean;
-  /** 一覧表示で、先頭の見出しに使う名前。既定は「よく使う項目」 */
+  /** 一覧表示で、先頭の見出しに使う名前。既定は「よく使う項目」（表示言語に合わせて訳す） */
   featuredLabel?: string;
   /**
    * 指定すると、選択中のとき、項目の下に「未選択に戻す」ボタンを出す（任意の選択のための引数）。
@@ -46,7 +47,7 @@ export type ChoiceGroupProps = {
    * 未指定の既存の呼び出しは、これまでと同じ（選択済みの項目を押しても、何も変わらない）。
    */
   onClear?: () => void;
-  /** 「未選択に戻す」ボタンの文言。既定は「未選択に戻す」 */
+  /** 「未選択に戻す」ボタンの文言。既定は「未選択に戻す」（表示言語に合わせて訳す） */
   clearLabel?: string;
 };
 
@@ -134,8 +135,9 @@ export function ChoiceGroup({
   searchable,
   featuredLabel,
   onClear,
-  clearLabel = "未選択に戻す",
+  clearLabel,
 }: ChoiceGroupProps) {
+  const t = useT();
   const uid = useId();
   const [query, setQuery] = useState("");
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -146,7 +148,7 @@ export function ChoiceGroup({
   const isList = variant === "list" || (variant === "auto" && options.length > SEGMENT_MAX);
   const showSearch = isList && (searchable ?? true);
   const visible = useMemo(() => (showSearch ? filterOptions(options, query) : [...options]), [options, query, showSearch]);
-  const sections = useMemo(() => (isList ? buildSections(visible, featuredLabel) : []), [isList, visible, featuredLabel]);
+  const sections = useMemo(() => (isList ? buildSections(visible, featuredLabel ?? t("input.choiceGroup_featured")) : []), [isList, visible, featuredLabel, t]);
 
   // 画面の並び順（「よく使う項目」を先頭に置いた順）。矢印キーの移動は、この順に従う。
   const flat = useMemo(() => (isList ? sections.flatMap((s) => s.options) : visible), [isList, sections, visible]);
@@ -235,7 +237,7 @@ export function ChoiceGroup({
     <fieldset className="min-w-0 border-0 p-0" disabled={disabled} aria-describedby={describedBy}>
       <legend className={hideLegend ? "sr-only" : "mb-1 flex items-center gap-2 p-0 text-sm font-bold"}>
         {legend}
-        {required && <Badge tone="red" icon={false}>必須</Badge>}
+        {required && <Badge tone="red" icon={false}>{t("input.choiceGroup_required")}</Badge>}
       </legend>
 
       {showSearch && (
@@ -245,12 +247,12 @@ export function ChoiceGroup({
             value={query}
             disabled={disabled}
             onChange={(e) => setQuery(e.target.value)}
-            aria-label={`${legend}を項目名で絞り込む`}
-            placeholder="項目名で絞り込む"
+            aria-label={t("input.choiceGroup_filterAria", { legend })}
+            placeholder={t("input.choiceGroup_filterPlaceholder")}
             className="min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/40"
           />
           <p role="status" className="mt-1 text-xs text-slate-500">
-            {query ? `${visible.length}件が見つかりました` : `${options.length}件から選べます`}
+            {query ? t("input.choiceGroup_foundCount", { count: visible.length }) : t("input.choiceGroup_totalCount", { count: options.length })}
           </p>
         </div>
       )}
@@ -265,7 +267,7 @@ export function ChoiceGroup({
       >
         {isList ? (
           visible.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-line-strong px-3 py-3 text-sm text-slate-600">該当する項目がありません</p>
+            <p className="rounded-xl border border-dashed border-line-strong px-3 py-3 text-sm text-slate-600">{t("input.choiceGroup_noMatch")}</p>
           ) : (
             <div className="space-y-3">
               {sections.map((s) => (
@@ -291,12 +293,12 @@ export function ChoiceGroup({
           onClick={clear}
           className="mt-2 inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100"
         >
-          {clearLabel}
+          {clearLabel ?? t("input.choiceGroup_clear")}
         </button>
       )}
       {onClear && (
         <p role="status" className="sr-only">
-          {cleared && !value ? `${legend}の選択を解除しました。未選択です` : ""}
+          {cleared && !value ? t("input.choiceGroup_clearedStatus", { legend }) : ""}
         </p>
       )}
 
@@ -305,7 +307,7 @@ export function ChoiceGroup({
           <svg aria-hidden viewBox="0 0 12 12" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={1.6}>
             <circle cx="6" cy="6" r="5" strokeDasharray="2 1.8" />
           </svg>
-          選択してください
+          {t("input.choiceGroup_pleaseSelect")}
         </p>
       )}
       {hint && !error && (
