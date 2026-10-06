@@ -1,5 +1,7 @@
 "use client";
 
+import { DateField } from "@/components/DateField";
+import { DATE_INVALID_MESSAGE } from "@/lib/dateInput";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
@@ -41,12 +43,12 @@ export function EmploymentFields({
             />
           </Field>
         ))}
-        <Field label="雇用開始日" error={dateError ? "日付をカレンダーから選び直してください。" : undefined}>
-          <input
-            type="date"
+        <Field label="雇用開始日">
+          <DateField
             className={inputClass}
             value={form.employmentStartDate}
-            onChange={(e) => set("employmentStartDate", e.target.value)}
+            error={dateError ? DATE_INVALID_MESSAGE : undefined}
+            onChange={(v) => set("employmentStartDate", v)}
           />
         </Field>
         <div className="md:col-span-2">

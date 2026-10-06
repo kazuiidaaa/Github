@@ -1,5 +1,6 @@
 "use client";
 
+import { DateField } from "@/components/DateField";
 import { useState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import {
@@ -50,6 +51,15 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   function text(key: TextKey, opts: { placeholder?: string; hint?: string; wide?: boolean; area?: boolean; date?: boolean } = {}) {
     const label = layout.labels[key];
     if (!label) return null; // この様式にない項目は表示しない
+    if (opts.date) {
+      return (
+        <div className={opts.wide ? "md:col-span-2" : ""}>
+          <Field label={label} hint={opts.hint}>
+            <DateField className={inputClass} value={form[key]} error={errors[key]} onChange={(v) => set(key, v as never)} />
+          </Field>
+        </div>
+      );
+    }
     const input = opts.area ? (
       <textarea
         className={inputClass}
@@ -60,7 +70,6 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       />
     ) : (
       <input
-        type={opts.date ? "date" : undefined}
         className={inputClass}
         value={form[key]}
         placeholder={opts.placeholder}
@@ -261,7 +270,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
                   <input className={inputClass} value={r.name} onChange={(e) => updateRelative(r.id, { name: e.target.value })} />
                 </Field>
                 <Field label="生年月日">
-                  <input type="date" className={inputClass} value={r.dateOfBirth} onChange={(e) => updateRelative(r.id, { dateOfBirth: e.target.value })} />
+                  <DateField className={inputClass} value={r.dateOfBirth} onChange={(v) => updateRelative(r.id, { dateOfBirth: v })} />
                 </Field>
                 <Field label="国籍・地域">
                   <input className={inputClass} value={r.nationality} onChange={(e) => updateRelative(r.id, { nationality: e.target.value })} />

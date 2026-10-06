@@ -113,14 +113,14 @@ export default function NewCasePage() {
       else if (groupName.length > 100) next.groupName = "グループ名は100文字以内で入力してください。";
       if (names.length === 0) next.names = "案件を1件以上登録してください。";
       else if (bulkNames.some((n) => n.length > 100)) next.names = "案件名は100文字以内で入力してください（グループ名に（行番号）が加わった長さを含みます）。";
-      if (hasEmploymentDateError(employment)) next.employment = "雇用開始日をカレンダーから選び直してください。";
+      if (hasEmploymentDateError(employment)) next.employment = "雇用開始日が正しくありません。存在する日付を、年4桁・月・日の順に入力してください。";
     } else {
       if (!caseName.trim()) next.caseName = "案件名を入力してください。";
       if (caseName.length > 100) next.caseName = "案件名は100文字以内で入力してください。";
     }
     if (!procedureType) next.procedureType = "手続種別を選択してください。";
     if (needsTarget && !targetStatus.trim()) next.targetStatus = `${targetStatusLabel(procedureType)}を選択してください。`;
-    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日をカレンダーから選び直してください。";
+    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = "受任日が正しくありません。存在する日付を、年4桁・月・日の順に入力してください。";
     setErrors(next);
     if (Object.keys(next).length > 0 || !procedureType) return;
 

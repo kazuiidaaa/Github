@@ -1,5 +1,6 @@
 "use client";
 
+import { DateField } from "@/components/DateField";
 import { useState } from "react";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Button, Field, inputClass } from "@/components/ui";
@@ -56,7 +57,7 @@ export function CustomRequirementForm({
           onChange={(v) => setIsRequired(v === "required")}
         />
         <Field label="期限">
-          <input type="date" className={inputClass} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <DateField className={inputClass} value={dueDate} onChange={setDueDate} />
         </Field>
       </div>
       <Field label="メモ">

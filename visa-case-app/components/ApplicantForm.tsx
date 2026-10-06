@@ -1,5 +1,6 @@
 "use client";
 
+import { DateField } from "@/components/DateField";
 import { ImageZoom } from "@/components/ImageZoom";
 import { useState } from "react";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
@@ -80,14 +81,14 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
 
   function date(key: "dateOfBirth" | "residenceExpiryDate", label: string) {
     return (
-      <Field label={label} required error={errors[key]}>
-        <input
+      <Field label={label} required>
+        <DateField
           id={applicantFieldId(key)}
-          type="date"
           className={inputClass}
           value={form[key]}
           disabled={confirmed}
-          onChange={(e) => set(key, e.target.value)}
+          error={errors[key]}
+          onChange={(v) => set(key, v)}
         />
       </Field>
     );

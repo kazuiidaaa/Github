@@ -1,5 +1,6 @@
 "use client";
 
+import { DateField } from "@/components/DateField";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
@@ -57,12 +58,11 @@ const selectClass = "rounded-xl border border-line-strong bg-white px-2 py-1 tex
 function DueInput({ label, value, overdue, onChange }: { label: string; value?: string; overdue: boolean; onChange: (v: string) => void }) {
   return (
     <div>
-      <input
-        type="date"
+      <DateField
         aria-label={`${label} 期限`}
-        className={`${selectClass} ${overdue ? "border-red-400 bg-red-50" : ""}`}
+        className={`${selectClass} w-32 ${overdue ? "border-red-400 bg-red-50" : ""}`}
         value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
       />
       {overdue && <p className="mt-1 text-xs font-medium text-red-700">期限超過</p>}
     </div>
