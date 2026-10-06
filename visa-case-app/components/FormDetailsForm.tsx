@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Field, inputClass } from "@/components/ui";import { DateField } from "@/components/DateField";
-
+import { Button, Field, inputClass } from "@/components/ui";
+import { DateField } from "@/components/DateField";
 import {
   EDUCATION_LEVELS,
   getFormDetailsWarnings,
