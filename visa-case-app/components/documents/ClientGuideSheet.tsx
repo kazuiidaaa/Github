@@ -1,11 +1,12 @@
 import { buildBlocks } from "@/lib/documents/model";
+import { DEFAULT_LANG, type Lang } from "@/lib/documents/lang";
 import type { GeneratedDocument } from "@/lib/documents/types";
 
-/** ご案内書類の画面表示。Word・PDF と同じ構成（buildBlocks）を描画する。保存済みの content_json だけを使う */
-export function ClientGuideSheet({ doc }: { doc: GeneratedDocument }) {
+/** ご案内書類の画面表示。Word・PDF と同じ構成（buildBlocks）を描画する。保存済みの content_json だけを使う。lang は表示の言語（保存しない） */
+export function ClientGuideSheet({ doc, lang = DEFAULT_LANG }: { doc: GeneratedDocument; lang?: Lang }) {
   return (
-    <article className="paper mx-auto max-w-[210mm] bg-white p-8 text-slate-900 shadow-sm print:shadow-none">
-      {buildBlocks(doc).map((b, i) => {
+    <article lang={lang} className="paper mx-auto max-w-[210mm] bg-white p-8 text-slate-900 shadow-sm print:shadow-none">
+      {buildBlocks(doc, lang).map((b, i) => {
         switch (b.kind) {
           case "eyebrow":
             return (

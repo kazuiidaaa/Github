@@ -56,13 +56,14 @@ async function pagesOf(blob: Blob): Promise<number> {
 }
 
 describe("buildPdf", () => {
-  it("PDF形式で出力し、日本語フォントを埋め込む", async () => {
+  it("PDF形式で出力し、日本語フォントを（全体で）埋め込む", async () => {
     const blob = await buildPdf(doc(record()), font);
     const bytes = new Uint8Array(await blob.arrayBuffer());
     expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
     expect(blob.type).toBe("application/pdf");
-    // 全体のフォント（約5MB）ではなく、使用した文字だけを埋め込む
-    expect(bytes.length).toBeLessThan(1_000_000);
+    // フォント全体を埋め込む。pdf-lib（fontkit）の文字の絞り込み（subset）は、字形データが途中で切れて、文字が欠けるため使わない
+    // （字形が読み出せることは、tests/clientGuideLang.test.ts で確認する）
+    expect(bytes.length).toBeGreaterThan(1_000_000);
   });
 
   it("内容が多い場合は複数ページに分割する", async () => {
