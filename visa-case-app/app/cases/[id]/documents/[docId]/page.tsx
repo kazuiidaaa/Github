@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { ChoiceGroup } from "@/components/ChoiceGroup";
 import { messageOf } from "@/lib/errors";
 import { ClientGuideSheet } from "@/components/documents/ClientGuideSheet";
 import { DocumentSheet } from "@/components/documents/DocumentSheet";
@@ -11,6 +12,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { changeStatus, downloadFile, exportFile, useGeneratedDocuments } from "@/lib/documents/store";
+import { DEFAULT_LANG, LANGS, LANG_LABELS, isLang, readStoredLang, storeLang, type Lang } from "@/lib/documents/lang";
 import { OFFICIAL_FORM_LOGIN_REQUIRED, officialFormNeedsLogin } from "@/lib/documents/officialFormAccess";
 import { OUTPUT_FORMAT_LABELS, isOfficialForm } from "@/lib/documents/types";
 import { useDemo } from "@/lib/demo";
@@ -50,6 +52,8 @@ export default function DocumentPreviewPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [asking, setAsking] = useState<StatusChange | null>(null);
+  // ご案内書類の表示・出力の言語。直前に選んだ言語を既定にする。案件・保存済みの内容には書き込まない
+  const [lang, setLang] = useState<Lang>(() => (typeof window === "undefined" ? DEFAULT_LANG : readStoredLang()));
   const router = useRouter();
 
   if (!doc) {
@@ -66,7 +70,16 @@ export default function DocumentPreviewPage() {
   }
 
   const stale = !!record && record.updatedAt > doc.content.source.caseUpdatedAt;
+  // 言語を選べるのは、ご案内書類の画面の版（Word・PDF は、この版から出力する）
+  const langChoosable = doc.documentType === "client_guide" && doc.outputFormat === "html";
+  const outLang: Lang = langChoosable ? lang : DEFAULT_LANG;
   const latest = documents.filter((d) => d.documentType === doc.documentType).reduce((m, d) => Math.max(m, d.version), 0);
+
+  function chooseLang(v: string) {
+    if (!isLang(v)) return;
+    setLang(v);
+    storeLang(v);
+  }
 
   async function file(mode: "docx" | "pdf" | "xlsx" | "download") {
     if (!doc) return;
@@ -74,11 +87,11 @@ export default function DocumentPreviewPage() {
     setMessage("");
     try {
       if (mode === "download") {
-        await downloadFile(doc);
+        await downloadFile(doc, outLang);
       } else {
         // 保存済みの内容から、新しい版として出力する。元の版は変更しない
-        const created = await exportFile(doc, mode);
-        await downloadFile(created);
+        const created = await exportFile(doc, mode, undefined, outLang);
+        await downloadFile(created, outLang);
         router.push(`/cases/${id}/documents/${created.id}`);
       }
     } catch (e) {
@@ -118,6 +131,22 @@ export default function DocumentPreviewPage() {
           </p>
         )}
         {isOfficialForm(doc.documentType) && <OfficialFormNotice />}
+        {langChoosable && (
+          <div className="space-y-2">
+            <ChoiceGroup
+              legend="案内書の言語"
+              options={LANGS.map((l) => ({ value: l, label: LANG_LABELS[l] }))}
+              value={lang}
+              onChange={chooseLang}
+              hint="切り替えると、画面の表示と、Word・PDF の出力の言語が変わります。保存済みの内容は変わりません。"
+            />
+            {lang !== "ja" && (
+              <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+                訳文は、行政書士が内容を確認してから、依頼者へお渡しください。書類名など、訳文が未確認のものは、日本語の原文のまま表示し、目印を付けています。備考・宛名・氏名は、翻訳しません。
+              </p>
+            )}
+          </div>
+        )}
         {doc.version < latest && (
           <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">これより新しい版（v{latest}）があります。</p>
         )}
@@ -164,7 +193,7 @@ export default function DocumentPreviewPage() {
           </span>
         </div>
       </div>
-      {doc.documentType === "client_guide" ? <ClientGuideSheet doc={doc} /> : <DocumentSheet doc={doc} />}
+      {doc.documentType === "client_guide" ? <ClientGuideSheet doc={doc} lang={outLang} /> : <DocumentSheet doc={doc} />}
       {asking && (
         <ConfirmDialog
           title={STATUS_CONFIRM[asking].title}
