@@ -74,6 +74,9 @@ describe("対象範囲の注意", () => {
   it("更新×技術・人文知識・国際業務は、注意なし", () => {
     expect(officialFormScopeWarnings(scopeOf(make()))).toEqual([]);
   });
+  it("更新×高度専門職（号つき）は、注意なし", () => {
+    expect(officialFormScopeWarnings(scopeOf(make({ currentStatus: "高度専門職（1号ロ）" })))).toEqual([]);
+  });
   it("専用の様式がない手続種別（その他）は、注意が出る", () => {
     expect(officialFormScopeWarnings(scopeOf(make({ procedureType: "other" })))).toHaveLength(1);
   });
