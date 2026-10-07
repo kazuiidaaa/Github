@@ -172,7 +172,7 @@ export function RequirementsPanel({
 
       {ev.ruleSet && ev.needsCategory && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
-          {t("caseRequirements.needsCategory")}
+          {t(ev.categoryOutOfRange ? "caseRequirements.categoryOutOfRange" : "caseRequirements.needsCategory")}
           <button onClick={onGoEmployment} className="ml-2 underline">
             {t("caseRequirements.needsCategoryAction")}
           </button>

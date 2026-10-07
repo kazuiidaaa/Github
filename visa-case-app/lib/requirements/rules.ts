@@ -38,6 +38,11 @@ export interface RuleSet {
   excludeStatuses?: string[];
   /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
   basis?: "category" | "acquisitionCause";
+  /**
+   * カテゴリー区分の定義（選べる範囲と、各区分の意味。日本語の原文）。省略時は、所属機関の区分（1〜4。CATEGORY_LABELS）。
+   * 在留資格によって区分の範囲・意味が違う場合に指定する（例：教授＝1常勤・2非常勤）。規則の categories が ALL でも、定義の範囲内でだけ判定する。
+   */
+  categoryDefinition?: Partial<Record<Category, string>>;
   sources: { title: string; url: string }[];
   checkedAt: string;
   rules: RequirementRule[];
@@ -57,6 +62,16 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   "3": "カテゴリー3（前年の法定調書合計表を提出した団体・個人）",
   "4": "カテゴリー4（上記以外）",
 };
+
+/** 規則集合のカテゴリー区分の定義（選べる区分 → 意味）。定義がなければ、所属機関の区分（1〜4） */
+export function categoryLabelsOf(ruleSet: Pick<RuleSet, "categoryDefinition"> | null): Partial<Record<Category, string>> {
+  return ruleSet?.categoryDefinition ?? CATEGORY_LABELS;
+}
+
+/** 規則集合で選べるカテゴリー（昇順） */
+export function categoryRangeOf(ruleSet: Pick<RuleSet, "categoryDefinition"> | null): Category[] {
+  return (Object.keys(categoryLabelsOf(ruleSet)) as Category[]).sort();
+}
 
 /** 申請書・写真・パスポート及び在留カードの提示は、在留資格によらず、手続の種類ごとに共通（Issue #291）。在留資格別の規則集合は、これを先頭に展開する */
 export type CommonProcedure = "renewal" | "change" | "coe";

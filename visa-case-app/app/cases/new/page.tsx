@@ -15,7 +15,7 @@ import { hasAcceptedDateError } from "@/lib/acceptedDate";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
-import { shouldShowNoRuleGuide } from "@/lib/requirements/evaluate";
+import { ruleSetFor, shouldShowNoRuleGuide, statusForRules } from "@/lib/requirements/evaluate";
 import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, procedureNeedsTarget, type EmploymentInfo, type ProcedureType } from "@/lib/types";
@@ -284,7 +284,11 @@ export default function NewCasePage() {
             <div>
               <h2 className="mb-1 text-sm font-semibold">{t("caseNew.employmentHeading")}</h2>
               <p className="mb-3 text-xs text-slate-500">{t("caseNew.employmentNote")}</p>
-              <EmploymentFields form={employment} set={(k, v) => setEmployment((f) => ({ ...f, [k]: v }))} />
+              <EmploymentFields
+                form={employment}
+                set={(k, v) => setEmployment((f) => ({ ...f, [k]: v }))}
+                ruleSet={procedureType ? ruleSetFor(procedureType, statusForRules(procedureType, { currentStatus, targetStatus })) : null}
+              />
               {errors.employment && <p className="mt-2 text-sm text-red-600">{errors.employment}</p>}
             </div>
             <Field label={t("caseNew.groupNameLabel")} required error={errors.groupName} hint={t("caseNew.groupNameHint")}>
