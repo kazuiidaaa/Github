@@ -355,10 +355,14 @@ async function buildFile(doc: GeneratedDocument, lang: Lang = DEFAULT_LANG): Pro
     return (await requestOfficialXlsx(doc.content.case.procedureType, o.input, o.kind === "hspPoint" ? "hspPoint" : undefined)).blob;
   }
   if (doc.outputFormat === "pdf") {
-    const { buildPdf, loadJapaneseFont, loadKoreanFont } = await import("./pdf");
+    const { buildPdf, containsHangul, loadJapaneseFont, loadKoreanFont } = await import("./pdf");
     // 韓国語は、ハングルを持つフォントを先に使い、漢字・かな（氏名など）は日本語のフォントで補う
     if (doc.documentType === "client_guide" && lang === "ko") {
       return buildPdf(doc, await loadKoreanFont(), lang, [await loadJapaneseFont()]);
+    }
+    // 日本語・英語でも、氏名などにハングルが含まれるときだけ、韓国語のフォントで補う（含まれなければ取得しない）
+    if (containsHangul(JSON.stringify(doc.content))) {
+      return buildPdf(doc, await loadJapaneseFont(), lang, [await loadKoreanFont()]);
     }
     return buildPdf(doc, await loadJapaneseFont(), lang);
   }

@@ -236,13 +236,13 @@ export async function buildPdf(
 ): Promise<Blob> {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
-  // subset: true は使わない。fontkit の絞り込みが、Noto Sans の字形データを途中で切ってしまい、
+  // subset: true は使わない。fontkit の絞り込みが、字形データを途中で切ってしまい、
   // 文字が欠ける（日本語・英語・韓国語のいずれも、PDF で一部の文字が描かれない）ため。
   // フォント全体を埋め込む（PDF は数 MB になる。圧縮される）。docs/client-guide-languages.md を参照
-  // locl（地域別の字形の置換）も切る。置換後の字形は、pdf-lib が幅を登録しない（既定の幅 1 em になる）ため、
-  // 英数字だけの文（日時など）で、数字の間隔が広がる
+  // locl（地域別の字形の置換）と liga（合字。英文の ffi・fi など）も切る。置換後の字形は、pdf-lib が幅を登録しない
+  // （既定の幅 1 em になる）ため、英数字だけの文（日時など）で数字の間隔が広がり、英文で合字の後ろが空く
   const embedded = [];
-  for (const bytes of [fontBytes, ...fallbackFontBytes]) embedded.push(await pdf.embedFont(bytes, { subset: false, features: { locl: false } }));
+  for (const bytes of [fontBytes, ...fallbackFontBytes]) embedded.push(await pdf.embedFont(bytes, { subset: false, features: { locl: false, liga: false } }));
   const font = new FontSet(embedded);
   pdf.setTitle(`${doc.title} v${doc.version}`);
   pdf.setSubject("内部確認用（公式様式ではありません）");
@@ -295,15 +295,23 @@ export async function buildPdf(
   return new Blob([bytes as BlobPart], { type: "application/pdf" });
 }
 
+/** ハングルを含むか。日本語・英語の書類でも、氏名などの入力値にハングルが含まれることがある（日本語のフォントにはハングルが無い） */
+export function containsHangul(text: string): boolean {
+  return /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/.test(text);
+}
+
 const fontPromises = new Map<string, Promise<Uint8Array>>();
 
 /**
- * 日本語・韓国語フォント（Noto Sans JP / KR Regular、SIL Open Font License 1.1）の配信元。
- * リポジトリの容量削減のため同梱せず、版（Sans2.004）を固定した jsDelivr から取得する。
+ * 日本語フォント（BIZ UDPゴシック）・韓国語フォント（ナヌムゴシック）の配信元。どちらも SIL Open Font License 1.1。
+ * リポジトリの容量削減のため同梱せず、版（google/fonts のコミット）を固定した jsDelivr から取得する。
+ * 固定の太さの TrueType（glyf 輪郭）を使う。pdf-lib は、OTF（CFF 輪郭）を正しく埋め込めず、文字が化ける・文字幅が登録されずに折り返しがずれる。
+ * Noto Sans の可変フォント（TrueType）は、既定の太さが最も細い（Thin）ため、PDF では細く描かれる。このため使わない（#253）。
+ * ナヌムゴシックには、かな・漢字が含まれない。韓国語の書類でも、日本語の氏名は、日本語のフォントの字形で描かれる。
  */
-const FONT_BASE = "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@Sans2.004/Sans/SubsetOTF";
-export const JAPANESE_FONT_URL = `${FONT_BASE}/JP/NotoSansJP-Regular.otf`;
-export const KOREAN_FONT_URL = `${FONT_BASE}/KR/NotoSansKR-Regular.otf`;
+const FONT_BASE = "https://cdn.jsdelivr.net/gh/google/fonts@7085eb89a950e85db5b166b7a58d414544b4140c/ofl";
+export const JAPANESE_FONT_URL = `${FONT_BASE}/bizudpgothic/BIZUDPGothic-Regular.ttf`;
+export const KOREAN_FONT_URL = `${FONT_BASE}/nanumgothic/NanumGothic-Regular.ttf`;
 
 /** 外部の配信元からフォントを読み込む（初回のみ） */
 function loadFont(path: string): Promise<Uint8Array> {
@@ -325,12 +333,12 @@ function loadFont(path: string): Promise<Uint8Array> {
   return p;
 }
 
-/** 日本語のフォントを読み込む（約4.5MB）。日本語・英語の出力で使う。韓国語では、漢字・かなの代わりとしても使う */
+/** 日本語のフォントを読み込む（約4.7MB）。日本語・英語の出力で使う。韓国語では、漢字・かなの代わりとしても使う */
 export function loadJapaneseFont(): Promise<Uint8Array> {
   return loadFont(JAPANESE_FONT_URL);
 }
 
-/** 韓国語のフォントを読み込む（約4.6MB。韓国語の出力のときだけ） */
+/** 韓国語のフォントを読み込む（約2.1MB。韓国語の出力のときだけ） */
 export function loadKoreanFont(): Promise<Uint8Array> {
   return loadFont(KOREAN_FONT_URL);
 }
