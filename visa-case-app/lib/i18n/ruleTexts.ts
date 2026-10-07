@@ -505,6 +505,65 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Status of residence \"Medical Services\" (Immigration Services Agency of Japan)",
     "체류자격 '의료'(출입국재류관리청)",
   ],
+
+
+  // 研究（Issue #296）
+  "研究 在留資格認定証明書交付申請": [
+    "Researcher: application for certificate of eligibility",
+    "연구 사증발급인정서 교부 신청",
+  ],
+  "研究 在留資格変更許可申請": [
+    "Researcher: application for change of status of residence",
+    "연구 체류자격 변경 허가 신청",
+  ],
+  "研究 在留期間更新許可申請": [
+    "Researcher: application for extension of the period of stay",
+    "연구 체류기간 연장 허가 신청",
+  ],
+  "在留資格「研究」（出入国在留管理庁）": [
+    "Status of residence \"Researcher\" (Immigration Services Agency of Japan)",
+    "체류자격 '연구'(출입국재류관리청)",
+  ],
+  "外国法人の源泉徴収に対する免除証明書その他の源泉徴収を要しないことを明らかにする資料": [
+    "Certificate of exemption from withholding for a foreign corporation, or other material showing that withholding is not required",
+    "외국법인의 원천징수 면제 증명서 기타 원천징수가 필요 없음을 밝히는 자료",
+  ],
+  "源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要": [
+    "Only for an organization exempt from withholding. In that case, the notification of opening a salary payment office, etc. below is not required",
+    "원천징수 면제를 받는 기관의 경우에만. 이 경우 아래의 급여지급사무소 등 개설 신고서 등은 불필요",
+  ],
+  "学歴及び職歴その他経歴等を証明する文書（履歴書、卒業証明書又は研究の経験期間を証明する文書等）": [
+    "Documents proving education, work history and other background (résumé, graduation certificate, or documents proving research experience, etc.)",
+    "학력 및 경력 기타 이력 등을 증명하는 문서(이력서, 졸업증명서 또는 연구 경험 기간을 증명하는 문서 등)",
+  ],
+  "履歴書（関連する職務に従事した機関、活動の内容及び期間を明示したもの）と、大学等の卒業証明書（同等以上の教育又は高度専門士の称号を証明する文書でもよい）又は研究の経験期間を証明する文書（大学院・大学での研究期間を含む）": [
+    "A résumé (stating the organizations, activities and periods of related work) and either a graduation certificate from a university, etc. (a document proving equivalent or higher education or the title of Advanced Professional may be used instead) or a document proving the period of research experience (including research at a graduate school or university)",
+    "이력서(관련 직무에 종사한 기관, 활동 내용 및 기간을 명시한 것)와 대학 등의 졸업증명서(동등 이상의 교육 또는 고도전문사 칭호를 증명하는 문서도 가능) 또는 연구 경험 기간을 증명하는 문서(대학원·대학에서의 연구 기간 포함)",
+  ],
+  "労働契約の場合は労働条件通知書等。日本法人の役員に就任する場合は役員報酬を定める定款の写し又は株主総会議事録の写し。外国法人の日本支店への転勤・会社以外の団体の役員に就任する場合は、地位（担当業務）、期間及び報酬額を明らかにする所属団体の文書": [
+    "For an employment contract, a notice of working conditions, etc. For an officer of a Japanese company, a copy of the articles of incorporation or of the shareholders' meeting minutes setting officer remuneration. For a transfer to the Japanese branch of a foreign company or an officer of a non-company organization, a document of the organization stating the position (duties), period and remuneration",
+    "근로계약의 경우 근로조건통지서 등. 일본 법인의 임원에 취임하는 경우 임원 보수를 정한 정관 사본 또는 주주총회 의사록 사본. 외국법인의 일본 지점으로 전근하는 경우·회사 이외 단체의 임원에 취임하는 경우 지위(담당 업무), 기간 및 보수액을 밝히는 소속 단체의 문서",
+  ],
+  "転勤の場合の資料（転勤直前の外国の機関の文書、転勤前後の事業所の関係を示す資料）": [
+    "Documents for an intra-company transfer (a document from the foreign organization worked for immediately before the transfer, and material showing the relationship between the workplaces before and after)",
+    "전근의 경우의 자료(전근 직전 외국 기관의 문서, 전근 전후 사업소의 관계를 보여 주는 자료)",
+  ],
+  "「研究（転勤）」の場合のみ（申請書は様式L）。過去1年間の業務内容・地位・報酬を明示した転勤直前の機関の文書と、支店の登記事項証明書又は出資・資本関係を明らかにする資料": [
+    "Only for \"Researcher (transfer)\" (the application form is Form L). A document from the organization immediately before the transfer stating duties, position and remuneration over the past year, and a certificate of registered matters of the branch or material showing the investment/capital relationship",
+    "'연구(전근)'의 경우에만(신청서는 양식 L). 지난 1년간의 업무 내용·지위·보수를 명시한 전근 직전 기관의 문서와, 지점의 등기사항증명서 또는 출자·자본 관계를 밝히는 자료",
+  ],
+  "沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が詳細に記載された案内書、これに準ずる文書、又は登記事項証明書のいずれか": [
+    "Any of: a brochure describing in detail the history, officers, organization and business (including main clients and transaction record), an equivalent document, or a certificate of registered matters",
+    "연혁, 임원, 조직, 사업 내용(주요 거래처와 거래 실적 포함) 등이 상세히 기재된 안내서, 이에 준하는 문서 또는 등기사항증명서 중 하나",
+  ],
+  "カテゴリー3は、転勤して研究を行う業務に従事する場合に限る。新規事業の場合は事業計画書": [
+    "For Category 3, only when engaged in research work after a transfer. For a new business, a business plan",
+    "카테고리 3은 전근하여 연구 업무에 종사하는 경우에 한함. 신규 사업의 경우 사업계획서",
+  ],
+  "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る": [
+    "Only for the first renewal application after changing jobs, and only when engaged in research work after a transfer",
+    "이직 후 첫 연장 허가 신청에서, 전근하여 연구 업무에 종사하는 경우에 한함",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
