@@ -1174,6 +1174,138 @@ export const HSP_ACQUISITION: RuleSet = {
   ],
 };
 
+// 在留資格「介護」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #297）。
+// 提出書類は案内ページの本文による。チェックシート（PDF）の内容は未照合。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const KAIGO = "介護";
+const KAIGO_SOURCE = { title: "在留資格「介護」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/nursingcare.html" };
+const KAIGO_CHECKED_AT = "2026-10-07";
+
+// 認定・変更・更新で共通に使う書類（手続別の規則集合が、必要なものを選んで並べる）
+const kaigoRegistration: RequirementRule = {
+  id: "care_worker_registration",
+  name: "介護福祉士登録証（写し）",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+};
+const kaigoWorkingConditions: RequirementRule = {
+  id: "working_conditions_document",
+  name: "労働条件を明示する文書（労働基準法第15条第1項・同法施行規則第5条に基づき交付されるもの）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const kaigoDispatch: RequirementRule = {
+  id: "dispatch_documents",
+  name: "派遣先での活動内容を明らかにする資料（労働条件通知書（雇用契約書）等）",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: "派遣契約に基づいて就労する場合（申請人が被派遣者の場合）のみ",
+};
+const kaigoOrganizationOverview: RequirementRule = {
+  id: "organization_overview",
+  name: "所属機関の概要を明らかにする文書（沿革・役員・組織・事業内容等が記載された案内書、又はこれに準ずる文書）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const kaigoRepresentativeDeclaration: RequirementRule = {
+  id: "representative_declaration",
+  name: "所属機関の代表者に関する申告書（参考様式）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+  note: "2026年4月15日以降の申請で提出する",
+};
+const kaigoSkillTransferDeclaration: RequirementRule = {
+  id: "skill_transfer_declaration",
+  name: "技能移転に係る申告書（参考様式）",
+  party: "applicant",
+  categories: ALL,
+  level: "check",
+  note: "「技能実習」の在留資格で在留していたことがある場合のみ",
+};
+
+export const KAIGO_COE: RuleSet = {
+  id: "kaigo_coe",
+  title: "介護 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: KAIGO,
+  excludeStatuses: ["特定技能"],
+  checkedAt: KAIGO_CHECKED_AT,
+  sources: [KAIGO_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    kaigoRegistration,
+    kaigoWorkingConditions,
+    kaigoDispatch,
+    kaigoOrganizationOverview,
+    kaigoRepresentativeDeclaration,
+    kaigoSkillTransferDeclaration,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+      verify: true,
+    },
+  ],
+};
+
+export const KAIGO_CHANGE: RuleSet = {
+  id: "kaigo_change",
+  title: "介護 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: KAIGO,
+  excludeStatuses: ["特定技能"],
+  checkedAt: KAIGO_CHECKED_AT,
+  sources: [KAIGO_SOURCE],
+  rules: [
+    ...procedureCommonRules("change"),
+    kaigoRegistration,
+    kaigoWorkingConditions,
+    kaigoDispatch,
+    kaigoOrganizationOverview,
+    kaigoRepresentativeDeclaration,
+    kaigoSkillTransferDeclaration,
+  ],
+};
+
+export const KAIGO_RENEWAL: RuleSet = {
+  id: "kaigo_renewal",
+  title: "介護 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: KAIGO,
+  excludeStatuses: ["特定技能"],
+  checkedAt: KAIGO_CHECKED_AT,
+  sources: [KAIGO_SOURCE],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    kaigoRepresentativeDeclaration,
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ALL,
+      level: "required",
+      note: "直近1年分の総所得及び納税状況が記載されたもの",
+    },
+    { ...kaigoWorkingConditions, level: "check", note: "転職後、初回の更新許可申請の場合のみ" },
+    { ...kaigoOrganizationOverview, level: "check", note: "転職後、初回の更新許可申請の場合のみ" },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1189,4 +1321,8 @@ export const RULE_SETS: RuleSet[] = [
   // 高度専門職の取得は、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する
   HSP_ACQUISITION,
   ACQUISITION_BY_CAUSE,
+  // 介護（Issue #297）
+  KAIGO_RENEWAL,
+  KAIGO_CHANGE,
+  KAIGO_COE,
 ];
