@@ -62,7 +62,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 `supabase/migrations/0010_generated_documents_word.sql` を、0008 の実行後に SQL Editor で実行します（0009 の有無には依存しません）。Word ファイルを保存する非公開バケット `generated-documents`（10MB・.docx のみ・更新と削除は不可）と、Word 版を新しい版として登録する関数を作成します。
 
 ## 9. PDF出力（フェーズ6-C）を使う場合
-`supabase/migrations/0011_generated_documents_pdf.sql` を、0010 の実行後に SQL Editor で実行します。バケット `generated-documents` に PDF を追加し、登録関数を Word と PDF の両方に対応させます。日本語フォント（Noto Sans JP、SIL Open Font License）は同梱せず、PDF の出力時のみ jsDelivr（版を固定）から読み込みます。配信元は `lib/documents/pdf.ts` の `JAPANESE_FONT_URL` です。
+`supabase/migrations/0011_generated_documents_pdf.sql` を、0010 の実行後に SQL Editor で実行します。バケット `generated-documents` に PDF を追加し、登録関数を Word と PDF の両方に対応させます。日本語・韓国語フォント（Noto Sans JP・Noto Sans KR、SIL Open Font License）は同梱せず、PDF の出力時のみ jsDelivr（版を固定）から読み込みます。配信元は `lib/documents/pdf.ts` の `JAPANESE_FONT_URL`・`KOREAN_FONT_URL` です。
 
 ## フェーズ10：複数ユーザーと役割
 

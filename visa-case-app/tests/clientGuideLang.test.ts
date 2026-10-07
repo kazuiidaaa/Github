@@ -15,7 +15,7 @@ import {
 import { buildDocx } from "../lib/documents/docx";
 import { DEFAULT_LANG, LANGS, LANG_STORAGE_KEY, readStoredLang, storeLang, type Lang } from "../lib/documents/lang";
 import { buildBlocks, footerLabel } from "../lib/documents/model";
-import { FontSet, buildPdf } from "../lib/documents/pdf";
+import { FontSet, buildPdf, containsHangul } from "../lib/documents/pdf";
 import { buildContent } from "../lib/documents/snapshot";
 import { CLIENT_GUIDE_NOTICES, GENERATED_STATUS_LABELS, type GeneratedDocument } from "../lib/documents/types";
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
@@ -480,12 +480,12 @@ describe("PDF の出力", () => {
       const pdf = await PDFDocument.load(await (await buildPdf(doc, jpFont, lang)).arrayBuffer());
       expect(pdf.getPageCount()).toBeGreaterThan(0);
     }
-    const ko = await PDFDocument.load(await (await buildPdf(doc, krFont, "ko", [jpFont])).arrayBuffer());
+    const ko = await PDFDocument.load(await (await buildPdf(doc, jpFont, "ko", [krFont])).arrayBuffer());
     expect(ko.getPageCount()).toBeGreaterThan(0);
   });
 
   it("埋め込まれたフォントの字形が壊れていない（絞り込みで字形が途中で切れると、文字が欠ける）", async () => {
-    const blob = await buildPdf(make(), krFont, "ko", [jpFont]);
+    const blob = await buildPdf(make(), jpFont, "ko", [krFont]);
     const pdf = await PDFDocument.load(await blob.arrayBuffer());
     const fonts: Uint8Array[] = [];
     for (const [, obj] of pdf.context.enumerateIndirectObjects()) {
@@ -571,11 +571,31 @@ describe("PDF の出力", () => {
       if (!krSet.has(ch.codePointAt(0)!) && !jpSet.has(ch.codePointAt(0)!)) missing.add(ch);
     }
     expect([...missing]).toEqual([]);
-    // ハングルは韓国語のフォントで描く。配信元の韓国語フォント（OTF）は、かな・漢字も含むため、それらはどちらで描かれてもよい
-    const set = new FontSet([kr, jp]);
+    // 日本語のフォントを先に使う。日本語のフォントにはハングルが無いため、ハングルだけ韓国語のフォントで描かれる。
+    // 韓国語のフォントにもかな・漢字はあるが韓国語の字形になるため、先に日本語のフォントを使う
+    const set = new FontSet([jp, kr]);
     const runs = set.runs("김민준 山田");
     expect(runs[0].font).toBe(kr);
+    // 漢字・かなは、必ず日本語のフォントで描く（韓国語の字形にならない）
+    expect(runs.filter((r) => /[山田]/.test(r.text)).every((r) => r.font === jp)).toBe(true);
     expect(runs.map((r) => r.text).join("")).toBe("김민준 山田");
     expect(set.widthOfTextAtSize("김민준 山田", 10)).toBeGreaterThan(0);
+  });
+
+  it("日本語・英語の書類でも、氏名にハングルが含まれれば、韓国語のフォントで補って描ける", async () => {
+    expect(containsHangul("김민준 山田 太郎")).toBe(true);
+    expect(containsHangul("山田 太郎 Taro")).toBe(false);
+    const pdf = await PDFDocument.create();
+    pdf.registerFontkit(fontkit);
+    const jp = await pdf.embedFont(jpFont, { subset: false });
+    const kr = await pdf.embedFont(krFont, { subset: false });
+    // 日本語のフォントには、ハングルが無い（補わないと、空白の四角になる）
+    expect(new Set(jp.getCharacterSet()).has("김".codePointAt(0)!)).toBe(false);
+    const set = new FontSet([jp, kr]);
+    const runs = set.runs("김민준 山田");
+    expect(runs.find((r) => r.text.includes("김"))?.font).toBe(kr);
+    expect(runs.find((r) => r.text.includes("山"))?.font).toBe(jp);
+    const out = await PDFDocument.load(await (await buildPdf(make({ ...record, applicant: { ...EMPTY_APPLICANT, legalName: "김민준 山田 太郎" } }), jpFont, "ja", [krFont])).arrayBuffer());
+    expect(out.getPageCount()).toBeGreaterThan(0);
   });
 });
