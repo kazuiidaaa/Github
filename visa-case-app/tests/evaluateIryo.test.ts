@@ -83,6 +83,13 @@ describe("医療の規則集合", () => {
     expect(e.items.some((i) => i.rule.id === "medical_license_doctor")).toBe(false);
   });
 
+  it("更新：資格の証明は、案内ページに記載がないため要確認（verify）", () => {
+    const r = IRYO_RENEWAL.rules.find((x) => x.id === "medical_license_other")!;
+    expect(r.level).toBe("check");
+    expect(r.verify).toBe(true);
+    expect(r.note).toContain("更新の案内ページには記載がありません");
+  });
+
   it("出典は入管庁の医療の案内ページで、規則の識別子が各集合内で重複しない", () => {
     for (const rs of [IRYO_RENEWAL, IRYO_CHANGE, IRYO_COE]) {
       expect(rs.sources.map((s) => s.url)).toContain("https://www.moj.go.jp/isa/applications/status/medicalservices.html");

@@ -481,9 +481,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Only for applicants other than doctors and dentists (\"Category 2\" in the guidance). One of: pharmacist, public health nurse, midwife, nurse, assistant nurse, dental hygienist, radiological technologist, physical therapist, occupational therapist, orthoptist, clinical engineer, prosthetist/orthotist",
     "의사·치과의사 이외의 경우에만(안내의 '카테고리 2'). 약사, 보건사, 조산사, 간호사, 준간호사, 치과위생사, 진료방사선기사, 물리치료사, 작업치료사, 시능훈련사, 임상공학기사, 의지보조기기사 중 하나",
   ],
-  "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ。薬剤師、保健師、助産師、看護師、准看護師、歯科衛生士、診療放射線技師、理学療法士、作業療法士、視能訓練士、臨床工学技士、義肢装具士のいずれか": [
-    "Only if a person other than a doctor or dentist files the first renewal application after changing jobs. One of: pharmacist, public health nurse, midwife, nurse, assistant nurse, dental hygienist, radiological technologist, physical therapist, occupational therapist, orthoptist, clinical engineer, prosthetist/orthotist",
-    "의사·치과의사 이외의 사람이 이직 후 첫 연장 허가 신청을 하는 경우에만. 약사, 보건사, 조산사, 간호사, 준간호사, 치과위생사, 진료방사선기사, 물리치료사, 작업치료사, 시능훈련사, 임상공학기사, 의지보조기기사 중 하나",
+  "更新の案内ページには記載がありません。医師・歯科医師以外の方は、念のため日本の資格（免状又は証明書等）の写しを用意し、管轄の出入国在留管理官署に要否を確認してください": [
+    "Not listed in the guidance for renewals. If you are not a doctor or dentist, prepare a copy of your Japanese qualification (license or certificate) just in case, and ask the competent immigration office whether it is needed",
+    "연장 안내 페이지에는 기재되어 있지 않습니다. 의사·치과의사 이외의 분은 만일에 대비해 일본 자격(면허 또는 증명서 등)의 사본을 준비하고, 관할 출입국·외국인관서에 필요 여부를 확인하십시오",
   ],
   "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ": [
     "Only if a person other than a doctor or dentist files the first renewal application after changing jobs",
