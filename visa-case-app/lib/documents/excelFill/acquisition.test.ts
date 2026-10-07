@@ -171,6 +171,14 @@ describe("fillAcquisitionExcel", () => {
     expect(warnings).toEqual([]);
   });
 
+  it("号つきの希望在留資格（高度専門職）は、「その他」の□と自由記入欄に入る（Issue #212）", async () => {
+    const { buffer } = await fillAcquisitionExcel(applicant, details, "高度専門職（1号ロ）");
+    const wb = await open(buffer);
+    expect(text(wb, "M44")).toBe("■"); // 13 その他
+    expect(text(wb, "Q44")).toBe("高度専門職（1号ロ）");
+    expect([text(wb, "H42"), text(wb, "P42"), text(wb, "X42"), text(wb, "H44")]).toEqual(["□", "□", "□", "□"]); // 4つのチェックボックスは付かない
+  });
+
   it("入力がなければ、テンプレートの元の状態のまま", async () => {
     const { buffer, warnings } = await fillAcquisitionExcel(EMPTY_APPLICANT, EMPTY_FORM_DETAILS);
     const out = sheet(await open(buffer));

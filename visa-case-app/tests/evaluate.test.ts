@@ -339,7 +339,7 @@ describe("規則を引く在留資格の決め方", () => {
 });
 
 describe("高度専門職の規則（Issue #186）", () => {
-  const find = (procedureType: "coe" | "change" | "renewal", status: string) => {
+  const find = (procedureType: "coe" | "change" | "renewal" | "acquisition", status: string) => {
     const field = procedureType === "renewal" ? "currentStatus" : "targetStatus";
     return evaluate(make({ procedureType, [field]: status } as Partial<CaseRecord>));
   };
@@ -372,14 +372,38 @@ describe("高度専門職の規則（Issue #186）", () => {
     expect(RULE_SETS.some((r) => r.procedureType === "renewal" && r.residenceStatus.includes("2号"))).toBe(false);
   });
 
+  it("高度専門職2号の更新・認定は、手続がないため、1号の規則に一致させない（evaluate の結果でも規則なし）（Issue #212）", () => {
+    for (const procedureType of ["renewal", "coe"] as const) {
+      expect(find(procedureType, "高度専門職（2号）").ruleSet, procedureType).toBeNull();
+      expect(hasRuleSetFor(procedureType, "高度専門職（2号）"), procedureType).toBe(false);
+    }
+    const renewal = evaluate(make({ procedureType: "renewal", currentStatus: "高度専門職（2号）" }));
+    expect(renewal.ruleSet).toBeNull();
+    expect(renewal.items).toHaveLength(0);
+  });
+
+  it("号なしの旧データ「高度専門職」と1号は、更新・認定・変更とも従来どおり1号の規則に一致する（Issue #212）", () => {
+    const expected = { renewal: "hsp_renewal", coe: "hsp_coe", change: "hsp_change" } as const;
+    for (const [procedureType, id] of Object.entries(expected)) {
+      for (const status of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
+        expect(find(procedureType as keyof typeof expected, status).ruleSet?.id, `${procedureType}:${status}`).toBe(id);
+      }
+    }
+  });
+
   it("他の在留資格の規則は、従来どおり（誤一致しない）", () => {
     expect(find("coe", "技術・人文知識・国際業務").ruleSet?.id).toBe("gijinkoku_coe");
     expect(find("change", "経営・管理").ruleSet?.id).toBe("keiei_kanri_change");
     expect(find("renewal", "経営・管理").ruleSet?.id).toBe("keiei_kanri_renewal");
   });
 
-  it("取得許可申請には、高度専門職の規則を足さない（取得の事由で判定する規則集合のまま）", () => {
-    expect(RULE_SETS.some((r) => r.procedureType === "acquisition" && r.id.startsWith("hsp_"))).toBe(false);
+  it("取得許可申請の高度専門職は、号の有無・種類を問わず HSP_ACQUISITION で引く。他の在留資格は取得の事由の規則集合のまま（Issue #212）", () => {
+    for (const status of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）", "高度専門職（2号）"]) {
+      expect(find("acquisition", status).ruleSet?.id, status).toBe("hsp_acquisition");
+    }
+    for (const status of ["", "技術・人文知識・国際業務", "留学"]) {
+      expect(find("acquisition", status).ruleSet?.id, status).toBe("acquisition_by_cause");
+    }
   });
 });
 

@@ -114,7 +114,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
         onChange={(v) => setProcedureType(v as ProcedureType)}
         hint={procedureDescriptionText(t, procedureType)}
       />
-      <StatusSelect legend={t("caseNew.currentStatusLegend")} hint={hints.current} value={currentStatus} onChange={setCurrentStatus} />
+      <StatusSelect legend={t("caseNew.currentStatusLegend")} hint={hints.current} value={currentStatus} onChange={setCurrentStatus} withGrade />
       {needsTarget && (
         <StatusSelect
           legend={targetStatusLegend(t, procedureType)}

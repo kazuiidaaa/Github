@@ -1,4 +1,4 @@
-import { officialFormScopeWarnings, officialFormSpecFor, type OfficialFormScope } from "@/lib/documents/officialForms";
+import { RENEWAL_SCOPE_TEXT, officialFormScopeWarnings, officialFormSpecFor, type OfficialFormScope } from "@/lib/documents/officialForms";
 import { precheckRows, type PrecheckInput, type PrecheckRow } from "@/lib/documents/precheck";
 import type { GeneratedDocumentStatus, GeneratedDocumentType, OutputFormat } from "@/lib/documents/types";
 import type { ProcedureType } from "@/lib/types";
@@ -55,8 +55,6 @@ export function useDocumentLabels() {
   return makeDocumentLabels(useT());
 }
 
-/** 更新の様式が対象とする在留資格（法令用語のため訳さない。lib/documents/officialForms.ts と同じ値。試験で一致を確認） */
-export const RENEWAL_TARGET_STATUS = "技術・人文知識・国際業務";
 
 const SCOPE_KEYS: Partial<Record<ProcedureType, DocKey>> = {
   renewal: "documents.scopeRenewal",
@@ -69,7 +67,7 @@ const SCOPE_KEYS: Partial<Record<ProcedureType, DocKey>> = {
 export function scopeWarningsText(t: T, s: OfficialFormScope): string[] {
   if (officialFormScopeWarnings(s).length === 0) return [];
   const key = SCOPE_KEYS[officialFormSpecFor(s.procedureType).procedureType];
-  return key ? [t(key, { status: RENEWAL_TARGET_STATUS })] : officialFormScopeWarnings(s);
+  return key ? [t(key, { status: RENEWAL_SCOPE_TEXT })] : officialFormScopeWarnings(s);
 }
 
 /**
