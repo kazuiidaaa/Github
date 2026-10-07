@@ -23,6 +23,8 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   caseChecks: { en: "draft", ko: "draft" },
   caseForm: { en: "draft", ko: "draft" },
   casePoints: { en: "draft", ko: "draft" },
+  caseApplicant: { en: "draft", ko: "draft" },
+  caseInfo: { en: "draft", ko: "draft" },
 };
 
 /** 指定の言語に、確認前（下書き）の区分が1つでもあるか */

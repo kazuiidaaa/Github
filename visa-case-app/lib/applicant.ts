@@ -1,4 +1,5 @@
 import { isValidDate } from "./format";
+import { jaT, type T } from "./i18n/jaT";
 import type { Applicant } from "./types";
 
 export type ApplicantField = keyof Pick<
@@ -12,23 +13,23 @@ export type ApplicantField = keyof Pick<
  * 日付欄（DateField）は、存在しない日付を YYYY-MM-DD の形のまま渡すため、ここで弾く。
  * 過去に自由入力で保存された値が残っている場合に限り、選び直しを促す（isValidDate は安全網として残す）。
  */
-export function validateApplicant(a: Applicant): Partial<Record<ApplicantField, string>> {
+export function validateApplicant(a: Applicant, t: T = jaT): Partial<Record<ApplicantField, string>> {
   const errors: Partial<Record<ApplicantField, string>> = {};
-  if (!a.legalName.trim()) errors.legalName = "氏名を入力してください。";
-  if (!a.nationality.trim()) errors.nationality = "国籍・地域を入力してください。";
-  if (!a.residenceStatus.trim()) errors.residenceStatus = "在留資格を選択してください。";
-  if (!a.dateOfBirth) errors.dateOfBirth = "生年月日を入力してください。";
-  else if (!isValidDate(a.dateOfBirth)) errors.dateOfBirth = "存在する日付を、年4桁・月・日の順に入力してください（例：2000/01/31）。";
-  if (!a.residenceExpiryDate) errors.residenceExpiryDate = "在留期間の満了日を入力してください。";
-  else if (!isValidDate(a.residenceExpiryDate)) errors.residenceExpiryDate = "存在する日付を、年4桁・月・日の順に入力してください（例：2000/01/31）。";
+  if (!a.legalName.trim()) errors.legalName = t("caseApplicant.errNameRequired");
+  if (!a.nationality.trim()) errors.nationality = t("caseApplicant.errNationalityRequired");
+  if (!a.residenceStatus.trim()) errors.residenceStatus = t("caseApplicant.errStatusRequired");
+  if (!a.dateOfBirth) errors.dateOfBirth = t("caseApplicant.errBirthRequired");
+  else if (!isValidDate(a.dateOfBirth)) errors.dateOfBirth = t("caseForm.dateInvalid");
+  if (!a.residenceExpiryDate) errors.residenceExpiryDate = t("caseApplicant.errExpiryRequired");
+  else if (!isValidDate(a.residenceExpiryDate)) errors.residenceExpiryDate = t("caseForm.dateInvalid");
   return errors;
 }
 
 /** 下書き保存時の検証。日付は、入力されている場合のみ形式を確認する。 */
-export function validateDraft(a: Applicant): Partial<Record<ApplicantField, string>> {
+export function validateDraft(a: Applicant, t: T = jaT): Partial<Record<ApplicantField, string>> {
   const errors: Partial<Record<ApplicantField, string>> = {};
   for (const k of ["dateOfBirth", "residenceExpiryDate"] as const) {
-    if (a[k] && !isValidDate(a[k])) errors[k] = "存在する日付を、年4桁・月・日の順に入力してください（例：2000/01/31）。";
+    if (a[k] && !isValidDate(a[k])) errors[k] = t("caseForm.dateInvalid");
   }
   return errors;
 }
