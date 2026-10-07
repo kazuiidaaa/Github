@@ -407,6 +407,50 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Status of residence \"Legal/Accounting Services\" (Immigration Services Agency of Japan)",
     "체류자격 '법률·회계업무'(출입국재류관리청)",
   ],
+
+  // 教授（Issue #292）
+  "カテゴリー1（常勤職員）": ["Category 1 (full-time staff)", "카테고리 1(상근 직원)"],
+  "カテゴリー2（非常勤職員）": ["Category 2 (part-time staff)", "카테고리 2(비상근 직원)"],
+  "大学等又は大学等以外の機関が作成する、申請人の大学等における活動の内容、期間、地位及び報酬を証明する文書": [
+    "Document prepared by the university or another institution certifying the applicant's activities, period, position and remuneration at the university, etc.",
+    "대학 등 또는 대학 등 이외의 기관이 작성하는, 신청인의 대학 등에서의 활동 내용, 기간, 지위 및 보수를 증명하는 문서",
+  ],
+  "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）": [
+    "One stating the total income and tax payment status for one year. If a single certificate states both, either one is sufficient (issued by the municipality of residence as of January 1)",
+    "1년간의 총소득 및 납세 상황이 기재된 것. 두 가지가 모두 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 거주지의 시구정촌에서 발급)",
+  ],
+  "常勤職員として「教授」で在留していた方が、更新申請時点で転職等により非常勤職員となっている場合のみ": [
+    "Only if the applicant stayed as full-time staff under \"Professor\" and has become part-time staff by the time of the renewal application due to a job change, etc.",
+    "상근 직원으로서 '교수' 체류자격으로 체류하던 분이 연장 신청 시점에 이직 등으로 비상근 직원이 된 경우에만",
+  ],
+  "教授 在留期間更新許可申請": [
+    "Professor: application for extension of the period of stay",
+    "교수 체류기간 연장 허가 신청",
+  ],
+  "教授 在留資格変更許可申請": [
+    "Professor: application for change of status of residence",
+    "교수 체류자격 변경 허가 신청",
+  ],
+  "教授 在留資格認定証明書交付申請": [
+    "Professor: application for certificate of eligibility",
+    "교수 사증발급인정서 교부 신청",
+  ],
+  "在留資格「教授」（出入国在留管理庁）": [
+    "Status of residence \"Professor\" (Immigration Services Agency of Japan)",
+    "체류자격 '교수'(출입국재류관리청)",
+  ],
+  "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Professor\" (for application for certificate of eligibility) (Immigration Services Agency of Japan)",
+    "'교수' 관련 제출 서류 일람(사증발급인정서 교부 신청용)(출입국재류관리청)",
+  ],
+  "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Professor\" (for application for change of status of residence) (Immigration Services Agency of Japan)",
+    "'교수' 관련 제출 서류 일람(체류자격 변경 허가 신청용)(출입국재류관리청)",
+  ],
+  "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Professor\" (for application for extension of the period of stay) (Immigration Services Agency of Japan)",
+    "'교수' 관련 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

@@ -21,6 +21,13 @@ export type HspActivity = (typeof HSP_ACTIVITIES)[number];
 export type CoeFormCode = "I" | "L" | "M" | "N" | "U";
 
 /**
+ * 高度専門職ではなく、それ自体が様式 I（見出し「教授」）を使う在留資格（出入国在留管理庁の各在留資格の案内ページによる。Issue #292）。
+ * 認定・変更・更新とも、公式様式は高度専門職の様式 I（docs/official/）と同じファイル。完全一致で照合する。
+ */
+export const FORM_I_STATUSES: readonly string[] = ["教授"];
+export const isFormIStatus = (status: string): boolean => FORM_I_STATUSES.includes(status.trim());
+
+/**
  * 高度専門職ではなく、それ自体が様式 U（見出し「その他」）を使う在留資格（出入国在留管理庁の各在留資格の案内ページによる。Issue #301・#302）。
  * 認定・変更・更新とも、公式様式は高度専門職の様式 U（docs/official/）と同じファイル。完全一致で照合する。
  */

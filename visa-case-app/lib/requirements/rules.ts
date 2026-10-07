@@ -1372,6 +1372,93 @@ export const HOUMU_KAIKEI_RENEWAL: RuleSet = {
   rules: [...procedureCommonRules("renewal")],
 };
 
+// 在留資格「教授」。所属機関のカテゴリーは、1＝常勤職員・2＝非常勤職員の2区分（会社の1〜4区分とは別。categoryDefinition）。
+// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-07 に照合済み（Issue #292）。申請書は様式 I（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const PROFESSOR = "教授";
+const PROFESSOR_CHECKED_AT = "2026-10-07";
+const PROFESSOR_PAGE_SOURCE = { title: "在留資格「教授」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/professor.html" };
+const PROFESSOR_CATEGORIES: Partial<Record<Category, string>> = {
+  "1": "カテゴリー1（常勤職員）",
+  "2": "カテゴリー2（非常勤職員）",
+};
+const PROFESSOR_PART_TIME: Category[] = ["2"];
+
+const professorActivityProof: RequirementRule = {
+  id: "activity_proof_document",
+  name: "大学等又は大学等以外の機関が作成する、申請人の大学等における活動の内容、期間、地位及び報酬を証明する文書",
+  party: "organization",
+  categories: PROFESSOR_PART_TIME,
+  level: "required",
+};
+
+export const PROFESSOR_COE: RuleSet = {
+  id: "professor_coe",
+  title: "教授 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: PROFESSOR,
+  categoryDefinition: PROFESSOR_CATEGORIES,
+  checkedAt: PROFESSOR_CHECKED_AT,
+  sources: [
+    PROFESSOR_PAGE_SOURCE,
+    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    professorActivityProof,
+  ],
+};
+
+export const PROFESSOR_CHANGE: RuleSet = {
+  id: "professor_change",
+  title: "教授 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: PROFESSOR,
+  categoryDefinition: PROFESSOR_CATEGORIES,
+  checkedAt: PROFESSOR_CHECKED_AT,
+  sources: [
+    PROFESSOR_PAGE_SOURCE,
+    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf" },
+  ],
+  rules: [...procedureCommonRules("change"), professorActivityProof],
+};
+
+export const PROFESSOR_RENEWAL: RuleSet = {
+  id: "professor_renewal",
+  title: "教授 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: PROFESSOR,
+  categoryDefinition: PROFESSOR_CATEGORIES,
+  checkedAt: PROFESSOR_CHECKED_AT,
+  sources: [
+    PROFESSOR_PAGE_SOURCE,
+    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: PROFESSOR_PART_TIME,
+      level: "required",
+      note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）",
+    },
+    {
+      ...professorActivityProof,
+      level: "check",
+      note: "常勤職員として「教授」で在留していた方が、更新申請時点で転職等により非常勤職員となっている場合のみ",
+    },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1395,4 +1482,8 @@ export const RULE_SETS: RuleSet[] = [
   HOUMU_KAIKEI_RENEWAL,
   HOUMU_KAIKEI_CHANGE,
   HOUMU_KAIKEI_COE,
+  // 教授（Issue #292）
+  PROFESSOR_RENEWAL,
+  PROFESSOR_CHANGE,
+  PROFESSOR_COE,
 ];
