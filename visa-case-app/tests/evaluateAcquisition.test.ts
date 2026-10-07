@@ -132,16 +132,83 @@ describe("evaluate: 在留資格取得許可申請（取得の事由別）", () 
   });
 
   it("すべての規則が verify: true（出典が解説記事のため、行政書士の確認後に外す）", () => {
-    const set = RULE_SETS.find((r) => r.procedureType === "acquisition");
+    const set = RULE_SETS.find((r) => r.id === "acquisition_by_cause");
     expect(set?.rules.every((r) => r.verify === true)).toBe(true);
   });
 
   it("規則は出典・確認日を持ち、IDが重複せず、旅券は提示と明記される", () => {
-    const set = RULE_SETS.find((r) => r.procedureType === "acquisition")!;
+    const set = RULE_SETS.find((r) => r.id === "acquisition_by_cause")!;
     expect(set.checkedAt).toBe("2026-10-04");
     expect(set.sources.length).toBeGreaterThan(0);
     const rids = set.rules.map((r) => r.id);
     expect(new Set(rids).size).toBe(rids.length);
     expect(set.rules.find((r) => r.id === "passport_presentation")?.name).toContain("提示");
+  });
+});
+
+describe("evaluate: 高度専門職の在留資格取得許可申請（Issue #212）", () => {
+  const CAUSES: Cause[] = ["nationalityLoss", "birth", "other"];
+  const hsp = (cause: Cause, targetStatus: string, over: Partial<CaseRecord> = {}) => evaluate(make(cause, { targetStatus, ...over }));
+  const baseRules = RULE_SETS.find((r) => r.id === "acquisition_by_cause")!;
+  const allGrades = ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）", "高度専門職（2号）"];
+
+  it("号の違い（号なし・1号イ・ロ・ハ・2号）にかかわらず HSP_ACQUISITION が適用される", () => {
+    for (const status of allGrades) {
+      const e = hsp("other", status);
+      expect(e.ruleSet?.id, status).toBe("hsp_acquisition");
+      expect(e.ruleSet?.title).toContain("（一部のみ整備）");
+    }
+  });
+
+  it("国籍離脱・出生・その他の3事由で、取得の事由別の共通書類とポイント計算表がそろう", () => {
+    for (const cause of CAUSES) {
+      const plain = evaluate(make(cause, { targetStatus: "技術・人文知識・国際業務" }));
+      const e = hsp(cause, "高度専門職（1号ロ）");
+      const ruleIds = e.items.map((i) => i.rule.id);
+      // 共通書類は、事由別の規則集合と同じ判定（ID・要否・順序）
+      expect(e.items.filter((i) => i.rule.id !== "hsp_point_table" && i.rule.id !== "hsp_point_evidence").map((i) => [i.rule.id, i.effective])).toEqual(
+        plain.items.map((i) => [i.rule.id, i.effective]),
+      );
+      expect(ruleIds, cause).toContain("hsp_point_table");
+      expect(ruleIds, cause).toContain("hsp_point_evidence");
+      // 取得でのポイント計算表の要否は確認できていないため、要確認（必要書類には数えない）
+      expect(e.items.find((i) => i.rule.id === "hsp_point_table")?.effective).toBe("check");
+    }
+  });
+
+  it("事由未選択でも、全事由に共通の書類とポイント計算表を判定する", () => {
+    const e = hsp("", "高度専門職");
+    expect(e.needsCause).toBe(true);
+    expect(e.items.map((i) => i.rule.id)).toEqual(["application_form", "passport_presentation", ...COMMON_CHECK, "hsp_point_table", "hsp_point_evidence"]);
+  });
+
+  it("共通書類は ACQUISITION_BY_CAUSE の規則をそのまま再利用する（複製しない）", () => {
+    const set = RULE_SETS.find((r) => r.id === "hsp_acquisition")!;
+    for (const rule of baseRules.rules) expect(set.rules).toContain(rule);
+    expect(set.basis).toBe("acquisitionCause");
+    expect(set.rules.every((r) => r.verify === true)).toBe(true);
+    const rids = set.rules.map((r) => r.id);
+    expect(new Set(rids).size).toBe(rids.length);
+  });
+
+  it("他の在留資格の取得は、従来どおり ACQUISITION_BY_CAUSE（技人国と同じ扱い）", () => {
+    for (const row of EXPECTED) {
+      for (const targetStatus of ["", "技術・人文知識・国際業務", "留学", "永住者"]) {
+        const e = evaluate(make(row.cause, { targetStatus }));
+        expect(e.ruleSet?.id).toBe("acquisition_by_cause");
+        expect(ids(e, "required")).toEqual(row.required);
+        expect(ids(e, "check")).toEqual(row.check);
+      }
+    }
+  });
+
+  it("ポイント計算表の項目を選ぶと、疎明資料の番号ごとの項目が出る（号が決まるシートで）", () => {
+    const e = hsp("other", "高度専門職（1号ロ）", { formDetails: { ...EMPTY_FORM_DETAILS, acquisitionCause: "other", hspPointChecks: ["B:15"] } });
+    expect(e.items.map((i) => i.rule.id)).toContain("hsp_point_evidence_①");
+    expect(e.items.map((i) => i.rule.id)).not.toContain("hsp_point_evidence");
+  });
+
+  it("案内：高度専門職の取得は規則あり、2号でも同じ", () => {
+    for (const status of allGrades) expect(shouldShowNoRuleGuide("acquisition", "", status)).toBe(false);
   });
 });

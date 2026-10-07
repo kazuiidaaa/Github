@@ -282,6 +282,18 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Application for extension of the period of stay as Highly Skilled Professional (i) (only the points calculation table and supporting materials are covered; other documents are not yet covered)",
     "고도전문직(1호)의 체류기간 연장 허가 신청(포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
   ],
+  "高度専門職 在留資格取得許可申請（一部のみ整備）": [
+    "Highly Skilled Professional: application for permission for acquisition of status of residence (only partly covered)",
+    "고도전문직 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "ポイント制の案内では、1号は70点以上、2号は別途要件がある。取得でポイント計算表が必要かは、入管庁の案内で確認できていないため要確認": [
+    "According to the points-based system guidance, Type 1 requires 70 points or more and Type 2 has separate requirements. Whether the points calculation table is required for acquisition has not been confirmed in the Immigration Services Agency guidance, so confirmation is needed",
+    "포인트제 안내에 따르면 1호는 70점 이상, 2호는 별도 요건이 있다. 취득에서 포인트 계산표가 필요한지는 출입국재류관리청 안내로 확인하지 못했으므로 확인 필요",
+  ],
+  "ポイント計算表を提出する場合の疎明資料。提出の要否は、入管庁の案内で確認できていないため要確認。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）": [
+    "Supporting materials for the points calculation table, if submitted. Whether submission is required has not been confirmed in the Immigration Services Agency guidance, so confirmation is needed. When you select items in the points calculation table, entries for each supporting material number (① to ㉑) appear below (docs/hsp-point-evidence.md)",
+    "포인트 계산표를 제출하는 경우의 소명 자료. 제출 필요 여부는 출입국재류관리청 안내로 확인하지 못했으므로 확인 필요. 포인트 계산표의 항목을 선택하면 그 소명 자료 번호(①~㉑)별 항목이 이 아래에 표시된다(docs/hsp-point-evidence.md)",
+  ],
   "在留資格取得許可申請（取得の事由別）": [
     "Application for permission for acquisition of status of residence (by cause of acquisition)",
     "체류자격 취득 허가 신청(취득 사유별)",

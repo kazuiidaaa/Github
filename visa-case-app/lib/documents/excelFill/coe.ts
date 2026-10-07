@@ -11,9 +11,10 @@ import {
   COE_PURPOSE_LABELS,
   COE_SHEET_APPLICANT_1,
 } from "./coeMapping";
-import { COE_TABLE2, type Table2Mapping } from "./coeTable2";
+import { COE_TABLE2 } from "./coeTable2";
 import { fillWorkbook } from "./fillWorkbook";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
+import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
 
 const KEIEI_KANRI = "経営・管理";
 
@@ -37,10 +38,7 @@ export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
  * （他の様式の表を流用しない）。高度専門職ではない「経営・管理」は、様式 M を使う（Issue #191）。
  */
 function planFill(r: CoeFormResolution, targetStatus: string): { form: CoeFormCode; firstOnly: boolean } {
-  if (r.kind === "resolved") return { form: r.form, firstOnly: false };
-  if (r.kind !== "not_applicable") return { form: "N", firstOnly: true };
-  if (targetStatus.trim() === KEIEI_KANRI) return { form: "M", firstOnly: false };
-  return { form: "N", firstOnly: false };
+  return planHspFill(r, { notApplicable: targetStatus.trim() === KEIEI_KANRI ? "M" : "N", unresolved: "N" });
 }
 
 /**

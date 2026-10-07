@@ -34,6 +34,8 @@ export interface RuleSet {
   residenceStatus: string;
   /** true の場合、在留資格（希望する在留資格を含む）の種類・有無によらず手続種別だけで適用する */
   anyResidenceStatus?: boolean;
+  /** この在留資格（の表記）には、residenceStatus に含まれていても適用しない。号によって手続の有無が異なる場合に使う */
+  excludeStatuses?: string[];
   /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
   basis?: "category" | "acquisitionCause";
   sources: { title: string; url: string }[];
@@ -904,8 +906,8 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
 
 // 在留資格「高度専門職」。現時点で規則に載せているのは、ポイント計算表とその疎明資料のみ（Issue #186）。
 // 申請書・写真・パスポート等の他の提出書類は、一覧の提供後に追加する（それまでは、一覧が全部ではないことを title に示す）。
-// 手続ごとの提出の要否は、出入国在留管理庁の案内ページ（高度専門職）による。取得許可申請は、取得の事由で判定する別の規則集合
-// （ACQUISITION_BY_CAUSE）が在留資格を問わず適用され、高度専門職を希望する在留資格に選べないため、対象外とする。
+// 手続ごとの提出の要否は、出入国在留管理庁の案内ページ（高度専門職）による。取得許可申請（Issue #212）は、取得の事由で判定する
+// ACQUISITION_BY_CAUSE の書類に、ポイント計算表・疎明資料を足した HSP_ACQUISITION を、号の有無・種類を問わず適用する。
 const HSP = "高度専門職";
 const HSP_SOURCE = {
   title: "在留資格「高度専門職」ポイント計算表（出入国在留管理庁）",
@@ -960,11 +962,15 @@ const hspPointRules = (tableNote: string): RequirementRule[] => [
   },
 ];
 
+/** 高度専門職2号には認定・更新の手続がないため、それらの規則（1号）には2号の表記を一致させない（Issue #212） */
+const HSP_GRADE_2 = "高度専門職（2号）";
+
 export const HSP_COE: RuleSet = {
   id: "hsp_coe",
   title: `高度専門職 在留資格認定証明書交付申請${HSP_PARTIAL}`,
   procedureType: "coe",
   residenceStatus: HSP,
+  excludeStatuses: [HSP_GRADE_2],
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
   rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
@@ -1092,9 +1098,47 @@ export const HSP_RENEWAL: RuleSet = {
   title: `高度専門職（1号）の在留期間更新許可申請${HSP_PARTIAL}`,
   procedureType: "renewal",
   residenceStatus: HSP,
+  excludeStatuses: [HSP_GRADE_2],
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
   rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+};
+
+/**
+ * 高度専門職の在留資格取得許可申請（Issue #212）。号の有無・種類（1号イ・ロ・ハ、2号、号なしの旧データ）によらず適用する。
+ * 取得の事由別の共通書類は、ACQUISITION_BY_CAUSE の規則をそのまま再利用する（文言は変えない）。
+ * 取得の高度専門職の具体的な提出書類は、入管庁の案内ページ（HTML）で確認できていないため、ポイント計算表・疎明資料のみを「要確認」で足す。
+ */
+const HSP_ACQUISITION_NOTE = "ポイント制の案内では、1号は70点以上、2号は別途要件がある。取得でポイント計算表が必要かは、入管庁の案内で確認できていないため要確認";
+export const HSP_ACQUISITION: RuleSet = {
+  id: "hsp_acquisition",
+  title: "高度専門職 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: HSP,
+  basis: "acquisitionCause",
+  checkedAt: "2026-10-07",
+  sources: [HSP_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    ...ACQUISITION_BY_CAUSE.rules,
+    {
+      id: "hsp_point_table",
+      name: "ポイント計算表（高度専門職 第1号イ・ロ・ハのうち、活動の区分に応じたもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: HSP_ACQUISITION_NOTE,
+      verify: true,
+    },
+    {
+      id: "hsp_point_evidence",
+      name: "ポイント計算表の疎明資料（ポイントの合計が70点以上あることを確認できる資料）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: "ポイント計算表を提出する場合の疎明資料。提出の要否は、入管庁の案内で確認できていないため要確認。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）",
+      verify: true,
+    },
+  ],
 };
 
 export const RULE_SETS: RuleSet[] = [
@@ -1109,5 +1153,7 @@ export const RULE_SETS: RuleSet[] = [
   HSP_CHANGE,
   HSP_COE,
   HSP_RENEWAL,
+  // 高度専門職の取得は、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する
+  HSP_ACQUISITION,
   ACQUISITION_BY_CAUSE,
 ];

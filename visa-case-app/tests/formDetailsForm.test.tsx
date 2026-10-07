@@ -155,3 +155,34 @@ describe("高度専門職のポイント計算表（Issue #186）", () => {
     expect(headings(html("coe", "技術・人文知識・国際業務"))).not.toContain("高度専門職のポイント計算表");
   });
 });
+
+describe("高度専門職の様式の案内（認定・変更・更新。Issue #212）", () => {
+  const render = (over: Partial<CaseRecord>, hspActivity = "") =>
+    renderToStaticMarkup(<FormDetailsForm record={makeRecord({ ...over, formDetails: { ...EMPTY_FORM_DETAILS, hspActivity } })} />);
+
+  it("変更は、変更後の在留資格が高度専門職なら、行う活動の選択と変更用の案内を出す", () => {
+    const m = render({ procedureType: "change", currentStatus: "技術・人文知識・国際業務", targetStatus: "高度専門職（1号イ）" }, "教授");
+    expect(m).toContain("高度専門職の行う活動");
+    expect(m).toContain("変更許可申請書で使う様式：様式 I");
+    expect(m).toContain("2号で活動が変わる場合は、変更後の在留資格の案内ページの様式を確認してください");
+    expect(m).not.toContain("認定申請書で使う様式");
+  });
+
+  it("更新は、現在の在留資格で解決する（変更後の在留資格には依存しない）", () => {
+    const m = render({ procedureType: "renewal", currentStatus: "高度専門職（1号ロ）", targetStatus: "" }, "企業内転勤");
+    expect(m).toContain("更新許可申請書で使う様式：様式 L");
+    expect(render({ procedureType: "renewal", currentStatus: "高度専門職", targetStatus: "" })).toContain("「現在の在留資格」で、号（イ・ロ・ハ）を選択");
+    expect(render({ procedureType: "renewal", currentStatus: "高度専門職（2号）" })).toContain("2号に更新はありません");
+  });
+
+  it("認定は、従来どおり、認定用の案内を出す", () => {
+    const m = render({ procedureType: "coe", targetStatus: "高度専門職（1号イ）" }, "教授");
+    expect(m).toContain("使う様式：様式 I");
+    expect(m).toContain("認定申請書で使う様式");
+  });
+
+  it("高度専門職ではない変更・更新には、行う活動の選択を出さない", () => {
+    expect(render({ procedureType: "change", targetStatus: "技術・人文知識・国際業務" })).not.toContain("高度専門職の行う活動");
+    expect(render({ procedureType: "renewal", currentStatus: "技術・人文知識・国際業務", targetStatus: "高度専門職（1号イ）" })).not.toContain("高度専門職の行う活動");
+  });
+});

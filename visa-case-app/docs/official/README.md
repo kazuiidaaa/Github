@@ -2,7 +2,7 @@
 
 在留期間更新許可申請・在留資格変更許可申請・在留資格認定証明書交付申請・在留資格取得許可申請(いずれも技術・人文知識・国際業務を中心とした在留資格)に関する、公式の様式・案内の写しです。
 
-`renewal-application-form_930004095.xlsx`・`change-application-form_930004065.xlsx`・`coe-application-form_930004030.xlsx`・`acquisition-application-form_930004121.xlsx` の4様式(Excel)は、フェーズ11(`docs/phase11-excel-fill-decision.md`)の決定により、実行時のコードから参照する**差し込み元テンプレート**です(実装はIssue単位で順次行います)。アプリは、これらのファイルを読み込み、案件情報を対応するセルへ書き込んだものを、申請書類としてダウンロード提供します。現在、実行時に読み込むのは `renewal-application-form_930004095.xlsx` のみです(`lib/documents/excelFill/renewal.ts`。セル座標の特定方法は `docs/phase11-fill-engines.md`（更新編）、画面・API への統合と手続種別ごとの拡張点は `docs/phase11-official-form-ui.md`)。他の3様式(変更・認定・取得)は、各Issueで同様に実装されるまで、コードからは参照していません。それ以外のPDF資料は、実行時のコードからは参照せず、対応表を点検するための参照用です。
+`renewal-application-form_930004095.xlsx`・`change-application-form_930004065.xlsx`・`coe-application-form_930004030.xlsx`・`acquisition-application-form_930004121.xlsx` の4様式(Excel)は、フェーズ11(`docs/phase11-excel-fill-decision.md`)の決定により、実行時のコードから参照する**差し込み元テンプレート**です(実装はIssue単位で順次行います)。アプリは、これらのファイルを読み込み、案件情報を対応するセルへ書き込んだものを、申請書類としてダウンロード提供します。実行時に読み込むのは、更新・変更・認定・取得の4様式(様式N)と、高度専門職の様式別ファイル(`renewal-application-form-{I,L,M,U}.xlsx`・`change-application-form-{I,L,M,U}.xlsx`・`coe-application-form-{I,L,M,U}_*.xlsx`)です(`lib/documents/excelFill/{renewal,change,coe,acquisition}.ts`。高度専門職の号・行う活動から様式を選ぶ規則は `lib/hspForm.ts`。取得は様式が1つで、高度専門職でも切り替えません)。セル座標の特定方法は `docs/phase11-fill-engines.md`（更新編）、画面・API への統合と手続種別ごとの拡張点は `docs/phase11-official-form-ui.md` を参照してください。それ以外のPDF資料は、実行時のコードからは参照せず、対応表を点検するための参照用です。
 
 | ファイル | 内容 | 取得元 |
 |---|---|---|

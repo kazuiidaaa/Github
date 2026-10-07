@@ -282,11 +282,14 @@ describe("fillChangeExcel", () => {
     expect(warnings.join("\n")).toContain("変更後の在留資格に合う様式");
   });
 
-  it("号つきの高度専門職は、項目13にそのまま入り、様式の対象外を警告する（Issue #181）", async () => {
+  it("号つきの高度専門職は、項目13にそのまま入る。行う活動が未選択なら、第1表のみ＋警告（Issue #181・#212）", async () => {
     const hsp = "高度専門職（1号ロ）";
     const { buffer, warnings } = await fillChangeExcel(applicant, employment, details, hsp);
-    expect(text(await open(buffer), S1, "I45")).toBe(hsp);
-    expect(warnings.join("\n")).toContain("変更後の在留資格に合う様式");
+    const wb = await open(buffer);
+    expect(text(wb, S1, "I45")).toBe(hsp);
+    expect(text(wb, S2, "E8")).toBe(""); // 様式を特定できないため、第2表以降は差し込まない
+    expect(warnings.join("\n")).toContain("第1表（申請人用（変更）１）のみ");
+    expect(warnings.join("\n")).not.toContain("変更後の在留資格に合う様式"); // 技人国以外の警告は、高度専門職では出さない
   });
 
   it("様式の欄に収まらない・形式が合わない入力は、警告する", async () => {

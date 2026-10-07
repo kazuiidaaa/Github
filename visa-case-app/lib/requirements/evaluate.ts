@@ -41,12 +41,21 @@ function normalize(s: string): string {
 }
 
 function matchRuleSet(procedureType: string, residenceStatus: string, ruleSets: RuleSet[]): RuleSet | null {
-  // 在留資格によらず手続種別だけで適用する規則（取得許可申請）。在留資格が空でも一致する
-  const anyStatus = ruleSets.find((r) => r.procedureType === procedureType && r.anyResidenceStatus);
-  if (anyStatus) return anyStatus;
   const status = normalize(residenceStatus);
-  if (status === "") return null;
-  return ruleSets.find((r) => r.procedureType === procedureType && status.includes(normalize(r.residenceStatus))) ?? null;
+  // 在留資格に固有の規則を先に引く（取得許可申請の高度専門職。号による除外は excludeStatuses）
+  const specific =
+    status === ""
+      ? undefined
+      : ruleSets.find(
+          (r) =>
+            r.procedureType === procedureType &&
+            !r.anyResidenceStatus &&
+            status.includes(normalize(r.residenceStatus)) &&
+            !r.excludeStatuses?.some((x) => status.includes(normalize(x))),
+        );
+  if (specific) return specific;
+  // 在留資格によらず手続種別だけで適用する規則（取得許可申請）。在留資格が空でも一致する
+  return ruleSets.find((r) => r.procedureType === procedureType && r.anyResidenceStatus) ?? null;
 }
 
 /** 変更後（希望）の在留資格で規則を引く手続種別。規則の residenceStatus は申請後に持つ在留資格を意味するため */
@@ -94,6 +103,16 @@ function hspEvidenceItems(c: CaseRecord, ruleSet: RuleSet): EvaluatedItem[] {
     const reasonCode: ReasonCode = { kind: "hspMark", mark };
     return { rule, result: rule.level, effective: state.override ?? rule.level, reason: reasonText(jaT, reasonCode), reasonCode, state };
   });
+}
+
+/** 規則の1件を、判定結果に足す。疎明資料の親は、番号ごとの項目が出ているとき、入力済みの状態がなければ隠す（重複するため） */
+function pushItem(items: EvaluatedItem[], c: CaseRecord, ruleSet: RuleSet, item: EvaluatedItem): void {
+  const evidence = item.rule.id === "hsp_point_evidence" ? hspEvidenceItems(c, ruleSet) : [];
+  const { state } = item;
+  // 親に入力済みの状態（受領・期限・判断・メモ）があれば残す
+  const untouched = state.status === "not_received" && !state.override && !state.dueDate && !state.note;
+  if (!(evidence.length > 0 && untouched)) items.push(item);
+  items.push(...evidence);
 }
 
 /** 手続種別と在留資格（文字列）だけから、対応する規則があるかを判定する（案件作成画面の案内用） */
@@ -169,7 +188,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
         reasonCode = needsCause ? { kind: "causeCommon" } : { kind: "causeLevel", cause, level: rule.level };
       }
       const state = c.requirementStates[rule.id] ?? NO_STATE;
-      items.push({ rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
+      pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
     }
     return summarize(ruleSet, false, needsCause, items);
   }
@@ -197,11 +216,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     const reason = reasonText(jaT, reasonCode);
 
     const state = c.requirementStates[rule.id] ?? NO_STATE;
-    const evidence = rule.id === "hsp_point_evidence" ? hspEvidenceItems(c, ruleSet) : [];
-    // 番号ごとの疎明資料が出ているときは、親の1件は重複するため隠す。ただし、親に入力済みの状態（受領・期限・判断・メモ）があれば残す
-    const untouched = state.status === "not_received" && !state.override && !state.dueDate && !state.note;
-    if (!(evidence.length > 0 && untouched)) items.push({ rule, result, effective: state.override ?? result, reason, reasonCode, state });
-    items.push(...evidence);
+    pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason, reasonCode, state });
   }
 
   return summarize(ruleSet, needsCategory, false, items);

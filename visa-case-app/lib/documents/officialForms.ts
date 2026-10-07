@@ -1,4 +1,4 @@
-import type { CaseRecord, ProcedureType } from "../types";
+import { ADVANCED_PROFESSIONAL_STATUS, baseResidenceStatus, type CaseRecord, type ProcedureType } from "../types";
 import type { OfficialFormContent } from "./types";
 
 // 公式様式（Excel）の、手続種別ごとの定義。画面とサーバーの両方から使う（node:fs は使わない）。
@@ -30,10 +30,15 @@ export interface OfficialFormSpec {
 }
 
 const RENEWAL_TARGET_STATUS = "技術・人文知識・国際業務";
+/** 対象外の注意に表示する、更新の様式が対象とする在留資格（高度専門職を含む） */
+export const RENEWAL_SCOPE_TEXT = `${RENEWAL_TARGET_STATUS}、高度専門職`;
+
+/** 高度専門職か（号つきの値を含む）。高度専門職の更新・変更は、様式 I・L・M・N・U を切り替えて差し込む（Issue #212） */
+const isHsp = (status: string) => baseResidenceStatus(status.trim()) === ADVANCED_PROFESSIONAL_STATUS;
 
 export const RENEWAL_SPEC: OfficialFormSpec = {
   procedureType: "renewal",
-  label: `在留期間更新許可申請書（${RENEWAL_TARGET_STATUS}）`,
+  label: "在留期間更新許可申請書",
   form: {
     formName: "別記第三十号の二様式（第二十一条関係）在留期間更新許可申請書（Excel）",
     fileId: "930004095",
@@ -42,8 +47,11 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
   },
   isInScope: (s) =>
     s.procedureType === "renewal" &&
-    (s.currentStatus.includes(RENEWAL_TARGET_STATUS) || s.residenceStatus.includes(RENEWAL_TARGET_STATUS)),
-  outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_TARGET_STATUS}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
+    (s.currentStatus.includes(RENEWAL_TARGET_STATUS) ||
+      s.residenceStatus.includes(RENEWAL_TARGET_STATUS) ||
+      isHsp(s.currentStatus) ||
+      isHsp(s.residenceStatus)),
+  outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_SCOPE_TEXT}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
 };
 
 export const COE_SPEC: OfficialFormSpec = {
@@ -62,7 +70,7 @@ export const COE_SPEC: OfficialFormSpec = {
 
 export const CHANGE_SPEC: OfficialFormSpec = {
   procedureType: "change",
-  label: "在留資格変更許可申請書（技術・人文知識・国際業務）",
+  label: "在留資格変更許可申請書",
   form: {
     formName: "別記第三十号様式（第二十条関係）在留資格変更許可申請書（Excel）",
     fileId: "930004065",

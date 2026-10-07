@@ -253,7 +253,7 @@ export default function NewCasePage() {
           </p>
         ) : (
           <div className="anim-fade-in space-y-5">
-            <StatusSelect legend={t("caseNew.currentStatusLegend")} hint={hints.current} value={currentStatus} onChange={setCurrentStatus} />
+            <StatusSelect legend={t("caseNew.currentStatusLegend")} hint={hints.current} value={currentStatus} onChange={setCurrentStatus} withGrade />
             {needsTarget && (
               <div className="anim-fade-in">
                 <StatusSelect

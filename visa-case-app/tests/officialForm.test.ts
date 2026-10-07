@@ -85,6 +85,23 @@ describe("対象範囲の注意", () => {
     c.applicant.residenceStatus = "留学";
     expect(officialFormScopeWarnings(scopeOf(c))).toHaveLength(1);
   });
+  it("高度専門職の更新は、号つきでも、対象外の注意が出ない（Issue #212）", () => {
+    for (const status of ["高度専門職（1号イ）", "高度専門職（1号ハ）", "高度専門職"]) {
+      const c = make({ currentStatus: status });
+      c.applicant.residenceStatus = "留学";
+      expect(officialFormScopeWarnings(scopeOf(c)), status).toEqual([]);
+    }
+    const c2 = make({ currentStatus: "留学" });
+    c2.applicant.residenceStatus = "高度専門職（1号ロ）";
+    expect(officialFormScopeWarnings(scopeOf(c2))).toEqual([]);
+  });
+  it("高度専門職の変更は、対象外の注意が出ない（Issue #212）", () => {
+    expect(officialFormScopeWarnings(scopeOf(make({ procedureType: "change", currentStatus: "高度専門職（1号イ）" })))).toEqual([]);
+  });
+  it("様式のラベルは、高度専門職（技人国以外の様式）でも誤らない", () => {
+    expect(OFFICIAL_FORM_SPECS.renewal?.label).not.toContain("技術・人文知識・国際業務");
+    expect(OFFICIAL_FORM_SPECS.change?.label).not.toContain("技術・人文知識・国際業務");
+  });
   it("様式の定義は、手続種別をキーに引ける", () => {
     expect(OFFICIAL_FORM_SPECS.renewal?.procedureType).toBe("renewal");
   });

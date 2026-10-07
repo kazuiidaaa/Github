@@ -17,7 +17,8 @@ import { HspPointSection } from "@/components/HspPointSection";
 import { formLabelText } from "@/lib/i18n/formLabels";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
-import { describeCoeForm, HSP_ACTIVITIES, isAdvancedProfessional, resolveCoeForm } from "@/lib/hspForm";
+import { HSP_ACTIVITIES, isAdvancedProfessional, resolveChangeForm, resolveCoeForm, resolveRenewalForm } from "@/lib/hspForm";
+import { describeHspForm, hspActivityHintKey, hspStatusOf, type HspProcedure } from "@/lib/hspFormGuide";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import { FORM_DETAILS_ZENKAKU, RELATIVE_ZENKAKU, WORK_ENTRY_ZENKAKU, zenkakuHandlers, zenkakuModeOf } from "@/lib/zenkaku";
@@ -54,6 +55,10 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const t = useT();
   const { lang } = useLang();
   const layout = getFormLayout(record.procedureType);
+  // 高度専門職の様式（認定・変更・更新）。更新は現在の在留資格、他は希望（変更後）の在留資格の号で決める
+  const hspProcedure: HspProcedure | null =
+    record.procedureType === "coe" || record.procedureType === "change" || record.procedureType === "renewal" ? record.procedureType : null;
+  const hspStatus = hspProcedure ? hspStatusOf(hspProcedure, record) : "";
   /** 様式の項目名・見出し・様式名の表示（番号は、そのまま） */
   const L = (label: string) => formLabelText(lang, label);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
@@ -227,9 +232,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
             </Field>
           </div>
         )}
-        {record.procedureType === "coe" && isAdvancedProfessional(record.targetStatus) && (
+        {hspProcedure && isAdvancedProfessional(hspStatus) && (
           <div className="md:col-span-2">
-            <Field label={t("caseForm.hspActivityLabel")} hint={t("caseForm.hintHspActivity")}>
+            <Field label={t("caseForm.hspActivityLabel")} hint={t(hspActivityHintKey(hspProcedure))}>
               <select className={inputClass} value={form.hspActivity} onChange={(e) => set("hspActivity", e.target.value)}>
                 <option value="">{t("caseForm.unselected")}</option>
                 {HSP_ACTIVITIES.map((a) => (
@@ -239,7 +244,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
                 ))}
               </select>
               <p role="note" className="mt-1 text-xs text-slate-600">
-                {describeCoeForm(resolveCoeForm(record.targetStatus, form.hspActivity), t)}
+                {describeHspForm(hspResolve(hspProcedure, hspStatus, form.hspActivity), hspProcedure, t)}
               </p>
             </Field>
           </div>
@@ -442,4 +447,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       </div>
     </div>
   );
+}
+
+function hspResolve(procedure: HspProcedure, status: string, activity: string) {
+  return procedure === "coe" ? resolveCoeForm(status, activity) : procedure === "change" ? resolveChangeForm(status, activity) : resolveRenewalForm(status, activity);
 }
