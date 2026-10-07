@@ -1459,6 +1459,117 @@ export const PROFESSOR_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「医療」。入管庁の案内ページ・チェックシートの「カテゴリー1・2」は、所属機関のカテゴリー（1〜4）ではなく、申請人の区分
+// （カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外の者）。案件にこの区分の入力項目がないため、全書類を全カテゴリー共通（ALL）とし、
+// 区分によって要否が分かれる書類は、要確認（check）として注記に区分を示す（Issue #302）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const IRYO = "医療";
+const IRYO_SOURCE = { title: "在留資格「医療」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/medicalservices.html" };
+const IRYO_CHECKED_AT = "2026-10-07";
+const IRYO_DOCTOR_NOTE = "医師・歯科医師の場合のみ（入管庁の案内の「カテゴリー1」。所属機関のカテゴリーではなく、申請人の区分）";
+const IRYO_OTHER_NOTE = "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）";
+
+const iryoDoctorLicense: RequirementRule = {
+  id: "medical_license_doctor",
+  name: "医師又は歯科医師の日本の資格を有することを証明する文書（免状又は証明書等の写し）",
+  party: "applicant",
+  categories: ALL,
+  level: "check",
+  note: IRYO_DOCTOR_NOTE,
+};
+const iryoOtherLicense: RequirementRule = {
+  id: "medical_license_other",
+  name: "医療に係る日本の資格を有することを証明する文書（免状又は証明書等の写し）",
+  party: "applicant",
+  categories: ALL,
+  level: "check",
+  note: "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）。薬剤師、保健師、助産師、看護師、准看護師、歯科衛生士、診療放射線技師、理学療法士、作業療法士、視能訓練士、臨床工学技士、義肢装具士のいずれか",
+};
+const iryoFacilityOverview: RequirementRule = {
+  id: "facility_overview",
+  name: "勤務する機関の概要を明らかにする資料（病院、診療所等設立に許可を受けることを要する機関の場合は、当該許可を受けた年月日を明示したもの）",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: IRYO_OTHER_NOTE,
+};
+
+export const IRYO_COE: RuleSet = {
+  id: "iryo_coe",
+  title: "医療 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: IRYO,
+  checkedAt: IRYO_CHECKED_AT,
+  sources: [IRYO_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    iryoDoctorLicense,
+    iryoOtherLicense,
+    iryoFacilityOverview,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+      verify: true,
+    },
+  ],
+};
+
+export const IRYO_CHANGE: RuleSet = {
+  id: "iryo_change",
+  title: "医療 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: IRYO,
+  checkedAt: IRYO_CHECKED_AT,
+  sources: [IRYO_SOURCE],
+  rules: [...procedureCommonRules("change"), iryoDoctorLicense, iryoOtherLicense, iryoFacilityOverview],
+};
+
+export const IRYO_RENEWAL: RuleSet = {
+  id: "iryo_renewal",
+  title: "医療 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: IRYO,
+  checkedAt: IRYO_CHECKED_AT,
+  sources: [IRYO_SOURCE],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ALL,
+      level: "required",
+      note: "直近1年分の総所得及び納税状況が記載されたもの",
+    },
+    {
+      id: "employment_certificate",
+      name: "従事する職務の内容及び報酬を証明する在職証明書その他の所属機関の文書",
+      party: "organization",
+      categories: ALL,
+      level: "check",
+      note: IRYO_OTHER_NOTE,
+    },
+    {
+      ...iryoOtherLicense,
+      // 更新の案内には、資格を証明する文書の記載がない（住民税の証明書・在職証明書・転職後の初回の機関概要のみ）。認定・変更と同じ書類を、念のため確認として案内する
+      note: "更新の案内ページには記載がありません。医師・歯科医師以外の方は、念のため日本の資格（免状又は証明書等）の写しを用意し、管轄の出入国在留管理官署に要否を確認してください",
+      verify: true,
+    },
+    { ...iryoFacilityOverview, note: "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ" },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1486,4 +1597,8 @@ export const RULE_SETS: RuleSet[] = [
   PROFESSOR_RENEWAL,
   PROFESSOR_CHANGE,
   PROFESSOR_COE,
+  // 医療（Issue #302）
+  IRYO_RENEWAL,
+  IRYO_CHANGE,
+  IRYO_COE,
 ];
