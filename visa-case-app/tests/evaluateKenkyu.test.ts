@@ -89,10 +89,19 @@ describe("研究の規則集合", () => {
   });
 
   it("納期の特例の承認の書類は、案件の「納期の特例」が真のときだけ判定する（カテゴリー4）", () => {
-    const off = evaluate(make("renewal", "4")).items.find((i) => i.rule.id === "withholding_special_approval");
-    const on = evaluate(make("renewal", "4", "研究", true)).items.find((i) => i.rule.id === "withholding_special_approval");
+    const off = evaluate(make("coe", "4")).items.find((i) => i.rule.id === "withholding_special_approval");
+    const on = evaluate(make("coe", "4", "研究", true)).items.find((i) => i.rule.id === "withholding_special_approval");
     expect(off?.effective).not.toBe("required");
     expect(on?.effective).toBe("required");
+  });
+
+  it("更新：源泉徴収の資料は、チェックシートでは転職後の初回の枠内でカテゴリー4のみ。必須ではなく確認として案内する", () => {
+    const e = evaluate(make("renewal", "4", "研究", true));
+    expect(ids(e, "check")).toEqual(
+      expect.arrayContaining(["withholding_exemption_certificate", "payroll_office_notification", "withholding_tax_receipts", "withholding_special_approval"]),
+    );
+    expect(ids(e, "required")).not.toContain("payroll_office_notification");
+    expect(all(evaluate(make("renewal", "3")))).not.toContain("payroll_office_notification");
   });
 
   it("変更：返信用封筒は不要で在留カードの提示が加わる。カテゴリー2には、留学からの変更の省略説明書を確認として案内する", () => {
@@ -118,6 +127,10 @@ describe("研究の規則集合", () => {
     expect(find(KENKYU_RENEWAL, "financial_statements", "4")?.verify).toBe(true);
     expect(find(KENKYU_RENEWAL, "financial_statements_transfer", "3")?.verify).toBe(true);
     expect(find(KENKYU_RENEWAL, "representative_declaration", "3,4")?.verify).toBe(true);
-    expect(find(KENKYU_COE, "transfer_documents", "3,4")?.verify).toBe(true);
+    // 変更の決算文書（カテゴリー4）は、案内ページは必要、チェックシート（変更）は△のため要確認
+    expect(find(KENKYU_CHANGE, "financial_statements", "4")?.verify).toBe(true);
+    // 転勤の書類は、チェックシートの「学歴及び職歴等」の(3)（基準省令ただし書）で確認できたため、要確認にしない
+    expect(find(KENKYU_COE, "transfer_documents", "3,4")?.verify).toBeUndefined();
+    expect(find(KENKYU_RENEWAL, "financial_statements_transfer", "3")?.note).toContain("「転勤の場合に限る」と「提出書類10は不要」の2つの文言");
   });
 });

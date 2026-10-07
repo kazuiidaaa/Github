@@ -1625,7 +1625,6 @@ const kenkyuTransferDocuments: RequirementRule = {
   categories: ["3", "4"],
   level: "check",
   note: "「研究（転勤）」の場合のみ（申請書は様式L）。過去1年間の業務内容・地位・報酬を明示した転勤直前の機関の文書と、支店の登記事項証明書又は出資・資本関係を明らかにする資料",
-  verify: true,
 };
 const kenkyuBusinessMaterials: RequirementRule = {
   id: "business_description",
@@ -1738,7 +1737,8 @@ export const KENKYU_CHANGE: RuleSet = {
     kenkyuCareerDocuments,
     kenkyuTransferDocuments,
     kenkyuBusinessMaterials,
-    kenkyuFinancialStatements,
+    // 案内ページはカテゴリー4に必要とするが、チェックシート（変更）は△（条件付き）。食い違うため要確認
+    { ...kenkyuFinancialStatements, note: "新規事業の場合は事業計画書。案内ページでは必要とされているが、チェックシート（変更）では△（条件付き）のため要確認", verify: true },
     kenkyuFinancialStatementsCat3,
     kenkyuRepresentativeDeclaration,
     ...kenkyuWithholdingRules,
@@ -1747,7 +1747,13 @@ export const KENKYU_CHANGE: RuleSet = {
 
 // 更新は、案内ページの「転職後の初回の更新申請」の資料（活動内容・事業内容・決算文書・代表者申告書）を、カテゴリー3・4の「要確認」とする。
 // 決算文書は、カテゴリー3について案内の文言が複数あり（転勤の場合に限る／提出書類10は不要）、読み取りに幅があるため要確認。
+// チェックシート（更新）では、決算文書は△（条件付き）、代表者申告書は○、源泉徴収の資料（11）はカテゴリー4のみで、いずれも転職後の初回の枠内。
 const KENKYU_FIRST_RENEWAL_NOTE = "転職後、初回の更新許可申請の場合のみ";
+const kenkyuFirstRenewalWithholding: RequirementRule[] = kenkyuWithholdingRules.map((r) => ({
+  ...r,
+  level: "check",
+  note: r.note ? `${KENKYU_FIRST_RENEWAL_NOTE}。${r.note}` : KENKYU_FIRST_RENEWAL_NOTE,
+}));
 export const KENKYU_RENEWAL: RuleSet = {
   id: "kenkyu_renewal",
   title: "研究 在留期間更新許可申請",
@@ -1771,10 +1777,24 @@ export const KENKYU_RENEWAL: RuleSet = {
     },
     { ...kenkyuActivityDocuments, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE },
     { ...kenkyuBusinessMaterials, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE },
-    { ...kenkyuFinancialStatements, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE, verify: true },
-    { ...kenkyuFinancialStatementsCat3, note: "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る", verify: true },
-    { ...kenkyuRepresentativeDeclaration, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE, verify: true },
-    ...kenkyuWithholdingRules,
+    {
+      ...kenkyuFinancialStatements,
+      level: "check",
+      note: `${KENKYU_FIRST_RENEWAL_NOTE}。案内ページでは必要とされているが、チェックシート（更新）では△（条件付き）のため要確認`,
+      verify: true,
+    },
+    {
+      ...kenkyuFinancialStatementsCat3,
+      note: "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。案内に「転勤の場合に限る」と「提出書類10は不要」の2つの文言があり、チェックシート（更新）は△（条件付き）のため要確認",
+      verify: true,
+    },
+    {
+      ...kenkyuRepresentativeDeclaration,
+      level: "check",
+      note: `${KENKYU_FIRST_RENEWAL_NOTE}。カテゴリー3は、案内ページに「提出書類10は不要」とあるが、チェックシート（更新）では○のため要確認`,
+      verify: true,
+    },
+    ...kenkyuFirstRenewalWithholding,
   ],
 };
 

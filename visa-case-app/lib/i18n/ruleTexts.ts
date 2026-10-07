@@ -560,9 +560,29 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "For Category 3, only when engaged in research work after a transfer. For a new business, a business plan",
     "카테고리 3은 전근하여 연구 업무에 종사하는 경우에 한함. 신규 사업의 경우 사업계획서",
   ],
-  "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る": [
-    "Only for the first renewal application after changing jobs, and only when engaged in research work after a transfer",
-    "이직 후 첫 연장 허가 신청에서, 전근하여 연구 업무에 종사하는 경우에 한함",
+  "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。案内に「転勤の場合に限る」と「提出書類10は不要」の2つの文言があり、チェックシート（更新）は△（条件付き）のため要確認": [
+    "Only for the first renewal application after changing jobs, and only when engaged in research work after a transfer. The guidance has two wordings (\"only in case of a transfer\" and \"document 10 is not required\"), and the checklist (renewal) shows △ (conditional), so please verify",
+    "이직 후 첫 연장 허가 신청에서, 전근하여 연구 업무에 종사하는 경우에 한함. 안내에 '전근의 경우에 한함'과 '제출서류 10은 불필요'라는 두 문구가 있고 체크시트(연장)는 △(조건부)이므로 확인 필요",
+  ],
+  "新規事業の場合は事業計画書。案内ページでは必要とされているが、チェックシート（変更）では△（条件付き）のため要確認": [
+    "For a new business, a business plan. The guidance page requires it, but the checklist (change) shows △ (conditional), so please verify",
+    "신규 사업의 경우 사업계획서. 안내 페이지에서는 필요하다고 되어 있으나 체크시트(변경)에서는 △(조건부)이므로 확인 필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。案内ページでは必要とされているが、チェックシート（更新）では△（条件付き）のため要確認": [
+    "Only for the first renewal application after changing jobs. The guidance page requires it, but the checklist (renewal) shows △ (conditional), so please verify",
+    "이직 후 첫 연장 허가 신청의 경우에만. 안내 페이지에서는 필요하다고 되어 있으나 체크시트(연장)에서는 △(조건부)이므로 확인 필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。カテゴリー3は、案内ページに「提出書類10は不要」とあるが、チェックシート（更新）では○のため要確認": [
+    "Only for the first renewal application after changing jobs. For Category 3, the guidance page says \"document 10 is not required\" but the checklist (renewal) shows ○, so please verify",
+    "이직 후 첫 연장 허가 신청의 경우에만. 카테고리 3은 안내 페이지에 '제출서류 10은 불필요'라고 되어 있으나 체크시트(연장)에서는 ○이므로 확인 필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要": [
+    "Only for the first renewal application after changing jobs. Only for an organization exempt from withholding. In that case, the notification of opening a payroll office and the like below are not required",
+    "이직 후 첫 연장 허가 신청의 경우에만. 원천징수 면제를 받는 기관의 경우에만. 이 경우 아래의 급여지급사무소 개설 신고서 등은 불필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。納期の特例の承認を受けている場合": [
+    "Only for the first renewal application after changing jobs. If the special payment deadline has been approved",
+    "이직 후 첫 연장 허가 신청의 경우에만. 납기 특례의 승인을 받고 있는 경우",
   ],
 };
 
