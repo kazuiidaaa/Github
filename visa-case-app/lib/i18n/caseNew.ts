@@ -1,6 +1,8 @@
 import type { MessageKey } from "./messages";
 import type { MessageParams } from "./translate";
-import { RULE_SETS, type Category } from "@/lib/requirements/rules";
+import type { Lang } from "@/lib/documents/lang";
+import { RULE_SETS, categoryLabelsOf, categoryRangeOf, type Category, type RuleSet } from "@/lib/requirements/rules";
+import { ruleText } from "./ruleTexts";
 import { PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
 
 /**
@@ -44,3 +46,15 @@ export const CATEGORY_KEYS: Record<Category, MessageKey> = {
   "3": "employment.category3",
   "4": "employment.category4",
 };
+
+/**
+ * 所属機関のカテゴリーの選択肢。規則集合に区分の定義があれば、その範囲・意味（ruleText の訳）を使い、なければ既定の1〜4。
+ * 規則集合が決まらない間（在留資格が未入力など）も、既定の1〜4。
+ */
+export function categoryOptions(t: T, lang: Lang, ruleSet: Pick<RuleSet, "categoryDefinition"> | null): { value: Category; label: string }[] {
+  const labels = categoryLabelsOf(ruleSet);
+  return categoryRangeOf(ruleSet).map((value) => ({
+    value,
+    label: ruleSet?.categoryDefinition ? ruleText(lang, labels[value] ?? "") : t(CATEGORY_KEYS[value]),
+  }));
+}

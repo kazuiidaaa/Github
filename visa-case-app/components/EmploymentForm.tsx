@@ -5,8 +5,10 @@ import { AddressField } from "@/components/AddressField";
 import { Button, Field, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
 import { DateField, useDateInvalidMessage } from "@/components/DateField";
-import { CATEGORY_KEYS } from "@/lib/i18n/caseNew";
-import { useT } from "@/lib/i18n/LanguageProvider";
+import { categoryOptions } from "@/lib/i18n/caseNew";
+import { useLang, useT } from "@/lib/i18n/LanguageProvider";
+import { ruleSetOfCase } from "@/lib/requirements/evaluate";
+import type { RuleSet } from "@/lib/requirements/rules";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { logAudit, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
@@ -29,11 +31,15 @@ const TEXT_FIELDS: { key: keyof EmploymentInfo; label: MessageKey; placeholder?:
 export function EmploymentFields({
   form,
   set,
+  ruleSet = null,
 }: {
   form: EmploymentInfo;
   set: <K extends keyof EmploymentInfo>(key: K, value: EmploymentInfo[K]) => void;
+  /** 案件に対応する規則集合。カテゴリーの選択肢（範囲・意味）を、その定義に合わせる。省略時は既定の1〜4 */
+  ruleSet?: RuleSet | null;
 }) {
   const t = useT();
+  const { lang } = useLang();
   const dateInvalid = useDateInvalidMessage();
   const dateError = hasEmploymentDateError(form);
   return (
@@ -65,9 +71,9 @@ export function EmploymentFields({
           <Field label={t("employment.categoryLabel")} hint={t("employment.categoryHint")}>
             <select className={inputClass} value={form.category} onChange={(e) => set("category", e.target.value as OrgCategory)}>
               <option value="">{t("employment.categoryNone")}</option>
-              {(Object.keys(CATEGORY_KEYS) as (keyof typeof CATEGORY_KEYS)[]).map((k) => (
-                <option key={k} value={k}>
-                  {t(CATEGORY_KEYS[k])}
+              {categoryOptions(t, lang, ruleSet).map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
                 </option>
               ))}
             </select>
@@ -115,7 +121,7 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
     <section className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="mb-1 font-semibold">{t("employment.title")}</h2>
       <p className="mb-5 text-xs text-slate-500">{t("employment.note")}</p>
-      <EmploymentFields form={form} set={set} />
+      <EmploymentFields form={form} set={set} ruleSet={ruleSetOfCase(record)} />
       <div className="mt-6 flex items-center gap-3">
         <Button disabled={dateError} onClick={save}>
           {t("employment.save")}

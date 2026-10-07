@@ -2,7 +2,7 @@ import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../type
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
 import { isCollected } from "./progress";
-import { ACQUISITION_CAUSE_LABELS, RULE_SETS, hspEvidenceRule, type RequirementRule, type RuleSet } from "./rules";
+import { ACQUISITION_CAUSE_LABELS, RULE_SETS, categoryRangeOf, hspEvidenceRule, type Category, type RequirementRule, type RuleSet } from "./rules";
 
 export type Result = "required" | "not_required" | "check";
 
@@ -23,6 +23,8 @@ export interface Evaluation {
   notApplicableReason?: string;
   /** カテゴリー未入力のため、共通の書類のみを判定している */
   needsCategory: boolean;
+  /** 入力済みのカテゴリーが、この規則集合の区分の範囲にない（needsCategory も true になる）。範囲内の区分を、画面に案内する */
+  categoryOutOfRange: boolean;
   /** 取得の事由が未選択のため、全事由に共通の書類のみを判定している（取得許可申請のみ） */
   needsCause: boolean;
   items: EvaluatedItem[];
@@ -115,6 +117,16 @@ function pushItem(items: EvaluatedItem[], c: CaseRecord, ruleSet: RuleSet, item:
   items.push(...evidence);
 }
 
+/** 手続種別と在留資格（文字列）から、対応する規則集合を返す（なければ null）。カテゴリー区分の定義を引くために使う */
+export function ruleSetFor(procedureType: string, residenceStatus: string, ruleSets: RuleSet[] = RULE_SETS): RuleSet | null {
+  return matchRuleSet(procedureType, residenceStatus, ruleSets);
+}
+
+/** 案件に対応する規則集合を返す（なければ null） */
+export function ruleSetOfCase(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): RuleSet | null {
+  return findRuleSet(c, ruleSets);
+}
+
 /** 手続種別と在留資格（文字列）だけから、対応する規則があるかを判定する（案件作成画面の案内用） */
 export function hasRuleSetFor(procedureType: string, residenceStatus: string, ruleSets: RuleSet[] = RULE_SETS): boolean {
   return matchRuleSet(procedureType, residenceStatus, ruleSets) !== null;
@@ -153,6 +165,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   const empty: Evaluation = {
     ruleSet: null,
     needsCategory: false,
+    categoryOutOfRange: false,
     needsCause: false,
     items: [],
     missing: [],
@@ -190,16 +203,20 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
       const state = c.requirementStates[rule.id] ?? NO_STATE;
       pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
     }
-    return summarize(ruleSet, false, needsCause, items);
+    return summarize(ruleSet, false, false, needsCause, items);
   }
 
-  const { category } = c.employment;
+  // 入力済みのカテゴリーが、この規則集合の区分の範囲にない（別の在留資格のときに選んだ値など）ときは、未入力と同じに扱う
+  const range = categoryRangeOf(ruleSet);
+  const entered = c.employment.category;
+  const category: Category | "" = entered !== "" && range.includes(entered) ? entered : "";
+  const categoryOutOfRange = entered !== "" && category === "";
   const needsCategory = category === "";
 
   for (const rule of ruleSet.rules) {
     // カテゴリー未入力の間は、全カテゴリーに共通の書類のみ判定する
     const categories = rule.categories ?? [];
-    if (needsCategory && categories.length < 4) continue;
+    if (needsCategory && !range.every((k) => categories.includes(k))) continue;
 
     let result: Result;
     let reasonCode: ReasonCode;
@@ -219,14 +236,15 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason, reasonCode, state });
   }
 
-  return summarize(ruleSet, needsCategory, false, items);
+  return summarize(ruleSet, needsCategory, categoryOutOfRange, false, items);
 }
 
-function summarize(ruleSet: RuleSet, needsCategory: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
+function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
   const required = items.filter((i) => i.effective === "required");
   return {
     ruleSet,
     needsCategory,
+    categoryOutOfRange,
     needsCause,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
