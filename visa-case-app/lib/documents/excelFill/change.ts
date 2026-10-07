@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { isAdvancedProfessional, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { isAdvancedProfessional, isFormUStatus, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   CHANGE_DIGIT_CHECKS,
@@ -51,7 +51,8 @@ export async function fillChangeExcel(
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: ChangeCtx = { a, e, f, targetStatus };
   const resolution = resolveChangeForm(targetStatus, f.hspActivity ?? "");
-  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable: "N", unresolved: "N" });
+  // 高度専門職ではない「法律・会計業務」「医療」は、様式 U（第2表以降を含む）を使う（Issue #301・#302）
+  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable: isFormUStatus(targetStatus) ? "U" : "N", unresolved: "N" });
   // 高度専門職ではない「経営・管理」への変更は、第2表以降（様式Nの表）を使えないため、第1表だけを差し込む（Issue #191）
   const firstOnly = plan.firstOnly || (resolution.kind === "not_applicable" && isKeieiKanri(targetStatus));
   const table2 = plan.form === "N" || plan.firstOnly ? null : HSP_CHANGE_TABLE2[plan.form];
@@ -75,6 +76,7 @@ function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, ta
   const hsp = isAdvancedProfessional(c.targetStatus);
   const maxWork = table2 && table2.fill.length > 0 ? table2.maxWork : MAX_WORK_HISTORY;
   if (hsp) w.push(...hspChangeWarnings({ resolution, procedure: "change", firstSheet: SHEET_CHANGE_APPLICANT_1, status: c.targetStatus, table2 }));
+  else if (table2) w.push(`${table2.name}の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${table2.manual}。`);
   if (c.a.confirmationStatus !== "confirmed") {
     w.push("申請人情報が確定していません。すべての項目を、原本と照合してから使用してください。");
   }
@@ -84,7 +86,7 @@ function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, ta
     w.push(
       `変更後の在留資格が「${CHANGE_TARGET_STATUS_KEIEI_KANRI}」のため、第1表（申請人用（変更）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。`,
     );
-  } else if (!hsp && !c.targetStatus.includes(CHANGE_TARGET_STATUS) && !CHANGE_FORM_N_STATUSES.includes(c.targetStatus.trim())) {
+  } else if (!hsp && !isFormUStatus(c.targetStatus) && !c.targetStatus.includes(CHANGE_TARGET_STATUS) && !CHANGE_FORM_N_STATUSES.includes(c.targetStatus.trim())) {
     w.push(
       `この様式は、変更後の在留資格が「${CHANGE_TARGET_STATUS}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。`,
     );

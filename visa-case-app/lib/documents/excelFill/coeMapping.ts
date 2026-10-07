@@ -1,4 +1,5 @@
 import { formatDate } from "../../format";
+import { FORM_U_STATUSES } from "../../hspForm";
 import type { FormDetails } from "../../formDetails";
 import {
   digitsOf,
@@ -253,17 +254,21 @@ export const COE_PURPOSE_CHECKBOXES: Record<string, string> = {
 };
 
 /** coe.ts の warnings で、targetStatus が様式の選択肢（34個）のどれかと一致するかの判定に使う */
-export const COE_PURPOSE_LABELS: string[] = Object.keys(COE_PURPOSE_CHECKBOXES);
+export const COE_PURPOSE_LABELS: string[] = [...Object.keys(COE_PURPOSE_CHECKBOXES), ...FORM_U_STATUSES];
 
 /**
  * 案件のプルダウン（lib/types.ts の RESIDENCE_STATUSES）の表記と、COE_PURPOSE_CHECKBOXES の文字が
  * 一致するものだけを、実際に□を■へ置き換える対象にする（「その他」は案件側に対応する値がないため対象外）。
  */
-const COE_PURPOSE_WRITES: Record<string, Record<string, string>> = Object.fromEntries(
-  Object.entries(COE_PURPOSE_CHECKBOXES)
-    .filter(([label]) => label !== "その他")
-    .map(([label, cell]) => [label, { [cell]: "■" }]),
-);
+const COE_PURPOSE_WRITES: Record<string, Record<string, string>> = {
+  ...Object.fromEntries(
+    Object.entries(COE_PURPOSE_CHECKBOXES)
+      .filter(([label]) => label !== "その他")
+      .map(([label, cell]) => [label, { [cell]: "■" }]),
+  ),
+  // 「法律・会計業務」「医療」は、様式の入国目的に独立の選択肢がなく、「Ｕ その他」に当たる（様式 U を使う。Issue #301・#302）
+  ...Object.fromEntries(FORM_U_STATUSES.map((label) => [label, { [COE_PURPOSE_CHECKBOXES["その他"]]: "■" }])),
+};
 
 export const COE_PICK_ITEMS: PickItem[] = [
   {

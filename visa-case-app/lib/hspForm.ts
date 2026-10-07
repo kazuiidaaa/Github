@@ -21,6 +21,13 @@ export type HspActivity = (typeof HSP_ACTIVITIES)[number];
 export type CoeFormCode = "I" | "L" | "M" | "N" | "U";
 
 /**
+ * 高度専門職ではなく、それ自体が様式 U（見出し「その他」）を使う在留資格（出入国在留管理庁の各在留資格の案内ページによる。Issue #301・#302）。
+ * 認定・変更・更新とも、公式様式は高度専門職の様式 U（docs/official/）と同じファイル。完全一致で照合する。
+ */
+export const FORM_U_STATUSES: readonly string[] = ["法律・会計業務", "医療"];
+export const isFormUStatus = (status: string): boolean => FORM_U_STATUSES.includes(status.trim());
+
+/**
  * 号と行う活動から、認定（COE）で使う様式を決める対応表（出入国在留管理庁の案内ページによる。Issue #181）。
  * キーは「号|行う活動」。表にない組み合わせは、推測せず、様式を特定できないものとして扱う。
  */
