@@ -266,21 +266,21 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Business Manager: application for certificate of eligibility",
     "경영·관리 사증발급인정서 교부 신청",
   ],
-  "高度専門職2号への在留資格変更許可申請（ポイント計算表・疎明資料・所得納税社会保険の書類のみ整備。他の書類は未整備）": [
-    "Application for change of status of residence to Highly Skilled Professional (ii) (only the points calculation table, supporting materials, and income, tax and social insurance documents are covered; other documents are not yet covered)",
-    "고도전문직 2호로의 체류자격 변경 허가 신청(포인트 계산표·소명 자료·소득 납세 사회보험 서류만 정비. 다른 서류는 미정비)",
+  "高度専門職2号への在留資格変更許可申請（共通書類・ポイント計算表・疎明資料・所得納税社会保険の書類のみ整備。他の書類は未整備）": [
+    "Application for change of status of residence to Highly Skilled Professional (ii) (only the common documents, points calculation table, supporting materials, and income, tax and social insurance documents are covered; other documents are not yet covered)",
+    "고도전문직 2호로의 체류자격 변경 허가 신청(공통 서류·포인트 계산표·소명 자료·소득 납세 사회보험 서류만 정비. 다른 서류는 미정비)",
   ],
-  "高度専門職（1号）への在留資格変更許可申請（ポイント計算表・疎明資料のみ整備。他の書類は未整備）": [
-    "Application for change of status of residence to Highly Skilled Professional (i) (only the points calculation table and supporting materials are covered; other documents are not yet covered)",
-    "고도전문직(1호)으로의 체류자격 변경 허가 신청(포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
+  "高度専門職（1号）への在留資格変更許可申請（共通書類・ポイント計算表・疎明資料のみ整備。他の書類は未整備）": [
+    "Application for change of status of residence to Highly Skilled Professional (i) (only the common documents, points calculation table and supporting materials are covered; other documents are not yet covered)",
+    "고도전문직(1호)으로의 체류자격 변경 허가 신청(공통 서류·포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
   ],
-  "高度専門職 在留資格認定証明書交付申請（ポイント計算表・疎明資料のみ整備。他の書類は未整備）": [
-    "Highly Skilled Professional: application for certificate of eligibility (only the points calculation table and supporting materials are covered; other documents are not yet covered)",
-    "고도전문직 사증발급인정서 교부 신청(포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
+  "高度専門職 在留資格認定証明書交付申請（共通書類・ポイント計算表・疎明資料のみ整備。他の書類は未整備）": [
+    "Highly Skilled Professional: application for certificate of eligibility (only the common documents, points calculation table and supporting materials are covered; other documents are not yet covered)",
+    "고도전문직 사증발급인정서 교부 신청(공통 서류·포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
   ],
-  "高度専門職（1号）の在留期間更新許可申請（ポイント計算表・疎明資料のみ整備。他の書類は未整備）": [
-    "Application for extension of the period of stay as Highly Skilled Professional (i) (only the points calculation table and supporting materials are covered; other documents are not yet covered)",
-    "고도전문직(1호)의 체류기간 연장 허가 신청(포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
+  "高度専門職（1号）の在留期間更新許可申請（共通書類・ポイント計算表・疎明資料のみ整備。他の書類は未整備）": [
+    "Application for extension of the period of stay as Highly Skilled Professional (i) (only the common documents, points calculation table and supporting materials are covered; other documents are not yet covered)",
+    "고도전문직(1호)의 체류기간 연장 허가 신청(공통 서류·포인트 계산표·소명 자료만 정비. 다른 서류는 미정비)",
   ],
   "高度専門職 在留資格取得許可申請（一部のみ整備）": [
     "Highly Skilled Professional: application for permission for acquisition of status of residence (only partly covered)",

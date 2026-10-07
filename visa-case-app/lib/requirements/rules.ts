@@ -58,6 +58,35 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   "4": "カテゴリー4（上記以外）",
 };
 
+/** 申請書・写真・パスポート及び在留カードの提示は、在留資格によらず、手続の種類ごとに共通（Issue #291）。在留資格別の規則集合は、これを先頭に展開する */
+export type CommonProcedure = "renewal" | "change" | "coe";
+
+const COMMON_APPLICATION_FORM_NAMES: Record<CommonProcedure, string> = {
+  renewal: "在留期間更新許可申請書",
+  change: "在留資格変更許可申請書",
+  coe: "在留資格認定証明書交付申請書",
+};
+const COMMON_PHOTO_NOTES: Record<CommonProcedure, string> = {
+  renewal: "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの",
+  change: "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの",
+  coe: "申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。裏面に申請人の氏名を記載し、申請書の写真欄に貼付する",
+};
+
+/**
+ * 認定・変更・更新の共通書類。パスポート及び在留カードの提示は、更新・変更のみ（認定は海外からの呼び寄せで在留カードがなく、旅券の提示も不要）。
+ * 取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が同じ項目を持つ。
+ */
+export function procedureCommonRules(procedure: CommonProcedure): RequirementRule[] {
+  const rules: RequirementRule[] = [
+    { id: "application_form", name: COMMON_APPLICATION_FORM_NAMES[procedure], party: "applicant", categories: ALL, level: "required" },
+    { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: COMMON_PHOTO_NOTES[procedure] },
+  ];
+  if (procedure !== "coe") {
+    rules.push({ id: "passport_card", name: "パスポート及び在留カード（提示）", party: "applicant", categories: ALL, level: "required" });
+  }
+  return rules;
+}
+
 export const GIJINKOKU_RENEWAL: RuleSet = {
   id: "gijinkoku_renewal",
   title: "技術・人文知識・国際業務 在留期間更新許可申請",
@@ -69,9 +98,7 @@ export const GIJINKOKU_RENEWAL: RuleSet = {
     { title: "提出書類のカテゴリー別一覧（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367009.pdf" },
   ],
   rules: [
-    { id: "application_form", name: "在留期間更新許可申請書", party: "applicant", categories: ALL, level: "required" },
-    { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの" },
-    { id: "passport_card", name: "パスポート及び在留カード（提示）", party: "applicant", categories: ALL, level: "required" },
+    ...procedureCommonRules("renewal"),
     {
       id: "employment_contract",
       name: "申請人の活動内容を明らかにする書類（雇用契約書・労働条件通知書の写し等）",
@@ -176,8 +203,7 @@ export const GIJINKOKU_COE: RuleSet = {
     { title: "【認定】提出書類チェックシート（カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437254.pdf" },
   ],
   rules: [
-    { id: "application_form", name: "在留資格認定証明書交付申請書", party: "applicant", categories: ALL, level: "required" },
-    { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: "申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。裏面に申請人の氏名を記載し、申請書の写真欄に貼付する" },
+    ...procedureCommonRules("coe"),
     {
       id: "return_envelope",
       name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
@@ -334,9 +360,7 @@ export const GIJINKOKU_CHANGE: RuleSet = {
     { title: "提出書類チェックシート（変更・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437255.pdf" },
   ],
   rules: [
-    { id: "application_form", name: "在留資格変更許可申請書", party: "applicant", categories: ALL, level: "required" },
-    { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの" },
-    { id: "passport_card", name: "パスポート及び在留カード（提示）", party: "applicant", categories: ALL, level: "required" },
+    ...procedureCommonRules("change"),
     {
       id: "category1_proof",
       name: "カテゴリー1に該当することを証明する文書（四季報の写し、上場を証明する文書の写し等）",
@@ -612,11 +636,6 @@ export const ACQUISITION_BY_CAUSE: RuleSet = {
 const KEIEI_KANRI = "経営・管理";
 const KEIEI_KANRI_SOURCE = { title: "在留資格「経営・管理」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/business-manager.html" };
 
-const keieiKanriCommon = (applicationFormName: string): RequirementRule[] => [
-  { id: "application_form", name: applicationFormName, party: "applicant", categories: ALL, level: "required" },
-  { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの" },
-];
-
 export const KEIEI_KANRI_RENEWAL: RuleSet = {
   id: "keiei_kanri_renewal",
   title: "経営・管理 在留期間更新許可申請",
@@ -625,8 +644,7 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
   checkedAt: "2026-10-05",
   sources: [KEIEI_KANRI_SOURCE],
   rules: [
-    ...keieiKanriCommon("在留期間更新許可申請書"),
-    { id: "passport_card", name: "パスポート及び在留カード（提示）", party: "applicant", categories: ALL, level: "required" },
+    ...procedureCommonRules("renewal"),
     {
       id: "statutory_report_total",
       name: "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（受付印のあるものの写し）",
@@ -690,7 +708,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
   checkedAt: "2026-10-05",
   sources: [KEIEI_KANRI_SOURCE],
   rules: [
-    ...keieiKanriCommon("在留資格認定証明書交付申請書"),
+    ...procedureCommonRules("coe"),
     {
       id: "return_envelope",
       name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
@@ -800,8 +818,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
   checkedAt: "2026-10-05",
   sources: [KEIEI_KANRI_SOURCE],
   rules: [
-    ...keieiKanriCommon("在留資格変更許可申請書"),
-    { id: "passport_card", name: "パスポート及び在留カード（提示）", party: "applicant", categories: ALL, level: "required" },
+    ...procedureCommonRules("change"),
     {
       id: "category_proof",
       name: "所属機関のカテゴリーを証明する文書",
@@ -904,8 +921,8 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
   ],
 };
 
-// 在留資格「高度専門職」。現時点で規則に載せているのは、ポイント計算表とその疎明資料のみ（Issue #186）。
-// 申請書・写真・パスポート等の他の提出書類は、一覧の提供後に追加する（それまでは、一覧が全部ではないことを title に示す）。
+// 在留資格「高度専門職」。現時点で規則に載せているのは、手続共通の書類と、ポイント計算表・その疎明資料（Issue #186）。
+// 申請書・写真・パスポート・在留カードは、手続共通の書類（procedureCommonRules。Issue #291）。それ以外の提出書類は、一覧の提供後に追加する（それまでは、一覧が全部ではないことを title に示す）。
 // 手続ごとの提出の要否は、出入国在留管理庁の案内ページ（高度専門職）による。取得許可申請（Issue #212）は、取得の事由で判定する
 // ACQUISITION_BY_CAUSE の書類に、ポイント計算表・疎明資料を足した HSP_ACQUISITION を、号の有無・種類を問わず適用する。
 const HSP = "高度専門職";
@@ -913,7 +930,7 @@ const HSP_SOURCE = {
   title: "在留資格「高度専門職」ポイント計算表（出入国在留管理庁）",
   url: "https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html",
 };
-const HSP_PARTIAL = "（ポイント計算表・疎明資料のみ整備。他の書類は未整備）";
+const HSP_PARTIAL = "（共通書類・ポイント計算表・疎明資料のみ整備。他の書類は未整備）";
 
 /**
  * ポイント計算表で選んだ項目から導く、疎明資料の番号ごとの必要書類（Issue #186）。規則集合には載せず、evaluate が案件の入力から生成する。
@@ -973,7 +990,7 @@ export const HSP_COE: RuleSet = {
   excludeStatuses: [HSP_GRADE_2],
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
-  rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+  rules: [...procedureCommonRules("coe"), ...hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通")],
 };
 
 /**
@@ -1071,12 +1088,13 @@ const hsp2Documents: RequirementRule[] = [
 /** 2号の変更は、HSP_CHANGE より先に照合する（RULE_SETS の並び順） */
 export const HSP_CHANGE_2: RuleSet = {
   id: "hsp_change_2",
-  title: `高度専門職2号への在留資格変更許可申請（ポイント計算表・疎明資料・所得納税社会保険の書類のみ整備。他の書類は未整備）`,
+  title: `高度専門職2号への在留資格変更許可申請（共通書類・ポイント計算表・疎明資料・所得納税社会保険の書類のみ整備。他の書類は未整備）`,
   procedureType: "change",
   residenceStatus: "高度専門職（2号）",
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
   rules: [
+    ...procedureCommonRules("change"),
     ...hspPointRules("1号イ・ロ・ハのいずれかのシート。要件：1号又は高度外国人材としての特定活動で3年以上在留し、70点以上であること"),
     ...hsp2Documents,
   ],
@@ -1089,7 +1107,7 @@ export const HSP_CHANGE: RuleSet = {
   residenceStatus: HSP,
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
-  rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+  rules: [...procedureCommonRules("change"), ...hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通")],
 };
 
 /** 高度専門職2号は在留期限が無期限のため、更新の手続はない。更新は1号が対象 */
@@ -1101,7 +1119,7 @@ export const HSP_RENEWAL: RuleSet = {
   excludeStatuses: [HSP_GRADE_2],
   checkedAt: "2026-10-06",
   sources: [HSP_SOURCE],
-  rules: hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通"),
+  rules: [...procedureCommonRules("renewal"), ...hspPointRules("1号イ・ロ・ハのうち、活動の区分に応じた1通")],
 };
 
 /**
