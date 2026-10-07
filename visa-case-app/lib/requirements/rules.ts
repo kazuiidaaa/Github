@@ -1306,6 +1306,72 @@ export const KAIGO_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「法律・会計業務」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #301）。
+// 提出書類は案内ページの本文による（チェックシート（PDF）は未照合）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 更新は、共通書類（申請書・写真・パスポート及び在留カードの提示）以外の書類が案内ページにない。
+const HOUMU_KAIKEI = "法律・会計業務";
+const HOUMU_KAIKEI_SOURCE = { title: "在留資格「法律・会計業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/legalaccountingservices.html" };
+const HOUMU_KAIKEI_CHECKED_AT = "2026-10-07";
+
+const houmuKaikeiLicense: RequirementRule = {
+  id: "legal_accounting_license",
+  name: "日本の法律・会計の資格を有することを証明する文書（免許書、証明書等の写し）",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "弁護士、司法書士、土地家屋調査士、外国法事務弁護士、公認会計士、外国公認会計士、税理士、社会保険労務士、弁理士、海事代理士、行政書士のいずれか",
+};
+
+export const HOUMU_KAIKEI_COE: RuleSet = {
+  id: "houmu_kaikei_coe",
+  title: "法律・会計業務 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: HOUMU_KAIKEI,
+  checkedAt: HOUMU_KAIKEI_CHECKED_AT,
+  sources: [HOUMU_KAIKEI_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    houmuKaikeiLicense,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+      verify: true,
+    },
+  ],
+};
+
+export const HOUMU_KAIKEI_CHANGE: RuleSet = {
+  id: "houmu_kaikei_change",
+  title: "法律・会計業務 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: HOUMU_KAIKEI,
+  checkedAt: HOUMU_KAIKEI_CHECKED_AT,
+  sources: [HOUMU_KAIKEI_SOURCE],
+  rules: [...procedureCommonRules("change"), houmuKaikeiLicense],
+};
+
+export const HOUMU_KAIKEI_RENEWAL: RuleSet = {
+  id: "houmu_kaikei_renewal",
+  title: "法律・会計業務 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: HOUMU_KAIKEI,
+  checkedAt: HOUMU_KAIKEI_CHECKED_AT,
+  sources: [HOUMU_KAIKEI_SOURCE],
+  rules: [...procedureCommonRules("renewal")],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1325,4 +1391,8 @@ export const RULE_SETS: RuleSet[] = [
   KAIGO_RENEWAL,
   KAIGO_CHANGE,
   KAIGO_COE,
+  // 法律・会計業務（Issue #301）
+  HOUMU_KAIKEI_RENEWAL,
+  HOUMU_KAIKEI_CHANGE,
+  HOUMU_KAIKEI_COE,
 ];

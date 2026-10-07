@@ -382,6 +382,31 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Status of residence \"Nursing Care\" (Immigration Services Agency of Japan)",
     "체류자격 '개호'(출입국재류관리청)",
   ],
+  // 法律・会計業務（Issue #301）
+  "日本の法律・会計の資格を有することを証明する文書（免許書、証明書等の写し）": [
+    "Document proving that the applicant holds a Japanese legal or accounting qualification (copy of the license, certificate, etc.)",
+    "일본의 법률·회계 자격을 보유하고 있음을 증명하는 문서(면허증, 증명서 등의 사본)",
+  ],
+  "弁護士、司法書士、土地家屋調査士、外国法事務弁護士、公認会計士、外国公認会計士、税理士、社会保険労務士、弁理士、海事代理士、行政書士のいずれか": [
+    "One of: attorney, judicial scrivener, land and house investigator, registered foreign lawyer, certified public accountant, foreign certified public accountant, tax accountant, social insurance and labor consultant, patent attorney, maritime procedure agent, administrative scrivener",
+    "변호사, 사법서사, 토지가옥조사사, 외국법사무변호사, 공인회계사, 외국공인회계사, 세무사, 사회보험노무사, 변리사, 해사대리사, 행정서사 중 하나",
+  ],
+  "法律・会計業務 在留期間更新許可申請": [
+    "Legal/Accounting Services: application for extension of the period of stay",
+    "법률·회계업무 체류기간 연장 허가 신청",
+  ],
+  "法律・会計業務 在留資格変更許可申請": [
+    "Legal/Accounting Services: application for change of status of residence",
+    "법률·회계업무 체류자격 변경 허가 신청",
+  ],
+  "法律・会計業務 在留資格認定証明書交付申請": [
+    "Legal/Accounting Services: application for certificate of eligibility",
+    "법률·회계업무 사증발급인정서 교부 신청",
+  ],
+  "在留資格「法律・会計業務」（出入国在留管理庁）": [
+    "Status of residence \"Legal/Accounting Services\" (Immigration Services Agency of Japan)",
+    "체류자격 '법률·회계업무'(출입국재류관리청)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
