@@ -10,7 +10,15 @@
 | renewal-application-form_930004095.xlsx | 同(Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004095.xlsx |
 | renewal-application-sample_001460062.pdf | 申請書の記載例 | https://www.moj.go.jp/isa/content/001460062.pdf |
 | gijinkoku-renewal-checksheet_001367009.pdf | 提出書類チェックシート(更新) | https://www.moj.go.jp/isa/content/001367009.pdf |
+| renewal-application-form-I.xlsx | 更新申請書 様式 I(教授。高度専門職1号イ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
+| renewal-application-form-L.xlsx | 更新申請書 様式 L(企業内転勤。高度専門職1号ロ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
+| renewal-application-form-M.xlsx | 更新申請書 様式 M(経営・管理。高度専門職1号ハ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
+| renewal-application-form-U.xlsx | 更新申請書 様式 U(法律・会計、医療。高度専門職1号ロ・ハ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
 | change-application-form_930004065.xlsx | 在留資格変更許可申請書(別記第三十号様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004065.xlsx |
+| change-application-form-I.xlsx | 変更申請書 様式 I(教授。高度専門職1号イ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
+| change-application-form-L.xlsx | 変更申請書 様式 L(企業内転勤。高度専門職1号ロ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
+| change-application-form-M.xlsx | 変更申請書 様式 M(経営・管理。高度専門職1号ハ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
+| change-application-form-U.xlsx | 変更申請書 様式 U(法律・会計、医療。高度専門職1号ロ・ハ・2号)。ユーザーが2026-10-07に提供。取得元の確認は未了 | 出典ページ: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html(ファイル番号は未照合) |
 | coe-application-form_930004030.xlsx | 在留資格認定証明書交付申請書(別記第六号の三様式・Excel・差し込み元テンプレート) | https://www.moj.go.jp/isa/content/930004030.xlsx |
 | coe-application-form-I_930004028.xlsx | 認定申請書 様式 I(教授。高度専門職1号イで教授の活動を行う場合)。第1表のみ差し込み元（`lib/documents/excelFill/coe.ts`） | https://www.moj.go.jp/isa/content/930004028.xlsx |
 | coe-application-form-L_930004032.xlsx | 認定申請書 様式 L(企業内転勤。高度専門職1号ロ)。同上 | https://www.moj.go.jp/isa/content/930004032.xlsx |
@@ -27,3 +35,6 @@
 - 更新:様式は改正されることがあります。月次で入管庁の更新情報を確認し、版が変わった場合は、このフォルダの資料と対応表(`lib/documents/excelFill/` 配下の各モジュール)を更新してください。
 
 - 認定申請書の様式の使い分け(高度専門職1号):イ=教授→I、研究→N/ロ=企業内転勤→L、技術・人文知識・国際業務→N、法律・会計または医療→U/ハ=経営・管理→M、法律・会計→U。上記以外の活動は、各在留資格の案内ページの様式を使います(Issue #181・#187)。取得日は2026-10-05です。
+
+- 変更申請書の様式の使い分け(高度専門職):1号は認定と同じ対応(イ=教授→I、研究→N/ロ=企業内転勤→L、技術・人文知識・国際業務→N、法律・会計または医療→U/ハ=経営・管理→M、法律・会計→U)。2号は、1号と同じ活動なら1号と同じ様式、活動が変わる場合は変更後の在留資格の案内ページの様式を使います。出典:上記の入管庁ページ(2026-10-07確認。ページ内に最終更新日の記載なし)。
+- 更新申請書の様式の使い分け(高度専門職1号):変更と同じ対応です(上記)。2号に更新はありません(在留期限が無期限のため)。出典:上記の入管庁ページ(2026-10-07確認)。
