@@ -354,8 +354,11 @@ describe("高度専門職の規則（Issue #186）", () => {
       const ev = find(procedureType, status);
       expect(ev.ruleSet?.id, `${procedureType}:${status}`).toMatch(/^hsp_/);
       const ids = ev.items.map((i) => i.rule.id);
-      expect(ids.slice(0, 2)).toEqual(["hsp_point_table", "hsp_point_evidence"]);
-      expect(ev.items.slice(0, 2).every((i) => i.effective === "required")).toBe(true);
+      // 手続共通の書類（申請書・写真、更新・変更は在留カードの提示）が先頭に付く（Issue #291）
+      const common = procedureType === "coe" ? ["application_form", "photo"] : ["application_form", "photo", "passport_card"];
+      expect(ids.slice(0, common.length), `${procedureType}:${status}`).toEqual(common);
+      expect(ids.slice(common.length, common.length + 2)).toEqual(["hsp_point_table", "hsp_point_evidence"]);
+      expect(ev.items.slice(0, common.length + 2).every((i) => i.effective === "required")).toBe(true);
       expect(ev.ruleSet?.title).toContain("ポイント計算表・疎明資料");
       // 2号の変更だけ、所得・納税・社会保険の書類（hsp2_）が加わる
       expect(ids.some((id) => id.startsWith("hsp2_")), `${procedureType}:${status}`).toBe(status === "高度専門職（2号）");
@@ -408,25 +411,27 @@ describe("高度専門職の規則（Issue #186）", () => {
 });
 
 describe("高度専門職：選んだ項目から導く疎明資料の番号ごとの必要書類（Issue #186）", () => {
+  // 変更の手続共通の書類（Issue #291）。この describe の期待値は、共通書類の後ろに続く
+  const COMMON = ["application_form", "photo", "passport_card"];
   const withChecks = (over: Partial<CaseRecord>, details: Partial<CaseRecord["formDetails"]>) =>
     evaluate(make({ ...over, formDetails: { ...EMPTY_FORM_DETAILS, ...details } }));
   const change1 = { procedureType: "change", targetStatus: "高度専門職（1号ロ）" } as const;
 
   it("項目を選んでいない間は、親の疎明資料1件のみ（従来と同じ）", () => {
     const ids = withChecks(change1, {}).items.map((i) => i.rule.id);
-    expect(ids).toEqual(["hsp_point_table", "hsp_point_evidence"]);
+    expect(ids).toEqual([...COMMON, "hsp_point_table", "hsp_point_evidence"]);
   });
 
   it("資格（⑧）・投資運用業等（㉑）を選ぶと、番号ごとの疎明資料を「必要」で出す。必要書類の件数に数える", () => {
     // B：修士(①)・資格 複数(⑧)・投資運用業等(㉑)
     const ev = withChecks(change1, { hspPointChecks: ["B:15", "B:48", "B:95"] });
-    expect(ev.items.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence_①", "hsp_point_evidence_⑧", "hsp_point_evidence_㉑"]);
+    expect(ev.items.map((i) => i.rule.id)).toEqual([...COMMON, "hsp_point_table", "hsp_point_evidence_①", "hsp_point_evidence_⑧", "hsp_point_evidence_㉑"]);
     const by = (id: string) => ev.items.find((i) => i.rule.id === id)!;
     expect(by("hsp_point_evidence_①").effective).toBe("check");
     expect(by("hsp_point_evidence_⑧").effective).toBe("required");
     expect(by("hsp_point_evidence_㉑").effective).toBe("required");
-    expect(ev.requiredCount).toBe(3); // ポイント計算表 + ⑧ + ㉑
-    expect(ev.missing.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence_⑧", "hsp_point_evidence_㉑"]);
+    expect(ev.requiredCount).toBe(6); // 共通書類3件 + ポイント計算表 + ⑧ + ㉑
+    expect(ev.missing.map((i) => i.rule.id)).toEqual([...COMMON, "hsp_point_table", "hsp_point_evidence_⑧", "hsp_point_evidence_㉑"]);
     // 選ばなければ、出さない
     expect(withChecks(change1, { hspPointChecks: ["B:15"] }).items.some((i) => i.rule.id === "hsp_point_evidence_⑧")).toBe(false);
   });
@@ -435,16 +440,17 @@ describe("高度専門職：選んだ項目から導く疎明資料の番号ご�
     // B：修士(①)・職歴(②)・年収(③)・日本語能力Ⅰ(⑮)
     const ev = withChecks(change1, { hspPointChecks: ["B:15", "B:20", "B:27", "B:72"] });
     expect(ev.items.map((i) => i.rule.id)).toEqual([
+      ...COMMON,
       "hsp_point_table",
       "hsp_point_evidence_①",
       "hsp_point_evidence_②",
       "hsp_point_evidence_③",
       "hsp_point_evidence_⑮",
     ]);
-    const children = ev.items.slice(1);
+    const children = ev.items.slice(COMMON.length + 1);
     expect(children.every((i) => i.effective === "check" && i.rule.level === "check")).toBe(true);
     expect(children[3].rule.name).toContain("日本語能力");
-    expect(ev.requiredCount).toBe(1);
+    expect(ev.requiredCount).toBe(COMMON.length + 1);
     // 未受領の「要確認」は、確認が必要な書類に出る
     expect(ev.toCheck.map((i) => i.rule.id)).toEqual(["hsp_point_evidence_①", "hsp_point_evidence_②", "hsp_point_evidence_③", "hsp_point_evidence_⑮"]);
   });
@@ -458,9 +464,9 @@ describe("高度専門職：選んだ項目から導く疎明資料の番号ご�
     const three = ev.items.find((i) => i.rule.id === "hsp_point_evidence_③")!;
     expect(one.state.status).toBe("received");
     expect(three.effective).toBe("required");
-    expect(ev.requiredCount).toBe(2);
-    // 未受領の必要書類：計算表と、必要に切り替えた③（受領済みの①は含まない）
-    expect(ev.missing.map((i) => i.rule.id)).toEqual(["hsp_point_table", "hsp_point_evidence_③"]);
+    expect(ev.requiredCount).toBe(COMMON.length + 2);
+    // 未受領の必要書類：共通書類と計算表と、必要に切り替えた③（受領済みの①は含まない）
+    expect(ev.missing.map((i) => i.rule.id)).toEqual([...COMMON, "hsp_point_table", "hsp_point_evidence_③"]);
     expect(ev.toCheck).toEqual([]);
   });
 
@@ -469,7 +475,7 @@ describe("高度専門職：選んだ項目から導く疎明資料の番号ご�
       { ...change1, requirementStates: { hsp_point_evidence: { status: "requested" } } },
       { hspPointChecks: ["B:15"] },
     );
-    expect(ev.items.map((i) => i.rule.id).slice(0, 3)).toEqual(["hsp_point_table", "hsp_point_evidence", "hsp_point_evidence_①"]);
+    expect(ev.items.map((i) => i.rule.id).slice(COMMON.length, COMMON.length + 3)).toEqual(["hsp_point_table", "hsp_point_evidence", "hsp_point_evidence_①"]);
   });
 
   it("使うシートが決まらない間（2号・号未選択）は出さない。シートを選ぶと出る", () => {
@@ -518,9 +524,9 @@ describe("高度専門職2号の変更の所得・納税・社会保険の書類
     expect(note("hsp2_resident_tax_payment")).toContain("特別徴収");
   });
 
-  it("書類は、ポイント計算表と合わせて11件。要確認の4件は、必要書類の件数に数えない", () => {
-    expect(ev.items).toHaveLength(11);
-    expect(ev.requiredCount).toBe(7);
+  it("書類は、共通書類3件・ポイント計算表と合わせて14件。要確認の4件は、必要書類の件数に数えない", () => {
+    expect(ev.items).toHaveLength(14);
+    expect(ev.requiredCount).toBe(10);
   });
 
   it("高度専門職（1号）の変更・認定・更新には、所得・納税・社会保険の書類を出さない", () => {
