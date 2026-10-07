@@ -6,6 +6,7 @@ import {
   CHANGE_DIGIT_CHECKS,
   CHANGE_FILL_ITEMS,
   CHANGE_PICK_ITEMS,
+  CHANGE_FORM_N_STATUSES,
   CHANGE_TARGET_STATUS,
   CHANGE_TARGET_STATUS_KEIEI_KANRI,
   SHEET_CHANGE_APPLICANT_1,
@@ -83,7 +84,7 @@ function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, ta
     w.push(
       `変更後の在留資格が「${CHANGE_TARGET_STATUS_KEIEI_KANRI}」のため、第1表（申請人用（変更）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。`,
     );
-  } else if (!hsp && !c.targetStatus.includes(CHANGE_TARGET_STATUS)) {
+  } else if (!hsp && !c.targetStatus.includes(CHANGE_TARGET_STATUS) && !CHANGE_FORM_N_STATUSES.includes(c.targetStatus.trim())) {
     w.push(
       `この様式は、変更後の在留資格が「${CHANGE_TARGET_STATUS}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。`,
     );

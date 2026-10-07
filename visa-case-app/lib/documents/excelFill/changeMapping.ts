@@ -40,6 +40,8 @@ export { MAX_RELATIVES, MAX_WORK_HISTORY, JOB_DESCRIPTION_LINES, digitsOf, sheet
 
 /** 変更様式（申請人等作成用・所属機関等作成用の4枚）が対象とする在留資格 */
 export const CHANGE_TARGET_STATUS = "技術・人文知識・国際業務";
+/** 同じ様式N（変更）を使う在留資格（入管庁の各在留資格の案内ページによる）。変更後の在留資格がこれらなら、様式の不一致を警告しない。完全一致で照合する（「技能」は「技能実習」「特定技能」を含まない） */
+export const CHANGE_FORM_N_STATUSES: readonly string[] = [CHANGE_TARGET_STATUS, "介護"];
 /** 第1表のみ差し込む在留資格。第2表以降は、様式Nの表のため使えない（Issue #191） */
 export const CHANGE_TARGET_STATUS_KEIEI_KANRI = "経営・管理";
 

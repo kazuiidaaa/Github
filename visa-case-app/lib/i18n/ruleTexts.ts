@@ -336,6 +336,52 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Application for permission for acquisition of status of residence (Appended Form No. 36) (Immigration Services Agency of Japan)",
     "체류자격 취득 허가 신청서(별기 제36호 양식)(출입국재류관리청)",
   ],
+
+  // 介護（Issue #297）
+  "介護福祉士登録証（写し）": [
+    "Certified care worker registration certificate (copy)",
+    "개호복지사 등록증(사본)",
+  ],
+  "労働条件を明示する文書（労働基準法第15条第1項・同法施行規則第5条に基づき交付されるもの）": [
+    "Document stating the working conditions (issued under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations)",
+    "근로조건을 명시한 문서(근로기준법 제15조 제1항 및 같은 법 시행규칙 제5조에 따라 교부되는 것)",
+  ],
+  "派遣先での活動内容を明らかにする資料（労働条件通知書（雇用契約書）等）": [
+    "Material showing the activities at the dispatch destination (notice of working conditions (employment contract), etc.)",
+    "파견처에서의 활동 내용을 밝히는 자료(근로조건통지서(고용계약서) 등)",
+  ],
+  "所属機関の概要を明らかにする文書（沿革・役員・組織・事業内容等が記載された案内書、又はこれに準ずる文書）": [
+    "Document showing an overview of the organization (a brochure stating its history, officers, organization, business content, etc., or an equivalent document)",
+    "소속 기관의 개요를 밝히는 문서(연혁·임원·조직·사업 내용 등이 기재된 안내서 또는 이에 준하는 문서)",
+  ],
+  "技能移転に係る申告書（参考様式）": [
+    "Declaration on skills transfer (reference form)",
+    "기능 이전에 관한 신고서(참고 양식)",
+  ],
+  "「技能実習」の在留資格で在留していたことがある場合のみ": [
+    "Only if the applicant has previously stayed under the status \"Technical Intern Training\"",
+    "'기능실습' 체류자격으로 체류한 적이 있는 경우에만",
+  ],
+  "転職後、初回の更新許可申請の場合のみ": [
+    "Only for the first renewal application after changing jobs",
+    "이직 후 첫 연장 허가 신청의 경우에만",
+  ],
+  "介護 在留期間更新許可申請": [
+    "Nursing Care: application for extension of the period of stay",
+    "개호 체류기간 연장 허가 신청",
+  ],
+  "介護 在留資格変更許可申請": [
+    "Nursing Care: application for change of status of residence",
+    "개호 체류자격 변경 허가 신청",
+  ],
+  "介護 在留資格認定証明書交付申請": [
+    "Nursing Care: application for certificate of eligibility",
+    "개호 사증발급인정서 교부 신청",
+  ],
+  "在留資格「介護」（出入国在留管理庁）": [
+    "Status of residence \"Nursing Care\" (Immigration Services Agency of Japan)",
+    "체류자격 '개호'(출입국재류관리청)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
