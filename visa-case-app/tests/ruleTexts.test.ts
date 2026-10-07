@@ -28,6 +28,8 @@ function ruleStrings() {
   for (const s of RULE_SETS) {
     others.add(s.title);
     s.sources.forEach((x) => others.add(x.title));
+    // 区分の意味（選択肢に出る）
+    Object.values(s.categoryDefinition ?? {}).forEach((x) => others.add(x));
   }
   for (const r of rules) {
     if (!r.id.startsWith("hsp_point_evidence_")) names.add(r.name);

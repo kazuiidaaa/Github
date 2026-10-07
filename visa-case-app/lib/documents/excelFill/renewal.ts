@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { isAdvancedProfessional, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { isAdvancedProfessional, isFormIStatus, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   JOB_DESCRIPTION_LINES,
@@ -47,7 +47,8 @@ export async function fillRenewalExcel(
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f };
   const { resolution, status } = resolveRenewal(currentStatus, a.residenceStatus, f.hspActivity ?? "");
-  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable: "N", unresolved: "N" });
+  // 高度専門職ではない「教授」は、様式 I（第2表以降を含む）を使う（Issue #292）
+  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable: isFormIStatus(status) ? "I" : "N", unresolved: "N" });
   // 高度専門職ではない「経営・管理」の更新は、第2表以降（様式Nの表）を使えないため、第1表（申請人用（更新）１）だけを差し込む（Issue #191）
   const keieiKanri = resolution.kind === "not_applicable" && (isKeieiKanri(currentStatus) || isKeieiKanri(a.residenceStatus));
   const table2 = plan.form === "N" || plan.firstOnly ? null : HSP_CHANGE_TABLE2[plan.form];
@@ -90,6 +91,9 @@ function buildWarnings(
   const maxWork = o.table2 && o.table2.fill.length > 0 ? o.table2.maxWork : MAX_WORK_HISTORY;
   if (isAdvancedProfessional(o.status)) {
     w.push(...hspChangeWarnings({ resolution: o.resolution, procedure: "renewal", firstSheet: SHEET_APPLICANT_1, status: o.status, table2: o.table2 }));
+  }
+  if (!isAdvancedProfessional(o.status) && o.table2) {
+    w.push(`${o.table2.name}の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${o.table2.manual}。`);
   }
   if (o.keieiKanri) {
     w.push("在留資格が「経営・管理」のため、第1表（申請人用（更新）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。");
