@@ -1570,6 +1570,234 @@ export const IRYO_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「研究」。所属機関のカテゴリー（1〜4）は、技術・人文知識・国際業務と同じ区分で、書類もカテゴリーごとに異なる（Issue #296）。
+// 提出書類は案内ページの本文による（カテゴリー1・2は「その他の資料は原則不要」、3は4のうち源泉徴収に関する資料が不要）。チェックシート（PDF）の○の位置は未照合。
+// 申請書は様式N（認定・変更・更新とも）。「転勤」は様式Lで、出力は別 Issue で扱う（ここでは書類のみ「要確認」で案内）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const KENKYU = "研究";
+const KENKYU_CHECKED_AT = "2026-10-07";
+const KENKYU_SOURCE = { title: "在留資格「研究」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/researcher.html" };
+const KENKYU_EXCLUDE = ["特定活動"]; // 「特定活動（研究活動等）」は別の在留資格（Issue #299）
+
+const kenkyuCategoryProof: RequirementRule = {
+  id: "category_proof",
+  name: "所属機関のカテゴリーを証明する文書",
+  party: "organization",
+  categories: ["1", "2", "3"],
+  level: "required",
+  note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
+};
+const kenkyuOnlineApproval: RequirementRule = {
+  id: "online_approval_proof",
+  name: "在留申請オンラインシステムの利用申出の承認を証明する文書（承認のお知らせメール等）",
+  party: "organization",
+  categories: ["2"],
+  level: "check",
+  note: "カテゴリー2と同様の添付資料での申請を希望し、利用申出が承認された機関の場合のみ",
+};
+const kenkyuDispatch: RequirementRule = {
+  id: "dispatch_documents",
+  name: "派遣先での活動内容を明らかにする資料（労働条件通知書（雇用契約書）等）",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: "派遣契約に基づいて就労する場合（申請人が被派遣者の場合）のみ",
+};
+const kenkyuActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "活動内容等を明らかにする資料（労働条件を明示する文書、役員報酬を定める定款の写し等）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "労働契約の場合は労働条件通知書等。日本法人の役員に就任する場合は役員報酬を定める定款の写し又は株主総会議事録の写し。外国法人の日本支店への転勤・会社以外の団体の役員に就任する場合は、地位（担当業務）、期間及び報酬額を明らかにする所属団体の文書",
+};
+const kenkyuCareerDocuments: RequirementRule = {
+  id: "career_documents",
+  name: "学歴及び職歴その他経歴等を証明する文書（履歴書、卒業証明書又は研究の経験期間を証明する文書等）",
+  party: "applicant",
+  categories: ["3", "4"],
+  level: "required",
+  note: "履歴書（関連する職務に従事した機関、活動の内容及び期間を明示したもの）と、大学等の卒業証明書（同等以上の教育又は高度専門士の称号を証明する文書でもよい）又は研究の経験期間を証明する文書（大学院・大学での研究期間を含む）",
+};
+const kenkyuTransferDocuments: RequirementRule = {
+  id: "transfer_documents",
+  name: "転勤の場合の資料（転勤直前の外国の機関の文書、転勤前後の事業所の関係を示す資料）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "check",
+  note: "「研究（転勤）」の場合のみ（申請書は様式L）。過去1年間の業務内容・地位・報酬を明示した転勤直前の機関の文書と、支店の登記事項証明書又は出資・資本関係を明らかにする資料",
+};
+const kenkyuBusinessMaterials: RequirementRule = {
+  id: "business_description",
+  name: "事業内容を明らかにする資料（会社案内等）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が詳細に記載された案内書、これに準ずる文書、又は登記事項証明書のいずれか",
+};
+const kenkyuFinancialStatements: RequirementRule = {
+  id: "financial_statements",
+  name: "直近年度の決算文書の写し",
+  party: "organization",
+  categories: ["4"],
+  level: "required",
+  note: "新規事業の場合は事業計画書",
+};
+const kenkyuFinancialStatementsCat3: RequirementRule = {
+  ...kenkyuFinancialStatements,
+  id: "financial_statements_transfer",
+  categories: ["3"],
+  level: "check",
+  note: "カテゴリー3は、転勤して研究を行う業務に従事する場合に限る。新規事業の場合は事業計画書",
+};
+const kenkyuRepresentativeDeclaration: RequirementRule = {
+  id: "representative_declaration",
+  name: "所属機関の代表者に関する申告書（参考様式）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "2026年4月15日以降の申請で提出する",
+};
+// カテゴリー4：前年分の法定調書合計表を提出できない理由を明らかにする資料
+const kenkyuWithholdingRules: RequirementRule[] = [
+  {
+    id: "withholding_exemption_certificate",
+    name: "外国法人の源泉徴収に対する免除証明書その他の源泉徴収を要しないことを明らかにする資料",
+    party: "organization",
+    categories: ["4"],
+    level: "check",
+    note: "源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要",
+  },
+  { id: "payroll_office_notification", name: "給与支払事務所等の開設届出書の写し", party: "organization", categories: ["4"], level: "required" },
+  { id: "withholding_tax_receipts", name: "直近3か月分の所得税徴収高計算書の写し", party: "organization", categories: ["4"], level: "required" },
+  {
+    id: "withholding_special_approval",
+    name: "源泉所得税の納期の特例の承認に関する申請書の写し",
+    party: "organization",
+    categories: ["4"],
+    level: "required",
+    when: "withholdingSpecial",
+    note: "納期の特例の承認を受けている場合",
+  },
+];
+
+export const KENKYU_COE: RuleSet = {
+  id: "kenkyu_coe",
+  title: "研究 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: KENKYU,
+  excludeStatuses: KENKYU_EXCLUDE,
+  checkedAt: KENKYU_CHECKED_AT,
+  sources: [KENKYU_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    kenkyuCategoryProof,
+    kenkyuOnlineApproval,
+    kenkyuDispatch,
+    kenkyuActivityDocuments,
+    kenkyuCareerDocuments,
+    kenkyuTransferDocuments,
+    kenkyuBusinessMaterials,
+    kenkyuFinancialStatements,
+    kenkyuFinancialStatementsCat3,
+    kenkyuRepresentativeDeclaration,
+    ...kenkyuWithholdingRules,
+  ],
+};
+
+export const KENKYU_CHANGE: RuleSet = {
+  id: "kenkyu_change",
+  title: "研究 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: KENKYU,
+  excludeStatuses: KENKYU_EXCLUDE,
+  checkedAt: KENKYU_CHECKED_AT,
+  sources: [KENKYU_SOURCE],
+  rules: [
+    ...procedureCommonRules("change"),
+    kenkyuCategoryProof,
+    kenkyuOnlineApproval,
+    {
+      id: "omission_statement",
+      name: "提出書類省略に関する説明書（「留学」から「技術・人文知識・国際業務」又は「研究」への変更）（参考様式）",
+      party: "organization",
+      categories: ["2"],
+      level: "check",
+      note: "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合",
+    },
+    kenkyuDispatch,
+    kenkyuActivityDocuments,
+    kenkyuCareerDocuments,
+    kenkyuTransferDocuments,
+    kenkyuBusinessMaterials,
+    // 案内ページはカテゴリー4に必要とするが、チェックシート（変更）は△（条件付き）。食い違うため要確認
+    { ...kenkyuFinancialStatements, note: "新規事業の場合は事業計画書。案内ページでは必要とされているが、チェックシート（変更）では△（条件付き）のため要確認", verify: true },
+    kenkyuFinancialStatementsCat3,
+    kenkyuRepresentativeDeclaration,
+    ...kenkyuWithholdingRules,
+  ],
+};
+
+// 更新は、案内ページの「転職後の初回の更新申請」の資料（活動内容・事業内容・決算文書・代表者申告書）を、カテゴリー3・4の「要確認」とする。
+// 決算文書は、カテゴリー3について案内の文言が複数あり（転勤の場合に限る／提出書類10は不要）、読み取りに幅があるため要確認。
+// チェックシート（更新）では、決算文書は△（条件付き）、代表者申告書は○、源泉徴収の資料（11）はカテゴリー4のみで、いずれも転職後の初回の枠内。
+const KENKYU_FIRST_RENEWAL_NOTE = "転職後、初回の更新許可申請の場合のみ";
+const kenkyuFirstRenewalWithholding: RequirementRule[] = kenkyuWithholdingRules.map((r) => ({
+  ...r,
+  level: "check",
+  note: r.note ? `${KENKYU_FIRST_RENEWAL_NOTE}。${r.note}` : KENKYU_FIRST_RENEWAL_NOTE,
+}));
+export const KENKYU_RENEWAL: RuleSet = {
+  id: "kenkyu_renewal",
+  title: "研究 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: KENKYU,
+  excludeStatuses: KENKYU_EXCLUDE,
+  checkedAt: KENKYU_CHECKED_AT,
+  sources: [KENKYU_SOURCE],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    kenkyuCategoryProof,
+    kenkyuOnlineApproval,
+    kenkyuDispatch,
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ["3", "4"],
+      level: "required",
+      note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）",
+    },
+    { ...kenkyuActivityDocuments, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE },
+    { ...kenkyuBusinessMaterials, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE },
+    {
+      ...kenkyuFinancialStatements,
+      level: "check",
+      note: `${KENKYU_FIRST_RENEWAL_NOTE}。案内ページでは必要とされているが、チェックシート（更新）では△（条件付き）のため要確認`,
+      verify: true,
+    },
+    {
+      ...kenkyuFinancialStatementsCat3,
+      note: "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。案内に「転勤の場合に限る」と「提出書類10は不要」の2つの文言があり、チェックシート（更新）は△（条件付き）のため要確認",
+      verify: true,
+    },
+    {
+      ...kenkyuRepresentativeDeclaration,
+      level: "check",
+      note: `${KENKYU_FIRST_RENEWAL_NOTE}。カテゴリー3は、案内ページに「提出書類10は不要」とあるが、チェックシート（更新）では○のため要確認`,
+      verify: true,
+    },
+    ...kenkyuFirstRenewalWithholding,
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1601,4 +1829,8 @@ export const RULE_SETS: RuleSet[] = [
   IRYO_RENEWAL,
   IRYO_CHANGE,
   IRYO_COE,
+  // 研究（Issue #296）
+  KENKYU_RENEWAL,
+  KENKYU_CHANGE,
+  KENKYU_COE,
 ];
