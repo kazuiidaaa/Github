@@ -451,6 +451,60 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "List of documents to submit for \"Professor\" (for application for extension of the period of stay) (Immigration Services Agency of Japan)",
     "'교수' 관련 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
   ],
+
+  // 医療（Issue #302）
+  "医師又は歯科医師の日本の資格を有することを証明する文書（免状又は証明書等の写し）": [
+    "Document proving that the applicant holds a Japanese qualification as a doctor or dentist (copy of the license, certificate, etc.)",
+    "의사 또는 치과의사의 일본 자격을 보유하고 있음을 증명하는 문서(면장 또는 증명서 등의 사본)",
+  ],
+  "医療に係る日本の資格を有することを証明する文書（免状又は証明書等の写し）": [
+    "Document proving that the applicant holds a Japanese medical-related qualification (copy of the license, certificate, etc.)",
+    "의료 관련 일본 자격을 보유하고 있음을 증명하는 문서(면장 또는 증명서 등의 사본)",
+  ],
+  "勤務する機関の概要を明らかにする資料（病院、診療所等設立に許可を受けることを要する機関の場合は、当該許可を受けた年月日を明示したもの）": [
+    "Material showing an overview of the workplace (for an organization that requires permission to be established, such as a hospital or clinic, one stating the date the permission was obtained)",
+    "근무하는 기관의 개요를 밝히는 자료(병원, 진료소 등 설립에 허가를 받아야 하는 기관의 경우에는 해당 허가를 받은 연월일을 명시한 것)",
+  ],
+  "従事する職務の内容及び報酬を証明する在職証明書その他の所属機関の文書": [
+    "Certificate of employment or other document from the organization proving the duties performed and the remuneration",
+    "종사하는 직무의 내용 및 보수를 증명하는 재직증명서 기타 소속 기관의 문서",
+  ],
+  "医師・歯科医師の場合のみ（入管庁の案内の「カテゴリー1」。所属機関のカテゴリーではなく、申請人の区分）": [
+    "Only for doctors and dentists (\"Category 1\" in the Immigration Services Agency's guidance; this is a classification of the applicant, not the organization's category)",
+    "의사·치과의사의 경우에만(출입국재류관리청 안내의 '카테고리 1'. 소속 기관의 카테고리가 아니라 신청인의 구분)",
+  ],
+  "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）": [
+    "Only for applicants other than doctors and dentists (\"Category 2\" in the Immigration Services Agency's guidance)",
+    "의사·치과의사 이외의 경우에만(출입국재류관리청 안내의 '카테고리 2')",
+  ],
+  "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）。薬剤師、保健師、助産師、看護師、准看護師、歯科衛生士、診療放射線技師、理学療法士、作業療法士、視能訓練士、臨床工学技士、義肢装具士のいずれか": [
+    "Only for applicants other than doctors and dentists (\"Category 2\" in the guidance). One of: pharmacist, public health nurse, midwife, nurse, assistant nurse, dental hygienist, radiological technologist, physical therapist, occupational therapist, orthoptist, clinical engineer, prosthetist/orthotist",
+    "의사·치과의사 이외의 경우에만(안내의 '카테고리 2'). 약사, 보건사, 조산사, 간호사, 준간호사, 치과위생사, 진료방사선기사, 물리치료사, 작업치료사, 시능훈련사, 임상공학기사, 의지보조기기사 중 하나",
+  ],
+  "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ。薬剤師、保健師、助産師、看護師、准看護師、歯科衛生士、診療放射線技師、理学療法士、作業療法士、視能訓練士、臨床工学技士、義肢装具士のいずれか": [
+    "Only if a person other than a doctor or dentist files the first renewal application after changing jobs. One of: pharmacist, public health nurse, midwife, nurse, assistant nurse, dental hygienist, radiological technologist, physical therapist, occupational therapist, orthoptist, clinical engineer, prosthetist/orthotist",
+    "의사·치과의사 이외의 사람이 이직 후 첫 연장 허가 신청을 하는 경우에만. 약사, 보건사, 조산사, 간호사, 준간호사, 치과위생사, 진료방사선기사, 물리치료사, 작업치료사, 시능훈련사, 임상공학기사, 의지보조기기사 중 하나",
+  ],
+  "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ": [
+    "Only if a person other than a doctor or dentist files the first renewal application after changing jobs",
+    "의사·치과의사 이외의 사람이 이직 후 첫 연장 허가 신청을 하는 경우에만",
+  ],
+  "医療 在留期間更新許可申請": [
+    "Medical Services: application for extension of the period of stay",
+    "의료 체류기간 연장 허가 신청",
+  ],
+  "医療 在留資格変更許可申請": [
+    "Medical Services: application for change of status of residence",
+    "의료 체류자격 변경 허가 신청",
+  ],
+  "医療 在留資格認定証明書交付申請": [
+    "Medical Services: application for certificate of eligibility",
+    "의료 사증발급인정서 교부 신청",
+  ],
+  "在留資格「医療」（出入国在留管理庁）": [
+    "Status of residence \"Medical Services\" (Immigration Services Agency of Japan)",
+    "체류자격 '의료'(출입국재류관리청)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
