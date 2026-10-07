@@ -480,12 +480,12 @@ describe("PDF の出力", () => {
       const pdf = await PDFDocument.load(await (await buildPdf(doc, jpFont, lang)).arrayBuffer());
       expect(pdf.getPageCount()).toBeGreaterThan(0);
     }
-    const ko = await PDFDocument.load(await (await buildPdf(doc, krFont, "ko", [jpFont])).arrayBuffer());
+    const ko = await PDFDocument.load(await (await buildPdf(doc, jpFont, "ko", [krFont])).arrayBuffer());
     expect(ko.getPageCount()).toBeGreaterThan(0);
   });
 
   it("埋め込まれたフォントの字形が壊れていない（絞り込みで字形が途中で切れると、文字が欠ける）", async () => {
-    const blob = await buildPdf(make(), krFont, "ko", [jpFont]);
+    const blob = await buildPdf(make(), jpFont, "ko", [krFont]);
     const pdf = await PDFDocument.load(await blob.arrayBuffer());
     const fonts: Uint8Array[] = [];
     for (const [, obj] of pdf.context.enumerateIndirectObjects()) {
@@ -571,8 +571,9 @@ describe("PDF の出力", () => {
       if (!krSet.has(ch.codePointAt(0)!) && !jpSet.has(ch.codePointAt(0)!)) missing.add(ch);
     }
     expect([...missing]).toEqual([]);
-    // ハングルは韓国語のフォントで描く。韓国語のフォントには、かな・漢字が無いため、それらは日本語のフォントで描かれる
-    const set = new FontSet([kr, jp]);
+    // 日本語のフォントを先に使う。日本語のフォントにはハングルが無いため、ハングルだけ韓国語のフォントで描かれる。
+    // 韓国語のフォントにもかな・漢字はあるが韓国語の字形になるため、先に日本語のフォントを使う
+    const set = new FontSet([jp, kr]);
     const runs = set.runs("김민준 山田");
     expect(runs[0].font).toBe(kr);
     // 漢字・かなは、必ず日本語のフォントで描く（韓国語の字形にならない）

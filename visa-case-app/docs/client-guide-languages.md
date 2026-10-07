@@ -48,15 +48,16 @@ Issue #251。依頼者向けの「ご案内書類」（`client_guide`）を、�
 
 ## PDF とフォント
 - PDF は、ブラウザ上で `pdf-lib` により作る。日本語・英語は日本語フォント、韓国語は韓国語フォントを先に使い、足りない文字（漢字・かな）は日本語フォントで補う（`FontSet`）。
-- フォントは、日本語が BIZ UDPゴシック（Regular）、韓国語がナヌムゴシック（Regular）。どちらも SIL Open Font License 1.1。リポジトリには同梱せず、外部（jsDelivr。google/fonts のコミット `7085eb8` を固定）から取得する（`lib/documents/pdf.ts` の `JAPANESE_FONT_URL`、`KOREAN_FONT_URL`）。出典・ライセンスは、配信元のリポジトリ（https://github.com/google/fonts ）の OFL。
-- ナヌムゴシックには、かな・漢字が無い。韓国語の書類でも、漢字・かな（日本語の氏名など）は、日本語のフォントの字形で描かれる（韓国語の字形にはならない）。
-- `pdf-lib` の文字の絞り込み（`subset: true`）は、字形データを途中で切り、文字が欠けるため使わない。フォント全体を埋め込む（PDF は数 MB）。
+- フォントは、Noto Sans JP・Noto Sans KR（どちらも太さ 400 の Regular、SIL Open Font License 1.1）。リポジトリには同梱せず、外部（jsDelivr。npm の `@expo-google-fonts/noto-sans-jp`・`noto-sans-kr`、版 0.4.4 を固定）から取得する（`lib/documents/pdf.ts` の `JAPANESE_FONT_URL`、`KOREAN_FONT_URL`）。出典・ライセンスは、Google Fonts の OFL。
+- 日本語のフォントを先に使い、ハングルだけ韓国語のフォントで描く（`FontSet`、`lib/documents/store.ts`）。Noto Sans JP にハングルは無く、Noto Sans KR のかな・漢字は韓国語の字形になるため、1本にはできない。
+- 韓国語のフォントは、韓国語版、または、氏名などにハングルを含む書類のときだけ取得する（約 6.2MB）。含まない日本語版・英語版は、日本語のフォント（約 5.7MB）のみ。
+- `pdf-lib` の文字の絞り込み（`subset: true`）は、字形データを途中で切り、文字が欠けるため使わない。フォント全体を埋め込む。PDF の容量は、日本語のフォントのみで約 3.4MB、韓国語のフォントも含むと約 6.5MB。
 - `locl`（地域別の字形の置換）と `liga`（合字。英文の ffi・fi など）は切る。置換後の字形の幅が登録されず、英数字だけの文で数字の間隔が広がり、英文で合字の後ろが空くため。
 
 ### 経緯：OTF（CFF）フォントでの文字化け（#253、解消済み）
 - #249 で、フォントが TrueType から OTF（CFF 輪郭）に変わった。`pdf-lib` は、CFF 輪郭の OpenType を正しく埋め込めない。日本語・韓国語の PDF で、文字が化ける、文字幅が登録されず表のセルで文字がはみ出す・重なる・本文が右端で切れる、という症状が出た。
-- 対応として、固定の太さの TrueType に差し替えた。第一候補の Noto Sans JP・KR（google/fonts の可変フォント）は、可変軸の既定値が Thin（100）で、`pdf-lib` は軸を指定して埋め込めないため、PDF で細く描かれる。このため採用しなかった。
-- 韓国語は、ナヌムゴシック（2.0MB）に決めた。同じ配信元の Gothic A1（2.3MB）・IBM Plex Sans KR（2.8MB）も、ハングルは含むが、サイズが大きい。Gothic A1 はかなも含み、日本語の文字の一部が韓国語のフォントで描かれる。ナヌムゴシックは、サイズが最も小さく、かな・漢字を含まない。
+- 対応として、固定の太さ（400）の TrueType に差し替えた。Google Fonts の可変フォント（`[wght]`）は、可変軸の既定値が Thin（100）で、`pdf-lib` は軸を指定して埋め込めないため、PDF で細く描かれる。このため使わない。同じ書体の、太さ 400 で固定した TrueType を、npm の `@expo-google-fonts` から取得する。
+- 検討した他の案: BIZ UDPゴシック（日本語）・ナヌムゴシック（韓国語）の2本立て（サイズは小さいが、書体が Noto Sans と異なる）。
 
 ## 範囲外（今後の課題）
 - 画面全体の表示言語の切替 → docs/future-considerations.md の 4。

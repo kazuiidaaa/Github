@@ -224,8 +224,8 @@ class Writer {
 }
 
 /**
- * PDF を作る。fontBytes は、文書の言語に対応した TrueType/OpenType フォント（日本語・英語は日本語のフォント、韓国語は韓国語のフォント）。
- * fallbackFontBytes は、fontBytes に無い文字（韓国語の文書に含まれる漢字・かななど）を描くためのフォント。
+ * PDF を作る。fontBytes は、日本語の TrueType フォント（漢字・かな・英数字を描く。韓国語の書類でも、日本語の氏名の字形を保つため先に使う）。
+ * fallbackFontBytes は、fontBytes に無い文字（ハングル）を描くためのフォント。
  * lang は、ご案内書類（client_guide）の言語。それ以外の文書は、日本語のみ。
  */
 export async function buildPdf(
@@ -303,15 +303,15 @@ export function containsHangul(text: string): boolean {
 const fontPromises = new Map<string, Promise<Uint8Array>>();
 
 /**
- * 日本語フォント（BIZ UDPゴシック）・韓国語フォント（ナヌムゴシック）の配信元。どちらも SIL Open Font License 1.1。
- * リポジトリの容量削減のため同梱せず、版（google/fonts のコミット）を固定した jsDelivr から取得する。
- * 固定の太さの TrueType（glyf 輪郭）を使う。pdf-lib は、OTF（CFF 輪郭）を正しく埋め込めず、文字が化ける・文字幅が登録されずに折り返しがずれる。
- * Noto Sans の可変フォント（TrueType）は、既定の太さが最も細い（Thin）ため、PDF では細く描かれる。このため使わない（#253）。
- * ナヌムゴシックには、かな・漢字が含まれない。韓国語の書類でも、日本語の氏名は、日本語のフォントの字形で描かれる。
+ * 日本語フォント（Noto Sans JP）・韓国語フォント（Noto Sans KR）の配信元。どちらも SIL Open Font License 1.1。
+ * リポジトリの容量削減のため同梱せず、版を固定した jsDelivr（npm の @expo-google-fonts、0.4.4）から取得する。
+ * 太さ 400（Regular）で固定した TrueType（glyf 輪郭）を使う。pdf-lib は、OTF（CFF 輪郭）を正しく埋め込めず、文字が化ける・文字幅が登録されずに折り返しがずれる。
+ * Google Fonts の可変フォント（[wght]）は、既定の太さが最も細い（Thin）ため、PDF では細く描かれる。このため使わない（#253）。
+ * Noto Sans JP にはハングルが無く、Noto Sans KR のかな・漢字は韓国語の字形になる。このため、日本語のフォントを先に使い、ハングルだけ韓国語のフォントで描く。
  */
-const FONT_BASE = "https://cdn.jsdelivr.net/gh/google/fonts@7085eb89a950e85db5b166b7a58d414544b4140c/ofl";
-export const JAPANESE_FONT_URL = `${FONT_BASE}/bizudpgothic/BIZUDPGothic-Regular.ttf`;
-export const KOREAN_FONT_URL = `${FONT_BASE}/nanumgothic/NanumGothic-Regular.ttf`;
+const FONT_BASE = "https://cdn.jsdelivr.net/npm/@expo-google-fonts";
+export const JAPANESE_FONT_URL = `${FONT_BASE}/noto-sans-jp@0.4.4/400Regular/NotoSansJP_400Regular.ttf`;
+export const KOREAN_FONT_URL = `${FONT_BASE}/noto-sans-kr@0.4.4/400Regular/NotoSansKR_400Regular.ttf`;
 
 /** 外部の配信元からフォントを読み込む（初回のみ） */
 function loadFont(path: string): Promise<Uint8Array> {
@@ -333,12 +333,12 @@ function loadFont(path: string): Promise<Uint8Array> {
   return p;
 }
 
-/** 日本語のフォントを読み込む（約4.7MB）。日本語・英語の出力で使う。韓国語では、漢字・かなの代わりとしても使う */
+/** 日本語のフォントを読み込む（約5.7MB）。全ての言語の出力で、漢字・かな・英数字を描く */
 export function loadJapaneseFont(): Promise<Uint8Array> {
   return loadFont(JAPANESE_FONT_URL);
 }
 
-/** 韓国語のフォントを読み込む（約2.1MB。韓国語の出力のときだけ） */
+/** 韓国語のフォントを読み込む（約6.2MB。ハングルを含む書類のときだけ。ハングルだけを描く） */
 export function loadKoreanFont(): Promise<Uint8Array> {
   return loadFont(KOREAN_FONT_URL);
 }
