@@ -23,6 +23,8 @@ import {
   type CaseFilter,
   type SortColumn,
 } from "@/lib/caseMetrics";
+import { useT } from "@/lib/i18n/LanguageProvider";
+import { sortDirKey, targetStatusKeys } from "@/lib/i18n/caseList";
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
@@ -66,9 +68,10 @@ function toQuery(f: CaseFilter): string {
 
 /** 並び替えの見出し。押すと並び順を切り替える（aria-sort は th に付ける）。 */
 function SortHeader({ column, label, filter, onSort }: { column: SortColumn; label: string; filter: CaseFilter; onSort: (k: CaseFilter["sort"]) => void }) {
+  const t = useT();
   const st = sortState(filter.sort);
   const current = st.column === column;
-  const dirLabel = column === "expiry" ? (st.dir === "asc" ? "近い順" : "遠い順") : st.dir === "asc" ? "昇順" : "降順";
+  const dirLabel = t(sortDirKey(st.column, st.dir));
   return (
     <th
       scope="col"
@@ -80,7 +83,7 @@ function SortHeader({ column, label, filter, onSort }: { column: SortColumn; lab
         <span aria-hidden="true" className={current ? "" : "text-slate-400"}>
           {current ? (st.dir === "asc" ? "▲" : "▼") : "↕"}
         </span>
-        <span className="sr-only">{current ? `（現在：${dirLabel}。押すと並び順を反転）` : "（押すと並び替え）"}</span>
+        <span className="sr-only">{current ? t("caseList.sortCurrent", { dir: dirLabel }) : t("caseList.sortHint")}</span>
       </button>
     </th>
   );
@@ -110,28 +113,31 @@ const procedureLabel = (c: CaseRecord) => PROCEDURE_TYPES.find((p) => p.value ==
 
 /** 一覧の「在留資格」表示。確認済みでない申請人情報の値（または案件側の値）には「未確認」を付ける。 */
 function ResidenceStatusCell({ record: c }: { record: CaseRecord }) {
+  const t = useT();
   const value = c.applicant.residenceStatus || c.currentStatus;
   if (!value) return <>-</>;
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
       {value}
-      {c.applicant.confirmationStatus !== "confirmed" && <Badge tone="gray">未確認</Badge>}
+      {c.applicant.confirmationStatus !== "confirmed" && <Badge tone="gray">{t("caseList.unconfirmedBadge")}</Badge>}
     </span>
   );
 }
 
 /** 変更後（希望）の在留資格の値。未入力は「未入力」と表示する。 */
 function TargetStatusValue({ value }: { value: string | null }) {
-  return <>{value ?? <span className="text-slate-400">未入力</span>}</>;
+  const t = useT();
+  return <>{value ?? <span className="text-slate-400">{t("caseList.notEntered")}</span>}</>;
 }
 
 /** 表（md 以上）：在留資格セルの2行目。表示対象外の手続種別では何も出さない。 */
 function TargetStatusLine({ record: c }: { record: CaseRecord }) {
+  const t = useT();
   const target = getTargetStatusDisplay(c.procedureType, c.targetStatus);
   if (!target) return null;
   return (
     <p className="mt-1 text-xs text-slate-600">
-      <span className="text-slate-500">{target.tableLabel}</span>
+      <span className="text-slate-500">{t(targetStatusKeys(c.procedureType).table)}</span>
       <TargetStatusValue value={target.value} />
     </p>
   );
@@ -139,11 +145,12 @@ function TargetStatusLine({ record: c }: { record: CaseRecord }) {
 
 /** カード（md 未満）：dl の1項目。表示対象外の手続種別では何も出さない。 */
 function TargetStatusItem({ record: c }: { record: CaseRecord }) {
+  const t = useT();
   const target = getTargetStatusDisplay(c.procedureType, c.targetStatus);
   if (!target) return null;
   return (
     <>
-      <dt className="text-slate-500">{target.cardLabel}</dt>
+      <dt className="text-slate-500">{t(targetStatusKeys(c.procedureType).card)}</dt>
       <dd>
         <TargetStatusValue value={target.value} />
       </dd>
@@ -152,17 +159,19 @@ function TargetStatusItem({ record: c }: { record: CaseRecord }) {
 }
 
 function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: CaseMetrics }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-start gap-1">
       <WorkflowBadge status={c.workflowStatus} />
-      {m.missingCount > 0 && <Badge tone="yellow">未受領書類 {m.missingCount}件</Badge>}
-      {m.unconfirmed && <Badge tone="gray">申請人情報 確認未了</Badge>}
-      {m.checksPending && <Badge tone="gray">申請前チェック未完了</Badge>}
+      {m.missingCount > 0 && <Badge tone="yellow">{t("caseList.missingBadge", { count: m.missingCount })}</Badge>}
+      {m.unconfirmed && <Badge tone="gray">{t("caseList.unconfirmedInfo")}</Badge>}
+      {m.checksPending && <Badge tone="gray">{t("caseList.checksPendingBadge")}</Badge>}
     </div>
   );
 }
 
 function CasesView() {
+  const t = useT();
   const cases = useCases();
   const loaded = useStoreLoaded();
   const error = useStoreError();
@@ -187,37 +196,37 @@ function CasesView() {
 
   let empty = "";
   if (rows.length === 0) {
-    if (!loaded) empty = error ? "案件を読み込めませんでした。ページを再読み込みしてください。解決しない場合は、時間をおいて再度お試しください。" : "読み込み中……";
-    else if (cases.length === 0) empty = "案件がありません。「新規案件」から作成してください。";
-    else empty = "該当する案件がありません。";
+    if (!loaded) empty = error ? t("caseList.loadError") : t("caseList.loading");
+    else if (cases.length === 0) empty = t("caseList.noCases");
+    else empty = t("caseList.noMatch");
   }
   const emptyRole = loaded ? undefined : error ? "alert" : "status";
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">案件一覧</h1>
+        <h1 className="text-2xl font-semibold">{t("caseList.pageTitle")}</h1>
         {canEdit && (
           <Link href="/cases/new" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover">
-            新規案件
+            {t("caseList.newCase")}
           </Link>
         )}
       </div>
       {loaded && <DashboardCards summary={summary} active={activeCard(filter)} onSelect={(k) => go(cardFilter(k))} />}
       <CaseFilters filter={filter} active={active} onChange={(patch) => go({ ...filter, ...patch })} onReset={() => go(DEFAULT_FILTER)} />
       <p className="mb-2 text-xs text-slate-500">
-        期限の表示は業務上の注意喚起です。申請の可否や許可の見込みを示すものではありません。
+        {t("caseList.disclaimer")}
       </p>
       {filter.noCard && (
-        <section aria-label="在留カードのまとめてアップロード" className="mb-6">
+        <section aria-label={t("caseList.bulkAria")} className="mb-6">
           <p className="mb-2 text-sm font-medium" role="status">
-            在留カード未登録：残り {pendingCount} 件
-            {rows.length !== pendingCount && <span className="ml-2 font-normal text-slate-500">（絞り込み結果 {rows.length} 件）</span>}
+            {t("caseList.noCardRemaining", { count: pendingCount })}
+            {rows.length !== pendingCount && <span className="ml-2 font-normal text-slate-500">{t("caseList.noCardFiltered", { count: rows.length })}</span>}
           </p>
-          {!canEdit && <p className="mb-2 text-xs text-slate-500">閲覧のみの権限のため、アップロードはできません。</p>}
+          {!canEdit && <p className="mb-2 text-xs text-slate-500">{t("caseList.viewOnly")}</p>}
           {empty ? (
             <p role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
-              {loaded && cases.length > 0 && pendingCount === 0 ? "在留カードが未登録の案件はありません。" : empty}
+              {loaded && cases.length > 0 && pendingCount === 0 ? t("caseList.noCardNone") : empty}
             </p>
           ) : (
             <ul className="anim-stagger space-y-3">
@@ -227,7 +236,7 @@ function CasesView() {
                     <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
                       {c.caseName}
                     </Link>
-                    <p className="mt-1 text-slate-600">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</p>
+                    <p className="mt-1 text-slate-600">{c.applicant.legalName || <span className="text-slate-400">{t("caseList.notEntered")}</span>}</p>
                     <p className="text-xs text-slate-500">{procedureLabel(c)}</p>
                   </div>
                   {canEdit && <UploadBox caseId={c.id} compact onUploaded={() => {}} />}
@@ -241,26 +250,26 @@ function CasesView() {
         <>
       {loaded && (
         <p className="mb-2 text-sm font-medium" role="status" aria-live="polite">
-          該当 {rows.length} 件（全 {cases.length} 件）
+          {t("caseList.resultCount", { count: rows.length, total: cases.length })}
           {pageData.totalPages > 1 && (
             <span className="ml-2 font-normal text-slate-500">
-              {(pageData.page - 1) * PAGE_SIZE + 1}〜{(pageData.page - 1) * PAGE_SIZE + shown.length} 件目を表示
+              {t("caseList.showingRange", { from: (pageData.page - 1) * PAGE_SIZE + 1, to: (pageData.page - 1) * PAGE_SIZE + shown.length })}
             </span>
           )}
         </p>
       )}
       <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white md:block">
         <table className="w-full text-left text-sm">
-          <caption className="sr-only">案件一覧</caption>
+          <caption className="sr-only">{t("caseList.tableCaption")}</caption>
           <thead className="bg-slate-50 text-slate-600">
             <tr>
-              <SortHeader column="name" label="案件名" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-              <SortHeader column="applicant" label="申請人氏名" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-              <th scope="col" className="whitespace-nowrap px-4 py-3">手続種別</th>
-              <th scope="col" className="whitespace-nowrap px-4 py-3">在留資格</th>
-              <SortHeader column="expiry" label="在留期限" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-              <th scope="col" className="whitespace-nowrap px-4 py-3">状況</th>
-              <SortHeader column="updated" label="最終更新" filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <SortHeader column="name" label={t("caseList.colName")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <SortHeader column="applicant" label={t("caseList.colApplicant")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <th scope="col" className="whitespace-nowrap px-4 py-3">{t("caseList.colProcedure")}</th>
+              <th scope="col" className="whitespace-nowrap px-4 py-3">{t("caseList.colStatus")}</th>
+              <SortHeader column="expiry" label={t("caseList.colExpiry")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
+              <th scope="col" className="whitespace-nowrap px-4 py-3">{t("caseList.colState")}</th>
+              <SortHeader column="updated" label={t("caseList.colUpdated")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
             </tr>
           </thead>
           <tbody className="anim-stagger">
@@ -270,13 +279,13 @@ function CasesView() {
                   {empty}
                   {loaded && cases.length > 0 && active && (
                     <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
-                      条件をリセット
+                      {t("caseList.resetConditions")}
                     </button>
                   )}
                   {loaded && cases.length === 0 && canEdit && (
                     <div className="mt-4">
                       <Link href="/cases/new" className="inline-block rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-text hover:bg-accent-hover">
-                        新規案件
+                        {t("caseList.newCase")}
                       </Link>
                     </div>
                   )}
@@ -290,7 +299,7 @@ function CasesView() {
                     {c.caseName}
                   </Link>
                 </td>
-                <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</td>
+                <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">{t("caseList.notEntered")}</span>}</td>
                 <td className="px-4 py-3">{procedureLabel(c)}</td>
                 <td className="px-4 py-3">
                   <ResidenceStatusCell record={c} />
@@ -316,13 +325,13 @@ function CasesView() {
             {empty}
             {loaded && cases.length > 0 && active && (
               <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
-                条件をリセット
+                {t("caseList.resetConditions")}
               </button>
             )}
             {loaded && cases.length === 0 && canEdit && (
               <div className="mt-4">
                 <Link href="/cases/new" className="inline-block rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-text hover:bg-accent-hover">
-                  新規案件
+                  {t("caseList.newCase")}
                 </Link>
               </div>
             )}
@@ -334,39 +343,39 @@ function CasesView() {
               {c.caseName}
             </Link>
             <dl className="mt-3 grid grid-cols-[6rem_1fr] gap-y-2">
-              <dt className="text-slate-500">申請人氏名</dt>
-              <dd>{c.applicant.legalName || <span className="text-slate-400">未入力</span>}</dd>
-              <dt className="text-slate-500">手続種別</dt>
+              <dt className="text-slate-500">{t("caseList.colApplicant")}</dt>
+              <dd>{c.applicant.legalName || <span className="text-slate-400">{t("caseList.notEntered")}</span>}</dd>
+              <dt className="text-slate-500">{t("caseList.colProcedure")}</dt>
               <dd>{procedureLabel(c)}</dd>
-              <dt className="text-slate-500">在留資格</dt>
+              <dt className="text-slate-500">{t("caseList.colStatus")}</dt>
               <dd><ResidenceStatusCell record={c} /></dd>
               <TargetStatusItem record={c} />
-              <dt className="text-slate-500">在留期限</dt>
+              <dt className="text-slate-500">{t("caseList.colExpiry")}</dt>
               <dd>
                 <ExpiryBadge date={c.applicant.residenceExpiryDate} />
               </dd>
-              <dt className="text-slate-500">状況</dt>
+              <dt className="text-slate-500">{t("caseList.colState")}</dt>
               <dd>
                 <StatusBadges record={c} metrics={m} />
               </dd>
-              <dt className="text-slate-500">最終更新</dt>
+              <dt className="text-slate-500">{t("caseList.colUpdated")}</dt>
               <dd className="text-slate-500">{formatDateTime(c.updatedAt)}</dd>
             </dl>
           </li>
         ))}
       </ul>
       {pageData.totalPages > 1 && (
-        <nav aria-label="ページ移動" className="mt-4 flex items-center justify-center gap-4 text-sm">
+        <nav aria-label={t("caseList.pagerAria")} className="mt-4 flex items-center justify-center gap-4 text-sm">
           <button
             type="button"
             disabled={pageData.page <= 1}
             onClick={() => go(filter, pageData.page - 1)}
             className="rounded-full border border-line-strong bg-white px-4 py-2 disabled:opacity-50"
           >
-            前のページ
+            {t("caseList.prevPage")}
           </button>
           <span aria-current="page">
-            {pageData.page} / {pageData.totalPages} ページ
+            {t("caseList.pageOf", { page: pageData.page, total: pageData.totalPages })}
           </span>
           <button
             type="button"
@@ -374,7 +383,7 @@ function CasesView() {
             onClick={() => go(filter, pageData.page + 1)}
             className="rounded-full border border-line-strong bg-white px-4 py-2 disabled:opacity-50"
           >
-            次のページ
+            {t("caseList.nextPage")}
           </button>
         </nav>
       )}

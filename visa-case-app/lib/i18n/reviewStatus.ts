@@ -25,6 +25,13 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   casePoints: { en: "draft", ko: "draft" },
   caseApplicant: { en: "draft", ko: "draft" },
   caseInfo: { en: "draft", ko: "draft" },
+  documents: { en: "draft", ko: "draft" },
+  documentView: { en: "draft", ko: "draft" },
+  home: { en: "draft", ko: "draft" },
+  account: { en: "draft", ko: "draft" },
+  caseList: { en: "draft", ko: "draft" },
+  auth: { en: "draft", ko: "draft" },
+  about: { en: "draft", ko: "draft" },
 };
 
 /** 指定の言語に、確認前（下書き）の区分が1つでもあるか */
