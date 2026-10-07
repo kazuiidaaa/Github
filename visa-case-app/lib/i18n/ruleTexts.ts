@@ -584,6 +584,86 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Only for the first renewal application after changing jobs. If the special payment deadline has been approved",
     "이직 후 첫 연장 허가 신청의 경우에만. 납기 특례의 승인을 받고 있는 경우",
   ],
+
+  // 教育（Issue #293）
+  "カテゴリー1（小学校・中学校・高等学校・中等教育学校・特別支援学校に常勤）": [
+    "Category 1 (full-time at an elementary school, junior high school, high school, secondary education school or special needs school)",
+    "카테고리 1(초등학교·중학교·고등학교·중등교육학교·특별지원학교에 상근)",
+  ],
+  "カテゴリー2（上記以外の教育機関に常勤）": [
+    "Category 2 (full-time at an educational institution other than the above)",
+    "카테고리 2(위 이외의 교육기관에 상근)",
+  ],
+  "カテゴリー3（非常勤）": ["Category 3 (part-time)", "카테고리 3(비상근)"],
+  "申請人の活動内容等を明らかにする資料（労働契約の場合は労働条件を明示する文書、雇用以外の契約の場合は業務従事に係る契約書の写し）": [
+    "Documents clarifying the applicant's activities, etc. (for an employment contract, a document specifying working conditions; for a non-employment contract, a copy of the contract for the work)",
+    "신청인의 활동 내용 등을 밝히는 자료(근로계약의 경우 근로조건을 명시한 문서, 고용 이외의 계약의 경우 업무 종사에 관한 계약서 사본)",
+  ],
+  "労働基準法第15条第1項・同法施行規則第5条に基づき交付される文書。雇用以外の契約で複数の機関と契約する場合は、すべての機関との間の契約書の写し": [
+    "A document issued under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations. For a non-employment contract with multiple institutions, copies of the contracts with all of them",
+    "근로기준법 제15조 제1항 및 동법 시행규칙 제5조에 따라 교부되는 문서. 고용 이외의 계약으로 여러 기관과 계약하는 경우에는 모든 기관과의 계약서 사본",
+  ],
+  "申請人の履歴を証明する資料（履歴書と、学歴又は職歴等を証明する文書）": [
+    "Documents certifying the applicant's background (a résumé and documents certifying education or work history, etc.)",
+    "신청인의 이력을 증명하는 자료(이력서와 학력 또는 경력 등을 증명하는 문서)",
+  ],
+  "履歴書は、関連する職務に従事した機関と活動の内容・期間を明示したもの。学歴又は職歴等は、大学等の卒業証明書等（専修学校の専攻科は専攻科の修了証明）、免許証等資格の写し、外国語教育の場合は当該外国語による12年以上の教育の証明、外国語以外の科目の場合は当該科目の5年以上の実務経験の証明のいずれか": [
+    "The résumé must state the institutions where the applicant worked in related duties and the content and period of the activities. For education or work history, any one of: a university graduation certificate, etc. (for a specialized training college, a certificate of completion of the advanced course), a copy of a license or qualification, for foreign language teaching proof of at least 12 years of education in that language, or for other subjects proof of at least 5 years of practical experience in that subject",
+    "이력서는 관련 직무에 종사한 기관과 활동의 내용·기간을 명시한 것. 학력 또는 경력 등은 대학 등의 졸업증명서 등(전수학교는 전공과 수료 증명), 면허증 등 자격의 사본, 외국어 교육의 경우 해당 외국어로 12년 이상 교육을 받았음의 증명, 외국어 이외의 과목의 경우 해당 과목의 5년 이상 실무 경험의 증명 중 하나",
+  ],
+  "事業内容を明らかにする資料（勤務先等の案内書、これに準ずる文書、登記事項証明書）": [
+    "Documents clarifying the business (a brochure of the workplace, etc., a document equivalent to it, or a certificate of registered matters)",
+    "사업 내용을 밝히는 자료(근무처 등의 안내서, 이에 준하는 문서, 등기사항증명서)",
+  ],
+  "案内書は、勤務先等の沿革、役員、組織、事業内容等が詳細に記載されたもの": [
+    "The brochure must describe in detail the history, officers, organization and business of the workplace, etc.",
+    "안내서는 근무처 등의 연혁, 임원, 조직, 사업 내용 등이 상세히 기재된 것",
+  ],
+  "直近の年度の決算文書の写し": ["Copy of the financial statements for the most recent fiscal year", "최근 연도 결산 문서 사본"],
+  "業務従事に係る契約書の写し（雇用以外の契約に基づいて業務に従事する場合）": [
+    "Copy of the contract for the work (if working under a non-employment contract)",
+    "업무 종사에 관한 계약서 사본(고용 이외의 계약에 따라 업무에 종사하는 경우)",
+  ],
+  "チェックシートに△の凡例がないため要確認。複数の機関との契約に基づいて業務に従事する場合は、そのすべての機関との間の契約書の写し": [
+    "Needs confirmation because the checksheet has no legend for the △ mark. If working under contracts with multiple institutions, copies of the contracts with all of them",
+    "체크시트에 △의 범례가 없어 확인이 필요합니다. 여러 기관과의 계약에 따라 업무에 종사하는 경우에는 모든 기관과의 계약서 사본",
+  ],
+  "転職後の初回の更新許可申請の場合のみ": [
+    "Only for the first renewal application after a job change",
+    "이직 후 첫 연장 허가 신청의 경우에만",
+  ],
+  "転職後の初回の更新許可申請の場合のみ（新規事業の場合は事業計画書）": [
+    "Only for the first renewal application after a job change (for a new business, a business plan)",
+    "이직 후 첫 연장 허가 신청의 경우에만(신규 사업의 경우 사업계획서)",
+  ],
+  "教育 在留期間更新許可申請": [
+    "Instructor: application for extension of the period of stay",
+    "교육 체류기간 연장 허가 신청",
+  ],
+  "教育 在留資格変更許可申請": [
+    "Instructor: application for change of status of residence",
+    "교육 체류자격 변경 허가 신청",
+  ],
+  "教育 在留資格認定証明書交付申請": [
+    "Instructor: application for certificate of eligibility",
+    "교육 사증발급인정서 교부 신청",
+  ],
+  "在留資格「教育」（出入国在留管理庁）": [
+    "Status of residence \"Instructor\" (Immigration Services Agency of Japan)",
+    "체류자격 '교육'(출입국재류관리청)",
+  ],
+  "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Instructor\" (for application for certificate of eligibility) (Immigration Services Agency of Japan)",
+    "'교육' 관련 제출 서류 일람(사증발급인정서 교부 신청용)(출입국재류관리청)",
+  ],
+  "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Instructor\" (for application for change of status of residence) (Immigration Services Agency of Japan)",
+    "'교육' 관련 제출 서류 일람(체류자격 변경 허가 신청용)(출입국재류관리청)",
+  ],
+  "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Instructor\" (for application for extension of the period of stay) (Immigration Services Agency of Japan)",
+    "'교육' 관련 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
