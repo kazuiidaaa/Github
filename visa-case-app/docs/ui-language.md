@@ -120,6 +120,64 @@ docs/client-guide-languages.md（#251）は、依頼者向けの案内書類の�
 
 第2段階・順1（#257）の確認：型検査、lint、全テスト（69 ファイル・718 件）、ビルド：通過。開発サーバーの実画面（ホーム、案件一覧、案件の新規登録）で、3言語を切り替え、幅 1280 と 375 のどちらでも横のはみ出しがなく、画面のエラーが出ないことを確認した。確認できなかった項目：Supabase に接続した状態の確認（上と同じ）、案件詳細・書類の画面での共通部品の表示（各画面の Issue で確認する）。
 
+## 第2段階・順5（#263）：案件の新規登録
+- 区分：`caseNew`（/cases/new の本文。54件）、`employment`（EmploymentForm の文言。28件。案件詳細（順6）と共有し、順6の担当は、この区分を使う）。
+- 設計の判断：
+  - 手続名、在留資格名、高度専門職の号は、日本語のまま表示する。手続の説明文（`PROCEDURE_TYPES` の `description`）のみ、`caseNew` の訳表から引く（`lib/i18n/caseNew.ts` の `procedureDescriptionText`）。
+  - `targetStatusLabel`（`lib/types.ts`）、`notApplicableMessage`（`lib/requirements/evaluate.ts`）、`CATEGORY_LABELS`（`lib/requirements/rules.ts`）は、書類・判定・テストが使うため変更しない。画面用に、`lib/i18n/caseNew.ts` の `targetStatusLegend`、`noRuleMessage`、`CATEGORY_KEYS` を足した。日本語の出力は、元と一致することをテスト（`tests/caseNewMessages.test.ts`）で確認している。
+  - `STATUS_HINTS`・`DATE_INVALID_MESSAGE` は、このページと EmploymentForm で、`useStatusHints()`・`useDateInvalidMessage()` に切り替えた。
+  - まとめて登録で生成される案件名「グループ名（行番号）」は、保存される案件の内容のため、日本語（全角括弧）のまま。案内文では、同じ形（グループ名（行番号））で説明している。`lib/bulkCaseNames.ts`・`lib/newCaseDraft.ts` には、画面に出る文言がなく、変更していない。
+- 訳の件数（英語・韓国語。言語ごと。行政書士の確認待ち）：`caseNew` 54、`employment` 28。計82件。
+- 行政書士に確認してほしい訳：
+  - 案件 = "case" / 사건、手続種別 = "procedure type" / 절차 종류、所属機関 = 소속기관、受任日 = "date of engagement" / 수임일。
+  - 在留期間の更新 = "extension of the period of stay" / 체류기간 연장、認定証明書 = "certificate of eligibility" / 사증발급인정서、上陸の手続 = "landing procedures" / 상륙 절차。
+  - 所属機関のカテゴリー 1 から 4 の説明（法定調書合計表 = "statutory report summary" / 법정조서합계표）。
+  - 源泉所得税の納期の特例 = "special exception on the payment deadline of withholding income tax" / 원천소득세 납기 특례。
+  - 規則の未整備の案内（`noRuleMessage`）の言い回し。
+
+## 第2段階・順6a（#264）：案件詳細のページ本体・必要書類・申請前チェック
+- 区分：`casePage`（ページ本体：タブ、概要の申請人情報、書類の一覧、削除の操作。38件）、`caseRequirements`（必要書類のタブ。79件）、`caseChecks`（申請前チェックのタブ。項目名と「参考」の表示を含む。49件）。#264 の本文は `casePage` を挙げていないが、ページ本体の文言の置き場として足した（`CATALOG` と `reviewStatus.ts` に各1行）。
+- 設計の判断：
+  - 規則（`lib/requirements/rules.ts`）の注記・題名・出典名は、`lib/i18n/ruleTexts.ts` の訳表（日本語の原文をキーとする。85件）から引く。書類名は、案内書類の訳表（`clientGuideNames.ts`）を再利用し、そこにない4件（各申請書）のみ足した。規則の元の日本語は変更していない。全規則の文言に訳があることは、`tests/ruleTexts.test.ts` で確認している。
+  - 判定の理由（`evaluate` の `reason`）は、構造化した `reasonCode` を持たせ、画面では `reasonText` で言語別に組み立てる。日本語の `reason` は、同じ関数に日本語の翻訳関数を渡して作るため、出力は変わらない（試験で確認）。
+  - 申請前チェックの「参考」（`referenceFor`）も同様に、文言を `caseChecks` 区分に移し、省略時は日本語で引く。保存済みの項目名（日本語）は変更せず、日本語の表示は保存値のまま、英語・韓国語は項目の `key` から訳を引く。行政書士が追加した手動項目の名前は訳さない。
+  - 高度専門職の疎明資料（番号ごとに生成される書類）は、枠の文言（「疎明資料 ①（…）：…」）のみ訳し、項目名と資料名（`lib/hspPoints.ts`）は日本語のまま。#265（ポイント計算表）の訳語の方針が決まった後に扱う。
+  - 手続名・在留資格名は、日本語のまま（#263 と同じ）。日付・日時の整形（`lib/format.ts`）は範囲外のため、日本語の書式のまま。
+  - 「不足書類をコピー」の本文は、表示言語で作る（書類名は訳、追加した書類は入力のまま）。
+- 訳の件数（英語・韓国語。言語ごと。行政書士の確認待ち）：`casePage` 38、`caseRequirements` 79、`caseChecks` 49。ほかに、規則の文言の訳表 85（確認の状態は `caseRequirements` に含める）。計251件。
+- 行政書士に確認してほしい訳：
+  - 書類の提出者 申請人 = Applicant / 신청인、所属機関 = Affiliated organization / 소속기관。
+  - 行政書士の判断 = Scrivener's decision / 행정서사의 판단（行政書士 = administrative scrivener / 행정서사）。
+  - 疎明資料 = Supporting material / 소명 자료、法定調書合計表 = summary table of statutory reports / 법정조서합계표。
+  - 規則の注記と題名の言い回し（`ruleTexts.ts`）。特に、高度専門職（1号・2号）の要件の注記。
+- 確認した結果（2026-10-06、仮データ方式）：型検査、lint、全テスト（71ファイル・741件）、ビルド：通過。開発サーバーで、案件詳細の概要・書類・必要書類・申請前チェックを、3言語・幅 1280 と 375 で表示し、横のはみ出しと画面のエラーがないことを確認した。確認できなかった項目：Supabase に接続した状態の確認、閲覧のみの権限での表示、申請準備完了後の操作（ダイアログ）の3言語での実画面。
+
+## 第2段階・順6b（#265）：案件詳細「公式様式項目」（書式用情報・住所・高度専門職のポイント）
+- 区分：`caseForm`（FormDetailsForm の枠、検証メッセージ、様式の案内。59件）、`casePoints`（ポイント計算表の枠、目安の注意、確認ダイアログ。37件）。ほかに、様式の項目名・見出し・様式名の訳表 `lib/i18n/formLabels.ts`（88件）。AddressField は、#257 で訳し済みのため、変更していない。
+- 設計の判断：
+  - 様式の項目名（`lib/formDetails.ts` の `FORM_LAYOUTS`）は、書類の出力が使うため変更せず、画面の表示のときだけ `formLabelText` で引く。先頭の番号（公式様式の項番）はそのまま残し、番号の後ろの名称のみ訳す。全項目に訳があることは、`tests/formLabels.test.ts` で確認している。
+  - `lib/` が日本語の文言を返す関数（`validateFormDetails`、`getFormDetailsWarnings`、`describeCoeForm`、`estimateHspPoints`、`hspPointConfirmLines`）は、省略可能な翻訳関数の引数を足した。省略時は日本語（`lib/i18n/jaT.ts`）で、書類の出力・既存の試験の出力は変わらない。`jaT` は `caseRequirements.ts` から移した（循環参照を避けるため。`caseRequirements.ts` からも引き続き取り出せる）。
+  - ポイント計算表の項目名・区分名・疎明資料の項目名と資料名（`lib/hspPointRows.ts`、`lib/hspPoints.ts`）は、#265 の備考のとおり、訳語の方針の確認が済むまで日本語のまま。注意文（「「年収」は、1つだけ選ぶ項目です」など）の区分名も日本語のまま差し込む。
+  - 在留資格名、高度専門職の「行う活動」（保存値）、学歴の区分の保存値（日本語）は、保存せず、表示のみ訳す（学歴の区分）または日本語のまま（在留資格名・行う活動）。
+  - 公式様式（エクセル）の生成が返す注意・エラー（`lib/documents/` 内の日本語）は、範囲外のため日本語のまま。
+- 訳の件数（英語・韓国語。言語ごと。行政書士の確認待ち）：`caseForm` 59、`casePoints` 37、様式の項目名の訳表 88（確認の状態は `caseForm` に含める）。計184件。
+- 行政書士に確認してほしい訳：
+  - 様式名（例：在留期間更新許可申請書 = Application for Permission for Extension of the Period of Stay / 체류기간 연장 허가 신청서）。
+  - 各項目名（法令・様式の用語。例：法第7条の2第2項に規定する代理人、退去強制又は出国命令による出国、在日身元保証人）。
+  - 同居の有無・同居予定の有無、親族・同居者、取次者（application agent / 신청 대행자）。
+  - ポイント計算表の枠の文言（「単純合計（目安）」「版として保存」など）。
+- 確認した結果（2026-10-06、仮データ方式）：型検査、lint、全テスト（72ファイル・749件）、ビルド：通過。開発サーバーで、更新・認定の案件の「公式様式項目」タブを、3言語・幅 1280 と 375 で表示し、横のはみ出しと画面のエラーがないことを確認した。確認できなかった項目：Supabase に接続した状態、閲覧のみの権限、エクセルの生成・保存（ログインが必要なため。確認ダイアログの文言は、テストで確認）、変更・取得の案件の実画面（項目名は、全項目をテストで確認）。
+
+## 第2段階・順6c（#266）：案件詳細「申請人情報」・案件情報・次に行うこと
+- 区分：`caseApplicant`（ApplicantForm と、申請人情報の検証メッセージ。24件）、`caseInfo`（CaseInfoEditor と、概要の「次に行うこと」の案内文。24件）。
+- 設計の判断：
+  - 欄の名前（氏名・国籍など）は、ページ本体の概要と共通のため、`casePage` 区分（`field_*`）を使い、重複して訳していない。案件名・手続種別・在留資格・メモの欄の名前、各種の誤りの文は、案件の新規登録の `caseNew` 区分、受任日の欄の名前は `input` 区分を使った。
+  - `lib/applicant.ts`（`validateApplicant`、`validateDraft`）と `lib/nextAction.ts`（`decideNextAction`）に、省略可能な翻訳関数の引数を足した（#265 と同じ方式）。省略時は日本語で、既存の呼び出し・試験の出力は変わらない。ダッシュボードの緊急案件（`lib/urgentCases.ts`）は、引数を省略するため、日本語のまま（別の Issue の範囲）。
+  - 性別の選択肢の保存値（男・女）は変えず、表示のみ訳す。手続名・在留資格名は、日本語のまま表示する。
+  - 案件詳細のページ本体（`app/cases/[id]/page.tsx`）の削除の確認の呼び出し側は、#264 で訳し済み。
+- 訳の件数（英語・韓国語。言語ごと。行政書士の確認待ち）：`caseApplicant` 24、`caseInfo` 24。計48件。
+- 行政書士に確認してほしい訳：性別 男・女 = Male・Female / 남・여、「確認済みにする」= Mark as confirmed / 확인 완료로 하기、「下書きに戻します」= returns to draft / 초안으로 되돌립니다、「次に行うこと」の各案内文。
+- 確認した結果（2026-10-07、仮データ方式）：型検査、lint、全テスト（73ファイル・753件）、ビルド：通過。開発サーバーで、申請人情報タブと、案件情報の編集（概要タブ）を、3言語・幅 1280 と 375 で表示し、横のはみ出しと画面のエラーがないことを確認した。確認できなかった項目：Supabase に接続した状態、閲覧のみの権限、確認済みにした後の表示（確認者の行）の実画面、案件情報を保存した後の表示。
 ## 第2段階・順7：書類の生成と履歴（#267）
 - 区分：`documents`（`lib/i18n/messages/documents.ts`）。対象は、`/cases/[id]/documents` の本文、`UnresolvedNote`、`OfficialFormNotice`（書類のプレビュー画面 `/cases/[id]/documents/[docId]` も、この2部品を使うため、表示言語に連動する。`DocumentSheet` は未変更）。
 - 表示用の対応は、`lib/i18n/documentsView.ts` に集約した。元の日本語の定数・関数（`lib/documents/types.ts`、`precheck.ts`、`officialForms.ts`、`lib/errors.ts`、`lib/documentKinds.ts`）は変更していない。

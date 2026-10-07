@@ -17,7 +17,7 @@ export function NextActionCard({
   onGoTab: (target: Exclude<NextActionTarget, "generate">) => void;
 }) {
   const t = useT();
-  const a = decideNextAction(record);
+  const a = decideNextAction(record, t);
   const buttonClass =
     "rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover";
   return (

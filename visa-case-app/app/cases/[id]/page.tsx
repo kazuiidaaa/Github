@@ -21,33 +21,38 @@ import { useToast } from "@/components/Toast";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
-import { UPLOADED_DOCUMENT_LABELS, findDocumentOfType, removeDocumentOfType } from "@/lib/documentKinds";
+import { findDocumentOfType, removeDocumentOfType, type UploadedDocumentType } from "@/lib/documentKinds";
 import { expiryLevel } from "@/lib/caseMetrics";
 import { canJumpToApplicantField } from "@/lib/applicantFields";
 import { unresolvedCount } from "@/lib/checks/definitions";
 import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
+import { useT } from "@/lib/i18n/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n/messages";
+import { useLabels } from "@/lib/i18n/labels";
 import { evaluate } from "@/lib/requirements/evaluate";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
-import {
-  DOCUMENT_STATUS_LABELS,
-  PROCEDURE_TYPES,
-  type DocumentRecord,
-} from "@/lib/types";
+import { PROCEDURE_TYPES, type DocumentRecord } from "@/lib/types";
 
 type Tab = "overview" | "documents" | "applicant" | "employment" | "formDetails" | "requirements" | "checks";
-const TABS: { key: Tab; label: string }[] = [
-  { key: "overview", label: "概要" },
-  { key: "documents", label: "書類" },
-  { key: "applicant", label: "申請人情報" },
-  { key: "employment", label: "雇用・会社" },
-  { key: "formDetails", label: "公式様式項目" },
-  { key: "requirements", label: "必要書類" },
-  { key: "checks", label: "申請前チェック" },
-];
-const TAB_KEYS = TABS.map((t) => t.key);
+const TABS = [
+  { key: "overview", label: "casePage.tab_overview" },
+  { key: "documents", label: "casePage.tab_documents" },
+  { key: "applicant", label: "casePage.tab_applicant" },
+  { key: "employment", label: "casePage.tab_employment" },
+  { key: "formDetails", label: "casePage.tab_formDetails" },
+  { key: "requirements", label: "casePage.tab_requirements" },
+  { key: "checks", label: "casePage.tab_checks" },
+] as const satisfies readonly { key: Tab; label: MessageKey }[];
+const TAB_KEYS = TABS.map((tb) => tb.key);
 function parseTab(value: string | null): Tab {
   return TAB_KEYS.find((k) => k === value) ?? "overview";
 }
+
+/** アップロードした書類の種別名（表示部品の訳表を共用する） */
+const UPLOADED_DOCUMENT_KEYS = {
+  residence_card: "display.docResidenceCard",
+  photo: "display.docPhoto",
+} as const satisfies Record<UploadedDocumentType, MessageKey>;
 
 function DocumentRow({
   doc,
@@ -60,6 +65,8 @@ function DocumentRow({
   readOnly: boolean;
   onDelete: () => void;
 }) {
+  const t = useT();
+  const labels = useLabels();
   const [error, setError] = useState("");
 
   async function open() {
@@ -68,31 +75,31 @@ function DocumentRow({
       let url: string;
       if (doc.dataUrl) url = URL.createObjectURL(await (await fetch(doc.dataUrl)).blob());
       else if (doc.storagePath) url = await getDocumentSignedUrl(doc.storagePath);
-      else throw new AppError("ファイルを保持していません。");
+      else throw new AppError(t("casePage.docFileMissing"));
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (e) {
-      setError(`表示できません：${messageOf(e)}`);
+      setError(t("casePage.docOpenFailed", { reason: messageOf(e) }));
     }
   }
 
   return (
     <div className="px-6 py-3 text-sm">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <span className="min-w-0 break-all">{UPLOADED_DOCUMENT_LABELS[doc.documentType]}：{doc.fileName}</span>
+        <span className="min-w-0 break-all">{t("casePage.documentLine", { label: t(UPLOADED_DOCUMENT_KEYS[doc.documentType]), file: doc.fileName })}</span>
         <span className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap">
           <Badge tone="blue">
-            {DOCUMENT_STATUS_LABELS[doc.status]}
+            {labels.documentStatus(doc.status)}
           </Badge>
           <span className="text-slate-500">{formatDateTime(doc.uploadedAt)}</span>
           <Button variant="secondary" className="min-h-10 md:min-h-0" onClick={() => void open()}>
-            表示
+            {t("casePage.docView")}
           </Button>
           <Button variant="danger" className="min-h-10 md:min-h-0" disabled={locked || readOnly} onClick={onDelete}>
-            削除
+            {t("casePage.delete")}
           </Button>
         </span>
       </div>
-      {locked && <p className="mt-1 text-xs text-slate-500">申請人情報が確定済みのため、削除できません。</p>}
+      {locked && <p className="mt-1 text-xs text-slate-500">{t("casePage.docLocked")}</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
@@ -102,6 +109,7 @@ export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const record = useCase(id);
   const loaded = useStoreLoaded();
   const canEdit = useCan("edit");
@@ -159,9 +167,9 @@ export default function CaseDetailPage() {
   if (!record) {
     return (
       <div>
-        <p className="mb-4">案件が見つかりません。</p>
+        <p className="mb-4">{t("casePage.notFound")}</p>
         <Link href="/cases" className="text-blue-700 hover:underline">
-          ← 案件一覧
+          {t("casePage.backToCases")}
         </Link>
       </div>
     );
@@ -178,23 +186,23 @@ export default function CaseDetailPage() {
       documents: removeDocumentOfType(c.documents, d.documentType),
     }));
     logAudit(record!.id, "document_deleted", { documentType: d.documentType });
-    toast.success(`${UPLOADED_DOCUMENT_LABELS[d.documentType]}を削除しました`);
+    toast.success(t("casePage.documentDeleted", { label: t(UPLOADED_DOCUMENT_KEYS[d.documentType]) }));
   }
   const a = record.applicant;
   const jump = canJumpToApplicantField(canEdit, a.confirmationStatus) ? jumpToField : undefined;
   // タブ見出しの未対応表示。値が null のタブは表示しない（選択中のタブも表示する）。
   const tabIndicators: Partial<Record<Tab, string>> = {};
-  if (a.confirmationStatus !== "confirmed") tabIndicators.applicant = "未確認";
+  if (a.confirmationStatus !== "confirmed") tabIndicators.applicant = t("casePage.tabUnconfirmed");
   const missingCount = evaluate(record).missing.length;
-  if (missingCount > 0) tabIndicators.requirements = `${missingCount}件`;
+  if (missingCount > 0) tabIndicators.requirements = t("casePage.tabCount", { count: missingCount });
   const unresolvedChecks = unresolvedCount(record.checks);
-  if (unresolvedChecks > 0) tabIndicators.checks = `${unresolvedChecks}件`;
+  if (unresolvedChecks > 0) tabIndicators.checks = t("casePage.tabCount", { count: unresolvedChecks });
   const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
 
   return (
     <div>
       <Link href="/cases" className="text-sm text-blue-700 hover:underline">
-        ← 案件一覧
+        {t("casePage.backToCases")}
       </Link>
       <div className="mt-2 mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
@@ -209,11 +217,11 @@ export default function CaseDetailPage() {
           href={`/cases/${record.id}/documents`}
           className="inline-flex min-h-10 items-center whitespace-nowrap md:min-h-0 rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
         >
-          申請書類作成
+          {t("casePage.createDocuments")}
         </Link>
         {canDelete && (
           <Button variant="danger" className="min-h-10 md:min-h-0" onClick={() => setConfirmingDelete(true)}>
-            削除
+            {t("casePage.delete")}
           </Button>
         )}
         </div>
@@ -228,7 +236,7 @@ export default function CaseDetailPage() {
             const ok = await deleteCase(record.id);
             setDeleting(false);
             if (ok) {
-              toast.success("案件を削除しました");
+              toast.success(t("casePage.caseDeleted"));
               router.push("/cases");
             }
             else setConfirmingDelete(false);
@@ -246,26 +254,26 @@ export default function CaseDetailPage() {
         />
       )}
 
-      <div role="tablist" aria-label="案件の項目" className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
-        {TABS.map((t, i) => (
+      <div role="tablist" aria-label={t("casePage.tabListLabel")} className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
+        {TABS.map((tb, i) => (
           <button
-            key={t.key}
+            key={tb.key}
             type="button"
             role="tab"
-            id={`case-tab-${t.key}`}
-            aria-selected={tab === t.key}
-            aria-controls={tab === t.key ? "case-tabpanel" : undefined}
-            tabIndex={tab === t.key ? 0 : -1}
-            onClick={() => setTab(t.key)}
+            id={`case-tab-${tb.key}`}
+            aria-selected={tab === tb.key}
+            aria-controls={tab === tb.key ? "case-tabpanel" : undefined}
+            tabIndex={tab === tb.key ? 0 : -1}
+            onClick={() => setTab(tb.key)}
             onKeyDown={(e) => onTabKeyDown(e, i)}
             className={`shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium ${
-              tab === t.key ? "border-b-2 border-accent text-foreground" : "text-slate-500 hover:text-slate-800"
+              tab === tb.key ? "border-b-2 border-accent text-foreground" : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            {t.label}
-            {tabIndicators[t.key] && (
+            {t(tb.label)}
+            {tabIndicators[tb.key] && (
               <span className="ml-1.5">
-                <Badge tone="yellow" icon={false}>{tabIndicators[t.key]}</Badge>
+                <Badge tone="yellow" icon={false}>{tabIndicators[tb.key]}</Badge>
               </span>
             )}
           </button>
@@ -284,37 +292,37 @@ export default function CaseDetailPage() {
           <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
           <section className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="mb-4 flex items-center gap-2 font-semibold">
-              申請人情報
+              {t("casePage.applicantInfo")}
               <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
-                {a.confirmationStatus === "confirmed" ? "確認済み" : "下書き"}
+                {a.confirmationStatus === "confirmed" ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}
               </Badge>
             </h2>
             <dl className="grid grid-cols-1 gap-y-1 text-sm md:grid-cols-[10rem_1fr] md:gap-y-3">
               {/* 未入力の項目は、編集できるときのみ、入力欄へ移動するボタンにする */}
-              <dt className="text-slate-500">氏名</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.legalName || <MissingValue field="legalName" label="氏名" onJump={jump} />}</dd>
-              <dt className="text-slate-500">国籍・地域</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.nationality || <MissingValue field="nationality" label="国籍・地域" onJump={jump} />}</dd>
-              <dt className="text-slate-500">生年月日</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.dateOfBirth ? formatDate(a.dateOfBirth) : <MissingValue field="dateOfBirth" label="生年月日" onJump={jump} />}</dd>
-              <dt className="text-slate-500">性別</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.gender || <MissingValue field="gender" label="性別" onJump={jump} />}</dd>
-              <dt className="text-slate-500">住居地</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.address || <MissingValue field="address" label="住居地" onJump={jump} />}</dd>
-              <dt className="text-slate-500">在留資格</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <MissingValue field="residenceStatus" label="在留資格" onJump={jump} />}</dd>
-              <dt className="text-slate-500">在留期間の満了日</dt>
+              <dt className="text-slate-500">{t("casePage.field_legalName")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.legalName || <MissingValue field="legalName" label={t("casePage.field_legalName")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_nationality")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.nationality || <MissingValue field="nationality" label={t("casePage.field_nationality")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_dateOfBirth")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.dateOfBirth ? formatDate(a.dateOfBirth) : <MissingValue field="dateOfBirth" label={t("casePage.field_dateOfBirth")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_gender")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.gender || <MissingValue field="gender" label={t("casePage.field_gender")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_address")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.address || <MissingValue field="address" label={t("casePage.field_address")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_residenceStatus")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <MissingValue field="residenceStatus" label={t("casePage.field_residenceStatus")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_residenceExpiryDate")}</dt>
               <dd className="mb-2 md:mb-0">
-                {a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : <MissingValue field="residenceExpiryDate" label="在留期間の満了日" onJump={jump} />}
+                {a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : <MissingValue field="residenceExpiryDate" label={t("casePage.field_residenceExpiryDate")} onJump={jump} />}
               </dd>
-              <dt className="text-slate-500">在留カード番号</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <MissingValue field="residenceCardNumber" label="在留カード番号" onJump={jump} />}</dd>
-              <dt className="text-slate-500">就労制限</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <MissingValue field="workRestriction" label="就労制限" onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_residenceCardNumber")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <MissingValue field="residenceCardNumber" label={t("casePage.field_residenceCardNumber")} onJump={jump} />}</dd>
+              <dt className="text-slate-500">{t("casePage.field_workRestriction")}</dt>
+              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <MissingValue field="workRestriction" label={t("casePage.field_workRestriction")} onJump={jump} />}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
               <p className="mt-4 text-sm text-green-700">
-                ✓ 行政書士確認済み（確認者：{a.confirmedBy}／{formatDateTime(a.confirmedAt)}）
+                {t("casePage.confirmedBy", { name: a.confirmedBy ?? "", at: formatDateTime(a.confirmedAt) })}
               </p>
             )}
           </section>
@@ -326,7 +334,7 @@ export default function CaseDetailPage() {
         <div className="space-y-6">
           {canEdit && !doc && (
             <p className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-              最初に、在留カードを登録してください。登録後に、「申請人情報」タブで、原本を見ながら内容を入力します。
+              {t("casePage.documentsFirst")}
             </p>
           )}
           {canEdit && (
@@ -342,8 +350,8 @@ export default function CaseDetailPage() {
             <UploadBox caseId={record.id} documentType="photo" currentFileName={photo?.fileName} onUploaded={() => {}} />
           )}
           <section className="rounded-2xl border border-slate-200 bg-white">
-            <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">登録書類</h2>
-            {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">登録された書類はありません。</p>}
+            <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">{t("casePage.registeredDocuments")}</h2>
+            {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">{t("casePage.noDocuments")}</p>}
             {record.documents.map((d) => (
               <DocumentRow
                 key={d.id}
@@ -358,7 +366,7 @@ export default function CaseDetailPage() {
       )}
 
       {!canEdit && tab !== "overview" && tab !== "documents" && (
-        <p className="mb-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">閲覧のみの権限です。内容を変更するには、事務所の所有者または管理者に役割の変更をご依頼ください。</p>
+        <p className="mb-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{t("casePage.readOnlyNotice")}</p>
       )}
       {/* 編集権限がない場合は、タブ内のすべての入力・操作を無効にする（最終的な拒否はデータベース側で行う） */}
       <fieldset disabled={!canEdit} className="m-0 min-w-0 border-0 p-0">

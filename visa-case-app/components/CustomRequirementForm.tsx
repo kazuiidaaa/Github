@@ -5,16 +5,8 @@ import { useState } from "react";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
 import { Button, Field, inputClass } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
+import { useT } from "@/lib/i18n/LanguageProvider";
 import type { CustomRequirement } from "@/lib/types";
-
-const PARTY_OPTIONS: ChoiceOption[] = [
-  { value: "applicant", label: "申請人" },
-  { value: "organization", label: "所属機関" },
-];
-const REQUIRED_OPTIONS: ChoiceOption[] = [
-  { value: "required", label: "必須" },
-  { value: "optional", label: "任意" },
-];
 
 export type CustomRequirementInput = Pick<CustomRequirement, "name" | "party" | "isRequired" | "dueDate" | "note">;
 
@@ -28,6 +20,15 @@ export function CustomRequirementForm({
   onSubmit: (value: CustomRequirementInput) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
+  const partyOptions: ChoiceOption[] = [
+    { value: "applicant", label: t("caseRequirements.partyApplicant") },
+    { value: "organization", label: t("caseRequirements.partyOrganization") },
+  ];
+  const requiredOptions: ChoiceOption[] = [
+    { value: "required", label: t("caseRequirements.isRequired") },
+    { value: "optional", label: t("caseRequirements.isOptional") },
+  ];
   const [name, setName] = useState(initial?.name ?? "");
   const [party, setParty] = useState<CustomRequirement["party"]>(initial?.party ?? "applicant");
   const [isRequired, setIsRequired] = useState(initial?.isRequired ?? true);
@@ -37,36 +38,36 @@ export function CustomRequirementForm({
 
   function submit() {
     const trimmed = name.trim();
-    if (!trimmed) return setError("書類名を入力してください。");
-    if (trimmed.length > 100) return setError("書類名は100文字以内で入力してください。");
-    if (dueDate && !isValidDate(dueDate)) return setError("期限は有効な日付で入力してください。");
+    if (!trimmed) return setError(t("caseRequirements.formNameRequired"));
+    if (trimmed.length > 100) return setError(t("caseRequirements.formNameTooLong"));
+    if (dueDate && !isValidDate(dueDate)) return setError(t("caseRequirements.formDueInvalid"));
     onSubmit({ name: trimmed, party, isRequired, dueDate: dueDate || undefined, note: note.trim() || undefined });
   }
 
   return (
     <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <Field label="書類名" required error={error}>
+      <Field label={t("caseRequirements.formName")} required error={error}>
         <input className={inputClass} value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
-        <ChoiceGroup legend="提出者" options={PARTY_OPTIONS} value={party} onChange={(v) => setParty(v as CustomRequirement["party"])} />
+        <ChoiceGroup legend={t("caseRequirements.formParty")} options={partyOptions} value={party} onChange={(v) => setParty(v as CustomRequirement["party"])} />
         <ChoiceGroup
-          legend="必須・任意"
-          options={REQUIRED_OPTIONS}
+          legend={t("caseRequirements.formRequired")}
+          options={requiredOptions}
           value={isRequired ? "required" : "optional"}
           onChange={(v) => setIsRequired(v === "required")}
         />
-        <Field label="期限">
+        <Field label={t("caseRequirements.formDue")}>
           <DateField className={inputClass} value={dueDate} onChange={setDueDate} />
         </Field>
       </div>
-      <Field label="メモ">
+      <Field label={t("caseRequirements.formNote")}>
         <input className={inputClass} value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
       <div className="flex gap-2">
-        <Button onClick={submit}>{initial ? "更新する" : "追加する"}</Button>
+        <Button onClick={submit}>{initial ? t("caseRequirements.formUpdate") : t("caseRequirements.formAdd")}</Button>
         <Button variant="secondary" onClick={onCancel}>
-          キャンセル
+          {t("caseRequirements.formCancel")}
         </Button>
       </div>
     </div>
