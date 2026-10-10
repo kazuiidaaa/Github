@@ -24,7 +24,7 @@ jobs:
         working-directory: visa-case-app
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           # @types/node（^22）と、手元で確認済みの 22 系に合わせる
           node-version: 22
