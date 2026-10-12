@@ -1,10 +1,10 @@
 import type { MessageKey } from "./messages";
 import type { MessageParams } from "./translate";
 import type { Lang } from "@/lib/documents/lang";
-import { isTokuteiKatsudo } from "@/lib/requirements/evaluate";
-import { RULE_SETS, categoryLabelsOf, categoryRangeOf, type Category, type RuleSet } from "@/lib/requirements/rules";
+import { isTokuteiKatsudo, supportedEntries } from "@/lib/requirements/evaluate";
+import { categoryLabelsOf, categoryRangeOf, type Category, type RuleSet } from "@/lib/requirements/rules";
 import { ruleText } from "./ruleTexts";
-import { PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
+import type { ProcedureType } from "@/lib/types";
 
 /**
  * 案件の新規登録の画面で、言語に合わせて文言を引く薄い関数。
@@ -33,10 +33,15 @@ export function targetStatusLegend(t: T, type: ProcedureType | ""): string {
 
 /** notApplicableMessage（lib/requirements/evaluate.ts）の、言語別の表示。手続名・在留資格名は日本語のまま */
 export function noRuleMessage(t: T): string {
-  const supported = RULE_SETS.map((r) => {
-    const label = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label ?? r.procedureType;
-    return r.anyResidenceStatus ? t("caseNew.noRuleItemAny", { label }) : t("caseNew.noRuleItemStatus", { status: r.residenceStatus, label });
-  }).join(t("caseNew.noRuleSeparator"));
+  const supported = supportedEntries()
+    .map((e) => {
+      const label = e.procedureLabel;
+      if (e.status === null) return t("caseNew.noRuleItemAny", { label });
+      // 特定活動は、対応済みの種別だけを括弧内に示す（種別ごとの規則集合を、特定活動の行で繰り返さない）
+      const subtypes = e.subtypes.map((s) => t(`caseRequirements.subtype_${s}`)).join(t("caseNew.noRuleSubtypeSeparator"));
+      return t("caseNew.noRuleItemStatus", { status: subtypes ? t("caseNew.noRuleStatusWithSubtypes", { status: e.status, subtypes }) : e.status, label });
+    })
+    .join(t("caseNew.noRuleSeparator"));
   return t("caseNew.noRuleMessage", { supported });
 }
 

@@ -169,12 +169,39 @@ export function shouldShowNoRuleGuide(
   return !hasRuleSetFor(procedureType, status, ruleSets);
 }
 
-/** 規則が未整備の手続・在留資格に対する案内文。対応する組み合わせは RULE_SETS から生成する */
+/** 案内文に並べる、対応済みの手続と在留資格の組み合わせ。特定活動のように種別ごとに規則集合がある在留資格は、種別を1件にまとめる */
+export interface SupportedEntry {
+  procedureLabel: string;
+  /** 在留資格を問わない規則集合は null */
+  status: string | null;
+  /** 種別つきの規則集合の種別（RULE_SETS の並び順）。種別を持たない組み合わせは空 */
+  subtypes: NonNullable<RuleSet["subtype"]>[];
+}
+
+export function supportedEntries(ruleSets: RuleSet[] = RULE_SETS): SupportedEntry[] {
+  const entries: SupportedEntry[] = [];
+  for (const r of ruleSets) {
+    const procedureLabel = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label ?? r.procedureType;
+    const status = r.anyResidenceStatus ? null : r.residenceStatus;
+    const found = r.subtype ? entries.find((e) => e.status === status && e.procedureLabel === procedureLabel && e.subtypes.length > 0) : undefined;
+    if (found) {
+      if (r.subtype && !found.subtypes.includes(r.subtype)) found.subtypes.push(r.subtype);
+    } else {
+      entries.push({ procedureLabel, status, subtypes: r.subtype ? [r.subtype] : [] });
+    }
+  }
+  return entries;
+}
+
+/** 規則が未整備の手続・在留資格に対する案内文。対応する組み合わせは RULE_SETS から生成する（特定活動は、対応済みの種別を括弧内に示す） */
 export function notApplicableMessage(): string {
-  const supported = RULE_SETS.map((r) => {
-    const label = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label ?? r.procedureType;
-    return r.anyResidenceStatus ? `在留資格を問わない「${label}」` : `「${r.residenceStatus}」の「${label}」`;
-  }).join("、");
+  const supported = supportedEntries()
+    .map((e) => {
+      if (e.status === null) return `在留資格を問わない「${e.procedureLabel}」`;
+      const subtypes = e.subtypes.map((s) => jaT(`caseRequirements.subtype_${s}`)).join("・");
+      return `「${subtypes ? `${e.status}（${subtypes}）` : e.status}」の「${e.procedureLabel}」`;
+    })
+    .join("、");
   return `この手続・在留資格の規則は未整備です。現在は${supported}のみ対応しています。`;
 }
 

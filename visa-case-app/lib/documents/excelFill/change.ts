@@ -19,7 +19,7 @@ import { CHANGE_SPEC } from "../officialForms";
 import { fillWorkbook } from "./fillWorkbook";
 import { hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
-import { tokuteiKenkyuWarnings } from "./tokuteiKenkyu";
+import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
@@ -91,7 +91,7 @@ function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, ta
     // 画面の事前表示（officialFormScopeWarnings）と同じ判定・同じ文面
     w.push(CHANGE_SPEC.outOfScopeWarning);
   }
-  w.push(...tokuteiKenkyuWarnings(isFormNTokuteiCase(c.targetStatus, c.f.tokuteiKatsudoType), c.f));
+  w.push(...tokuteiKatsudoWarnings(isFormNTokuteiCase(c.targetStatus, c.f.tokuteiKatsudoType), c.f));
   if (c.f.relativesPresent === "yes" && c.f.relatives.length > MAX_RELATIVES) {
     w.push(`在日親族は、様式の欄（${MAX_RELATIVES}人分）に入らない分を差し込んでいません。別紙に記載してください。`);
   }

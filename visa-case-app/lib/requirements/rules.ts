@@ -2459,7 +2459,7 @@ export const KIGYONAI_RENEWAL: RuleSet = {
 
 // 在留資格「特定活動」のうち、特定研究等活動（告示36号）の本人（種別 tokuteiKenkyu。Issue #299）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
 // 提出書類は、入管庁の案内ページ（designatedactivities07）の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
-// 範囲外：告示37号（特定情報処理活動）は別ページ（#300）、特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+// 範囲外：告示37号（特定情報処理活動）は、対応する Issue なし（未対応）。特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
 const TOKUTEI_KENKYU_STATUS = "特定活動";
 const TOKUTEI_KENKYU_CHECKED_AT = "2026-10-12";
 const TOKUTEI_KENKYU_PAGE_SOURCE = { title: "在留資格「特定活動」（特定研究等活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities07.html" };
@@ -2604,6 +2604,130 @@ export const TOKUTEI_KENKYU_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「特定活動」のうち、本邦大学等卒業者（告示46号）の本人（種別 daigakuSotsugyo。Issue #300）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
+// 提出書類は、入管庁の案内ページ（designatedactivities11）の「本邦大学等卒業者の場合に必要な書類」の列の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
+// 告示の番号は、案内ページ・様式Nの注記とも「告示46号」（Issue #300 の依頼文の「44号」「45号」とは異なる）。
+// 範囲外：本邦大学等卒業者の家族（案内ページの家族の列）は種別「その他」。告示37号（特定情報処理活動）は、対応する Issue なし（未対応）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+const DAIGAKU_SOTSUGYO_STATUS = "特定活動";
+const DAIGAKU_SOTSUGYO_CHECKED_AT = "2026-10-12";
+const DAIGAKU_SOTSUGYO_PAGE_SOURCE = { title: "在留資格「特定活動」（本邦大学等卒業者及びその配偶者等）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities11.html" };
+
+const daigakuSotsugyoLaborConditions: RequirementRule = {
+  id: "labor_conditions_document",
+  name: "申請人の労働基準法第15条第1項及び同法施行規則第5条に基づき、労働者に交付される労働条件を明示する文書（写し）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const daigakuSotsugyoEmploymentReason: RequirementRule = {
+  id: "employment_reason",
+  name: "雇用理由書",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: "労働条件を明示する文書の内容から、日本語を用いた業務等、本制度に該当する業務に従事することが明らかな場合は提出不要。所属機関が作成したものが必要で、様式は自由（所属機関名及び代表者の記名をお願いします）",
+};
+const daigakuSotsugyoEducation: RequirementRule = {
+  id: "education_documents",
+  name: "申請人の学歴等を証明する文書（次のいずれか）",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "(1)本邦の大学卒業者又は大学院修了者：卒業（修了）証書（写し）又は卒業（修了）証明書（学位の確認が可能なものに限る）／(2)本邦の短期大学若しくは高等専門学校を卒業又は専門職大学の前期課程を修了し、独立行政法人大学改革支援・学位授与機構が行う審査に合格して学士の学位を授与された者：ア 短期大学又は高等専門学校卒業者は卒業証書（写し）又は卒業証明書、専門職大学前期課程修了者は修了証書（写し）又は修了証明書、イ 同機構が交付した学位記（写し）又は学位授与証明書／(3)外国人留学生キャリア形成促進プログラムとして認定を受けた専修学校専門課程や専攻科の学科を修了し、高度専門士の称号を付与された者：高度専門士の称号を付与されたことを証明する文書",
+};
+const daigakuSotsugyoJapanese: RequirementRule = {
+  id: "japanese_ability",
+  name: "申請人の日本語能力を証明する文書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "日本語能力試験N1又はBJTビジネス日本語能力テスト480点以上の成績証明書（写し）。外国の大学において日本語を専攻した方は、当該大学の卒業証書（写し）又は卒業証明書",
+};
+const daigakuSotsugyoBusiness: RequirementRule = {
+  id: "business_description",
+  name: "事業内容を明らかにする資料（次のいずれか）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+  note: "(1)勤務先の沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が記載された案内書／(2)その他の勤務先等の作成した(1)に準ずる文書／(3)勤務先のホームページの写し（トップページのみで可）／(4)登記事項証明書",
+};
+const daigakuSotsugyoRepresentative: RequirementRule = {
+  id: "representative_declaration",
+  name: "所属機関の代表者に関する申告書（参考様式）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+  note: "2026年4月15日以降の申請から提出する（家族としての活動の場合は添付不要）",
+};
+const daigakuSotsugyoResidentTax: RequirementRule = {
+  id: "resident_tax_certificates",
+  name: "住民税の課税（又は非課税）証明書及び納税証明書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、源泉徴収票及び当該期間の給与明細書の写し、賃金台帳の写し等を提出する",
+};
+const daigakuSotsugyoApplicationRules: RequirementRule[] = [
+  daigakuSotsugyoLaborConditions,
+  daigakuSotsugyoEmploymentReason,
+  daigakuSotsugyoEducation,
+  daigakuSotsugyoJapanese,
+  daigakuSotsugyoBusiness,
+  daigakuSotsugyoRepresentative,
+];
+
+export const DAIGAKU_SOTSUGYO_COE: RuleSet = {
+  id: "daigaku_sotsugyo_coe",
+  title: "特定活動（本邦大学卒業者） 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: DAIGAKU_SOTSUGYO_STATUS,
+  subtype: "daigakuSotsugyo",
+  checkedAt: DAIGAKU_SOTSUGYO_CHECKED_AT,
+  sources: [DAIGAKU_SOTSUGYO_PAGE_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    ...daigakuSotsugyoApplicationRules,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+    },
+  ],
+};
+
+export const DAIGAKU_SOTSUGYO_CHANGE: RuleSet = {
+  id: "daigaku_sotsugyo_change",
+  title: "特定活動（本邦大学卒業者） 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: DAIGAKU_SOTSUGYO_STATUS,
+  subtype: "daigakuSotsugyo",
+  checkedAt: DAIGAKU_SOTSUGYO_CHECKED_AT,
+  sources: [DAIGAKU_SOTSUGYO_PAGE_SOURCE],
+  rules: [...procedureCommonRules("change"), ...daigakuSotsugyoApplicationRules],
+};
+
+export const DAIGAKU_SOTSUGYO_RENEWAL: RuleSet = {
+  id: "daigaku_sotsugyo_renewal",
+  title: "特定活動（本邦大学卒業者） 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: DAIGAKU_SOTSUGYO_STATUS,
+  subtype: "daigakuSotsugyo",
+  checkedAt: DAIGAKU_SOTSUGYO_CHECKED_AT,
+  sources: [DAIGAKU_SOTSUGYO_PAGE_SOURCE],
+  rules: [...procedureCommonRules("renewal"), daigakuSotsugyoRepresentative, daigakuSotsugyoResidentTax],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -2659,4 +2783,8 @@ export const RULE_SETS: RuleSet[] = [
   TOKUTEI_KENKYU_RENEWAL,
   TOKUTEI_KENKYU_CHANGE,
   TOKUTEI_KENKYU_COE,
+  // 特定活動（本邦大学卒業者。Issue #300）
+  DAIGAKU_SOTSUGYO_RENEWAL,
+  DAIGAKU_SOTSUGYO_CHANGE,
+  DAIGAKU_SOTSUGYO_COE,
 ];

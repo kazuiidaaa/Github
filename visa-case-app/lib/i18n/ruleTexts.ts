@@ -1002,6 +1002,71 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Only if the applicant, under \"Designated Research Activities\", personally operates a business related to research, research guidance or education (one copy). The Immigration Services Agency's guidance page lists it under \"Other (if the applicant has changed jobs)\"",
     "「특정 연구 등 활동」으로 연구, 연구 지도 또는 교육과 관련된 사업을 직접 경영하는 활동을 하고 있는 경우에만(1통). 출입국재류관리청 안내 페이지에는 「기타(이직한 경우)」 항목에 기재되어 있다",
   ],
+  // 特定活動（本邦大学卒業者。Issue #300）
+  "在留資格「特定活動」（本邦大学等卒業者及びその配偶者等）（出入国在留管理庁）": [
+    "Status of residence \"Designated Activities\" (graduates of Japanese universities, etc. and their spouses, etc.) (Immigration Services Agency of Japan)",
+    "체류자격 「특정활동」(본방 대학 등 졸업자 및 그 배우자 등)(출입국재류관리청)",
+  ],
+  "特定活動（本邦大学卒業者） 在留資格認定証明書交付申請": [
+    "Designated Activities (Graduates of Japanese universities): application for certificate of eligibility",
+    "특정활동(본방 대학 졸업자) 사증발급인정서 교부 신청",
+  ],
+  "特定活動（本邦大学卒業者） 在留資格変更許可申請": [
+    "Designated Activities (Graduates of Japanese universities): application for permission for change of status of residence",
+    "특정활동(본방 대학 졸업자) 체류자격 변경 허가 신청",
+  ],
+  "特定活動（本邦大学卒業者） 在留期間更新許可申請": [
+    "Designated Activities (Graduates of Japanese universities): application for permission for extension of the period of stay",
+    "특정활동(본방 대학 졸업자) 체류기간 연장 허가 신청",
+  ],
+  "申請人の労働基準法第15条第1項及び同法施行規則第5条に基づき、労働者に交付される労働条件を明示する文書（写し）": [
+    "Document stating the working conditions, issued to the worker under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations (copy)",
+    "신청인의 노동기준법 제15조 제1항 및 동법 시행규칙 제5조에 따라 근로자에게 교부되는 근로조건 명시 문서(사본)",
+  ],
+  "雇用理由書": [
+    "Statement of reasons for employment",
+    "고용 이유서",
+  ],
+  "労働条件を明示する文書の内容から、日本語を用いた業務等、本制度に該当する業務に従事することが明らかな場合は提出不要。所属機関が作成したものが必要で、様式は自由（所属機関名及び代表者の記名をお願いします）": [
+    "Not required if the document stating the working conditions makes it clear that the applicant will engage in work covered by this system, such as work using Japanese. It must be prepared by the affiliated organization; the format is free (please enter the organization's name and the representative's name)",
+    "근로조건 명시 문서의 내용으로 보아 일본어를 사용하는 업무 등 이 제도에 해당하는 업무에 종사함이 명백한 경우에는 제출 불필요. 소속 기관이 작성한 것이 필요하며 양식은 자유(소속 기관명 및 대표자 기명 요망)",
+  ],
+  "申請人の学歴等を証明する文書（次のいずれか）": [
+    "Document certifying the applicant's educational background (any of the following)",
+    "신청인의 학력 등을 증명하는 문서(다음 중 하나)",
+  ],
+  "(1)本邦の大学卒業者又は大学院修了者：卒業（修了）証書（写し）又は卒業（修了）証明書（学位の確認が可能なものに限る）／(2)本邦の短期大学若しくは高等専門学校を卒業又は専門職大学の前期課程を修了し、独立行政法人大学改革支援・学位授与機構が行う審査に合格して学士の学位を授与された者：ア 短期大学又は高等専門学校卒業者は卒業証書（写し）又は卒業証明書、専門職大学前期課程修了者は修了証書（写し）又は修了証明書、イ 同機構が交付した学位記（写し）又は学位授与証明書／(3)外国人留学生キャリア形成促進プログラムとして認定を受けた専修学校専門課程や専攻科の学科を修了し、高度専門士の称号を付与された者：高度専門士の称号を付与されたことを証明する文書": [
+    "(1) Graduates of a Japanese university or graduate school: copy of the diploma (certificate of completion) or certificate of graduation (completion) (only one from which the degree can be confirmed) / (2) Those who graduated from a Japanese junior college or college of technology, or completed the first-stage course of a professional university, passed the examination of the National Institution for Academic Degrees and Quality Enhancement of Higher Education and were awarded a bachelor's degree: (a) for junior college or college of technology graduates, a copy of the diploma or certificate of graduation; for those who completed the first-stage course of a professional university, a copy of the certificate of completion; (b) a copy of the degree certificate or certificate of degree conferral issued by that institution / (3) Those who completed a course at a specialized training college accredited under the career formation promotion program for international students and were awarded the title of Advanced Professional: a document certifying that the title was awarded",
+    "(1) 일본 대학 졸업자 또는 대학원 수료자: 졸업(수료)증서(사본) 또는 졸업(수료)증명서(학위 확인이 가능한 것에 한함) / (2) 일본의 단기대학 또는 고등전문학교를 졸업하거나 전문직대학 전기과정을 수료하고, 독립행정법인 대학개혁지원·학위수여기구가 실시하는 심사에 합격하여 학사 학위를 받은 자: 가. 단기대학 또는 고등전문학교 졸업자는 졸업증서(사본) 또는 졸업증명서, 전문직대학 전기과정 수료자는 수료증서(사본) 또는 수료증명서, 나. 같은 기구가 교부한 학위기(사본) 또는 학위수여증명서 / (3) 외국인 유학생 커리어 형성 촉진 프로그램으로 인정받은 전수학교 전문과정이나 전공과 학과를 수료하고 고도전문사 칭호를 부여받은 자: 고도전문사 칭호를 부여받았음을 증명하는 문서",
+  ],
+  "申請人の日本語能力を証明する文書": [
+    "Document certifying the applicant's Japanese language ability",
+    "신청인의 일본어 능력을 증명하는 문서",
+  ],
+  "日本語能力試験N1又はBJTビジネス日本語能力テスト480点以上の成績証明書（写し）。外国の大学において日本語を専攻した方は、当該大学の卒業証書（写し）又は卒業証明書": [
+    "Copy of the score report of the Japanese-Language Proficiency Test N1 or the BJT Business Japanese Proficiency Test (480 points or higher). For those who majored in Japanese at a foreign university, a copy of the diploma or certificate of graduation of that university",
+    "일본어능력시험 N1 또는 BJT 비즈니스 일본어능력테스트 480점 이상의 성적증명서(사본). 외국 대학에서 일본어를 전공한 사람은 해당 대학의 졸업증서(사본) 또는 졸업증명서",
+  ],
+  "事業内容を明らかにする資料（次のいずれか）": [
+    "Materials showing the business content (any of the following)",
+    "사업 내용을 밝히는 자료(다음 중 하나)",
+  ],
+  "(1)勤務先の沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が記載された案内書／(2)その他の勤務先等の作成した(1)に準ずる文書／(3)勤務先のホームページの写し（トップページのみで可）／(4)登記事項証明書": [
+    "(1) Brochure stating the history, officers, organization and business (including main clients and transaction record) of the workplace / (2) other document prepared by the workplace equivalent to (1) / (3) copy of the workplace's website (the top page is sufficient) / (4) certificate of registered matters",
+    "(1) 근무처의 연혁, 임원, 조직, 사업 내용(주요 거래처와 거래 실적 포함) 등이 기재된 안내서 / (2) 그 밖에 근무처 등이 작성한 (1)에 준하는 문서 / (3) 근무처 홈페이지 사본(톱페이지만 가능) / (4) 등기사항증명서",
+  ],
+  "所属機関の代表者に関する申告書（参考様式）": [
+    "Declaration concerning the representative of the affiliated organization (reference form)",
+    "소속 기관 대표자에 관한 신고서(참고 양식)",
+  ],
+  "2026年4月15日以降の申請から提出する（家族としての活動の場合は添付不要）": [
+    "Submit for applications made on or after April 15, 2026 (not required for activities as a family member)",
+    "2026년 4월 15일 이후 신청부터 제출한다(가족으로서의 활동인 경우에는 첨부 불필요)",
+  ],
+  "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、源泉徴収票及び当該期間の給与明細書の写し、賃金台帳の写し等を提出する": [
+    "One stating a year's total income and tax payment status. If one certificate states both, either one is sufficient (issued by the municipality of the address as of January 1). If it cannot be issued because of recent arrival or a move, submit the withholding slip and copies of the payslips for the period, a copy of the wage ledger, etc.",
+    "1년간의 총소득 및 납세 상황이 기재된 것. 둘 다 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 주소지의 시구정촌에서 발급). 입국 직후나 이사 등으로 발급되지 않을 때는 원천징수영수증 및 해당 기간의 급여명세서 사본, 임금대장 사본 등을 제출",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
