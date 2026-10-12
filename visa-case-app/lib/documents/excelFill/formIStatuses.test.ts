@@ -10,7 +10,7 @@ import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 import { fillRenewalExcel } from "./renewal";
 import { sheetKey } from "./renewalMapping";
 
-// 高度専門職ではない「教授」は、様式 I（見出し「教授」）で出力する（Issue #292）。値はすべてダミー。
+// 高度専門職ではない「教授」「教育」は、様式 I（見出し「教授」）で出力する（Issue #292・#293）。値はすべてダミー。
 
 const applicant: Applicant = { ...EMPTY_APPLICANT, legalName: "TARO YAMADA", nationality: "テスト国", confirmationStatus: "confirmed" };
 const employment: EmploymentInfo = { ...EMPTY_EMPLOYMENT, companyName: "テスト大学", jobDescription: "研究・教育" };
@@ -71,6 +71,39 @@ describe("様式 I を使わない在留資格は、従来どおり", () => {
 
   it("「教授」を含む別の表記（例：「准教授」）は、完全一致でないため様式 I にならない", async () => {
     const { buffer } = await fillChangeExcel(applicant, employment, details, "准教授");
+    const wb = await open(buffer);
+    const company = HSP_CHANGE_TABLE2.I.fill.find((i) => i.label === "所属機関 名称")!;
+    expect(cell(wb, company.sheet, company.cell)).toBe("");
+  });
+});
+
+describe("「教育」（高度専門職ではない）も様式 I で出力する", () => {
+  it("認定：様式 I の第2表以降に差し込み、入国目的は「教育」にチェックする", async () => {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, "教育");
+    const wb = await open(buffer);
+    const company = COE_TABLE2.I.fill.find((i) => i.label === "所属機関 名称")!;
+    expect(cell(wb, company.sheet, company.cell)).toBe("テスト大学");
+    expect(cell(wb, COE_SHEET_APPLICANT_1, COE_PURPOSE_CHECKBOXES["教育"])).toBe("■");
+    expect(warnings.join("\n")).toContain(COE_TABLE2.I.manual);
+  });
+
+  it("変更：様式 I の第2表以降に差し込み、様式の対象外の警告は出さない", async () => {
+    const { buffer, warnings } = await fillChangeExcel(applicant, employment, details, "教育");
+    const wb = await open(buffer);
+    const company = HSP_CHANGE_TABLE2.I.fill.find((i) => i.label === "所属機関 名称")!;
+    expect(cell(wb, company.sheet, company.cell)).toBe("テスト大学");
+    expect(warnings.join("\n")).not.toContain("変更後の在留資格に合う様式");
+  });
+
+  it("更新：様式 I の第2表以降に差し込む", async () => {
+    const { buffer } = await fillRenewalExcel(applicant, employment, details, "教育");
+    const wb = await open(buffer);
+    const company = HSP_CHANGE_TABLE2.I.fill.find((i) => i.label === "所属機関 名称")!;
+    expect(cell(wb, company.sheet, company.cell)).toBe("テスト大学");
+  });
+
+  it("「教育」を含む別の表記（例：「教育訓練」）は、完全一致でないため様式 I にならない", async () => {
+    const { buffer } = await fillChangeExcel(applicant, employment, details, "教育訓練");
     const wb = await open(buffer);
     const company = HSP_CHANGE_TABLE2.I.fill.find((i) => i.label === "所属機関 名称")!;
     expect(cell(wb, company.sheet, company.cell)).toBe("");

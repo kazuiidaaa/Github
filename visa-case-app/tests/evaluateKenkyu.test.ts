@@ -35,7 +35,7 @@ const ids = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) =>
 const all = (e: ReturnType<typeof evaluate>) => e.items.filter((i) => i.effective === "required" || i.effective === "check").map((i) => i.rule.id);
 
 describe("研究の規則集合", () => {
-  it("認定・変更・更新が末尾に登録され、在留資格「研究」で引ける。申請書は様式N（様式I・Uの対象ではない）", () => {
+  it("認定・変更・更新が連続して登録され、在留資格「研究」で引ける。申請書は様式N（様式I・Uの対象ではない）", () => {
     for (const [rs, type] of [
       [KENKYU_RENEWAL, "renewal"],
       [KENKYU_CHANGE, "change"],
@@ -45,7 +45,10 @@ describe("研究の規則集合", () => {
       expect(rs.procedureType).toBe(type);
       expect(evaluate(make(type)).ruleSet?.id).toBe(rs.id);
     }
-    expect(RULE_SETS.slice(-3)).toEqual([KENKYU_RENEWAL, KENKYU_CHANGE, KENKYU_COE]);
+    // 末尾とは限らない（後から足される在留資格が続く）ため、3件が連続して登録されていることを確かめる
+    const at = RULE_SETS.indexOf(KENKYU_RENEWAL);
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(RULE_SETS.slice(at, at + 3)).toEqual([KENKYU_RENEWAL, KENKYU_CHANGE, KENKYU_COE]);
     expect(isFormIStatus("研究") || isFormUStatus("研究")).toBe(false);
   });
 

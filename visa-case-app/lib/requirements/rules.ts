@@ -1798,6 +1798,140 @@ export const KENKYU_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「教育」。所属機関のカテゴリーは、1＝小学校〜特別支援学校に常勤・2＝左記以外の教育機関に常勤・3＝非常勤の3区分（会社の1〜4区分とは別。categoryDefinition）。
+// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○・△の位置まで）による。2026-10-07 に照合済み（Issue #293）。
+// 申請書は様式 I（認定・変更・更新とも。公式の教育の様式は、教授と同じファイル）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const EDUCATION = "教育";
+const EDUCATION_CHECKED_AT = "2026-10-07";
+const EDUCATION_PAGE_SOURCE = { title: "在留資格「教育」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/instructor.html" };
+const EDUCATION_CATEGORIES: Partial<Record<Category, string>> = {
+  "1": "カテゴリー1（小学校・中学校・高等学校・中等教育学校・特別支援学校に常勤）",
+  "2": "カテゴリー2（上記以外の教育機関に常勤）",
+  "3": "カテゴリー3（非常勤）",
+};
+const EDUCATION_ALL: Category[] = ["1", "2", "3"];
+const EDUCATION_CAT_2_3: Category[] = ["2", "3"];
+const EDUCATION_CAT_3: Category[] = ["3"];
+
+const educationActivityDocuments: RequirementRule = {
+  id: "activity_content_documents",
+  name: "申請人の活動内容等を明らかにする資料（労働契約の場合は労働条件を明示する文書、雇用以外の契約の場合は業務従事に係る契約書の写し）",
+  party: "organization",
+  categories: EDUCATION_CAT_2_3,
+  level: "required",
+  note: "労働基準法第15条第1項・同法施行規則第5条に基づき交付される文書。雇用以外の契約で複数の機関と契約する場合は、すべての機関との間の契約書の写し",
+};
+const educationCareerDocuments: RequirementRule = {
+  id: "career_documents",
+  name: "申請人の履歴を証明する資料（履歴書と、学歴又は職歴等を証明する文書）",
+  party: "applicant",
+  categories: EDUCATION_CAT_2_3,
+  level: "required",
+  note: "履歴書は、関連する職務に従事した機関と活動の内容・期間を明示したもの。学歴又は職歴等は、大学等の卒業証明書等（専修学校の専攻科は専攻科の修了証明）、免許証等資格の写し、外国語教育の場合は当該外国語による12年以上の教育の証明、外国語以外の科目の場合は当該科目の5年以上の実務経験の証明のいずれか",
+};
+const educationBusinessDocuments: RequirementRule = {
+  id: "business_content_documents",
+  name: "事業内容を明らかにする資料（勤務先等の案内書、これに準ずる文書、登記事項証明書）",
+  party: "organization",
+  categories: EDUCATION_CAT_2_3,
+  level: "required",
+  note: "案内書は、勤務先等の沿革、役員、組織、事業内容等が詳細に記載されたもの",
+};
+const educationFinancialStatements: RequirementRule = {
+  id: "financial_statements",
+  name: "直近の年度の決算文書の写し",
+  party: "organization",
+  categories: EDUCATION_CAT_3,
+  level: "required",
+  note: "新規事業の場合は事業計画書",
+};
+
+export const EDUCATION_COE: RuleSet = {
+  id: "education_coe",
+  title: "教育 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: EDUCATION,
+  categoryDefinition: EDUCATION_CATEGORIES,
+  checkedAt: EDUCATION_CHECKED_AT,
+  sources: [
+    EDUCATION_PAGE_SOURCE,
+    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: EDUCATION_ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    educationActivityDocuments,
+    educationCareerDocuments,
+    educationBusinessDocuments,
+    educationFinancialStatements,
+  ],
+};
+
+export const EDUCATION_CHANGE: RuleSet = {
+  id: "education_change",
+  title: "教育 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: EDUCATION,
+  categoryDefinition: EDUCATION_CATEGORIES,
+  checkedAt: EDUCATION_CHECKED_AT,
+  sources: [
+    EDUCATION_PAGE_SOURCE,
+    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("change"),
+    educationActivityDocuments,
+    educationCareerDocuments,
+    educationBusinessDocuments,
+    educationFinancialStatements,
+  ],
+};
+
+// 更新：チェックシートの「転職後の初回の更新許可申請の場合」の資料（表の6〜8）は、区分2・3の方のみ。区分2は、決算文書（8）は不要。
+const EDUCATION_FIRST_RENEWAL_AFTER_JOB_CHANGE = "転職後の初回の更新許可申請の場合のみ";
+export const EDUCATION_RENEWAL: RuleSet = {
+  id: "education_renewal",
+  title: "教育 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: EDUCATION,
+  categoryDefinition: EDUCATION_CATEGORIES,
+  checkedAt: EDUCATION_CHECKED_AT,
+  sources: [
+    EDUCATION_PAGE_SOURCE,
+    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: EDUCATION_CAT_2_3,
+      level: "required",
+      note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）",
+    },
+    {
+      id: "non_employment_contract_copy",
+      name: "業務従事に係る契約書の写し（雇用以外の契約に基づいて業務に従事する場合）",
+      party: "organization",
+      categories: EDUCATION_CAT_2_3,
+      level: "check",
+      verify: true,
+      note: "チェックシートに△の凡例がないため要確認。複数の機関との契約に基づいて業務に従事する場合は、そのすべての機関との間の契約書の写し",
+    },
+    { ...educationActivityDocuments, level: "check", note: EDUCATION_FIRST_RENEWAL_AFTER_JOB_CHANGE },
+    { ...educationBusinessDocuments, level: "check", note: EDUCATION_FIRST_RENEWAL_AFTER_JOB_CHANGE },
+    { ...educationFinancialStatements, level: "check", note: `${EDUCATION_FIRST_RENEWAL_AFTER_JOB_CHANGE}（新規事業の場合は事業計画書）` },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1833,4 +1967,8 @@ export const RULE_SETS: RuleSet[] = [
   KENKYU_RENEWAL,
   KENKYU_CHANGE,
   KENKYU_COE,
+  // 教育（Issue #293）
+  EDUCATION_RENEWAL,
+  EDUCATION_CHANGE,
+  EDUCATION_COE,
 ];
