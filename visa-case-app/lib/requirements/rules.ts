@@ -2052,6 +2052,198 @@ export const HODO_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「技能」。所属機関のカテゴリー（1〜4）は、技術・人文知識・国際業務と同じ区分で、書類もカテゴリーごとに異なる（Issue #298）。
+// 案内ページは「調理師」と「調理師以外」の2ページに分かれ、書類の違いは職歴を証明する文書のみ（職種別）。案件情報に職種の入力欄がないため、職歴の証明は職種ごとに要確認（check）とし、注記に職種を示す。
+// 職種の入力欄は、Issue #298 に提案として書く。提出書類は案内ページの本文による。チェックシート（カテゴリー3・4の認定と、更新）の○の位置は、案内ページと一致することを確認した。
+// 申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const GINO = "技能";
+const GINO_CHECKED_AT = "2026-10-12";
+const GINO_SOURCES = [
+  { title: "在留資格「技能」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor.html" },
+  { title: "在留資格「技能」調理師としての活動の場合（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor01.html" },
+  { title: "在留資格「技能」調理師以外の活動の場合（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor02.html" },
+];
+// 「特定技能」「技能実習」は、在留資格名に「技能」を含むが、別の在留資格
+const GINO_EXCLUDE = ["特定技能", "技能実習"];
+
+const ginoWorkContent: RequirementRule = {
+  id: "work_content_document",
+  name: "従事する業務の内容を証明する所属機関の文書",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const ginoResume: RequirementRule = {
+  id: "skill_resume",
+  name: "申請に係る技能を要する業務に従事した機関及び内容並びに期間を明示した履歴書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+};
+// 職歴を証明する文書（カテゴリー3・4）。職種によって異なるため、案件情報に職種の入力欄ができるまでは、職種ごとに要確認とする
+const GINO_CAREER_NOTE = "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ";
+const ginoCareerRules: RequirementRule[] = [
+  {
+    id: "career_cook",
+    name: "料理人（タイ料理人を除く）の職歴を証明する文書（在職証明書等）",
+    party: "applicant",
+    categories: ["3", "4"],
+    level: "check",
+    note: `${GINO_CAREER_NOTE}（調理師）。所属していた機関の在職証明書（機関の名称、所在地及び電話番号が記載されたもの）等で、技能を要する業務に従事した期間を証明する文書（外国の教育機関で当該業務に係る科目を専攻した期間を含む）。公的機関が発行する証明書がある場合はその写し（中華料理人は戸口簿及び職業資格証明書）`,
+  },
+  {
+    id: "career_thai_cook",
+    name: "タイ料理人の職歴・技能水準を証明する文書",
+    party: "applicant",
+    categories: ["3", "4"],
+    level: "check",
+    note: `${GINO_CAREER_NOTE}（タイ料理人）。タイ料理人として5年以上の実務経験を証明する文書、初級以上のタイ料理人としての技能水準に関する証明書、申請の直前1年間にタイでタイ料理人として妥当な報酬を受けていたことを証明する文書`,
+  },
+  {
+    id: "career_special_skill",
+    name: "外国特有の建築技術者等の職歴を証明する文書（在職証明書等）",
+    party: "applicant",
+    categories: ["3", "4"],
+    level: "check",
+    note: `${GINO_CAREER_NOTE}（外国特有の建築技術者、外国特有の製品製造者、動物の調教師、海底掘削・探査技術者、宝石・貴金属・毛皮加工技能者）。所属していた機関の在職証明書（機関の名称、所在地及び電話番号が記載されたもの）等で、技能を要する業務に従事した期間を証明する文書（外国の教育機関で当該業務に係る科目を専攻した期間を含む）`,
+  },
+  {
+    id: "career_pilot",
+    name: "パイロットの250時間以上の飛行経歴を証明する所属機関の文書",
+    party: "applicant",
+    categories: ["3", "4"],
+    level: "check",
+    note: `${GINO_CAREER_NOTE}（パイロット）`,
+  },
+  {
+    id: "career_sports_instructor",
+    name: "スポーツ指導者の実務経験及び国際競技会への出場を証明する文書",
+    party: "applicant",
+    categories: ["3", "4"],
+    level: "check",
+    note: `${GINO_CAREER_NOTE}（スポーツ指導者）。指導の実務に従事していたことを証明する文書（外国の教育機関で当該スポーツの指導に係る科目を専攻した期間及び報酬を受けて当該スポーツに従事していた期間を含む）と、選手としてオリンピック大会、世界選手権大会その他国際的な競技会に出場したことを証明する文書`,
+  },
+  {
+    id: "career_sommelier",
+    name: "ソムリエの実務経験及び国際ソムリエコンクールの成績又は資格を証明する文書",
+    party: "applicant",
+    categories: ["3", "4"],
+    level: "check",
+    note: `${GINO_CAREER_NOTE}（ソムリエ）。在職証明書でワイン鑑定等の実務経験を証明する文書（外国の教育機関でワイン鑑定等に係る科目を専攻した期間を含む）と、次の(ア)又は(イ)の資料（所持しない場合は(ウ)）：(ア)国際ソムリエコンクールで優秀な成績を収めたことを証明する文書、(イ)国際ソムリエコンクールで国の代表となったことを証明する文書（出場者が1国につき1名に制限されているものに限る）、(ウ)ワイン鑑定等に係る技能について、国又は地方公共団体等が認定する資格で法務大臣が告示で定めるものを有することを証明する文書`,
+  },
+];
+const ginoActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "活動内容等を明らかにする資料（労働条件を明示する文書、役員報酬を定める定款の写し等）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "労働契約の場合は、労働条件を明示する文書（労働基準法第15条第1項・同法施行規則第5条に基づき交付されるもの）。日本法人の役員に就任する場合は、役員報酬を定める定款の写し又は役員報酬を決議した株主総会の議事録の写し",
+};
+// 決算文書は、案内ページ・チェックシートとも、カテゴリー3・4の両方に必要（カテゴリー3は源泉徴収の理由書類のみ不要）
+const ginoFinancialStatements: RequirementRule = { ...kenkyuFinancialStatements, categories: ["3", "4"] };
+
+export const GINO_COE: RuleSet = {
+  id: "gino_coe",
+  title: "技能 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: GINO,
+  excludeStatuses: GINO_EXCLUDE,
+  checkedAt: GINO_CHECKED_AT,
+  sources: GINO_SOURCES,
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    kenkyuCategoryProof,
+    kenkyuOnlineApproval,
+    ginoWorkContent,
+    ginoResume,
+    kenkyuDispatch,
+    ...ginoCareerRules,
+    ginoActivityDocuments,
+    kenkyuBusinessMaterials,
+    ginoFinancialStatements,
+    kenkyuRepresentativeDeclaration,
+    ...kenkyuWithholdingRules,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+      verify: true,
+    },
+  ],
+};
+
+export const GINO_CHANGE: RuleSet = {
+  id: "gino_change",
+  title: "技能 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: GINO,
+  excludeStatuses: GINO_EXCLUDE,
+  checkedAt: GINO_CHECKED_AT,
+  sources: GINO_SOURCES,
+  rules: [
+    ...procedureCommonRules("change"),
+    kenkyuCategoryProof,
+    kenkyuOnlineApproval,
+    ginoWorkContent,
+    ginoResume,
+    kenkyuDispatch,
+    ...ginoCareerRules,
+    ginoActivityDocuments,
+    kenkyuBusinessMaterials,
+    ginoFinancialStatements,
+    kenkyuRepresentativeDeclaration,
+    ...kenkyuWithholdingRules,
+  ],
+};
+
+// 更新は、案内ページの「転職後の初回の更新申請」の資料（活動内容・事業内容・決算文書・源泉徴収の理由書類）を、カテゴリー3・4の要確認とする。
+// カテゴリー3は、案内ページの「提出書類11（源泉徴収の理由書類）は不要」により、源泉徴収の資料が不要（カテゴリー4のみ）。
+const GINO_FIRST_RENEWAL_NOTE = "転職後、初回の更新許可申請の場合のみ";
+export const GINO_RENEWAL: RuleSet = {
+  id: "gino_renewal",
+  title: "技能 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: GINO,
+  excludeStatuses: GINO_EXCLUDE,
+  checkedAt: GINO_CHECKED_AT,
+  sources: GINO_SOURCES,
+  rules: [
+    ...procedureCommonRules("renewal"),
+    kenkyuCategoryProof,
+    kenkyuOnlineApproval,
+    kenkyuDispatch,
+    kenkyuRepresentativeDeclaration,
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ["3", "4"],
+      level: "required",
+      note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）",
+    },
+    { ...ginoActivityDocuments, level: "check", note: GINO_FIRST_RENEWAL_NOTE },
+    { ...kenkyuBusinessMaterials, level: "check", note: GINO_FIRST_RENEWAL_NOTE },
+    { ...ginoFinancialStatements, level: "check", note: `${GINO_FIRST_RENEWAL_NOTE}。新規事業の場合は事業計画書` },
+    ...kenkyuWithholdingRules.map((r) => ({
+      ...r,
+      level: "check" as const,
+      note: r.note ? `${GINO_FIRST_RENEWAL_NOTE}。${r.note}` : GINO_FIRST_RENEWAL_NOTE,
+    })),
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -2095,4 +2287,8 @@ export const RULE_SETS: RuleSet[] = [
   HODO_RENEWAL,
   HODO_CHANGE,
   HODO_COE,
+  // 技能（Issue #298）
+  GINO_RENEWAL,
+  GINO_CHANGE,
+  GINO_COE,
 ];

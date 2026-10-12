@@ -742,6 +742,96 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Only for the first renewal application after changing jobs. The guidance page lists it, but the checklist (renewal) does not, so please verify",
     "이직 후 첫 연장 허가 신청의 경우에만. 안내 페이지에는 기재되어 있으나 체크시트(연장)에는 없으므로 확인 필요",
   ],
+
+  // 技能（Issue #298）
+  "技能 在留資格認定証明書交付申請": [
+    "Skilled Labor: application for certificate of eligibility",
+    "기능 사증발급인정서 교부 신청",
+  ],
+  "技能 在留資格変更許可申請": [
+    "Skilled Labor: application for change of status of residence",
+    "기능 체류자격 변경 허가 신청",
+  ],
+  "技能 在留期間更新許可申請": [
+    "Skilled Labor: application for extension of the period of stay",
+    "기능 체류기간 연장 허가 신청",
+  ],
+  "在留資格「技能」（出入国在留管理庁）": [
+    "Status of residence \"Skilled Labor\" (Immigration Services Agency of Japan)",
+    "체류자격 '기능'(출입국재류관리청)",
+  ],
+  "在留資格「技能」調理師としての活動の場合（出入国在留管理庁）": [
+    "Status of residence \"Skilled Labor\": activities as a cook (Immigration Services Agency of Japan)",
+    "체류자격 '기능' 조리사로서의 활동의 경우(출입국재류관리청)",
+  ],
+  "在留資格「技能」調理師以外の活動の場合（出入国在留管理庁）": [
+    "Status of residence \"Skilled Labor\": activities other than as a cook (Immigration Services Agency of Japan)",
+    "체류자격 '기능' 조리사 이외의 활동의 경우(출입국재류관리청)",
+  ],
+  "従事する業務の内容を証明する所属機関の文書": [
+    "Document from the organization proving the work to be performed",
+    "종사하는 업무의 내용을 증명하는 소속 기관의 문서",
+  ],
+  "申請に係る技能を要する業務に従事した機関及び内容並びに期間を明示した履歴書": [
+    "A résumé stating the organizations, content and periods of past work requiring the relevant skill",
+    "신청에 관련된 기능을 요하는 업무에 종사한 기관, 내용 및 기간을 명시한 이력서",
+  ],
+  "料理人（タイ料理人を除く）の職歴を証明する文書（在職証明書等）": [
+    "Document proving the work history of a cook other than a Thai cook (certificate of employment, etc.)",
+    "요리사(태국 요리사 제외)의 경력을 증명하는 문서(재직증명서 등)",
+  ],
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（調理師）。所属していた機関の在職証明書（機関の名称、所在地及び電話番号が記載されたもの）等で、技能を要する業務に従事した期間を証明する文書（外国の教育機関で当該業務に係る科目を専攻した期間を含む）。公的機関が発行する証明書がある場合はその写し（中華料理人は戸口簿及び職業資格証明書）": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (cook). A certificate of employment from a former organization (stating its name, address and telephone number) or similar document proving the period of work requiring the skill (including the period of majoring in related subjects at a foreign educational institution). If a public authority has issued a certificate, a copy of it (for Chinese cooks, the household register and the vocational qualification certificate)",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(조리사). 근무했던 기관의 재직증명서(기관의 명칭, 소재지 및 전화번호가 기재된 것) 등으로 기능을 요하는 업무에 종사한 기간을 증명하는 문서(외국 교육기관에서 해당 업무에 관련된 과목을 전공한 기간 포함). 공적 기관이 발급한 증명서가 있는 경우 그 사본(중국 요리사는 호구부 및 직업자격증명서)",
+  ],
+  "タイ料理人の職歴・技能水準を証明する文書": [
+    "Documents proving the work history and skill level of a Thai cook",
+    "태국 요리사의 경력·기능 수준을 증명하는 문서",
+  ],
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（タイ料理人）。タイ料理人として5年以上の実務経験を証明する文書、初級以上のタイ料理人としての技能水準に関する証明書、申請の直前1年間にタイでタイ料理人として妥当な報酬を受けていたことを証明する文書": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (Thai cook). A document proving at least 5 years of practical experience as a Thai cook, a certificate of skill level as a Thai cook at beginner level or above, and a document proving that the applicant received appropriate remuneration as a Thai cook in Thailand during the year immediately before the application",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(태국 요리사). 태국 요리사로서 5년 이상의 실무 경험을 증명하는 문서, 초급 이상의 태국 요리사로서의 기능 수준에 관한 증명서, 신청 직전 1년 동안 태국에서 태국 요리사로서 적정한 보수를 받았음을 증명하는 문서",
+  ],
+  "外国特有の建築技術者等の職歴を証明する文書（在職証明書等）": [
+    "Document proving the work history of a foreign-specific architectural engineer, etc. (certificate of employment, etc.)",
+    "외국 특유의 건축 기술자 등의 경력을 증명하는 문서(재직증명서 등)",
+  ],
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（外国特有の建築技術者、外国特有の製品製造者、動物の調教師、海底掘削・探査技術者、宝石・貴金属・毛皮加工技能者）。所属していた機関の在職証明書（機関の名称、所在地及び電話番号が記載されたもの）等で、技能を要する業務に従事した期間を証明する文書（外国の教育機関で当該業務に係る科目を専攻した期間を含む）": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (foreign-specific architectural engineer, foreign-specific product maker, animal trainer, undersea drilling/exploration engineer, or jewelry/precious metal/fur processing craftsperson). A certificate of employment from a former organization (stating its name, address and telephone number) or similar document proving the period of work requiring the skill (including the period of majoring in related subjects at a foreign educational institution)",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(외국 특유의 건축 기술자, 외국 특유의 제품 제조자, 동물 조련사, 해저 굴착·탐사 기술자, 보석·귀금속·모피 가공 기능자). 근무했던 기관의 재직증명서(기관의 명칭, 소재지 및 전화번호가 기재된 것) 등으로 기능을 요하는 업무에 종사한 기간을 증명하는 문서(외국 교육기관에서 해당 업무에 관련된 과목을 전공한 기간 포함)",
+  ],
+  "パイロットの250時間以上の飛行経歴を証明する所属機関の文書": [
+    "Document from the organization proving a flight history of at least 250 hours (pilot)",
+    "조종사의 250시간 이상 비행 경력을 증명하는 소속 기관의 문서",
+  ],
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（パイロット）": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (pilot)",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(조종사)",
+  ],
+  "スポーツ指導者の実務経験及び国際競技会への出場を証明する文書": [
+    "Documents proving the practical experience of a sports instructor and participation in international competitions",
+    "스포츠 지도자의 실무 경험 및 국제 경기대회 출전을 증명하는 문서",
+  ],
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（スポーツ指導者）。指導の実務に従事していたことを証明する文書（外国の教育機関で当該スポーツの指導に係る科目を専攻した期間及び報酬を受けて当該スポーツに従事していた期間を含む）と、選手としてオリンピック大会、世界選手権大会その他国際的な競技会に出場したことを証明する文書": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (sports instructor). A document proving that the applicant worked in sports instruction (including the period of majoring in related subjects at a foreign educational institution and the period of paid work in the sport), and a document proving that the applicant competed as an athlete in the Olympic Games, a world championship or another international competition",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(스포츠 지도자). 지도 실무에 종사했음을 증명하는 문서(외국 교육기관에서 해당 스포츠 지도에 관련된 과목을 전공한 기간 및 보수를 받고 해당 스포츠에 종사한 기간 포함)와, 선수로서 올림픽 대회, 세계선수권 대회 기타 국제 경기대회에 출전했음을 증명하는 문서",
+  ],
+  "ソムリエの実務経験及び国際ソムリエコンクールの成績又は資格を証明する文書": [
+    "Documents proving a sommelier's practical experience and results at an international sommelier competition or qualification",
+    "소믈리에의 실무 경험 및 국제 소믈리에 콩쿠르 성적 또는 자격을 증명하는 문서",
+  ],
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（ソムリエ）。在職証明書でワイン鑑定等の実務経験を証明する文書（外国の教育機関でワイン鑑定等に係る科目を専攻した期間を含む）と、次の(ア)又は(イ)の資料（所持しない場合は(ウ)）：(ア)国際ソムリエコンクールで優秀な成績を収めたことを証明する文書、(イ)国際ソムリエコンクールで国の代表となったことを証明する文書（出場者が1国につき1名に制限されているものに限る）、(ウ)ワイン鑑定等に係る技能について、国又は地方公共団体等が認定する資格で法務大臣が告示で定めるものを有することを証明する文書": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (sommelier). A certificate of employment proving practical experience in wine appraisal, etc. (including the period of majoring in related subjects at a foreign educational institution), and the document in (a) or (b) below (or (c) if the applicant has neither): (a) a document proving excellent results at an international sommelier competition; (b) a document proving that the applicant represented the country at an international sommelier competition (limited to competitions with one entrant per country); (c) a document proving that the applicant holds a qualification for wine appraisal skills, certified by a national or local government or an equivalent public/private body, that is designated by the Minister of Justice by public notice",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(소믈리에). 재직증명서로 와인 감정 등의 실무 경험을 증명하는 문서(외국 교육기관에서 와인 감정 등에 관련된 과목을 전공한 기간 포함)와, 다음 (가) 또는 (나)의 자료(소지하지 않은 경우 (다)): (가) 국제 소믈리에 콩쿠르에서 우수한 성적을 거두었음을 증명하는 문서, (나) 국제 소믈리에 콩쿠르에서 국가 대표가 되었음을 증명하는 문서(출전자가 1국당 1명으로 제한된 것에 한함), (다) 와인 감정 등에 관한 기능에 대해 국가 또는 지방공공단체 등이 인정하는 자격으로 법무대신이 고시로 정한 것을 보유하고 있음을 증명하는 문서",
+  ],
+  "労働契約の場合は、労働条件を明示する文書（労働基準法第15条第1項・同法施行規則第5条に基づき交付されるもの）。日本法人の役員に就任する場合は、役員報酬を定める定款の写し又は役員報酬を決議した株主総会の議事録の写し": [
+    "For an employment contract: the document stating working conditions (issued under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations). For an officer of a Japanese company: a copy of the articles of incorporation setting officer remuneration, or a copy of the minutes of the shareholders' meeting resolving it",
+    "노동계약의 경우: 근로조건을 명시한 문서(노동기준법 제15조 제1항 및 동법 시행규칙 제5조에 따라 교부되는 것). 일본 법인의 임원으로 취임하는 경우: 임원 보수를 정한 정관의 사본 또는 임원 보수를 결의한 주주총회 의사록의 사본",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。新規事業の場合は事業計画書": [
+    "Only for the first renewal application after changing jobs. For a new business, a business plan",
+    "이직 후 첫 연장 허가 신청의 경우에만. 신규 사업의 경우 사업계획서",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
