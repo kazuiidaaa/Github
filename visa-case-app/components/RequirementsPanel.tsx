@@ -30,8 +30,9 @@ const RESULT_KEY = {
   required: "caseRequirements.resultRequired",
   not_required: "caseRequirements.resultNotRequired",
   check: "caseRequirements.resultCheck",
+  optional: "caseRequirements.resultOptional",
 } as const satisfies Record<Result, string>;
-const RESULT_TONE: Record<Result, "red" | "gray" | "yellow"> = { required: "red", not_required: "gray", check: "yellow" };
+const RESULT_TONE: Record<Result, "red" | "gray" | "yellow"> = { required: "red", not_required: "gray", check: "yellow", optional: "gray" };
 const PARTY_KEY = { applicant: "caseRequirements.partyApplicant", organization: "caseRequirements.partyOrganization" } as const;
 
 // 狭い画面幅（md 未満）では、表の行をカード状に縦積みして表示する。

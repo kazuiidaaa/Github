@@ -54,9 +54,9 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
 
   const COMMON = ["application_form", "photo", "return_envelope"];
   const CAT34 = ["activity_documents", "career_documents", "registry_certificate", "business_description", "financial_statements", "representative_declaration"];
-  const BASE_CHECK = ["vocational_school_certificate", "dispatch_documents", "passport_copy"];
-  const CAT_CHECK = ["vocational_school_certificate", "dispatch_documents", "language_ability", "passport_copy"];
-  const CAT4_CHECK = ["vocational_school_certificate", "dispatch_documents", "language_ability", "withholding_exemption", "passport_copy"];
+  const BASE_CHECK = ["vocational_school_certificate", "dispatch_documents"];
+  const CAT_CHECK = ["vocational_school_certificate", "dispatch_documents", "language_ability"];
+  const CAT4_CHECK = ["vocational_school_certificate", "dispatch_documents", "language_ability", "withholding_exemption"];
   const MATRIX: { category: OrgCategory; required: string[]; check: string[] }[] = [
     { category: "", required: COMMON, check: BASE_CHECK },
     { category: "1", required: [...COMMON, "category_proof"], check: BASE_CHECK },
@@ -75,6 +75,10 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
         const e = evaluate(make({}, row.category, special));
         expect(ruleIds(e, "required")).toEqual(required);
         expect(ruleIds(e, "check")).toEqual(row.check);
+        // 旅券の写しは任意で、必要書類にも要確認にも数えない
+        expect(ruleIds(e, "optional")).toEqual(["passport_copy"]);
+        expect(e.missing.map((i) => i.rule.id)).not.toContain("passport_copy");
+        expect(e.toCheck.map((i) => i.rule.id)).not.toContain("passport_copy");
       });
 
       it(`${label}: 判定対象のうち、共通の3書類以外は要確認（verify）である`, () => {

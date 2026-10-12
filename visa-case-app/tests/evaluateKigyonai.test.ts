@@ -83,15 +83,16 @@ describe("企業内転勤の規則集合", () => {
     const base = ["application_form", "photo", "return_envelope"];
     const e1 = evaluate(make("coe", "1"));
     expect(ids(e1, "required")).toEqual([...base, "category_proof"]);
-    expect(ids(e1, "check")).toEqual(["passport_copy"]);
+    expect(ids(e1, "check")).toEqual([]);
+    expect(ids(e1, "optional")).toEqual(["passport_copy"]);
     const e2 = evaluate(make("coe", "2"));
     expect(ids(e2, "required")).toEqual([...base, "category_proof"]);
-    expect(ids(e2, "check")).toEqual(["online_approval_proof", "passport_copy"]);
+    expect(ids(e2, "check")).toEqual(["online_approval_proof"]);
     const e3 = evaluate(make("coe", "3"));
     expect(ids(e3, "required")).toEqual([...base, "category_proof", ...CATEGORY_3_4_DOCS]);
     const e4 = evaluate(make("coe", "4"));
     expect(ids(e4, "required")).toEqual([...base, ...CATEGORY_3_4_DOCS, "payroll_office_notification", "withholding_tax_receipts"]);
-    expect(ids(e4, "check")).toEqual(["withholding_exemption_certificate", "passport_copy"]);
+    expect(ids(e4, "check")).toEqual(["withholding_exemption_certificate"]);
   });
 
   it("変更：返信用封筒と旅券の写しは不要で、在留カードの提示が加わる。カテゴリーごとの書類は認定と同じ", () => {
@@ -125,7 +126,7 @@ describe("企業内転勤の規則集合", () => {
   it("カテゴリー未選択のときは、カテゴリーを選ぶよう案内し、カテゴリーを問わない共通書類だけを出す", () => {
     const e = evaluate(make("coe"));
     expect(e.needsCategory).toBe(true);
-    expect(e.items.map((i) => i.rule.id)).toEqual(["application_form", "photo", "return_envelope", "passport_copy"]);
+    expect(e.items.map((i) => i.rule.id)).toEqual(["application_form", "photo", "passport_copy", "return_envelope"]);
   });
 });
 

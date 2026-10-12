@@ -21,8 +21,8 @@ export interface RequirementRule {
   causes?: AcquisitionCause[];
   /** この書類が必要となる申請人の区分（basis が applicantType の規則集合のみ。省略時は全区分） */
   applicantTypes?: MedicalApplicantType[];
-  /** required：必要、check：必要となる場合があり確認を要する */
-  level: "required" | "check";
+  /** required：必要、check：必要となる場合があり確認を要する、optional：提出は必須でないが、実務では取得するのが通例（不足にも要確認にも数えない） */
+  level: "required" | "check" | "optional";
   /** 入力された雇用・会社情報が真の場合のみ適用する条件 */
   when?: keyof Pick<EmploymentInfo, "withholdingSpecial">;
   note?: string;
@@ -96,15 +96,25 @@ const COMMON_PHOTO_NOTES: Record<CommonProcedure, string> = {
 };
 
 /**
- * 認定・変更・更新の共通書類。パスポート及び在留カードの提示は、更新・変更のみ（認定は海外からの呼び寄せで在留カードがなく、旅券の提示も不要）。
- * 取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が同じ項目を持つ。
+ * 認定・変更・更新の共通書類。旅券は身分証情報として扱い、更新・変更は「パスポート及び在留カード（提示）」を必須、
+ * 認定は海外からの呼び寄せで在留カードがなく旅券の提示も不要なため「旅券の写し」を任意にする（Issue #312）。
+ * 取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が同じ項目（旅券の提示）を持つ。
  */
 export function procedureCommonRules(procedure: CommonProcedure): RequirementRule[] {
   const rules: RequirementRule[] = [
     { id: "application_form", name: COMMON_APPLICATION_FORM_NAMES[procedure], party: "applicant", categories: ALL, level: "required" },
     { id: "photo", name: "写真（縦4cm×横3cm）", party: "applicant", categories: ALL, level: "required", note: COMMON_PHOTO_NOTES[procedure] },
   ];
-  if (procedure !== "coe") {
+  if (procedure === "coe") {
+    rules.push({
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "optional",
+      note: "入管庁の案内では提示不要。実務では取得するのが通例。認定証明書上の氏名と旅券上の氏名の表記が異なる場合は、提出が可能であれば併せて提出する",
+    });
+  } else {
     rules.push({ id: "passport_card", name: "パスポート及び在留カード（提示）", party: "applicant", categories: ALL, level: "required" });
   }
   return rules;
@@ -352,15 +362,6 @@ export const GIJINKOKU_COE: RuleSet = {
       level: "required",
       when: "withholdingSpecial",
       note: "納期の特例の承認を受けている場合",
-      verify: true,
-    },
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
       verify: true,
     },
   ],
@@ -1259,15 +1260,6 @@ export const KAIGO_COE: RuleSet = {
     kaigoOrganizationOverview,
     kaigoRepresentativeDeclaration,
     kaigoSkillTransferDeclaration,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-      verify: true,
-    },
   ],
 };
 
@@ -1348,15 +1340,6 @@ export const HOUMU_KAIKEI_COE: RuleSet = {
       note: "申請結果（認定証明書等）の返送に使用する",
     },
     houmuKaikeiLicense,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-      verify: true,
-    },
   ],
 };
 
@@ -1524,15 +1507,6 @@ export const IRYO_COE: RuleSet = {
     iryoDoctorLicense,
     iryoOtherLicense,
     iryoFacilityOverview,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-      verify: true,
-    },
   ],
 };
 
@@ -2187,15 +2161,6 @@ export const GINO_COE: RuleSet = {
     ginoFinancialStatements,
     kenkyuRepresentativeDeclaration,
     ...kenkyuWithholdingRules,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-      verify: true,
-    },
   ],
 };
 
@@ -2407,14 +2372,6 @@ export const KIGYONAI_COE: RuleSet = {
       note: "申請結果（認定証明書等）の返送に使用する",
     },
     ...kigyonaiCategoryRules,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-    },
   ],
 };
 
@@ -2545,14 +2502,6 @@ export const TOKUTEI_KENKYU_COE: RuleSet = {
     ...tokuteiKenkyuOrganizationRules,
     tokuteiKenkyuActivityDocuments,
     tokuteiKenkyuCareerDocuments,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-    },
   ],
 };
 
@@ -2695,14 +2644,6 @@ export const DAIGAKU_SOTSUGYO_COE: RuleSet = {
       note: "申請結果（認定証明書等）の返送に使用する",
     },
     ...daigakuSotsugyoApplicationRules,
-    {
-      id: "passport_copy",
-      name: "旅券（パスポート）の写し",
-      party: "applicant",
-      categories: ALL,
-      level: "check",
-      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
-    },
   ],
 };
 

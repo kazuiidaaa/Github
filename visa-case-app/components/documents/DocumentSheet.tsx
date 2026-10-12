@@ -28,7 +28,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-const CATEGORY_LABELS = { required: "必要", not_required: "不要", check: "要確認" } as const;
+const CATEGORY_LABELS = { required: "必要", not_required: "不要", check: "要確認", optional: "任意" } as const;
 
 function ApplicantSection({ a }: { a: NonNullable<ContentJson["applicant"]> }) {
   return (

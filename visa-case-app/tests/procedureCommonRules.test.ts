@@ -6,13 +6,31 @@ import { RULE_SETS, procedureCommonRules, type CommonProcedure } from "../lib/re
 const COMMON_PROCEDURES: CommonProcedure[] = ["renewal", "change", "coe"];
 
 describe("手続共通の書類（Issue #291）", () => {
-  it("申請書と写真は認定・変更・更新のすべてに、在留カードの提示は更新・変更だけにある（認定は不要）", () => {
+  it("申請書と写真は認定・変更・更新のすべてに、在留カードの提示は更新・変更だけにある。認定は旅券の写しを任意で持つ（Issue #312）", () => {
     const ids = (p: CommonProcedure) => procedureCommonRules(p).map((r) => r.id);
-    expect(ids("coe")).toEqual(["application_form", "photo"]);
+    expect(ids("coe")).toEqual(["application_form", "photo", "passport_copy"]);
     expect(ids("renewal")).toEqual(["application_form", "photo", "passport_card"]);
     expect(ids("change")).toEqual(["application_form", "photo", "passport_card"]);
     for (const p of COMMON_PROCEDURES) {
-      expect(procedureCommonRules(p).every((r) => r.level === "required" && r.party === "applicant"), p).toBe(true);
+      expect(procedureCommonRules(p).every((r) => r.party === "applicant"), p).toBe(true);
+      // 旅券の写し以外は必須
+      expect(procedureCommonRules(p).filter((r) => r.level !== "required").map((r) => r.id), p).toEqual(p === "coe" ? ["passport_copy"] : []);
+    }
+  });
+
+  it("認定の旅券の写しは任意で、要確認（verify）にしない。注記に、提示不要と実務の通例を書く", () => {
+    const passport = procedureCommonRules("coe").find((r) => r.id === "passport_copy");
+    expect(passport?.level).toBe("optional");
+    expect(passport?.verify).toBeUndefined();
+    expect(passport?.note).toContain("入管庁の案内では提示不要。実務では取得するのが通例");
+  });
+
+  it("旅券の写しは共通書類にだけある。規則集合ごとに持たせない（同じ id は共通書類と同一）", () => {
+    const common = procedureCommonRules("coe").find((r) => r.id === "passport_copy");
+    for (const set of RULE_SETS) {
+      const found = set.rules.filter((r) => r.id === "passport_copy");
+      if (set.procedureType === "coe") expect(found, set.id).toEqual([common]);
+      else expect(found, set.id).toEqual([]);
     }
   });
 

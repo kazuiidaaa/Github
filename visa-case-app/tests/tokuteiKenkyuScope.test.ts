@@ -106,11 +106,11 @@ describe("特定研究等活動の規則集合", () => {
     }
   });
 
-  it("認定：申請書・写真・返信用封筒・機関の資料・活動内容の文書・経歴の文書が必須。旅券の写しは確認事項で、在留カードの提示は含まない", () => {
+  it("認定：申請書・写真・返信用封筒・機関の資料・活動内容の文書・経歴の文書が必須。旅券の写しは任意で、在留カードの提示は含まない", () => {
     for (const id of ["application_form", "photo", "return_envelope", "organization_brochure", "registry_certificate", "foreign_staff_list", "consent_form", "activity_documents", "career_documents"]) {
       expect(levelOf(TOKUTEI_KENKYU_COE, id), id).toBe("required");
     }
-    expect(levelOf(TOKUTEI_KENKYU_COE, "passport_copy")).toBe("check");
+    expect(levelOf(TOKUTEI_KENKYU_COE, "passport_copy")).toBe("optional");
     expect(ids(TOKUTEI_KENKYU_COE)).not.toContain("passport_card");
   });
 

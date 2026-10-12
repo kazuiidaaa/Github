@@ -5,7 +5,8 @@ import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
 import { isCollected } from "./progress";
 import { ACQUISITION_CAUSE_LABELS, RULE_SETS, categoryRangeOf, hspEvidenceRule, type Category, type RequirementRule, type RuleSet } from "./rules";
 
-export type Result = "required" | "not_required" | "check";
+/** required：必要、not_required：不要、check：要確認、optional：任意（不足にも要確認にも数えない） */
+export type Result = "required" | "not_required" | "check" | "optional";
 
 export interface EvaluatedItem {
   rule: RequirementRule;
