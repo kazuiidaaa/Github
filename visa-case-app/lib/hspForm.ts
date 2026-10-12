@@ -51,11 +51,34 @@ export function formCodeOfStatus(status: string): Exclude<CoeFormCode, "M"> | un
 }
 
 /**
- * 在留資格が、公式様式（認定・変更・更新）で扱える範囲か。一覧の在留資格（FORM_STATUSES）、高度専門職、経営・管理（第1表のみ）なら true。
- * 研究・特定活動などは、一覧に足すまでは false（対象外の可能性を警告する）。
+ * 特定活動のうち、様式Nを使う種別（Issue #299）。様式Nの見出しは「特定活動（研究活動等）」を含む（入管庁の特定研究等活動（告示36号）の案内ページ・様式Nの見出しによる）。
+ * 特定活動は在留資格の文字列だけでは様式を決められない（家事使用人・EPAなど、様式が異なる種別がある）ため、FORM_STATUSES には入れず、案件の特定活動の種別で判定する。
+ * 告示37号（特定情報処理活動）は #300（tokuteiJoho）、特定研究等活動の家族は「その他」として、ここには入れない。
  */
-export function isStatusInFormScope(status: string): boolean {
-  return formCodeOfStatus(status) !== undefined || isAdvancedProfessional(status) || status.trim() === KEIEI_KANRI_STATUS;
+export const FORM_N_TOKUTEI_TYPES: readonly string[] = ["tokuteiKenkyu"];
+
+/** 在留資格が特定活動か（「特定活動（告示○号）」などの表記を含む。lib/requirements/evaluate.ts の isTokuteiKatsudo と同じ判定） */
+export function isTokuteiKatsudoStatus(status: string): boolean {
+  return status.replace(/[\s・･]/g, "").includes("特定活動");
+}
+
+/** 特定活動の在留資格が、案件の特定活動の種別により様式Nを使うか。特定活動以外の在留資格・種別が未選択・ほかの種別は false */
+export function isFormNTokuteiCase(status: string, tokuteiKatsudoType: string | undefined): boolean {
+  return isTokuteiKatsudoStatus(status) && FORM_N_TOKUTEI_TYPES.includes(tokuteiKatsudoType ?? "");
+}
+
+/**
+ * 在留資格が、公式様式（認定・変更・更新）で扱える範囲か。一覧の在留資格（FORM_STATUSES）、高度専門職、経営・管理（第1表のみ）なら true。
+ * 特定活動は、案件の特定活動の種別（tokuteiKatsudoType）が様式Nを使う種別のときだけ true（FORM_N_TOKUTEI_TYPES）。
+ * 種別を渡さない・未選択・ほかの種別の特定活動、研究などは、一覧に足すまでは false（対象外の可能性を警告する）。
+ */
+export function isStatusInFormScope(status: string, tokuteiKatsudoType?: string): boolean {
+  return (
+    formCodeOfStatus(status) !== undefined ||
+    isAdvancedProfessional(status) ||
+    status.trim() === KEIEI_KANRI_STATUS ||
+    isFormNTokuteiCase(status, tokuteiKatsudoType)
+  );
 }
 
 /**

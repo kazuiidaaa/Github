@@ -8,7 +8,7 @@ import { EmploymentFields, hasEmploymentDateError } from "@/components/Employmen
 import { AcceptedDateField } from "@/components/AcceptedDateField";
 import { ChoiceGroup } from "@/components/ChoiceGroup";
 import { PROCEDURE_OPTIONS, StatusSelect, useStatusHints } from "@/components/StatusSelect";
-import { noRuleMessage, procedureDescriptionText, targetStatusLegend } from "@/lib/i18n/caseNew";
+import { noRuleGuideText, procedureDescriptionText, targetStatusLegend } from "@/lib/i18n/caseNew";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { Button, Field, inputClass } from "@/components/ui";
 import { hasAcceptedDateError } from "@/lib/acceptedDate";
@@ -273,7 +273,7 @@ export default function NewCasePage() {
         <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
         {showNoRuleGuide && (
           <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
-            {t("caseNew.noRuleGuide", { message: noRuleMessage(t) })}
+            {noRuleGuideText(t, statusForRules(procedureType, { currentStatus, targetStatus }))}
           </p>
         )}
         <Field label={t("caseNew.memoLabel")} hint={t("caseNew.memoHint")}>

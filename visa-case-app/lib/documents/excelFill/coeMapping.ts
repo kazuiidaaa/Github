@@ -1,5 +1,5 @@
 import { formatDate } from "../../format";
-import { FORM_U_STATUSES } from "../../hspForm";
+import { FORM_U_STATUSES, isFormNTokuteiCase } from "../../hspForm";
 import type { FormDetails } from "../../formDetails";
 import {
   digitsOf,
@@ -253,6 +253,17 @@ export const COE_PURPOSE_CHECKBOXES: Record<string, string> = {
   その他: "AK53",
 };
 
+/**
+ * 項目11「入国目的」の判定に使う、希望する在留資格の表記。案件の「希望する在留資格」は「特定活動」までしか選べないため、
+ * 特定活動で、特定活動の種別が特定研究等活動（tokuteiKenkyu）のときは「特定活動（研究活動等）」として扱う（Issue #299）。
+ * すでに様式の選択肢と一字一句一致する表記は、そのまま返す。
+ */
+export function coePurposeStatus(targetStatus: string, tokuteiKatsudoType: string | undefined): string {
+  const target = targetStatus.trim();
+  if (target in COE_PURPOSE_CHECKBOXES) return target;
+  return isFormNTokuteiCase(target, tokuteiKatsudoType) ? "特定活動（研究活動等）" : target;
+}
+
 /** coe.ts の warnings で、targetStatus が様式の選択肢（34個）のどれかと一致するかの判定に使う */
 export const COE_PURPOSE_LABELS: string[] = [...Object.keys(COE_PURPOSE_CHECKBOXES), ...FORM_U_STATUSES];
 
@@ -297,7 +308,7 @@ export const COE_PICK_ITEMS: PickItem[] = [
     no: "11",
     label: "入国目的",
     sheet: S1,
-    get: (c) => (c.targetStatus ?? "").trim(),
+    get: (c) => coePurposeStatus(c.targetStatus ?? "", c.f.tokuteiKatsudoType),
     writes: COE_PURPOSE_WRITES,
   },
   {

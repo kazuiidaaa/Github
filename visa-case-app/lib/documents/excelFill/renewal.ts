@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { formCodeOfStatus, isAdvancedProfessional, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { formCodeOfStatus, isAdvancedProfessional, isFormNTokuteiCase, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   JOB_DESCRIPTION_LINES,
@@ -17,6 +17,7 @@ import {
 import { fillWorkbook } from "./fillWorkbook";
 import { hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
+import { tokuteiKenkyuWarnings } from "./tokuteiKenkyu";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
@@ -105,6 +106,7 @@ function buildWarnings(
   if (c.f.relativesPresent === "yes" && c.f.relatives.length > MAX_RELATIVES) {
     w.push(`在日親族は、様式の欄（${MAX_RELATIVES}人分）に入らない分を差し込んでいません。別紙に記載してください。`);
   }
+  w.push(...tokuteiKenkyuWarnings(isFormNTokuteiCase(o.status, c.f.tokuteiKatsudoType) || isFormNTokuteiCase(c.a.residenceStatus, c.f.tokuteiKatsudoType), c.f));
   if (c.f.workHistory.length > maxWork) {
     w.push(`職歴は、様式の欄（${maxWork}件分）に入らない分を差し込んでいません。別紙に記載してください。`);
   }

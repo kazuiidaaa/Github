@@ -2457,6 +2457,153 @@ export const KIGYONAI_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「特定活動」のうち、特定研究等活動（告示36号）の本人（種別 tokuteiKenkyu。Issue #299）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
+// 提出書類は、入管庁の案内ページ（designatedactivities07）の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
+// 範囲外：告示37号（特定情報処理活動）は別ページ（#300）、特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+const TOKUTEI_KENKYU_STATUS = "特定活動";
+const TOKUTEI_KENKYU_CHECKED_AT = "2026-10-12";
+const TOKUTEI_KENKYU_PAGE_SOURCE = { title: "在留資格「特定活動」（特定研究等活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities07.html" };
+
+const tokuteiKenkyuOrganizationRules: RequirementRule[] = [
+  {
+    id: "organization_brochure",
+    name: "申請人と契約を結んだ本邦の機関の概要及び事業活動を明らかにする資料：案内書（パンフレット等）",
+    party: "organization",
+    categories: ALL,
+    level: "required",
+    note: "申請人が研究、研究の指導又は教育と関連する事業を自ら経営する活動を行う場合も、案内書・登記事項証明書・これらに準ずる文書を提出する",
+  },
+  { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: ALL, level: "required", note: "商業・法人登記" },
+  {
+    id: "organization_equivalent_documents",
+    name: "上記の案内書及び登記事項証明書に準ずる文書",
+    party: "organization",
+    categories: ALL,
+    level: "check",
+    note: "適宜。案内書・登記事項証明書だけでは機関の概要・事業活動が明らかにならない場合に提出する",
+  },
+  {
+    id: "foreign_staff_list",
+    name: "外国人社員リスト",
+    party: "organization",
+    categories: ALL,
+    level: "required",
+    note: "国籍・氏名・性別・生年月日・入社年月日・在留資格・在留期間・在留期間満了日・職務内容を含んだもの",
+  },
+  {
+    id: "consent_form",
+    name: "同意書",
+    party: "organization",
+    categories: ALL,
+    level: "required",
+    note: "用紙は地方出入国在留管理官署に用意されている",
+  },
+];
+const tokuteiKenkyuActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "活動の内容、期間、地位及び報酬を証する文書（次のいずれか）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+  note: "(1)受入れ機関（本邦の機関）との雇用契約書の写し／(2)辞令の写し／(3)採用通知書の写し／(4)上記(1)〜(3)に準ずる文書",
+};
+const tokuteiKenkyuCareerDocuments: RequirementRule = {
+  id: "career_documents",
+  name: "卒業証明書及び職歴その他経歴を証する文書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "卒業証明書、在職証明書、履歴書（各1通）",
+};
+const tokuteiKenkyuResidentTax: RequirementRule = {
+  id: "resident_tax_certificates",
+  name: "住民税の課税（又は非課税）証明書及び納税証明書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる",
+};
+
+export const TOKUTEI_KENKYU_COE: RuleSet = {
+  id: "tokutei_kenkyu_coe",
+  title: "特定活動（特定研究等活動） 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: TOKUTEI_KENKYU_STATUS,
+  subtype: "tokuteiKenkyu",
+  checkedAt: TOKUTEI_KENKYU_CHECKED_AT,
+  sources: [TOKUTEI_KENKYU_PAGE_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    ...tokuteiKenkyuOrganizationRules,
+    tokuteiKenkyuActivityDocuments,
+    tokuteiKenkyuCareerDocuments,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+    },
+  ],
+};
+
+export const TOKUTEI_KENKYU_CHANGE: RuleSet = {
+  id: "tokutei_kenkyu_change",
+  title: "特定活動（特定研究等活動） 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: TOKUTEI_KENKYU_STATUS,
+  subtype: "tokuteiKenkyu",
+  checkedAt: TOKUTEI_KENKYU_CHECKED_AT,
+  sources: [TOKUTEI_KENKYU_PAGE_SOURCE],
+  rules: [
+    ...procedureCommonRules("change"),
+    ...tokuteiKenkyuOrganizationRules,
+    tokuteiKenkyuActivityDocuments,
+    tokuteiKenkyuCareerDocuments,
+    {
+      id: "resignation_certificate",
+      name: "前雇用先機関が作成した退職証明書（退職日を明記したもの）",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "転職した場合のみ",
+    },
+    { ...tokuteiKenkyuResidentTax, level: "check", note: `転職した場合のみ。${tokuteiKenkyuResidentTax.note}` },
+  ],
+};
+
+export const TOKUTEI_KENKYU_RENEWAL: RuleSet = {
+  id: "tokutei_kenkyu_renewal",
+  title: "特定活動（特定研究等活動） 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: TOKUTEI_KENKYU_STATUS,
+  subtype: "tokuteiKenkyu",
+  checkedAt: TOKUTEI_KENKYU_CHECKED_AT,
+  sources: [TOKUTEI_KENKYU_PAGE_SOURCE],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    tokuteiKenkyuActivityDocuments,
+    tokuteiKenkyuResidentTax,
+    {
+      id: "profit_loss_statement",
+      name: "研究、研究の指導又は教育と関連する事業に係る事業所の損益計算書の写し",
+      party: "organization",
+      categories: ALL,
+      level: "check",
+      note: "「特定研究等活動」で、研究、研究の指導又は教育と関連する事業を自ら経営する活動を行っている場合のみ（1通）。入管庁の案内ページでは「その他（転職した場合）」の項に記載されている",
+    },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -2508,4 +2655,8 @@ export const RULE_SETS: RuleSet[] = [
   KIGYONAI_RENEWAL,
   KIGYONAI_CHANGE,
   KIGYONAI_COE,
+  // 特定活動（特定研究等活動。Issue #299）
+  TOKUTEI_KENKYU_RENEWAL,
+  TOKUTEI_KENKYU_CHANGE,
+  TOKUTEI_KENKYU_COE,
 ];

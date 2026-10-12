@@ -18,6 +18,8 @@ export interface OfficialFormScope {
   residenceStatus: string;
   /** 案件の「変更後（希望）の在留資格」。変更の対象範囲の判定に使う。省略・空は、判定しない */
   targetStatus?: string;
+  /** 案件の特定活動の種別（formDetails.tokuteiKatsudoType）。在留資格が特定活動のときだけ、範囲の判定に使う。省略・空は、未選択として扱う */
+  tokuteiKatsudoType?: string;
 }
 
 export interface OfficialFormSpec {
@@ -35,7 +37,8 @@ export interface OfficialFormSpec {
 }
 
 // 更新・変更の「対象範囲」は、在留資格が lib/hspForm.ts の FORM_STATUSES（様式 I・L・N・U の一覧）・高度専門職・経営・管理のいずれかか、で決める。
-// 研究・特定活動などは、FORM_STATUSES に足すまで対象外（Issue #299・#300）。
+// 特定活動は、案件の特定活動の種別が様式Nを使う種別（tokuteiKenkyu。Issue #299）のときだけ対象。ほかの種別・未選択は対象外。
+// 研究などは、FORM_STATUSES に足すまで対象外（Issue #300）。
 
 const FORM_N_HEADING_STATUS = FORM_STATUSES.N[0];
 /** 対象外の注意に表示する、更新の様式の代表的な在留資格（高度専門職を含む。ほかの在留資格の様式は FORM_STATUSES を参照） */
@@ -51,7 +54,7 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
     confirmedOn: "2026-10-02",
   },
   // 現在の在留資格か、申請人情報の在留資格の、どちらかが対象範囲なら対象
-  isInScope: (s) => s.procedureType === "renewal" && (isStatusInFormScope(s.currentStatus) || isStatusInFormScope(s.residenceStatus)),
+  isInScope: (s) => s.procedureType === "renewal" && (isStatusInFormScope(s.currentStatus, s.tokuteiKatsudoType) || isStatusInFormScope(s.residenceStatus, s.tokuteiKatsudoType)),
   outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_SCOPE_TEXT}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
   scopeText: RENEWAL_SCOPE_TEXT,
 };
@@ -80,7 +83,7 @@ export const CHANGE_SPEC: OfficialFormSpec = {
     confirmedOn: "2026-10-03",
   },
   // 変更は、変更後の在留資格で決まる（現在の在留資格によらない）。未入力は、差し込み側が別の案内を出すため、ここでは判定しない
-  isInScope: (s) => s.procedureType === "change" && (!s.targetStatus?.trim() || isStatusInFormScope(s.targetStatus)),
+  isInScope: (s) => s.procedureType === "change" && (!s.targetStatus?.trim() || isStatusInFormScope(s.targetStatus, s.tokuteiKatsudoType)),
   outOfScopeWarning: `この様式は、変更後の在留資格が「${FORM_N_HEADING_STATUS}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。`,
   scopeText: FORM_N_HEADING_STATUS,
 };
