@@ -255,13 +255,14 @@ export const COE_PURPOSE_CHECKBOXES: Record<string, string> = {
 
 /**
  * 項目11「入国目的」の判定に使う、希望する在留資格の表記。案件の「希望する在留資格」は「特定活動」までしか選べないため、
- * 特定活動で、特定活動の種別が特定研究等活動（tokuteiKenkyu）のときは「特定活動（研究活動等）」として扱う（Issue #299）。
+ * 特定活動で、特定活動の種別が特定研究等活動（tokuteiKenkyu）のときは「特定活動（研究活動等）」、本邦大学等卒業者（daigakuSotsugyo）のときは「特定活動（本邦大学卒業者）」として扱う（Issue #299・#300）。
  * すでに様式の選択肢と一字一句一致する表記は、そのまま返す。
  */
 export function coePurposeStatus(targetStatus: string, tokuteiKatsudoType: string | undefined): string {
   const target = targetStatus.trim();
   if (target in COE_PURPOSE_CHECKBOXES) return target;
-  return isFormNTokuteiCase(target, tokuteiKatsudoType) ? "特定活動（研究活動等）" : target;
+  if (!isFormNTokuteiCase(target, tokuteiKatsudoType)) return target;
+  return tokuteiKatsudoType === "daigakuSotsugyo" ? "特定活動（本邦大学卒業者）" : "特定活動（研究活動等）";
 }
 
 /** coe.ts の warnings で、targetStatus が様式の選択肢（34個）のどれかと一致するかの判定に使う */

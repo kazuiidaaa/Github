@@ -51,11 +51,12 @@ export function formCodeOfStatus(status: string): Exclude<CoeFormCode, "M"> | un
 }
 
 /**
- * 特定活動のうち、様式Nを使う種別（Issue #299）。様式Nの見出しは「特定活動（研究活動等）」を含む（入管庁の特定研究等活動（告示36号）の案内ページ・様式Nの見出しによる）。
+ * 特定活動のうち、様式Nを使う種別（Issue #299・#300）。様式Nの見出しは「特定活動（研究活動等）」「特定活動（本邦大学卒業者）」を含む
+ * （入管庁の特定研究等活動（告示36号）・本邦大学等卒業者（告示46号）の案内ページ・様式Nの見出しによる）。
  * 特定活動は在留資格の文字列だけでは様式を決められない（家事使用人・EPAなど、様式が異なる種別がある）ため、FORM_STATUSES には入れず、案件の特定活動の種別で判定する。
- * 告示37号（特定情報処理活動）は #300（tokuteiJoho）、特定研究等活動の家族は「その他」として、ここには入れない。
+ * 告示37号（特定情報処理活動）は、対応する Issue なし（未対応）。特定研究等活動・本邦大学等卒業者の家族は「その他」として、ここには入れない。
  */
-export const FORM_N_TOKUTEI_TYPES: readonly string[] = ["tokuteiKenkyu"];
+export const FORM_N_TOKUTEI_TYPES: readonly string[] = ["tokuteiKenkyu", "daigakuSotsugyo"];
 
 /** 在留資格が特定活動か（「特定活動（告示○号）」などの表記を含む。lib/requirements/evaluate.ts の isTokuteiKatsudo と同じ判定） */
 export function isTokuteiKatsudoStatus(status: string): boolean {
