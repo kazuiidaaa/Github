@@ -105,6 +105,14 @@ describe("公式様式の対象外の注意", () => {
     expect(w[0]).toContain("技術・人文知識・国際業務");
     expect(w[0]).toContain("This form is for");
   });
+  it("変更は、変更後の在留資格で判定し、日本語は生成時と同じ文面。英語・韓国語は訳を返す", () => {
+    const s = { procedureType: "change" as ProcedureType, currentStatus: "技術・人文知識・国際業務", residenceStatus: "技術・人文知識・国際業務", targetStatus: "留学" };
+    expect(scopeWarningsText(ja, s)).toEqual(officialFormScopeWarnings(s));
+    expect(scopeWarningsText(ja, s)[0]).toContain("変更後の在留資格に合う様式");
+    expect(scopeWarningsText(tFor("en"), s)[0]).toContain("This form is for");
+    expect(scopeWarningsText(tFor("ko"), s)[0]).toContain("이 서식");
+    expect(scopeWarningsText(ja, { ...s, targetStatus: "介護" })).toEqual([]);
+  });
   it("様式の定義がある手続種別は、すべて訳がある", () => {
     for (const p of Object.keys(OFFICIAL_FORM_SPECS)) {
       const w = scopeWarningsText(tFor("ko"), { procedureType: p as ProcedureType, currentStatus: "x", residenceStatus: "x" });

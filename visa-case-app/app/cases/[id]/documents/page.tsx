@@ -72,6 +72,7 @@ export default function DocumentsPage() {
     procedureType: record.procedureType,
     currentStatus: record.currentStatus,
     residenceStatus: record.applicant.residenceStatus,
+    targetStatus: record.targetStatus,
   });
   const rows = precheckRowsText(t, {
     applicantConfirmed: record.applicant.confirmationStatus === "confirmed",

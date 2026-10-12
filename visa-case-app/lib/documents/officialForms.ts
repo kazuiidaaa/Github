@@ -1,4 +1,5 @@
-import { ADVANCED_PROFESSIONAL_STATUS, baseResidenceStatus, type CaseRecord, type ProcedureType } from "../types";
+import { FORM_STATUSES, isStatusInFormScope } from "../hspForm";
+import type { CaseRecord, ProcedureType } from "../types";
 import type { OfficialFormContent } from "./types";
 
 // 公式様式（Excel）の、手続種別ごとの定義。画面とサーバーの両方から使う（node:fs は使わない）。
@@ -15,6 +16,8 @@ export interface OfficialFormScope {
   currentStatus: string;
   /** 申請人情報の在留資格 */
   residenceStatus: string;
+  /** 案件の「変更後（希望）の在留資格」。変更の対象範囲の判定に使う。省略・空は、判定しない */
+  targetStatus?: string;
 }
 
 export interface OfficialFormSpec {
@@ -27,14 +30,16 @@ export interface OfficialFormSpec {
   isInScope(s: OfficialFormScope): boolean;
   /** 対象外の案件のときの注意 */
   outOfScopeWarning: string;
+  /** 注意の文面（画面の言語別の訳）の {status} に入れる、対象とする在留資格の表記。注意の文面に在留資格がない手続は省略 */
+  scopeText?: string;
 }
 
-const RENEWAL_TARGET_STATUS = "技術・人文知識・国際業務";
-/** 対象外の注意に表示する、更新の様式が対象とする在留資格（高度専門職を含む） */
-export const RENEWAL_SCOPE_TEXT = `${RENEWAL_TARGET_STATUS}、高度専門職`;
+// 更新・変更の「対象範囲」は、在留資格が lib/hspForm.ts の FORM_STATUSES（様式 I・L・N・U の一覧）・高度専門職・経営・管理のいずれかか、で決める。
+// 研究・特定活動などは、FORM_STATUSES に足すまで対象外（Issue #299・#300）。
 
-/** 高度専門職か（号つきの値を含む）。高度専門職の更新・変更は、様式 I・L・M・N・U を切り替えて差し込む（Issue #212） */
-const isHsp = (status: string) => baseResidenceStatus(status.trim()) === ADVANCED_PROFESSIONAL_STATUS;
+const FORM_N_HEADING_STATUS = FORM_STATUSES.N[0];
+/** 対象外の注意に表示する、更新の様式の代表的な在留資格（高度専門職を含む。ほかの在留資格の様式は FORM_STATUSES を参照） */
+export const RENEWAL_SCOPE_TEXT = `${FORM_N_HEADING_STATUS}、高度専門職`;
 
 export const RENEWAL_SPEC: OfficialFormSpec = {
   procedureType: "renewal",
@@ -45,13 +50,10 @@ export const RENEWAL_SPEC: OfficialFormSpec = {
     sourceUrl: "https://www.moj.go.jp/isa/content/930004095.xlsx",
     confirmedOn: "2026-10-02",
   },
-  isInScope: (s) =>
-    s.procedureType === "renewal" &&
-    (s.currentStatus.includes(RENEWAL_TARGET_STATUS) ||
-      s.residenceStatus.includes(RENEWAL_TARGET_STATUS) ||
-      isHsp(s.currentStatus) ||
-      isHsp(s.residenceStatus)),
+  // 現在の在留資格か、申請人情報の在留資格の、どちらかが対象範囲なら対象
+  isInScope: (s) => s.procedureType === "renewal" && (isStatusInFormScope(s.currentStatus) || isStatusInFormScope(s.residenceStatus)),
   outOfScopeWarning: `この様式は、在留期間更新許可申請（${RENEWAL_SCOPE_TEXT}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。`,
+  scopeText: RENEWAL_SCOPE_TEXT,
 };
 
 export const COE_SPEC: OfficialFormSpec = {
@@ -77,8 +79,10 @@ export const CHANGE_SPEC: OfficialFormSpec = {
     sourceUrl: "https://www.moj.go.jp/isa/content/930004065.xlsx",
     confirmedOn: "2026-10-03",
   },
-  isInScope: (s) => s.procedureType === "change",
-  outOfScopeWarning: "この様式は、在留資格変更許可申請を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。",
+  // 変更は、変更後の在留資格で決まる（現在の在留資格によらない）。未入力は、差し込み側が別の案内を出すため、ここでは判定しない
+  isInScope: (s) => s.procedureType === "change" && (!s.targetStatus?.trim() || isStatusInFormScope(s.targetStatus)),
+  outOfScopeWarning: `この様式は、変更後の在留資格が「${FORM_N_HEADING_STATUS}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。`,
+  scopeText: FORM_N_HEADING_STATUS,
 };
 
 export const ACQUISITION_SPEC: OfficialFormSpec = {
@@ -95,7 +99,7 @@ export const ACQUISITION_SPEC: OfficialFormSpec = {
   outOfScopeWarning: "この様式は、在留資格取得許可申請を対象としています。この案件は対象外の可能性があります。",
 };
 
-/** 手続種別ごとの様式。未対応の手続種別は、現時点では更新の様式を、注意を付けて使う */
+/** 手続種別ごとの様式 */
 export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec>> = {
   renewal: RENEWAL_SPEC,
   coe: COE_SPEC,
@@ -103,7 +107,10 @@ export const OFFICIAL_FORM_SPECS: Partial<Record<ProcedureType, OfficialFormSpec
   acquisition: ACQUISITION_SPEC,
 };
 
-/** 差し込みに使う様式。手続種別に専用の様式がなければ、更新の様式（対象外の注意が付く） */
+/**
+ * 差し込みに使う様式。手続種別に専用の様式がなければ（現時点では「その他」）、更新の様式（対象外の注意が付く）。
+ * このフォールバックは、ここだけで決める。差し込み関数の選択（excelFill/index.ts）も、この返り値の手続種別を使う。
+ */
 export function officialFormSpecFor(procedureType: ProcedureType): OfficialFormSpec {
   return OFFICIAL_FORM_SPECS[procedureType] ?? RENEWAL_SPEC;
 }
