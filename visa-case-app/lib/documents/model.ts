@@ -26,7 +26,7 @@ export type Block =
   | { kind: "table"; widths: number[]; head: string[]; rows: string[][] }
   | { kind: "notices"; lines: string[] };
 
-const CATEGORY_LABELS = { required: "必要", not_required: "不要", check: "要確認" } as const;
+const CATEGORY_LABELS = { required: "必要", not_required: "不要", check: "要確認", optional: "任意" } as const;
 
 function kv(rows: [string, string | undefined][]): Block {
   return { kind: "kv", rows: rows.map(([k, v]) => [k, v || "未入力"]) };

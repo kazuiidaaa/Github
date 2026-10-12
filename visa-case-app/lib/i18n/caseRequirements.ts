@@ -19,15 +19,15 @@ export type ReasonCode =
   | { kind: "hspMark"; mark: string }
   | { kind: "causeNotRequired"; cause: AcquisitionCause }
   | { kind: "causeCommon" }
-  | { kind: "causeLevel"; cause: AcquisitionCause; level: "required" | "check" }
+  | { kind: "causeLevel"; cause: AcquisitionCause; level: RequirementRule["level"] }
   | { kind: "categoryNotRequired"; category: Category }
   | { kind: "conditionNotMet"; note?: string }
   | { kind: "categoryCommon" }
-  | { kind: "categoryLevel"; category: Category; level: "required" | "check" }
+  | { kind: "categoryLevel"; category: Category; level: RequirementRule["level"] }
   | { kind: "applicantTypeNotRequired"; type: MedicalApplicantType }
   | { kind: "applicantTypeCommon" }
   | { kind: "applicantTypeUnknown" }
-  | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: "required" | "check" };
+  | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
@@ -40,6 +40,17 @@ const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
   other: "caseRequirements.cause_other",
 };
 
+/** 規則の level ごとの、判定の理由の文（任意は、不足にも要確認にも数えない書類） */
+const LEVEL_KEYS = {
+  cause: { required: "caseRequirements.reasonCauseRequired", check: "caseRequirements.reasonCauseCheck", optional: "caseRequirements.reasonCauseOptional" },
+  category: { required: "caseRequirements.reasonCategoryRequired", check: "caseRequirements.reasonCategoryCheck", optional: "caseRequirements.reasonCategoryOptional" },
+  applicantType: {
+    required: "caseRequirements.reasonApplicantTypeRequired",
+    check: "caseRequirements.reasonApplicantTypeCheck",
+    optional: "caseRequirements.reasonApplicantTypeOptional",
+  },
+} as const;
+
 /** 判定の理由の文。noteText は、条件に該当しない理由に含める規則の注記の訳（日本語は原文のまま） */
 export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => string = (n) => n): string {
   switch (code.kind) {
@@ -50,7 +61,7 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
     case "causeCommon":
       return t("caseRequirements.reasonCauseCommon");
     case "causeLevel":
-      return t(code.level === "required" ? "caseRequirements.reasonCauseRequired" : "caseRequirements.reasonCauseCheck", {
+      return t(LEVEL_KEYS.cause[code.level], {
         cause: t(CAUSE_KEYS[code.cause]),
       });
     case "categoryNotRequired":
@@ -62,7 +73,7 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
     case "categoryCommon":
       return t("caseRequirements.reasonCategoryCommon");
     case "categoryLevel":
-      return t(code.level === "required" ? "caseRequirements.reasonCategoryRequired" : "caseRequirements.reasonCategoryCheck", {
+      return t(LEVEL_KEYS.category[code.level], {
         category: code.category,
       });
     case "applicantTypeNotRequired":
@@ -72,7 +83,7 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
     case "applicantTypeUnknown":
       return t("caseRequirements.reasonApplicantTypeUnknown");
     case "applicantTypeLevel":
-      return t(code.level === "required" ? "caseRequirements.reasonApplicantTypeRequired" : "caseRequirements.reasonApplicantTypeCheck", {
+      return t(LEVEL_KEYS.applicantType[code.level], {
         type: t(APPLICANT_TYPE_KEYS[code.type]),
       });
   }

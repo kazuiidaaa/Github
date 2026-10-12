@@ -216,7 +216,7 @@ export interface SnapshotRequirement {
   name: string;
   party: "applicant" | "organization";
   /** 管理上の区分（行政書士の上書きを反映）。法的な適否の判断ではない */
-  category: "required" | "not_required" | "check";
+  category: "required" | "not_required" | "check" | "optional";
   overridden: boolean;
   custom: boolean;
   status: RequirementStatus;

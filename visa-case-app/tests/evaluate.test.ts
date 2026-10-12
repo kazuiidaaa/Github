@@ -356,10 +356,10 @@ describe("高度専門職の規則（Issue #186）", () => {
       expect(ev.ruleSet?.id, `${procedureType}:${status}`).toMatch(/^hsp_/);
       const ids = ev.items.map((i) => i.rule.id);
       // 手続共通の書類（申請書・写真、更新・変更は在留カードの提示）が先頭に付く（Issue #291）
-      const common = procedureType === "coe" ? ["application_form", "photo"] : ["application_form", "photo", "passport_card"];
+      const common = procedureType === "coe" ? ["application_form", "photo", "passport_copy"] : ["application_form", "photo", "passport_card"];
       expect(ids.slice(0, common.length), `${procedureType}:${status}`).toEqual(common);
       expect(ids.slice(common.length, common.length + 2)).toEqual(["hsp_point_table", "hsp_point_evidence"]);
-      expect(ev.items.slice(0, common.length + 2).every((i) => i.effective === "required")).toBe(true);
+      expect(ev.items.slice(0, common.length + 2).every((i) => i.effective === (i.rule.id === "passport_copy" ? "optional" : "required"))).toBe(true);
       expect(ev.ruleSet?.title).toContain("ポイント計算表・疎明資料");
       // 2号の変更だけ、所得・納税・社会保険の書類（hsp2_）が加わる
       expect(ids.some((id) => id.startsWith("hsp2_")), `${procedureType}:${status}`).toBe(status === "高度専門職（2号）");

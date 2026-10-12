@@ -40,12 +40,12 @@ describe("本邦大学等卒業者の規則集合", () => {
     }
   });
 
-  it("認定：本人の書類（申請書・写真・返信用封筒・労働条件の文書・学歴・日本語能力・事業内容・代表者の申告書）が必須。旅券の写しは確認事項で、在留カードの提示は含まない", () => {
+  it("認定：本人の書類（申請書・写真・返信用封筒・労働条件の文書・学歴・日本語能力・事業内容・代表者の申告書）が必須。旅券の写しは任意で、在留カードの提示は含まない", () => {
     for (const id of ["application_form", "photo", "return_envelope", "labor_conditions_document", "education_documents", "japanese_ability", "business_description", "representative_declaration"]) {
       expect(levelOf(DAIGAKU_SOTSUGYO_COE, id), id).toBe("required");
     }
     expect(levelOf(DAIGAKU_SOTSUGYO_COE, "employment_reason")).toBe("check");
-    expect(levelOf(DAIGAKU_SOTSUGYO_COE, "passport_copy")).toBe("check");
+    expect(levelOf(DAIGAKU_SOTSUGYO_COE, "passport_copy")).toBe("optional");
     expect(ids(DAIGAKU_SOTSUGYO_COE)).not.toContain("passport_card");
   });
 

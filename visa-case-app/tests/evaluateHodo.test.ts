@@ -95,6 +95,6 @@ describe("報道の規則集合", () => {
   it("カテゴリー未選択のときは、カテゴリーを選ぶよう案内し、カテゴリーを問わない共通書類だけを出す", () => {
     const e = evaluate(make("coe"));
     expect(e.needsCategory).toBe(true);
-    expect(e.items.map((i) => i.rule.id)).toEqual(["application_form", "photo", "return_envelope"]);
+    expect(e.items.map((i) => i.rule.id)).toEqual(["application_form", "photo", "passport_copy", "return_envelope"]);
   });
 });

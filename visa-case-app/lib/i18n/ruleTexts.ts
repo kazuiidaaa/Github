@@ -137,9 +137,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "In the official guidance, either this or material showing approval of the special payment deadline",
     "공식 안내에서는 이것 또는 납기 특례의 승인을 나타내는 자료 중 하나",
   ],
-  "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要": [
-    "If the name on the certificate of eligibility differs from the name on the passport, submit it together if possible. Presenting the passport and residence card is not required for a certificate of eligibility application",
-    "사증발급인정서상의 성명과 여권상의 성명 표기가 다른 경우, 제출이 가능하면 함께 제출한다. 인정 신청에서는 여권·재류카드의 제시는 불필요",
+  "入管庁の案内では提示不要。実務では取得するのが通例。認定証明書上の氏名と旅券上の氏名の表記が異なる場合は、提出が可能であれば併せて提出する": [
+    "Presenting it is not required in the Immigration Services Agency guidance, but in practice it is usually obtained. If the name on the certificate of eligibility differs from the name on the passport, submit it together if possible",
+    "출입국재류관리청 안내에서는 제시가 불필요하지만, 실무에서는 취득하는 것이 통례이다. 사증발급인정서상의 성명과 여권상의 성명 표기가 다른 경우, 제출이 가능하면 함께 제출한다",
   ],
   "更新の一覧が未提供のため、公開情報に基づく暫定の内容": [
     "Provisional content based on public information, because the list for renewals has not been provided",
