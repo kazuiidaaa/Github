@@ -9,10 +9,12 @@ import {
   getFormDetailsWarnings,
   getFormLayout,
   validateFormDetails,
+  TOKUTEI_KATSUDO_TYPES,
   type FormDetails,
   type Relative,
   type WorkEntry,
 } from "@/lib/formDetails";
+import { isTokuteiKatsudo, statusForRules } from "@/lib/requirements/evaluate";
 import { HspPointSection } from "@/components/HspPointSection";
 import { formLabelText } from "@/lib/i18n/formLabels";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
@@ -61,6 +63,10 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const hspStatus = hspProcedure ? hspStatusOf(hspProcedure, record) : "";
   /** 様式の項目名・見出し・様式名の表示（番号は、そのまま） */
   const L = (label: string) => formLabelText(lang, label);
+  // 特定活動の種別は、手続に使う在留資格が特定活動のときだけ尋ねる（様式の項目ではないため、項目番号表の外で出す）
+  const showTokuteiType = isTokuteiKatsudo(
+    statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }),
+  );
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);
@@ -128,7 +134,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "entryHistory"
       | "coeHistory"
       | "deportationHistory"
-      | "acquisitionCause",
+      | "acquisitionCause"
+      | "tokuteiKatsudoType",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -215,6 +222,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {text("passportExpiry", { date: true })}
         {select("acquisitionCause", [["birth", t("caseRequirements.cause_birth")], ["nationalityLoss", t("caseRequirements.cause_nationalityLoss")], ["other", t("caseRequirements.cause_other")]])}
         {form.acquisitionCause === "other" && text("acquisitionCauseOther")}
+        {showTokuteiType && select("tokuteiKatsudoType", TOKUTEI_KATSUDO_TYPES.map((v) => [v, t(`caseRequirements.subtype_${v}`)]), t("caseRequirements.subtypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (

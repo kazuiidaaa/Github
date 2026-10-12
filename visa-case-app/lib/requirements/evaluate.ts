@@ -1,3 +1,4 @@
+import type { FormDetails } from "../formDetails";
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
@@ -27,6 +28,8 @@ export interface Evaluation {
   categoryOutOfRange: boolean;
   /** 取得の事由が未選択のため、全事由に共通の書類のみを判定している（取得許可申請のみ） */
   needsCause: boolean;
+  /** 在留資格が特定活動で、種別が未選択（種別ごとの書類は判定できない）。特定活動以外の在留資格では常に false */
+  needsSubtype: boolean;
   items: EvaluatedItem[];
   /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
@@ -42,7 +45,20 @@ function normalize(s: string): string {
   return s.replace(/[\s・･]/g, "");
 }
 
-function matchRuleSet(procedureType: string, residenceStatus: string, ruleSets: RuleSet[]): RuleSet | null {
+/** 在留資格が特定活動か（「特定活動（告示○号）」などの表記を含む） */
+export function isTokuteiKatsudo(residenceStatus: string): boolean {
+  return normalize(residenceStatus).includes("特定活動");
+}
+
+/**
+ * 規則を引くための特定活動の種別。在留資格が特定活動のときだけ保存済みの値を使う。
+ * 特定活動から別の在留資格に変えた案件に値が残っていても、判定にも画面にも使わない（値は消さずに無視する）
+ */
+export function tokuteiSubtypeOf(residenceStatus: string, stored: FormDetails["tokuteiKatsudoType"]): FormDetails["tokuteiKatsudoType"] {
+  return isTokuteiKatsudo(residenceStatus) ? stored : "";
+}
+
+function matchRuleSet(procedureType: string, residenceStatus: string, ruleSets: RuleSet[], subtype: FormDetails["tokuteiKatsudoType"] = ""): RuleSet | null {
   const status = normalize(residenceStatus);
   // 在留資格に固有の規則を先に引く（取得許可申請の高度専門職。号による除外は excludeStatuses）
   const specific =
@@ -52,6 +68,8 @@ function matchRuleSet(procedureType: string, residenceStatus: string, ruleSets: 
           (r) =>
             r.procedureType === procedureType &&
             !r.anyResidenceStatus &&
+            // 種別を持つ規則集合は、在留資格と種別の両方が合うときだけ選ぶ（持たない規則集合は種別を見ない）
+            (r.subtype === undefined || (subtype !== "" && r.subtype === subtype)) &&
             status.includes(normalize(r.residenceStatus)) &&
             !r.excludeStatuses?.some((x) => status.includes(normalize(x))),
         );
@@ -88,7 +106,8 @@ function statusOfCase(c: CaseRecord): string {
 }
 
 function findRuleSet(c: CaseRecord, ruleSets: RuleSet[]): RuleSet | null {
-  return matchRuleSet(c.procedureType, statusOfCase(c), ruleSets);
+  const status = statusOfCase(c);
+  return matchRuleSet(c.procedureType, status, ruleSets, tokuteiSubtypeOf(status, c.formDetails.tokuteiKatsudoType));
 }
 
 /**
@@ -118,8 +137,8 @@ function pushItem(items: EvaluatedItem[], c: CaseRecord, ruleSet: RuleSet, item:
 }
 
 /** 手続種別と在留資格（文字列）から、対応する規則集合を返す（なければ null）。カテゴリー区分の定義を引くために使う */
-export function ruleSetFor(procedureType: string, residenceStatus: string, ruleSets: RuleSet[] = RULE_SETS): RuleSet | null {
-  return matchRuleSet(procedureType, residenceStatus, ruleSets);
+export function ruleSetFor(procedureType: string, residenceStatus: string, ruleSets: RuleSet[] = RULE_SETS, subtype: FormDetails["tokuteiKatsudoType"] = ""): RuleSet | null {
+  return matchRuleSet(procedureType, residenceStatus, ruleSets, tokuteiSubtypeOf(residenceStatus, subtype));
 }
 
 /** 案件に対応する規則集合を返す（なければ null） */
@@ -167,6 +186,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     needsCategory: false,
     categoryOutOfRange: false,
     needsCause: false,
+    needsSubtype: false,
     items: [],
     missing: [],
     toCheck: [],
@@ -174,9 +194,13 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     receivedCount: 0,
   };
   const ruleSet = findRuleSet(c, ruleSets);
+  // 特定活動で種別が未選択のとき、要確認の注意を出す（規則集合の有無によらない）
+  const status = statusOfCase(c);
+  const needsSubtype = isTokuteiKatsudo(status) && tokuteiSubtypeOf(status, c.formDetails.tokuteiKatsudoType) === "";
   if (!ruleSet) {
     return {
       ...empty,
+      needsSubtype,
       notApplicableReason: notApplicableMessage(),
     };
   }
@@ -203,7 +227,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
       const state = c.requirementStates[rule.id] ?? NO_STATE;
       pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
     }
-    return summarize(ruleSet, false, false, needsCause, items);
+    return { ...summarize(ruleSet, false, false, needsCause, items), needsSubtype };
   }
 
   // 入力済みのカテゴリーが、この規則集合の区分の範囲にない（別の在留資格のときに選んだ値など）ときは、未入力と同じに扱う
@@ -236,7 +260,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason, reasonCode, state });
   }
 
-  return summarize(ruleSet, needsCategory, categoryOutOfRange, false, items);
+  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, false, items), needsSubtype };
 }
 
 function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
@@ -246,6 +270,7 @@ function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange:
     needsCategory,
     categoryOutOfRange,
     needsCause,
+    needsSubtype: false,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
     toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),
