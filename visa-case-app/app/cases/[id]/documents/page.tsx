@@ -73,6 +73,7 @@ export default function DocumentsPage() {
     currentStatus: record.currentStatus,
     residenceStatus: record.applicant.residenceStatus,
     targetStatus: record.targetStatus,
+    tokuteiKatsudoType: record.formDetails.tokuteiKatsudoType,
   });
   const rows = precheckRowsText(t, {
     applicantConfirmed: record.applicant.confirmationStatus === "confirmed",

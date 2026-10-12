@@ -268,7 +268,8 @@ describe("案件作成画面向けの規則判定", () => {
 
   it("RULE_SETS の全要素が、判定と案内文の両方に反映される", () => {
     for (const r of RULE_SETS) {
-      expect(hasRuleSetFor(r.procedureType, r.residenceStatus)).toBe(true);
+      // 特定活動の種別つきの規則集合は、案件作成後に種別を選んで初めて当たる。作成画面の判定（hasRuleSetFor）は種別を持たないため false のまま（Issue #299）
+      expect(hasRuleSetFor(r.procedureType, r.residenceStatus)).toBe(r.subtype === undefined);
       const label = PROCEDURE_TYPES.find((p) => p.value === r.procedureType)?.label;
       expect(label).toBeTruthy();
       expect(notApplicableMessage()).toContain(label as string);

@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { describeCoeForm, formCodeOfStatus, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
+import { describeCoeForm, formCodeOfStatus, isFormNTokuteiCase, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
 import { ADVANCED_PROFESSIONAL_STATUS, type Applicant, type EmploymentInfo } from "../../types";
 import {
   COE_DIGIT_CHECKS,
@@ -9,10 +9,12 @@ import {
   COE_MAX_WORK_HISTORY,
   COE_PICK_ITEMS,
   COE_PURPOSE_LABELS,
+  coePurposeStatus,
   COE_SHEET_APPLICANT_1,
 } from "./coeMapping";
 import { COE_TABLE2 } from "./coeTable2";
 import { fillWorkbook } from "./fillWorkbook";
+import { tokuteiKenkyuWarnings } from "./tokuteiKenkyu";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
 
@@ -95,7 +97,8 @@ function buildWarnings(c: FillCtx, resolution: CoeFormResolution, table2: Table2
   if (c.f.occupationCode && !/^\d{1,3}$/.test(c.f.occupationCode.trim())) {
     w.push("職種が番号ではないため、所属機関等作成用1の職種欄は空欄です。別紙「職種一覧」の番号を記入してください。");
   }
-  const target = (c.targetStatus ?? "").trim();
+  const target = coePurposeStatus(c.targetStatus ?? "", c.f.tokuteiKatsudoType);
+  w.push(...tokuteiKenkyuWarnings(isFormNTokuteiCase(c.targetStatus ?? "", c.f.tokuteiKatsudoType), c.f));
   if (target === ADVANCED_PROFESSIONAL_STATUS) {
     w.push("11 入国目的（高度専門職）は、号（イ・ロ・ハ）が未選択のため、チェックを付けていません。案件の「希望する在留資格」で号を選択してください。");
   } else if (target && !COE_PURPOSE_LABELS.includes(target)) {

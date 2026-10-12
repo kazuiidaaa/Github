@@ -120,22 +120,35 @@ describe("特定活動の種別：規則集合の選択", () => {
 });
 
 describe("既存の規則集合への影響がない", () => {
-  it("RULE_SETS に種別つきの規則集合はまだない（#299・#300 で足す）", () => {
-    expect(RULE_SETS.some((r) => r.subtype !== undefined)).toBe(false);
+  it("RULE_SETS の種別つきの規則集合は、特定研究等活動（tokuteiKenkyu）の認定・変更・更新だけ（#300 で tokuteiJoho を足す）", () => {
+    const typed = RULE_SETS.filter((r) => r.subtype !== undefined);
+    expect(typed.map((r) => `${r.subtype}:${r.procedureType}:${r.residenceStatus}`).sort()).toEqual([
+      "tokuteiKenkyu:change:特定活動",
+      "tokuteiKenkyu:coe:特定活動",
+      "tokuteiKenkyu:renewal:特定活動",
+    ]);
+    // 種別つきの規則集合は、RULE_SETS の末尾にまとめる（ほかの規則集合の並びを変えない）
+    const firstTyped = RULE_SETS.findIndex((r) => r.subtype !== undefined);
+    expect(RULE_SETS.slice(firstTyped).every((r) => r.subtype !== undefined)).toBe(true);
   });
 
-  it("本番の規則では、特定活動の案件はどの種別でも規則集合に当たらず、研究にも当たらない", () => {
-    for (const v of ["", "tokuteiKenkyu", "tokuteiJoho", "daigakuSotsugyo", "other"] as const) {
+  it("本番の規則では、特定活動の案件は tokuteiKenkyu のときだけ規則集合に当たる。未選択・ほかの種別は当たらず、研究にも当たらない", () => {
+    for (const v of ["", "tokuteiJoho", "daigakuSotsugyo", "other"] as const) {
       for (const proc of ["coe", "change", "renewal"]) {
-        expect(evaluate(make("特定活動", v, proc)).ruleSet).toBeNull();
+        expect(evaluate(make("特定活動", v, proc)).ruleSet, `${v}/${proc}`).toBeNull();
       }
+    }
+    for (const proc of ["coe", "change", "renewal"]) {
+      const set = evaluate(make("特定活動", "tokuteiKenkyu", proc)).ruleSet;
+      expect(set?.subtype, proc).toBe("tokuteiKenkyu");
+      expect(set?.procedureType, proc).toBe(proc);
     }
   });
 
-  it("研究の除外（特定活動）は変わらない：研究は研究のまま選ばれ、特定活動は除外される", () => {
+  it("研究の除外（特定活動）は変わらない：研究は研究のまま選ばれ、特定活動は特定研究等活動の規則集合に当たる", () => {
     expect(KENKYU_CHANGE.excludeStatuses).toContain("特定活動");
     expect(evaluate(make("研究")).ruleSet?.id).toBe(KENKYU_CHANGE.id);
-    expect(evaluate(make("特定活動（研究活動等）", "tokuteiKenkyu")).ruleSet).toBeNull();
+    expect(evaluate(make("特定活動（研究活動等）", "tokuteiKenkyu")).ruleSet?.id).toBe("tokutei_kenkyu_change");
   });
 
   it("種別を持たない既存の規則集合は、種別の値に影響されない", () => {

@@ -1,6 +1,7 @@
 import type { MessageKey } from "./messages";
 import type { MessageParams } from "./translate";
 import type { Lang } from "@/lib/documents/lang";
+import { isTokuteiKatsudo } from "@/lib/requirements/evaluate";
 import { RULE_SETS, categoryLabelsOf, categoryRangeOf, type Category, type RuleSet } from "@/lib/requirements/rules";
 import { ruleText } from "./ruleTexts";
 import { PROCEDURE_TYPES, type ProcedureType } from "@/lib/types";
@@ -37,6 +38,15 @@ export function noRuleMessage(t: T): string {
     return r.anyResidenceStatus ? t("caseNew.noRuleItemAny", { label }) : t("caseNew.noRuleItemStatus", { status: r.residenceStatus, label });
   }).join(t("caseNew.noRuleSeparator"));
   return t("caseNew.noRuleMessage", { supported });
+}
+
+/**
+ * 案件作成画面の「規則が未整備」の案内文。在留資格が特定活動のときは、種別ごとの規則集合があるため「未整備」とは言わず、
+ * 案件の作成後に種別を選ぶと判定することを案内する（種別は案件の作成後に選ぶため、この画面では判定できない。Issue #299）。
+ * 判定に使う在留資格は、shouldShowNoRuleGuide と同じ決め方（statusForRules）の結果を渡す。
+ */
+export function noRuleGuideText(t: T, statusForRules: string): string {
+  return isTokuteiKatsudo(statusForRules) ? t("caseNew.tokuteiGuide") : t("caseNew.noRuleGuide", { message: noRuleMessage(t) });
 }
 
 /** 所属機関のカテゴリーの表示名（CATEGORY_LABELS の言語別） */

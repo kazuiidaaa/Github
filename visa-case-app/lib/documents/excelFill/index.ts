@@ -42,6 +42,7 @@ export async function fillOfficialExcel(input: FillInput): Promise<{ buffer: Buf
     currentStatus: input.currentStatus,
     residenceStatus: input.applicant.residenceStatus,
     targetStatus: input.targetStatus,
+    tokuteiKatsudoType: input.formDetails.tokuteiKatsudoType,
   });
   // 差し込み関数が同じ注意（変更の様式の不一致）を出している場合は、重ねて出さない
   return { buffer, warnings: [...scope.filter((w) => !warnings.includes(w)), ...warnings] };

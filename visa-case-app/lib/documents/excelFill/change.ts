@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { formCodeOfStatus, isAdvancedProfessional, isStatusInFormScope, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { formCodeOfStatus, isAdvancedProfessional, isFormNTokuteiCase, isStatusInFormScope, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   CHANGE_DIGIT_CHECKS,
@@ -19,6 +19,7 @@ import { CHANGE_SPEC } from "../officialForms";
 import { fillWorkbook } from "./fillWorkbook";
 import { hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
+import { tokuteiKenkyuWarnings } from "./tokuteiKenkyu";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
@@ -86,10 +87,11 @@ function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, ta
     w.push(
       `変更後の在留資格が「${CHANGE_TARGET_STATUS_KEIEI_KANRI}」のため、第1表（申請人用（変更）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。`,
     );
-  } else if (!isStatusInFormScope(c.targetStatus)) {
+  } else if (!isStatusInFormScope(c.targetStatus, c.f.tokuteiKatsudoType)) {
     // 画面の事前表示（officialFormScopeWarnings）と同じ判定・同じ文面
     w.push(CHANGE_SPEC.outOfScopeWarning);
   }
+  w.push(...tokuteiKenkyuWarnings(isFormNTokuteiCase(c.targetStatus, c.f.tokuteiKatsudoType), c.f));
   if (c.f.relativesPresent === "yes" && c.f.relatives.length > MAX_RELATIVES) {
     w.push(`在日親族は、様式の欄（${MAX_RELATIVES}人分）に入らない分を差し込んでいません。別紙に記載してください。`);
   }
