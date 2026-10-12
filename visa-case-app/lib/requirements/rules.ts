@@ -1,4 +1,4 @@
-import type { FormDetails } from "../formDetails";
+import type { FormDetails, TokuteiKatsudoType } from "../formDetails";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
@@ -36,6 +36,11 @@ export interface RuleSet {
   anyResidenceStatus?: boolean;
   /** この在留資格（の表記）には、residenceStatus に含まれていても適用しない。号によって手続の有無が異なる場合に使う */
   excludeStatuses?: string[];
+  /**
+   * 特定活動の種別。指定した規則集合は、在留資格が一致し、かつ案件の種別（formDetails.tokuteiKatsudoType）がこれと一致するときだけ選ばれる。
+   * 省略時は種別を見ない（特定活動以外の既存の規則集合は、すべて省略）。種別の規則集合は RULE_SETS の末尾に足す（#299・#300）
+   */
+  subtype?: TokuteiKatsudoType;
   /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
   basis?: "category" | "acquisitionCause";
   /**

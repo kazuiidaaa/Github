@@ -31,6 +31,10 @@ export interface WorkEntry {
   employer: string;
 }
 
+/** 特定活動の種別（在留資格が特定活動のときだけ使う。種別ごとの必要書類は #299・#300） */
+export const TOKUTEI_KATSUDO_TYPES = ["tokuteiKenkyu", "tokuteiJoho", "daigakuSotsugyo", "other"] as const;
+export type TokuteiKatsudoType = (typeof TOKUTEI_KATSUDO_TYPES)[number];
+
 export interface FormDetails {
   // 申請人等作成用1
   /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
@@ -88,6 +92,8 @@ export interface FormDetails {
   dispatchCapital: string;
   dispatchAnnualSales: string;
   dispatchPeriod: string;
+  /** 特定活動の種別。"" は未選択（この項目がない既存の案件も ""） */
+  tokuteiKatsudoType: "" | TokuteiKatsudoType;
   // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
@@ -192,6 +198,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   dispatchCapital: "",
   dispatchAnnualSales: "",
   dispatchPeriod: "",
+  tokuteiKatsudoType: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
@@ -242,6 +249,7 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     relatives: Array.isArray(r.relatives) ? r.relatives : [],
     workHistory: Array.isArray(r.workHistory) ? r.workHistory : [],
     hspPointChecks: sanitizePointChecks(r.hspPointChecks),
+    tokuteiKatsudoType: (TOKUTEI_KATSUDO_TYPES as readonly unknown[]).includes(r.tokuteiKatsudoType) ? (r.tokuteiKatsudoType as TokuteiKatsudoType) : "",
   };
 }
 

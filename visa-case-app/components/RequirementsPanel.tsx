@@ -170,6 +170,12 @@ export function RequirementsPanel({
 
       {!ev.ruleSet && <p className="rounded-xl bg-slate-100 p-4 text-sm text-slate-700">{noRuleMessage(t)}</p>}
 
+      {ev.needsSubtype && (
+        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+          {t("caseRequirements.needsSubtype")}
+        </p>
+      )}
+
       {ev.ruleSet && ev.needsCategory && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(ev.categoryOutOfRange ? "caseRequirements.categoryOutOfRange" : "caseRequirements.needsCategory")}
