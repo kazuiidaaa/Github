@@ -21,10 +21,48 @@ export type HspActivity = (typeof HSP_ACTIVITIES)[number];
 export type CoeFormCode = "I" | "L" | "M" | "N" | "U";
 
 /**
+ * 高度専門職ではない在留資格が、認定・変更・更新で使う様式の一覧（どの在留資格がどの様式か、の唯一の表）。
+ * 新しい在留資格（研究・特定活動など）の様式は、該当する様式の行へ足す。各様式の出典は、下の FORM_*_STATUSES の説明を参照。
+ * 様式N（見出し「技術・人文知識・国際業務」ほか）は、介護・技能も同じ様式（入管庁の各在留資格の案内ページによる。Issue #297・#298）。
+ */
+export const FORM_STATUSES: Readonly<Record<"I" | "L" | "N" | "U", readonly string[]>> = {
+  I: ["教授", "教育"],
+  L: ["報道", "企業内転勤"],
+  N: ["技術・人文知識・国際業務", "介護", "技能"],
+  U: ["法律・会計業務", "医療"],
+};
+
+/** 様式Nの見出しの在留資格。この文字を含む値（例：括弧つき）も様式Nとして扱う（部分一致は、この在留資格だけ） */
+const FORM_N_BASE_STATUS = FORM_STATUSES.N[0];
+
+/** 第1表のみ差し込む「経営・管理」。認定は様式M、変更・更新は様式Nの第1表だけを使う（Issue #191） */
+export const KEIEI_KANRI_STATUS = "経営・管理";
+
+/**
+ * 高度専門職ではない在留資格から、使う様式（I・L・N・U）を決める。一覧にない値は undefined。
+ * FORM_STATUSES と完全一致で照合する（「技能」は「技能実習」「特定技能」を含まない）。ただし技術・人文知識・国際業務だけは部分一致。
+ */
+export function formCodeOfStatus(status: string): Exclude<CoeFormCode, "M"> | undefined {
+  const s = status.trim();
+  for (const code of ["I", "L", "U", "N"] as const) {
+    if (FORM_STATUSES[code].includes(s)) return code;
+  }
+  return s.includes(FORM_N_BASE_STATUS) ? "N" : undefined;
+}
+
+/**
+ * 在留資格が、公式様式（認定・変更・更新）で扱える範囲か。一覧の在留資格（FORM_STATUSES）、高度専門職、経営・管理（第1表のみ）なら true。
+ * 研究・特定活動などは、一覧に足すまでは false（対象外の可能性を警告する）。
+ */
+export function isStatusInFormScope(status: string): boolean {
+  return formCodeOfStatus(status) !== undefined || isAdvancedProfessional(status) || status.trim() === KEIEI_KANRI_STATUS;
+}
+
+/**
  * 高度専門職ではなく、それ自体が様式 I（見出し「教授」）を使う在留資格（出入国在留管理庁の各在留資格の案内ページによる。Issue #292・#293）。
  * 認定・変更・更新とも、公式様式は高度専門職の様式 I（docs/official/）と同じファイル（教育も同一ファイルであることをバイト単位で確認した）。完全一致で照合する。
  */
-export const FORM_I_STATUSES: readonly string[] = ["教授", "教育"];
+export const FORM_I_STATUSES: readonly string[] = FORM_STATUSES.I;
 export const isFormIStatus = (status: string): boolean => FORM_I_STATUSES.includes(status.trim());
 
 /**
@@ -32,14 +70,14 @@ export const isFormIStatus = (status: string): boolean => FORM_I_STATUSES.includ
  * 認定・変更・更新とも、公式様式は高度専門職の様式 L（docs/official/）と同じファイル。完全一致で照合する（Issue #294・#295）。
  * 「研究（転勤）」も同じ様式 L だが、研究の在留資格の扱い（#296）に属するため、ここには入れない。
  */
-export const FORM_L_STATUSES: readonly string[] = ["報道", "企業内転勤"];
+export const FORM_L_STATUSES: readonly string[] = FORM_STATUSES.L;
 export const isFormLStatus = (status: string): boolean => FORM_L_STATUSES.includes(status.trim());
 
 /**
  * 高度専門職ではなく、それ自体が様式 U（見出し「その他」）を使う在留資格（出入国在留管理庁の各在留資格の案内ページによる。Issue #301・#302）。
  * 認定・変更・更新とも、公式様式は高度専門職の様式 U（docs/official/）と同じファイル。完全一致で照合する。
  */
-export const FORM_U_STATUSES: readonly string[] = ["法律・会計業務", "医療"];
+export const FORM_U_STATUSES: readonly string[] = FORM_STATUSES.U;
 export const isFormUStatus = (status: string): boolean => FORM_U_STATUSES.includes(status.trim());
 
 /**

@@ -1,6 +1,6 @@
 import type { FormDetails } from "../../formDetails";
 import type { Applicant, EmploymentInfo, ProcedureType } from "../../types";
-import { officialFormScopeWarnings } from "../officialForms";
+import { officialFormScopeWarnings, officialFormSpecFor } from "../officialForms";
 import { fillCoeExcel } from "./coe";
 import { fillChangeExcel } from "./change";
 import { fillAcquisitionExcel } from "./acquisition";
@@ -34,13 +34,16 @@ export const FILLERS: Partial<Record<ProcedureType, Filler>> = {
  * 更新の様式で作り、対象外の注意を warnings の先頭へ加える。
  */
 export async function fillOfficialExcel(input: FillInput): Promise<{ buffer: Buffer; warnings: string[] }> {
-  const fill: Filler = FILLERS[input.procedureType] ?? ((a, e, f, _t, currentStatus) => fillRenewalExcel(a, e, f, currentStatus));
+  // 専用の様式がない手続種別のフォールバックは、officialFormSpecFor が決める（画面の様式表示と同じ）
+  const fill = FILLERS[officialFormSpecFor(input.procedureType).procedureType] as Filler;
   const { buffer, warnings } = await fill(input.applicant, input.employment, input.formDetails, input.targetStatus ?? "", input.currentStatus);
   const scope = officialFormScopeWarnings({
     procedureType: input.procedureType,
     currentStatus: input.currentStatus,
     residenceStatus: input.applicant.residenceStatus,
+    targetStatus: input.targetStatus,
   });
-  return { buffer, warnings: [...scope, ...warnings] };
+  // 差し込み関数が同じ注意（変更の様式の不一致）を出している場合は、重ねて出さない
+  return { buffer, warnings: [...scope.filter((w) => !warnings.includes(w)), ...warnings] };
 }
 

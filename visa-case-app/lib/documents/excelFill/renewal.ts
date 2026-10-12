@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { isAdvancedProfessional, isFormIStatus, isFormLStatus, isFormUStatus, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { formCodeOfStatus, isAdvancedProfessional, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   JOB_DESCRIPTION_LINES,
@@ -48,7 +48,7 @@ export async function fillRenewalExcel(
   const ctx: FillCtx = { a, e, f };
   const { resolution, status } = resolveRenewal(currentStatus, a.residenceStatus, f.hspActivity ?? "");
   // 高度専門職ではない「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = isFormIStatus(status) ? "I" : isFormLStatus(status) ? "L" : isFormUStatus(status) ? "U" : "N";
+  const notApplicable: CoeFormCode = formCodeOfStatus(status) ?? "N";
   const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
   // 高度専門職ではない「経営・管理」の更新は、第2表以降（様式Nの表）を使えないため、第1表（申請人用（更新）１）だけを差し込む（Issue #191）
   const keieiKanri = resolution.kind === "not_applicable" && (isKeieiKanri(currentStatus) || isKeieiKanri(a.residenceStatus));

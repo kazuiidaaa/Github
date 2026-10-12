@@ -1,4 +1,4 @@
-import { RENEWAL_SCOPE_TEXT, officialFormScopeWarnings, officialFormSpecFor, type OfficialFormScope } from "@/lib/documents/officialForms";
+import { officialFormScopeWarnings, officialFormSpecFor, type OfficialFormScope } from "@/lib/documents/officialForms";
 import { precheckRows, type PrecheckInput, type PrecheckRow } from "@/lib/documents/precheck";
 import type { GeneratedDocumentStatus, GeneratedDocumentType, OutputFormat } from "@/lib/documents/types";
 import type { ProcedureType } from "@/lib/types";
@@ -66,8 +66,9 @@ const SCOPE_KEYS: Partial<Record<ProcedureType, DocKey>> = {
 /** 公式様式の対象外の注意（officialFormScopeWarnings と同じ判定。文面だけを言語別に引く） */
 export function scopeWarningsText(t: T, s: OfficialFormScope): string[] {
   if (officialFormScopeWarnings(s).length === 0) return [];
-  const key = SCOPE_KEYS[officialFormSpecFor(s.procedureType).procedureType];
-  return key ? [t(key, { status: RENEWAL_SCOPE_TEXT })] : officialFormScopeWarnings(s);
+  const spec = officialFormSpecFor(s.procedureType);
+  const key = SCOPE_KEYS[spec.procedureType];
+  return key ? [t(key, { status: spec.scopeText ?? "" })] : officialFormScopeWarnings(s);
 }
 
 /**

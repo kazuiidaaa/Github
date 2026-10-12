@@ -58,7 +58,7 @@ export const documents = defineMessages({
       "この様式は、在留期間更新許可申請（{status}）を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。",
     scopeCoe: "この様式は、在留資格認定証明書交付申請を対象としています。この案件は対象外の可能性があります。",
     scopeChange:
-      "この様式は、在留資格変更許可申請を対象としています。この案件は対象外の可能性があります。差し込み結果を、案件に合う様式と照合してください。",
+      "この様式は、変更後の在留資格が「{status}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。",
     scopeAcquisition: "この様式は、在留資格取得許可申請を対象としています。この案件は対象外の可能性があります。",
 
     docType_case_summary: "案件確認シート",
@@ -170,7 +170,7 @@ export const documents = defineMessages({
       "This form is for applications for extension of the period of stay ({status}). This case may be out of scope. Check the filled result against the form that fits the case.",
     scopeCoe: "This form is for applications for a Certificate of Eligibility. This case may be out of scope.",
     scopeChange:
-      "This form is for applications for permission to change status of residence. This case may be out of scope. Check the filled result against the form that fits the case.",
+      "This form is for applications where the status after the change is \"{status}\". Check the filled result against the form that fits the status after the change.",
     scopeAcquisition: "This form is for applications for permission to acquire status of residence. This case may be out of scope.",
 
     docType_case_summary: "Case confirmation sheet",
@@ -280,7 +280,7 @@ export const documents = defineMessages({
       "이 서식은 체류기간 연장 허가 신청({status})을 대상으로 합니다. 이 사건은 대상이 아닐 수 있습니다. 채워진 결과를 사건에 맞는 서식과 대조해 주십시오.",
     scopeCoe: "이 서식은 체류자격 인정 증명서 교부 신청을 대상으로 합니다. 이 사건은 대상이 아닐 수 있습니다.",
     scopeChange:
-      "이 서식은 체류자격 변경 허가 신청을 대상으로 합니다. 이 사건은 대상이 아닐 수 있습니다. 채워진 결과를 사건에 맞는 서식과 대조해 주십시오.",
+      "이 서식은 변경 후 체류자격이 「{status}」인 신청을 대상으로 합니다. 채워진 결과를 변경 후 체류자격에 맞는 서식과 대조해 주십시오.",
     scopeAcquisition: "이 서식은 체류자격 취득 허가 신청을 대상으로 합니다. 이 사건은 대상이 아닐 수 있습니다.",
 
     docType_case_summary: "사건 확인 시트",

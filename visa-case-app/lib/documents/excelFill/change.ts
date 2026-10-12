@@ -1,13 +1,11 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { isAdvancedProfessional, isFormIStatus, isFormLStatus, isFormUStatus, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { formCodeOfStatus, isAdvancedProfessional, isStatusInFormScope, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   CHANGE_DIGIT_CHECKS,
   CHANGE_FILL_ITEMS,
   CHANGE_PICK_ITEMS,
-  CHANGE_FORM_N_STATUSES,
-  CHANGE_TARGET_STATUS,
   CHANGE_TARGET_STATUS_KEIEI_KANRI,
   SHEET_CHANGE_APPLICANT_1,
   JOB_DESCRIPTION_LINES,
@@ -17,6 +15,7 @@ import {
   sheetKey,
   type ChangeCtx,
 } from "./changeMapping";
+import { CHANGE_SPEC } from "../officialForms";
 import { fillWorkbook } from "./fillWorkbook";
 import { hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
@@ -52,7 +51,7 @@ export async function fillChangeExcel(
   const ctx: ChangeCtx = { a, e, f, targetStatus };
   const resolution = resolveChangeForm(targetStatus, f.hspActivity ?? "");
   // 高度専門職ではない「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = isFormIStatus(targetStatus) ? "I" : isFormLStatus(targetStatus) ? "L" : isFormUStatus(targetStatus) ? "U" : "N";
+  const notApplicable: CoeFormCode = formCodeOfStatus(targetStatus) ?? "N";
   const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
   // 高度専門職ではない「経営・管理」への変更は、第2表以降（様式Nの表）を使えないため、第1表だけを差し込む（Issue #191）
   const firstOnly = plan.firstOnly || (resolution.kind === "not_applicable" && isKeieiKanri(targetStatus));
@@ -87,10 +86,9 @@ function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, ta
     w.push(
       `変更後の在留資格が「${CHANGE_TARGET_STATUS_KEIEI_KANRI}」のため、第1表（申請人用（変更）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。`,
     );
-  } else if (!hsp && !isFormIStatus(c.targetStatus) && !isFormLStatus(c.targetStatus) && !isFormUStatus(c.targetStatus) && !c.targetStatus.includes(CHANGE_TARGET_STATUS) && !CHANGE_FORM_N_STATUSES.includes(c.targetStatus.trim())) {
-    w.push(
-      `この様式は、変更後の在留資格が「${CHANGE_TARGET_STATUS}」の申請を対象としています。変更後の在留資格に合う様式と照合してください。`,
-    );
+  } else if (!isStatusInFormScope(c.targetStatus)) {
+    // 画面の事前表示（officialFormScopeWarnings）と同じ判定・同じ文面
+    w.push(CHANGE_SPEC.outOfScopeWarning);
   }
   if (c.f.relativesPresent === "yes" && c.f.relatives.length > MAX_RELATIVES) {
     w.push(`在日親族は、様式の欄（${MAX_RELATIVES}人分）に入らない分を差し込んでいません。別紙に記載してください。`);

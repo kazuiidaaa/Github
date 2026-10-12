@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { describeCoeForm, isFormIStatus, isFormLStatus, isFormUStatus, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
+import { describeCoeForm, formCodeOfStatus, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
 import { ADVANCED_PROFESSIONAL_STATUS, type Applicant, type EmploymentInfo } from "../../types";
 import {
   COE_DIGIT_CHECKS,
@@ -39,7 +39,7 @@ export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
  */
 function planFill(r: CoeFormResolution, targetStatus: string): { form: CoeFormCode; firstOnly: boolean } {
   // 高度専門職ではない「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = targetStatus.trim() === KEIEI_KANRI ? "M" : isFormIStatus(targetStatus) ? "I" : isFormLStatus(targetStatus) ? "L" : isFormUStatus(targetStatus) ? "U" : "N";
+  const notApplicable: CoeFormCode = targetStatus.trim() === KEIEI_KANRI ? "M" : formCodeOfStatus(targetStatus) ?? "N";
   return planHspFill(r, { notApplicable, unresolved: "N" });
 }
 
