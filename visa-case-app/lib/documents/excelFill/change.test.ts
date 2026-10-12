@@ -287,6 +287,15 @@ describe("fillChangeExcel", () => {
     expect(warnings.join("\n")).not.toContain("変更後の在留資格に合う様式");
   });
 
+  it("変更後の在留資格が技能なら、同じ様式Nのため、様式の対象外を警告しない。特定技能・技能実習は警告する（Issue #298）", async () => {
+    const gino = await fillChangeExcel(applicant, employment, details, "技能");
+    expect(gino.warnings.join("\n")).not.toContain("変更後の在留資格に合う様式");
+    for (const status of ["特定技能", "技能実習"]) {
+      const other = await fillChangeExcel(applicant, employment, details, status);
+      expect(other.warnings.join("\n"), status).toContain("変更後の在留資格に合う様式");
+    }
+  });
+
   it("号つきの高度専門職は、項目13にそのまま入る。行う活動が未選択なら、第1表のみ＋警告（Issue #181・#212）", async () => {
     const hsp = "高度専門職（1号ロ）";
     const { buffer, warnings } = await fillChangeExcel(applicant, employment, details, hsp);
