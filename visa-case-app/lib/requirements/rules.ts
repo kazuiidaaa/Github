@@ -2244,6 +2244,204 @@ export const GINO_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「企業内転勤」。所属機関のカテゴリーは、技術・人文知識・国際業務と同じ1〜4区分（CATEGORY_LABELS）。
+// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-12 に照合済み（Issue #295）。
+// 案内ページとチェックシートの食い違いはなかったため、要確認（verify）の項目はない。
+// 「在留資格『企業内転勤』の提出書類の変更について（令和8年4月1日運用開始）」（001457117.pdf）は、認定・変更の表2の9に「登記事項証明書」を選択肢として足すが、10の登記事項証明書は引き続き必要で、提出する書類の範囲は変わらない。
+// 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const KIGYONAI = "企業内転勤";
+const KIGYONAI_CHECKED_AT = "2026-10-12";
+const KIGYONAI_PAGE_SOURCE = { title: "在留資格「企業内転勤」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/intracompanytransfee.html" };
+
+const kigyonaiCategoryProof: RequirementRule = {
+  id: "category_proof",
+  name: "所属機関のカテゴリーを証明する文書",
+  party: "organization",
+  categories: ["1", "2", "3"],
+  level: "required",
+  note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
+};
+const kigyonaiOnlineApproval: RequirementRule = {
+  id: "online_approval_proof",
+  name: "在留申請オンラインシステムの利用申出の承認を証明する文書（承認のお知らせメール等）",
+  party: "organization",
+  categories: ["2"],
+  level: "check",
+  note: "カテゴリー2と同様の添付資料での申請を希望し、利用申出が承認された機関の場合のみ",
+};
+// 認定・変更：カテゴリー3・4（チェックシートの表2、5〜12）
+const kigyonaiActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "申請人の活動の内容等を明らかにする資料（活動内容、期間、地位及び報酬を含む。次のいずれか）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "(1)法人を異にしない転勤の場合：転勤命令書の写し・辞令等の写し／(2)法人を異にする転勤の場合：労働基準法第15条第1項・同法施行規則第5条に基づき交付される労働条件を明示する文書／(3)役員等労働者に該当しない者：会社の場合は役員報酬を定める定款の写し又は役員報酬を決議した株主総会の議事録（報酬委員会が設置されている会社は同委員会の議事録）の写し、会社以外の団体の場合は地位（担当業務）、期間及び支払われる報酬額を明らかにする所属団体の文書",
+};
+const kigyonaiWorkplaceRelation: RequirementRule = {
+  id: "workplace_relation_documents",
+  name: "転勤前に勤務していた事業所と転勤後の事業所の関係を示す資料（次のいずれか）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "(1)同一の法人内の転勤の場合：外国法人の支店の登記事項証明書等、当該法人が日本に事業所を有することを明らかにする資料／(2)日本法人への出向の場合：当該日本法人と出向元の外国法人との出資関係を明らかにする資料／(3)日本に事務所を有する外国法人への出向の場合：当該外国法人の支店の登記事項証明書等（日本に事務所を有することを明らかにする資料）と、当該外国法人と出向元の法人との資本関係を明らかにする資料",
+};
+const kigyonaiPreviousWorkplace: RequirementRule = {
+  id: "previous_workplace_existence",
+  name: "転勤前に勤務していた事業所の存在を明らかにする資料（次のいずれか）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "(1)公的機関から発行された法人登記に関する資料／(2)納税状況、取引実績、船荷証券、輸出入許可書、広告等",
+};
+const kigyonaiCareerDocuments: RequirementRule = {
+  id: "career_documents",
+  name: "申請人の経歴を証明する文書",
+  party: "applicant",
+  categories: ["3", "4"],
+  level: "required",
+  note: "(1)関連する業務に従事した機関及び内容並びに期間を明示した履歴書／(2)過去1年間に従事した業務内容及び地位、報酬を明示した、転勤の直前に勤務した外国の機関の文書（社会保険加入証明、戸口簿等）。転勤の直前1年以内に企業内転勤の在留資格で本邦に在留していた期間がある場合は、その期間に勤務していた本邦の機関を含む",
+};
+const kigyonaiBusinessDescription: RequirementRule = {
+  id: "business_description",
+  name: "事業内容を明らかにする資料（会社案内等）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が詳細に記載された案内書、又はこれに準ずる勤務先等の作成した文書のいずれか",
+};
+const kigyonaiRegistryCertificate: RequirementRule = {
+  id: "registry_certificate",
+  name: "登記事項証明書",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "商業・法人登記",
+};
+const kigyonaiWorkplaceExistence: RequirementRule = {
+  id: "workplace_existence",
+  name: "申請人が活動する事業所の存在を明らかにする資料（不動産登記簿、事務所の写真・平面図等）",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+};
+const kigyonaiFinancialStatements: RequirementRule = {
+  id: "financial_statements",
+  name: "直近年度の決算文書の写し",
+  party: "organization",
+  categories: ["3", "4"],
+  level: "required",
+  note: "新規事業の場合は事業計画書",
+};
+// カテゴリー4：前年分の法定調書合計表を提出できない理由を明らかにする資料（表2の13）
+const kigyonaiWithholdingRules: RequirementRule[] = [
+  {
+    id: "withholding_exemption_certificate",
+    name: "外国法人の源泉徴収に対する免除証明書その他の源泉徴収を要しないことを明らかにする資料",
+    party: "organization",
+    categories: ["4"],
+    level: "check",
+    note: "源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要",
+  },
+  { id: "payroll_office_notification", name: "給与支払事務所等の開設届出書の写し", party: "organization", categories: ["4"], level: "required" },
+  { id: "withholding_tax_receipts", name: "直近3か月分の所得税徴収高計算書の写し", party: "organization", categories: ["4"], level: "required" },
+  {
+    id: "withholding_special_approval",
+    name: "源泉所得税の納期の特例の承認に関する申請書の写し",
+    party: "organization",
+    categories: ["4"],
+    level: "required",
+    when: "withholdingSpecial",
+    note: "納期の特例の承認を受けている場合",
+  },
+];
+// 認定・変更の、カテゴリー別の書類（チェックシートの番号順）
+const kigyonaiCategoryRules: RequirementRule[] = [
+  kigyonaiCategoryProof,
+  kigyonaiOnlineApproval,
+  kigyonaiActivityDocuments,
+  kigyonaiWorkplaceRelation,
+  kigyonaiPreviousWorkplace,
+  kigyonaiCareerDocuments,
+  kigyonaiBusinessDescription,
+  kigyonaiRegistryCertificate,
+  kigyonaiWorkplaceExistence,
+  kigyonaiFinancialStatements,
+  ...kigyonaiWithholdingRules,
+];
+
+export const KIGYONAI_COE: RuleSet = {
+  id: "kigyonai_coe",
+  title: "企業内転勤 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: KIGYONAI,
+  checkedAt: KIGYONAI_CHECKED_AT,
+  sources: [
+    KIGYONAI_PAGE_SOURCE,
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404133.pdf" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366542.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    ...kigyonaiCategoryRules,
+    {
+      id: "passport_copy",
+      name: "旅券（パスポート）の写し",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "認定証明書上の氏名と旅券上の氏名の表記が異なる場合に、提出が可能であれば併せて提出する。認定申請では旅券・在留カードの提示は不要",
+    },
+  ],
+};
+
+export const KIGYONAI_CHANGE: RuleSet = {
+  id: "kigyonai_change",
+  title: "企業内転勤 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: KIGYONAI,
+  checkedAt: KIGYONAI_CHECKED_AT,
+  sources: [
+    KIGYONAI_PAGE_SOURCE,
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366563.pdf" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366564.pdf" },
+  ],
+  rules: [...procedureCommonRules("change"), ...kigyonaiCategoryRules],
+};
+
+export const KIGYONAI_RENEWAL: RuleSet = {
+  id: "kigyonai_renewal",
+  title: "企業内転勤 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: KIGYONAI,
+  checkedAt: KIGYONAI_CHECKED_AT,
+  sources: [
+    KIGYONAI_PAGE_SOURCE,
+    { title: "「企業内転勤」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366562.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    kigyonaiCategoryProof,
+    kigyonaiOnlineApproval,
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ["3", "4"],
+      level: "required",
+      note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる。提出できない場合は、給与について申告済みであることを明らかにする資料を提出する",
+    },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -2291,4 +2489,8 @@ export const RULE_SETS: RuleSet[] = [
   GINO_RENEWAL,
   GINO_CHANGE,
   GINO_COE,
+  // 企業内転勤（Issue #295）
+  KIGYONAI_RENEWAL,
+  KIGYONAI_CHANGE,
+  KIGYONAI_COE,
 ];

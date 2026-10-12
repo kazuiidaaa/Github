@@ -29,10 +29,10 @@ export const isFormIStatus = (status: string): boolean => FORM_I_STATUSES.includ
 
 /**
  * 高度専門職ではなく、それ自体が様式 L（見出し「高度専門職（1号ロ）・（2号）、報道、研究（転勤）、企業内転勤」）を使う在留資格（出入国在留管理庁の各在留資格の案内ページによる。Issue #294）。
- * 認定・変更・更新とも、公式様式は高度専門職の様式 L（docs/official/）と同じファイル。完全一致で照合する。
- * 「研究（転勤）」「企業内転勤」は別 Issue（#296・#295）で扱う。
+ * 認定・変更・更新とも、公式様式は高度専門職の様式 L（docs/official/）と同じファイル。完全一致で照合する（Issue #294・#295）。
+ * 「研究（転勤）」も同じ様式 L だが、研究の在留資格の扱い（#296）に属するため、ここには入れない。
  */
-export const FORM_L_STATUSES: readonly string[] = ["報道"];
+export const FORM_L_STATUSES: readonly string[] = ["報道", "企業内転勤"];
 export const isFormLStatus = (status: string): boolean => FORM_L_STATUSES.includes(status.trim());
 
 /**

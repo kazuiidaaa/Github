@@ -832,6 +832,91 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Only for the first renewal application after changing jobs. For a new business, a business plan",
     "이직 후 첫 연장 허가 신청의 경우에만. 신규 사업의 경우 사업계획서",
   ],
+  // 企業内転勤（Issue #295）
+  "企業内転勤 在留資格認定証明書交付申請": [
+    "Intra-company Transferee: application for certificate of eligibility",
+    "기업 내 전근 사증발급인정서 교부 신청",
+  ],
+  "企業内転勤 在留資格変更許可申請": [
+    "Intra-company Transferee: application for permission for change of status of residence",
+    "기업 내 전근 체류자격 변경 허가 신청",
+  ],
+  "企業内転勤 在留期間更新許可申請": [
+    "Intra-company Transferee: application for permission for extension of the period of stay",
+    "기업 내 전근 체류기간 연장 허가 신청",
+  ],
+  "在留資格「企業内転勤」（出入国在留管理庁）": [
+    "Status of residence \"Intra-company Transferee\" (Immigration Services Agency of Japan)",
+    "체류자격 「기업 내 전근」(출입국재류관리청)",
+  ],
+  "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー共通・表1）（出入国在留管理庁）": [
+    "List of documents to submit for \"Intra-company Transferee\" (for certificate of eligibility, common to all categories, Table 1) (Immigration Services Agency of Japan)",
+    "「기업 내 전근」 제출서류 일람(사증발급인정서 교부 신청용·카테고리 공통·표 1)(출입국재류관리청)",
+  ],
+  "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）": [
+    "List of documents to submit for \"Intra-company Transferee\" (for certificate of eligibility, categories 3 and 4 only, Table 2) (Immigration Services Agency of Japan)",
+    "「기업 내 전근」 제출서류 일람(사증발급인정서 교부 신청용·카테고리 3·4 전용·표 2)(출입국재류관리청)",
+  ],
+  "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー共通・表1）（出入国在留管理庁）": [
+    "List of documents to submit for \"Intra-company Transferee\" (for change of status of residence, common to all categories, Table 1) (Immigration Services Agency of Japan)",
+    "「기업 내 전근」 제출서류 일람(체류자격 변경 허가 신청용·카테고리 공통·표 1)(출입국재류관리청)",
+  ],
+  "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）": [
+    "List of documents to submit for \"Intra-company Transferee\" (for change of status of residence, categories 3 and 4 only, Table 2) (Immigration Services Agency of Japan)",
+    "「기업 내 전근」 제출서류 일람(체류자격 변경 허가 신청용·카테고리 3·4 전용·표 2)(출입국재류관리청)",
+  ],
+  "「企業内転勤」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Intra-company Transferee\" (for extension of the period of stay) (Immigration Services Agency of Japan)",
+    "「기업 내 전근」 제출서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
+  ],
+  "申請人の活動の内容等を明らかにする資料（活動内容、期間、地位及び報酬を含む。次のいずれか）": [
+    "Material clarifying the applicant's activities, including the content, period, position and remuneration (any of the following)",
+    "신청인의 활동 내용 등을 밝히는 자료(활동 내용, 기간, 지위 및 보수 포함. 다음 중 하나)",
+  ],
+  "転勤前に勤務していた事業所と転勤後の事業所の関係を示す資料（次のいずれか）": [
+    "Material showing the relationship between the office where the applicant worked before the transfer and the office after the transfer (any of the following)",
+    "전근 전에 근무하던 사업소와 전근 후 사업소의 관계를 나타내는 자료(다음 중 하나)",
+  ],
+  "転勤前に勤務していた事業所の存在を明らかにする資料（次のいずれか）": [
+    "Material showing that the office where the applicant worked before the transfer exists (any of the following)",
+    "전근 전에 근무하던 사업소의 존재를 밝히는 자료(다음 중 하나)",
+  ],
+  "申請人の経歴を証明する文書": [
+    "Documents certifying the applicant's career history",
+    "신청인의 경력을 증명하는 문서",
+  ],
+  "申請人が活動する事業所の存在を明らかにする資料（不動産登記簿、事務所の写真・平面図等）": [
+    "Material showing that the office where the applicant will work exists (real estate register, photographs and floor plan of the office, etc.)",
+    "신청인이 활동하는 사업소의 존재를 밝히는 자료(부동산 등기부, 사무소 사진·평면도 등)",
+  ],
+  "商業・法人登記": [
+    "Commercial and corporate registration",
+    "상업·법인 등기",
+  ],
+  "(1)法人を異にしない転勤の場合：転勤命令書の写し・辞令等の写し／(2)法人を異にする転勤の場合：労働基準法第15条第1項・同法施行規則第5条に基づき交付される労働条件を明示する文書／(3)役員等労働者に該当しない者：会社の場合は役員報酬を定める定款の写し又は役員報酬を決議した株主総会の議事録（報酬委員会が設置されている会社は同委員会の議事録）の写し、会社以外の団体の場合は地位（担当業務）、期間及び支払われる報酬額を明らかにする所属団体の文書": [
+    "(1) Transfer within the same legal entity: a copy of the transfer order and a copy of the letter of appointment, etc. / (2) Transfer between different legal entities: a document stating working conditions issued under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations / (3) Persons who are not workers, such as officers: for a company, a copy of the articles of incorporation setting officer remuneration or of the minutes of the shareholders' meeting resolving it (the minutes of the remuneration committee, if the company has one); for an organization other than a company, a document of the organization stating the position (duties), period and remuneration to be paid",
+    "(1) 같은 법인 내 전근인 경우: 전근 명령서 사본·발령장 등의 사본 / (2) 법인이 다른 전근인 경우: 근로기준법 제15조 제1항 및 동 시행규칙 제5조에 따라 교부되는 근로조건을 명시한 문서 / (3) 임원 등 근로자에 해당하지 않는 사람: 회사의 경우 임원 보수를 정한 정관 사본 또는 임원 보수를 결의한 주주총회 의사록(보수위원회가 설치된 회사는 같은 위원회 의사록) 사본, 회사 이외의 단체의 경우 지위(담당 업무), 기간 및 지급되는 보수액을 밝히는 소속 단체의 문서",
+  ],
+  "(1)同一の法人内の転勤の場合：外国法人の支店の登記事項証明書等、当該法人が日本に事業所を有することを明らかにする資料／(2)日本法人への出向の場合：当該日本法人と出向元の外国法人との出資関係を明らかにする資料／(3)日本に事務所を有する外国法人への出向の場合：当該外国法人の支店の登記事項証明書等（日本に事務所を有することを明らかにする資料）と、当該外国法人と出向元の法人との資本関係を明らかにする資料": [
+    "(1) Transfer within the same legal entity: a certificate of registered matters of the foreign corporation's branch, etc., showing that the corporation has an office in Japan / (2) Secondment to a Japanese corporation: material showing the capital relationship between that Japanese corporation and the foreign corporation that sends the applicant / (3) Secondment to a foreign corporation that has an office in Japan: a certificate of registered matters of that foreign corporation's branch, etc. (showing that it has an office in Japan), and material showing the capital relationship between that foreign corporation and the sending corporation",
+    "(1) 같은 법인 내 전근인 경우: 외국 법인 지점의 등기사항증명서 등, 해당 법인이 일본에 사업소를 두고 있음을 밝히는 자료 / (2) 일본 법인으로 파견되는 경우: 해당 일본 법인과 파견 원 외국 법인의 출자 관계를 밝히는 자료 / (3) 일본에 사무소를 둔 외국 법인으로 파견되는 경우: 해당 외국 법인 지점의 등기사항증명서 등(일본에 사무소를 두고 있음을 밝히는 자료)과 해당 외국 법인과 파견 원 법인의 자본 관계를 밝히는 자료",
+  ],
+  "(1)公的機関から発行された法人登記に関する資料／(2)納税状況、取引実績、船荷証券、輸出入許可書、広告等": [
+    "(1) Material on corporate registration issued by a public agency / (2) Tax payment status, transaction record, bill of lading, import/export permit, advertisements, etc.",
+    "(1) 공적 기관이 발행한 법인 등기에 관한 자료 / (2) 납세 상황, 거래 실적, 선하증권, 수출입 허가서, 광고 등",
+  ],
+  "(1)関連する業務に従事した機関及び内容並びに期間を明示した履歴書／(2)過去1年間に従事した業務内容及び地位、報酬を明示した、転勤の直前に勤務した外国の機関の文書（社会保険加入証明、戸口簿等）。転勤の直前1年以内に企業内転勤の在留資格で本邦に在留していた期間がある場合は、その期間に勤務していた本邦の機関を含む": [
+    "(1) A résumé stating the organizations, content and periods of related work / (2) A document of the foreign organization where the applicant worked immediately before the transfer, stating the work, position and remuneration over the past year (social insurance certificate, household register, etc.). If the applicant stayed in Japan with the status of residence \"Intra-company Transferee\" within one year immediately before the transfer, this includes the Japanese organization where the applicant worked during that period",
+    "(1) 관련 업무에 종사한 기관 및 내용, 기간을 명시한 이력서 / (2) 최근 1년간 종사한 업무 내용, 지위, 보수를 명시한, 전근 직전에 근무한 외국 기관의 문서(사회보험 가입 증명, 호적 등). 전근 직전 1년 이내에 기업 내 전근 체류자격으로 일본에 체류한 기간이 있는 경우에는 그 기간에 근무한 일본 기관을 포함",
+  ],
+  "沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が詳細に記載された案内書、又はこれに準ずる勤務先等の作成した文書のいずれか": [
+    "Either a brochure describing in detail the history, officers, organization and business (including main clients and transaction record), or an equivalent document prepared by the workplace",
+    "연혁, 임원, 조직, 사업 내용(주요 거래처와 거래 실적 포함) 등이 상세히 기재된 안내서 또는 이에 준하는 근무처 등이 작성한 문서 중 하나",
+  ],
+  "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる。提出できない場合は、給与について申告済みであることを明らかにする資料を提出する": [
+    "One stating a year's total income and tax payment status. If one certificate states both, either one is sufficient (issued by the municipality of the address as of January 1). If it cannot be issued because of recent arrival or a move, ask the nearest immigration office. If it cannot be submitted, submit material showing that the salary has been declared",
+    "1년간의 총소득 및 납세 상황이 기재된 것. 둘 다 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 주소지의 시구정촌에서 발급). 입국 직후나 이사 등으로 발급되지 않을 때는 가까운 출입국재류관리관서에 문의. 제출할 수 없는 경우에는 급여에 대해 신고를 마쳤음을 밝히는 자료를 제출",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
