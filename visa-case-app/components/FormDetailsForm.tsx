@@ -9,12 +9,13 @@ import {
   getFormDetailsWarnings,
   getFormLayout,
   validateFormDetails,
+  MEDICAL_APPLICANT_TYPES,
   TOKUTEI_KATSUDO_TYPES,
   type FormDetails,
   type Relative,
   type WorkEntry,
 } from "@/lib/formDetails";
-import { isTokuteiKatsudo, statusForRules } from "@/lib/requirements/evaluate";
+import { isTokuteiKatsudo, ruleSetFor, statusForRules } from "@/lib/requirements/evaluate";
 import { HspPointSection } from "@/components/HspPointSection";
 import { formLabelText } from "@/lib/i18n/formLabels";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
@@ -67,6 +68,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const showTokuteiType = isTokuteiKatsudo(
     statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }),
   );
+  // 医療の申請人の区分は、手続に使う在留資格が医療のときだけ尋ねる（所属機関のカテゴリーとは別の項目）
+  const showMedicalType =
+    ruleSetFor(record.procedureType, statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }))?.basis === "applicantType";
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);
@@ -135,7 +139,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "coeHistory"
       | "deportationHistory"
       | "acquisitionCause"
-      | "tokuteiKatsudoType",
+      | "tokuteiKatsudoType"
+      | "medicalApplicantType",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -223,6 +228,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {select("acquisitionCause", [["birth", t("caseRequirements.cause_birth")], ["nationalityLoss", t("caseRequirements.cause_nationalityLoss")], ["other", t("caseRequirements.cause_other")]])}
         {form.acquisitionCause === "other" && text("acquisitionCauseOther")}
         {showTokuteiType && select("tokuteiKatsudoType", TOKUTEI_KATSUDO_TYPES.map((v) => [v, t(`caseRequirements.subtype_${v}`)]), t("caseRequirements.subtypeLabel"))}
+        {showMedicalType && select("medicalApplicantType", MEDICAL_APPLICANT_TYPES.map((v) => [v, t(`caseRequirements.applicantType_${v}`)]), t("caseRequirements.applicantTypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (

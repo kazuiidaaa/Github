@@ -1,4 +1,4 @@
-import type { FormDetails } from "../formDetails";
+import { MEDICAL_APPLICANT_TYPES, type FormDetails } from "../formDetails";
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
@@ -30,6 +30,8 @@ export interface Evaluation {
   needsCause: boolean;
   /** 在留資格が特定活動で、種別が未選択（種別ごとの書類は判定できない）。特定活動以外の在留資格では常に false */
   needsSubtype: boolean;
+  /** 在留資格「医療」の申請人の区分が未選択のため、区分で要否が分かれる書類を要確認で表示している（basis が applicantType の規則集合のみ） */
+  needsApplicantType: boolean;
   items: EvaluatedItem[];
   /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
@@ -187,6 +189,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     categoryOutOfRange: false,
     needsCause: false,
     needsSubtype: false,
+    needsApplicantType: false,
     items: [],
     missing: [],
     toCheck: [],
@@ -206,6 +209,32 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   }
 
   const items: EvaluatedItem[] = [];
+
+  // 申請人の区分（医療）で判定する規則集合は、所属機関のカテゴリーに依存しない（「カテゴリー未入力」の注意も出さない）
+  if (ruleSet.basis === "applicantType") {
+    const type = c.formDetails.medicalApplicantType;
+    const needsApplicantType = type === "";
+    for (const rule of ruleSet.rules) {
+      const types = rule.applicantTypes ?? MEDICAL_APPLICANT_TYPES;
+      const common = types.length === MEDICAL_APPLICANT_TYPES.length;
+      let result: Result;
+      let reasonCode: ReasonCode;
+      if (needsApplicantType) {
+        // 区分が未選択の間は、全区分に共通の書類は規則どおり、区分で分かれる書類は要確認（これまでと同じ表示）
+        result = common ? rule.level : "check";
+        reasonCode = common ? { kind: "applicantTypeCommon" } : { kind: "applicantTypeUnknown" };
+      } else if (!types.includes(type)) {
+        result = "not_required";
+        reasonCode = { kind: "applicantTypeNotRequired", type };
+      } else {
+        result = rule.level;
+        reasonCode = common ? { kind: "applicantTypeCommon" } : { kind: "applicantTypeLevel", type, level: rule.level };
+      }
+      const state = c.requirementStates[rule.id] ?? NO_STATE;
+      pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
+    }
+    return { ...summarize(ruleSet, false, false, false, items), needsSubtype, needsApplicantType };
+  }
 
   // 取得の事由で判定する規則集合は、所属機関のカテゴリーに依存しない
   if (ruleSet.basis === "acquisitionCause") {
@@ -271,6 +300,7 @@ function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange:
     categoryOutOfRange,
     needsCause,
     needsSubtype: false,
+    needsApplicantType: false,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
     toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),
