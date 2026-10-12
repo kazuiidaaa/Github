@@ -1,4 +1,4 @@
-import type { FormDetails, TokuteiKatsudoType } from "../formDetails";
+import type { FormDetails, MedicalApplicantType, TokuteiKatsudoType } from "../formDetails";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
@@ -9,6 +9,7 @@ export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
 /** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
 export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
+export type { MedicalApplicantType };
 
 export interface RequirementRule {
   id: string;
@@ -18,6 +19,8 @@ export interface RequirementRule {
   categories?: Category[];
   /** この書類が必要となる取得の事由（basis が acquisitionCause の規則集合のみ） */
   causes?: AcquisitionCause[];
+  /** この書類が必要となる申請人の区分（basis が applicantType の規則集合のみ。省略時は全区分） */
+  applicantTypes?: MedicalApplicantType[];
   /** required：必要、check：必要となる場合があり確認を要する */
   level: "required" | "check";
   /** 入力された雇用・会社情報が真の場合のみ適用する条件 */
@@ -42,7 +45,7 @@ export interface RuleSet {
    */
   subtype?: TokuteiKatsudoType;
   /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
-  basis?: "category" | "acquisitionCause";
+  basis?: "category" | "acquisitionCause" | "applicantType";
   /**
    * カテゴリー区分の定義（選べる範囲と、各区分の意味。日本語の原文）。省略時は、所属機関の区分（1〜4。CATEGORY_LABELS）。
    * 在留資格によって区分の範囲・意味が違う場合に指定する（例：教授＝1常勤・2非常勤）。規則の categories が ALL でも、定義の範囲内でだけ判定する。
@@ -1465,8 +1468,8 @@ export const PROFESSOR_RENEWAL: RuleSet = {
 };
 
 // 在留資格「医療」。入管庁の案内ページ・チェックシートの「カテゴリー1・2」は、所属機関のカテゴリー（1〜4）ではなく、申請人の区分
-// （カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外の者）。案件にこの区分の入力項目がないため、全書類を全カテゴリー共通（ALL）とし、
-// 区分によって要否が分かれる書類は、要確認（check）として注記に区分を示す（Issue #302）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// （カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外の者）。この区分は formDetails.medicalApplicantType に持ち、basis: "applicantType" で判定する（Issue #310。
+// 所属機関のカテゴリーには依存しないため、categories は ALL のまま）。区分が未選択の間は、区分で要否が分かれる書類を要確認（check）で表示する（Issue #302 と同じ）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const IRYO = "医療";
 const IRYO_SOURCE = { title: "在留資格「医療」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/medicalservices.html" };
 const IRYO_CHECKED_AT = "2026-10-07";
@@ -1478,7 +1481,8 @@ const iryoDoctorLicense: RequirementRule = {
   name: "医師又は歯科医師の日本の資格を有することを証明する文書（免状又は証明書等の写し）",
   party: "applicant",
   categories: ALL,
-  level: "check",
+  applicantTypes: ["doctor"],
+  level: "required",
   note: IRYO_DOCTOR_NOTE,
 };
 const iryoOtherLicense: RequirementRule = {
@@ -1486,7 +1490,8 @@ const iryoOtherLicense: RequirementRule = {
   name: "医療に係る日本の資格を有することを証明する文書（免状又は証明書等の写し）",
   party: "applicant",
   categories: ALL,
-  level: "check",
+  applicantTypes: ["other"],
+  level: "required",
   note: "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）。薬剤師、保健師、助産師、看護師、准看護師、歯科衛生士、診療放射線技師、理学療法士、作業療法士、視能訓練士、臨床工学技士、義肢装具士のいずれか",
 };
 const iryoFacilityOverview: RequirementRule = {
@@ -1500,6 +1505,7 @@ const iryoFacilityOverview: RequirementRule = {
 
 export const IRYO_COE: RuleSet = {
   id: "iryo_coe",
+  basis: "applicantType",
   title: "医療 在留資格認定証明書交付申請",
   procedureType: "coe",
   residenceStatus: IRYO,
@@ -1532,6 +1538,7 @@ export const IRYO_COE: RuleSet = {
 
 export const IRYO_CHANGE: RuleSet = {
   id: "iryo_change",
+  basis: "applicantType",
   title: "医療 在留資格変更許可申請",
   procedureType: "change",
   residenceStatus: IRYO,
@@ -1542,6 +1549,7 @@ export const IRYO_CHANGE: RuleSet = {
 
 export const IRYO_RENEWAL: RuleSet = {
   id: "iryo_renewal",
+  basis: "applicantType",
   title: "医療 在留期間更新許可申請",
   procedureType: "renewal",
   residenceStatus: IRYO,
@@ -1562,16 +1570,18 @@ export const IRYO_RENEWAL: RuleSet = {
       name: "従事する職務の内容及び報酬を証明する在職証明書その他の所属機関の文書",
       party: "organization",
       categories: ALL,
-      level: "check",
+      applicantTypes: ["other"],
+      level: "required",
       note: IRYO_OTHER_NOTE,
     },
     {
       ...iryoOtherLicense,
+      level: "check",
       // 更新の案内には、資格を証明する文書の記載がない（住民税の証明書・在職証明書・転職後の初回の機関概要のみ）。認定・変更と同じ書類を、念のため確認として案内する
       note: "更新の案内ページには記載がありません。医師・歯科医師以外の方は、念のため日本の資格（免状又は証明書等）の写しを用意し、管轄の出入国在留管理官署に要否を確認してください",
       verify: true,
     },
-    { ...iryoFacilityOverview, note: "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ" },
+    { ...iryoFacilityOverview, applicantTypes: ["other"], note: "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ" },
   ],
 };
 

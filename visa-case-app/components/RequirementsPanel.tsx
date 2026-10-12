@@ -185,6 +185,12 @@ export function RequirementsPanel({
         </p>
       )}
 
+      {ev.ruleSet && ev.needsApplicantType && (
+        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+          {t("caseRequirements.needsApplicantType")}
+        </p>
+      )}
+
       {ev.ruleSet && ev.needsCause && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t("caseRequirements.needsCause")}

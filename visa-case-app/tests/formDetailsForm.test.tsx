@@ -186,3 +186,21 @@ describe("高度専門職の様式の案内（認定・変更・更新。Issue #
     expect(render({ procedureType: "renewal", currentStatus: "技術・人文知識・国際業務", targetStatus: "高度専門職（1号イ）" })).not.toContain("高度専門職の行う活動");
   });
 });
+
+describe("医療の申請人の区分の入力欄（Issue #310）", () => {
+  const field = "医療の申請人の区分";
+  it("手続に使う在留資格が医療のときだけ表示する（認定・変更は希望する在留資格、更新は現在の在留資格）", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "医療" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "coe", targetStatus: "医療" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "医療" })} />)).toContain(field);
+  });
+  it("医療以外の在留資格では表示しない", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "技術・人文知識・国際業務" })} />)).not.toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "技能" })} />)).not.toContain(field);
+  });
+  it("選択肢は医師・歯科医師と、それ以外の2つ", () => {
+    const m = renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "医療" })} />);
+    expect(m).toContain("医師・歯科医師（カテゴリー1）");
+    expect(m).toContain("医師・歯科医師以外（カテゴリー2）");
+  });
+});

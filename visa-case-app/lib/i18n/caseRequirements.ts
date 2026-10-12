@@ -1,3 +1,4 @@
+import type { MedicalApplicantType } from "@/lib/formDetails";
 import type { Lang } from "@/lib/documents/lang";
 import type { AcquisitionCause, Category, RequirementRule } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
@@ -22,7 +23,16 @@ export type ReasonCode =
   | { kind: "categoryNotRequired"; category: Category }
   | { kind: "conditionNotMet"; note?: string }
   | { kind: "categoryCommon" }
-  | { kind: "categoryLevel"; category: Category; level: "required" | "check" };
+  | { kind: "categoryLevel"; category: Category; level: "required" | "check" }
+  | { kind: "applicantTypeNotRequired"; type: MedicalApplicantType }
+  | { kind: "applicantTypeCommon" }
+  | { kind: "applicantTypeUnknown" }
+  | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: "required" | "check" };
+
+const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
+  doctor: "caseRequirements.applicantType_doctor",
+  other: "caseRequirements.applicantType_other",
+};
 
 const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
   nationalityLoss: "caseRequirements.cause_nationalityLoss",
@@ -54,6 +64,16 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
     case "categoryLevel":
       return t(code.level === "required" ? "caseRequirements.reasonCategoryRequired" : "caseRequirements.reasonCategoryCheck", {
         category: code.category,
+      });
+    case "applicantTypeNotRequired":
+      return t("caseRequirements.reasonApplicantTypeNotRequired", { type: t(APPLICANT_TYPE_KEYS[code.type]) });
+    case "applicantTypeCommon":
+      return t("caseRequirements.reasonApplicantTypeCommon");
+    case "applicantTypeUnknown":
+      return t("caseRequirements.reasonApplicantTypeUnknown");
+    case "applicantTypeLevel":
+      return t(code.level === "required" ? "caseRequirements.reasonApplicantTypeRequired" : "caseRequirements.reasonApplicantTypeCheck", {
+        type: t(APPLICANT_TYPE_KEYS[code.type]),
       });
   }
 }
