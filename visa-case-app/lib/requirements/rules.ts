@@ -1932,6 +1932,126 @@ export const EDUCATION_RENEWAL: RuleSet = {
   ],
 };
 
+// 在留資格「報道」。所属機関のカテゴリーは、1＝外務省報道官から外国記者登録証を発行された者を雇用する外国の報道機関に雇用される場合・2＝それ以外の団体・個人の2区分（会社の1〜4区分とは別。categoryDefinition）。
+// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-12 に照合済み（Issue #294）。
+// 食い違いは更新の「外国の報道機関の概要」だけ（案内ページには転職後初回の資料にあるが、チェックシート（更新）にはない）。この1件は要確認とした。
+// 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+const HODO = "報道";
+const HODO_CHECKED_AT = "2026-10-12";
+const HODO_PAGE_SOURCE = { title: "在留資格「報道」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/journalist.html" };
+const HODO_CATEGORIES: Partial<Record<Category, string>> = {
+  "1": "カテゴリー1（外務省報道官から外国記者登録証を発行された者を雇用する外国の報道機関に雇用される場合）",
+  "2": "カテゴリー2（上記に該当しない団体・個人）",
+};
+const HODO_CAT_1: Category[] = ["1"];
+const HODO_CAT_2: Category[] = ["2"];
+const HODO_FIRST_RENEWAL_NOTE = "転職後、初回の更新許可申請の場合のみ";
+
+const hodoRegisteredEmployerProof: RequirementRule = {
+  id: "registered_employer_proof",
+  name: "申請人を雇用する外国の報道機関が、外務省報道官から外国記者登録証を発行された社員を雇用していることを証明する文書",
+  party: "organization",
+  categories: HODO_CAT_1,
+  level: "required",
+};
+const hodoActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "申請人の活動の内容等を明らかにする資料（次のいずれか）",
+  party: "organization",
+  categories: HODO_CAT_2,
+  level: "required",
+  note: "(1)外国の報道機関から派遣される場合：その機関が作成した活動の内容、派遣期間、地位及び報酬を証明する文書／(2)外国の報道機関に日本で雇用される場合：労働基準法第15条第1項・同法施行規則第5条に基づき交付される労働条件を明示する文書／(3)雇用以外の契約に基づいて活動する場合（フリーランサー等）：その契約書（活動の内容、期間、地位及び報酬のいずれかの記載がないときは、その事項を記載した外国の報道機関の文書）",
+};
+const hodoOrganizationOverview: RequirementRule = {
+  id: "organization_overview",
+  name: "外国の報道機関の概要（代表者名、沿革、組織、施設、職員数、報道実績等）を明らかにする資料",
+  party: "organization",
+  categories: HODO_CAT_2,
+  level: "required",
+};
+
+export const HODO_COE: RuleSet = {
+  id: "hodo_coe",
+  title: "報道 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: HODO,
+  checkedAt: HODO_CHECKED_AT,
+  categoryDefinition: HODO_CATEGORIES,
+  sources: [
+    HODO_PAGE_SOURCE,
+    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: [...HODO_CAT_1, ...HODO_CAT_2],
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    hodoRegisteredEmployerProof,
+    hodoActivityDocuments,
+    hodoOrganizationOverview,
+  ],
+};
+
+export const HODO_CHANGE: RuleSet = {
+  id: "hodo_change",
+  title: "報道 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: HODO,
+  checkedAt: HODO_CHECKED_AT,
+  categoryDefinition: HODO_CATEGORIES,
+  sources: [
+    HODO_PAGE_SOURCE,
+    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf" },
+  ],
+  rules: [...procedureCommonRules("change"), hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
+};
+
+export const HODO_RENEWAL: RuleSet = {
+  id: "hodo_renewal",
+  title: "報道 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: HODO,
+  checkedAt: HODO_CHECKED_AT,
+  categoryDefinition: HODO_CATEGORIES,
+  sources: [
+    HODO_PAGE_SOURCE,
+    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf" },
+  ],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    { id: "press_registration_copy", name: "外務省報道官が発行した外国記者登録証の写し", party: "applicant", categories: HODO_CAT_1, level: "required" },
+    {
+      id: "employment_certificate",
+      name: "外国の報道機関の作成した在職証明書等（引き続き派遣され、雇用され、又は契約により活動していることを証明する文書）",
+      party: "organization",
+      categories: HODO_CAT_2,
+      level: "required",
+      note: "在職証明書は、所属機関の名称、所在地及び電話番号が記載されているものに限る",
+    },
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: HODO_CAT_2,
+      level: "required",
+      note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる",
+    },
+    { ...hodoRegisteredEmployerProof, level: "check", note: HODO_FIRST_RENEWAL_NOTE },
+    { ...hodoActivityDocuments, level: "check", note: `${HODO_FIRST_RENEWAL_NOTE}。${hodoActivityDocuments.note}` },
+    {
+      ...hodoOrganizationOverview,
+      level: "check",
+      note: `${HODO_FIRST_RENEWAL_NOTE}。案内ページには記載があるが、チェックシート（更新）にはないため要確認`,
+      verify: true,
+    },
+  ],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -1971,4 +2091,8 @@ export const RULE_SETS: RuleSet[] = [
   EDUCATION_RENEWAL,
   EDUCATION_CHANGE,
   EDUCATION_COE,
+  // 報道（Issue #294）
+  HODO_RENEWAL,
+  HODO_CHANGE,
+  HODO_COE,
 ];

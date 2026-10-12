@@ -664,6 +664,84 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "List of documents to submit for \"Instructor\" (for application for extension of the period of stay) (Immigration Services Agency of Japan)",
     "'교육' 관련 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
   ],
+
+  // 報道（Issue #294）
+  "報道 在留資格認定証明書交付申請": [
+    "Journalist: application for certificate of eligibility",
+    "보도 사증발급인정서 교부 신청",
+  ],
+  "報道 在留資格変更許可申請": [
+    "Journalist: application for change of status of residence",
+    "보도 체류자격 변경 허가 신청",
+  ],
+  "報道 在留期間更新許可申請": [
+    "Journalist: application for extension of the period of stay",
+    "보도 체류기간 연장 허가 신청",
+  ],
+  "在留資格「報道」（出入国在留管理庁）": [
+    "Status of residence \"Journalist\" (Immigration Services Agency of Japan)",
+    "체류자격 '보도'(출입국재류관리청)",
+  ],
+  "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Journalist\" (for application for certificate of eligibility) (Immigration Services Agency of Japan)",
+    "'보도' 관련 제출서류 일람(사증발급인정서 교부 신청용)(출입국재류관리청)",
+  ],
+  "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Journalist\" (for application for change of status of residence) (Immigration Services Agency of Japan)",
+    "'보도' 관련 제출서류 일람(체류자격 변경 허가 신청용)(출입국재류관리청)",
+  ],
+  "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": [
+    "List of documents to submit for \"Journalist\" (for application for extension of the period of stay) (Immigration Services Agency of Japan)",
+    "'보도' 관련 제출서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
+  ],
+  "カテゴリー1（外務省報道官から外国記者登録証を発行された者を雇用する外国の報道機関に雇用される場合）": [
+    "Category 1 (employed by a foreign news organization that employs a person issued a foreign press registration card by the Ministry of Foreign Affairs press officer)",
+    "카테고리 1(외무성 보도관으로부터 외국 기자 등록증을 발급받은 사람을 고용하는 외국 보도기관에 고용되는 경우)",
+  ],
+  "カテゴリー2（上記に該当しない団体・個人）": [
+    "Category 2 (an organization or individual not falling under the above)",
+    "카테고리 2(위에 해당하지 않는 단체·개인)",
+  ],
+  "申請人を雇用する外国の報道機関が、外務省報道官から外国記者登録証を発行された社員を雇用していることを証明する文書": [
+    "A document certifying that the foreign news organization employing the applicant employs a staff member issued a foreign press registration card by the Ministry of Foreign Affairs press officer",
+    "신청인을 고용하는 외국 보도기관이 외무성 보도관으로부터 외국 기자 등록증을 발급받은 직원을 고용하고 있음을 증명하는 문서",
+  ],
+  "申請人の活動の内容等を明らかにする資料（次のいずれか）": [
+    "Material clarifying the applicant's activities (any of the following)",
+    "신청인의 활동 내용 등을 밝히는 자료(다음 중 하나)",
+  ],
+  "(1)外国の報道機関から派遣される場合：その機関が作成した活動の内容、派遣期間、地位及び報酬を証明する文書／(2)外国の報道機関に日本で雇用される場合：労働基準法第15条第1項・同法施行規則第5条に基づき交付される労働条件を明示する文書／(3)雇用以外の契約に基づいて活動する場合（フリーランサー等）：その契約書（活動の内容、期間、地位及び報酬のいずれかの記載がないときは、その事項を記載した外国の報道機関の文書）": [
+    "(1) Dispatched by a foreign news organization: a document prepared by that organization certifying the activities, dispatch period, position and remuneration / (2) Employed in Japan by a foreign news organization: a document stating working conditions issued under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations / (3) Working under a non-employment contract (freelancer, etc.): the contract (if any of the activities, period, position or remuneration is not stated, a document of the foreign news organization stating them)",
+    "(1) 외국 보도기관에서 파견되는 경우: 그 기관이 작성한 활동 내용, 파견 기간, 지위 및 보수를 증명하는 문서 / (2) 외국 보도기관에 일본에서 고용되는 경우: 근로기준법 제15조 제1항 및 동 시행규칙 제5조에 따라 교부되는 근로조건을 명시한 문서 / (3) 고용 이외의 계약에 따라 활동하는 경우(프리랜서 등): 그 계약서(활동 내용, 기간, 지위 및 보수 중 기재되지 않은 것이 있을 때는 그 사항을 기재한 외국 보도기관의 문서)",
+  ],
+  "外国の報道機関の概要（代表者名、沿革、組織、施設、職員数、報道実績等）を明らかにする資料": [
+    "Material clarifying an outline of the foreign news organization (name of representative, history, organization, facilities, number of staff, reporting record, etc.)",
+    "외국 보도기관의 개요(대표자명, 연혁, 조직, 시설, 직원 수, 보도 실적 등)를 밝히는 자료",
+  ],
+  "外務省報道官が発行した外国記者登録証の写し": [
+    "Copy of the foreign press registration card issued by the Ministry of Foreign Affairs press officer",
+    "외무성 보도관이 발급한 외국 기자 등록증 사본",
+  ],
+  "外国の報道機関の作成した在職証明書等（引き続き派遣され、雇用され、又は契約により活動していることを証明する文書）": [
+    "Certificate of employment, etc. prepared by the foreign news organization (a document certifying continued dispatch, employment or activity under a contract)",
+    "외국 보도기관이 작성한 재직증명서 등(계속 파견되거나 고용되거나 계약에 따라 활동하고 있음을 증명하는 문서)",
+  ],
+  "在職証明書は、所属機関の名称、所在地及び電話番号が記載されているものに限る": [
+    "The certificate of employment must state the name, address and telephone number of the organization",
+    "재직증명서는 소속 기관의 명칭, 소재지 및 전화번호가 기재된 것에 한함",
+  ],
+  "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる": [
+    "One stating a year's total income and tax payment status. If one certificate states both, either one is sufficient (issued by the municipality of the address as of January 1). If it cannot be issued because of recent arrival or a move, ask the nearest immigration office",
+    "1년간의 총소득 및 납세 상황이 기재된 것. 둘 다 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 주소지의 시구정촌에서 발급). 입국 직후나 이사 등으로 발급되지 않을 때는 가까운 출입국재류관리관서에 문의",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。(1)外国の報道機関から派遣される場合：その機関が作成した活動の内容、派遣期間、地位及び報酬を証明する文書／(2)外国の報道機関に日本で雇用される場合：労働基準法第15条第1項・同法施行規則第5条に基づき交付される労働条件を明示する文書／(3)雇用以外の契約に基づいて活動する場合（フリーランサー等）：その契約書（活動の内容、期間、地位及び報酬のいずれかの記載がないときは、その事項を記載した外国の報道機関の文書）": [
+    "Only for the first renewal application after changing jobs. (1) Dispatched by a foreign news organization: a document prepared by that organization certifying the activities, dispatch period, position and remuneration / (2) Employed in Japan by a foreign news organization: a document stating working conditions issued under Article 15, paragraph 1 of the Labor Standards Act and Article 5 of its Enforcement Regulations / (3) Working under a non-employment contract (freelancer, etc.): the contract (if any of the activities, period, position or remuneration is not stated, a document of the foreign news organization stating them)",
+    "이직 후 첫 연장 허가 신청의 경우에만. (1) 외국 보도기관에서 파견되는 경우: 그 기관이 작성한 활동 내용, 파견 기간, 지위 및 보수를 증명하는 문서 / (2) 외국 보도기관에 일본에서 고용되는 경우: 근로기준법 제15조 제1항 및 동 시행규칙 제5조에 따라 교부되는 근로조건을 명시한 문서 / (3) 고용 이외의 계약에 따라 활동하는 경우(프리랜서 등): 그 계약서(활동 내용, 기간, 지위 및 보수 중 기재되지 않은 것이 있을 때는 그 사항을 기재한 외국 보도기관의 문서)",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。案内ページには記載があるが、チェックシート（更新）にはないため要確認": [
+    "Only for the first renewal application after changing jobs. The guidance page lists it, but the checklist (renewal) does not, so please verify",
+    "이직 후 첫 연장 허가 신청의 경우에만. 안내 페이지에는 기재되어 있으나 체크시트(연장)에는 없으므로 확인 필요",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
