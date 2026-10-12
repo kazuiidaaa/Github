@@ -11,7 +11,7 @@ import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 import { fillRenewalExcel } from "./renewal";
 import { sheetKey } from "./renewalMapping";
 
-// 高度専門職ではない「報道」は、様式 L（見出し「高度専門職（1号ロ）・（2号）、報道、研究（転勤）、企業内転勤」）で出力する（Issue #294）。値はすべてダミー。
+// 高度専門職ではない「報道」は、様式 L（見出し「高度専門職（1号ロ）・（2号）、報道、研究（転勤）、企業内転勤」）で出力する（Issue #294）。「企業内転勤」も同じ様式 L で出力する（Issue #295）。値はすべてダミー。
 
 const applicant: Applicant = { ...EMPTY_APPLICANT, legalName: "TARO YAMADA", nationality: "テスト国", confirmationStatus: "confirmed" };
 const employment: EmploymentInfo = { ...EMPTY_EMPLOYMENT, companyName: "テスト通信社", jobDescription: "取材" };
@@ -32,27 +32,27 @@ const cell = (wb: ExcelJS.Workbook, name: string, addr: string) => {
 };
 const sheetNames = (wb: ExcelJS.Workbook) => wb.worksheets.map((w) => sheetKey(w.name));
 
-describe("「報道」（高度専門職ではない）は様式 L で出力する", () => {
+describe.each(["報道", "企業内転勤"])("「%s」（高度専門職ではない）は様式 L で出力する", (status) => {
   it("在留資格として選べ、様式 L の対象として照合できる", () => {
-    expect(RESIDENCE_STATUSES).toContain("報道");
-    expect(FORM_L_STATUSES).toContain("報道");
-    expect(isFormLStatus("報道")).toBe(true);
-    expect(COE_PURPOSE_CHECKBOXES["報道"]).toBeTruthy();
+    expect(RESIDENCE_STATUSES).toContain(status);
+    expect(FORM_L_STATUSES).toContain(status);
+    expect(isFormLStatus(status)).toBe(true);
+    expect(COE_PURPOSE_CHECKBOXES[status]).toBeTruthy();
   });
 
-  it("認定：様式 L の第2表以降に差し込み、入国目的は「報道」にチェックする", async () => {
-    const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, "報道");
+  it("認定：様式 L の第2表以降に差し込み、入国目的の該当欄にチェックする", async () => {
+    const { buffer, warnings } = await fillCoeExcel(applicant, employment, details, status);
     const wb = await open(buffer);
     const company = COE_TABLE2.L.fill.find((i) => i.label === "所属機関 名称")!;
     expect(sheetNames(wb).some((n) => n.includes("Ｌ") || n.endsWith("L"))).toBe(true);
     expect(cell(wb, company.sheet, company.cell)).toBe("テスト通信社");
-    expect(cell(wb, COE_SHEET_APPLICANT_1, COE_PURPOSE_CHECKBOXES["報道"])).toBe("■");
+    expect(cell(wb, COE_SHEET_APPLICANT_1, COE_PURPOSE_CHECKBOXES[status])).toBe("■");
     expect(warnings.join("\n")).toContain(COE_TABLE2.L.manual);
     expect(warnings.join("\n")).not.toContain("入国目的");
   });
 
   it("変更：様式 L の第2表以降に差し込み、様式の対象外の警告は出さない", async () => {
-    const { buffer, warnings } = await fillChangeExcel(applicant, employment, details, "報道");
+    const { buffer, warnings } = await fillChangeExcel(applicant, employment, details, status);
     const wb = await open(buffer);
     const company = HSP_CHANGE_TABLE2.L.fill.find((i) => i.label === "所属機関 名称")!;
     expect(cell(wb, company.sheet, company.cell)).toBe("テスト通信社");
@@ -61,7 +61,7 @@ describe("「報道」（高度専門職ではない）は様式 L で出力す�
   });
 
   it("更新：様式 L の第2表以降に差し込む", async () => {
-    const { buffer, warnings } = await fillRenewalExcel(applicant, employment, details, "報道");
+    const { buffer, warnings } = await fillRenewalExcel(applicant, employment, details, status);
     const wb = await open(buffer);
     const company = HSP_CHANGE_TABLE2.L.fill.find((i) => i.label === "所属機関 名称")!;
     expect(cell(wb, company.sheet, company.cell)).toBe("テスト通信社");
@@ -77,8 +77,10 @@ describe("様式 L を使わない在留資格は、従来どおり", () => {
     expect(cell(wb, company.sheet, company.cell)).toBe("");
   });
 
-  it("「報道」を含む別の表記は、完全一致でないため様式 L にならない", () => {
+  it("「報道」「企業内転勤」を含む別の表記や「研究（転勤）」は、完全一致でないため様式 L にならない", () => {
     expect(isFormLStatus("報道関係")).toBe(false);
+    expect(isFormLStatus("企業内転勤２号")).toBe(false);
+    expect(isFormLStatus("研究（転勤）")).toBe(false);
     expect(isFormLStatus("")).toBe(false);
   });
 });
