@@ -120,12 +120,15 @@ describe("特定活動の種別：規則集合の選択", () => {
 });
 
 describe("既存の規則集合への影響がない", () => {
-  it("RULE_SETS の種別つきの規則集合は、特定研究等活動（tokuteiKenkyu）と本邦大学卒業者（daigakuSotsugyo）の認定・変更・更新だけ（告示37号の tokuteiJoho は未対応）", () => {
+  it("RULE_SETS の種別つきの規則集合は、特定研究等活動（tokuteiKenkyu）・本邦大学卒業者（daigakuSotsugyo）・特定情報処理活動（tokuteiJoho）の認定・変更・更新だけ", () => {
     const typed = RULE_SETS.filter((r) => r.subtype !== undefined);
     expect(typed.map((r) => `${r.subtype}:${r.procedureType}:${r.residenceStatus}`).sort()).toEqual([
       "daigakuSotsugyo:change:特定活動",
       "daigakuSotsugyo:coe:特定活動",
       "daigakuSotsugyo:renewal:特定活動",
+      "tokuteiJoho:change:特定活動",
+      "tokuteiJoho:coe:特定活動",
+      "tokuteiJoho:renewal:特定活動",
       "tokuteiKenkyu:change:特定活動",
       "tokuteiKenkyu:coe:特定活動",
       "tokuteiKenkyu:renewal:特定活動",
@@ -135,13 +138,13 @@ describe("既存の規則集合への影響がない", () => {
     expect(RULE_SETS.slice(firstTyped).every((r) => r.subtype !== undefined)).toBe(true);
   });
 
-  it("本番の規則では、特定活動の案件は tokuteiKenkyu・daigakuSotsugyo のときだけ規則集合に当たる。未選択・ほかの種別は当たらず、研究にも当たらない", () => {
-    for (const v of ["", "tokuteiJoho", "other"] as const) {
+  it("本番の規則では、特定活動の案件は tokuteiKenkyu・daigakuSotsugyo・tokuteiJoho のときだけ規則集合に当たる。未選択・ほかの種別は当たらず、研究にも当たらない", () => {
+    for (const v of ["", "other"] as const) {
       for (const proc of ["coe", "change", "renewal"]) {
         expect(evaluate(make("特定活動", v, proc)).ruleSet, `${v}/${proc}`).toBeNull();
       }
     }
-    for (const type of ["tokuteiKenkyu", "daigakuSotsugyo"] as const) {
+    for (const type of ["tokuteiKenkyu", "daigakuSotsugyo", "tokuteiJoho"] as const) {
       for (const proc of ["coe", "change", "renewal"]) {
         const set = evaluate(make("特定活動", type, proc)).ruleSet;
         expect(set?.subtype, `${type}/${proc}`).toBe(type);

@@ -37,7 +37,7 @@ export interface OfficialFormSpec {
 }
 
 // 更新・変更の「対象範囲」は、在留資格が lib/hspForm.ts の FORM_STATUSES（様式 I・L・N・U の一覧）・高度専門職・経営・管理のいずれかか、で決める。
-// 特定活動は、案件の特定活動の種別が様式Nを使う種別（tokuteiKenkyu・daigakuSotsugyo。Issue #299・#300）のときだけ対象。ほかの種別・未選択は対象外。
+// 特定活動は、案件の特定活動の種別が様式Nを使う種別（tokuteiKenkyu・daigakuSotsugyo・tokuteiJoho。Issue #299・#300・#334）のときだけ対象。ほかの種別・未選択は対象外。
 // 研究などは、FORM_STATUSES に足すまで対象外。
 
 const FORM_N_HEADING_STATUS = FORM_STATUSES.N[0];

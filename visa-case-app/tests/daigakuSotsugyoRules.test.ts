@@ -26,8 +26,8 @@ function make(procedureType: string, type: "tokuteiKenkyu" | "daigakuSotsugyo" |
 describe("本邦大学等卒業者の規則集合", () => {
   const sets = [DAIGAKU_SOTSUGYO_COE, DAIGAKU_SOTSUGYO_CHANGE, DAIGAKU_SOTSUGYO_RENEWAL];
 
-  it("認定・変更・更新の3件が、RULE_SETS の末尾（特定研究等活動のあと）にある", () => {
-    expect(RULE_SETS.slice(-3)).toEqual([DAIGAKU_SOTSUGYO_RENEWAL, DAIGAKU_SOTSUGYO_CHANGE, DAIGAKU_SOTSUGYO_COE]);
+  it("認定・変更・更新の3件が、RULE_SETS にある（特定情報処理活動の直前）", () => {
+    expect(RULE_SETS.slice(-6, -3)).toEqual([DAIGAKU_SOTSUGYO_RENEWAL, DAIGAKU_SOTSUGYO_CHANGE, DAIGAKU_SOTSUGYO_COE]);
     expect(sets.map((s) => s.procedureType)).toEqual(["coe", "change", "renewal"]);
   });
 
@@ -71,12 +71,12 @@ describe("本邦大学等卒業者の規則集合", () => {
     }
   });
 
-  it("案件の判定：種別 daigakuSotsugyo は本規則集合に当たり、tokuteiJoho・未選択は当たらない", () => {
+  it("案件の判定：種別 daigakuSotsugyo は本規則集合に当たり、tokuteiJoho・未選択は当たらない（tokuteiJoho は、自分の規則集合に当たる）", () => {
     expect(evaluate(make("coe", "daigakuSotsugyo")).ruleSet).toBe(DAIGAKU_SOTSUGYO_COE);
     expect(evaluate(make("change", "daigakuSotsugyo")).ruleSet).toBe(DAIGAKU_SOTSUGYO_CHANGE);
     expect(evaluate(make("renewal", "daigakuSotsugyo")).ruleSet).toBe(DAIGAKU_SOTSUGYO_RENEWAL);
     for (const p of ["coe", "change", "renewal"]) {
-      expect(evaluate(make(p, "tokuteiJoho")).ruleSet).toBeNull();
+      expect(evaluate(make(p, "tokuteiJoho")).ruleSet?.subtype).toBe("tokuteiJoho");
       expect(evaluate(make(p, "")).ruleSet).toBeNull();
     }
   });
@@ -95,14 +95,13 @@ describe("案件作成画面の「未整備」案内：特定活動は1件にま
   it("同じ手続・在留資格の組み合わせは1件にまとまり、特定活動は手続ごとに1回だけ出る", () => {
     const entries = supportedEntries().filter((e) => e.status === "特定活動");
     expect(entries.map((e) => e.procedureLabel)).toHaveLength(3);
-    for (const e of entries) expect(e.subtypes).toEqual(["tokuteiKenkyu", "daigakuSotsugyo"]);
+    for (const e of entries) expect(e.subtypes).toEqual(["tokuteiKenkyu", "daigakuSotsugyo", "tokuteiJoho"]);
   });
 
-  it("日本語：「特定活動（特定研究等活動・本邦大学等卒業者）」で示し、未対応の種別（特定情報処理活動・その他）は出さない", () => {
+  it("日本語：「特定活動（特定研究等活動・本邦大学等卒業者・特定情報処理活動）」で示し、未対応の種別（その他）は出さない", () => {
     const msg = notApplicableMessage();
-    expect(msg).toContain("「特定活動（特定研究等活動・本邦大学等卒業者）」の「在留資格認定証明書交付申請」");
+    expect(msg).toContain("「特定活動（特定研究等活動・本邦大学等卒業者・特定情報処理活動）」の「在留資格認定証明書交付申請」");
     expect(msg.match(/「特定活動/g)).toHaveLength(3);
-    expect(msg).not.toContain("特定情報処理活動");
     expect(msg).not.toContain("その他");
   });
 
@@ -112,8 +111,8 @@ describe("案件作成画面の「未整備」案内：特定活動は1件にま
       expect(msg.match(/特定活動/g), lang).toHaveLength(3);
       expect(msg, lang).not.toContain("{");
     }
-    expect(noRuleMessage(tFor("en"))).toContain("特定活動 (Designated research activities, Graduates of Japanese universities, etc.)");
-    expect(noRuleMessage(tFor("ko"))).toContain("特定活動 (특정 연구 등 활동, 본방 대학 등 졸업자)");
+    expect(noRuleMessage(tFor("en"))).toContain("特定活動 (Designated research activities, Graduates of Japanese universities, etc., Designated information processing activities)");
+    expect(noRuleMessage(tFor("ko"))).toContain("特定活動 (특정 연구 등 활동, 본방 대학 등 졸업자, 특정 정보처리 활동)");
   });
 
   it("日本語の出力は、画面側（noRuleMessage）と一致する", () => {

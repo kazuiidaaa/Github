@@ -950,33 +950,17 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "As appropriate. Submit when the brochure and the certificate of registered matters alone do not show the organization's outline and business activities",
     "적절히. 안내서·등기사항증명서만으로는 기관의 개요·사업 활동이 밝혀지지 않는 경우에 제출한다",
   ],
-  "外国人社員リスト": [
-    "List of foreign employees",
-    "외국인 사원 리스트",
-  ],
   "国籍・氏名・性別・生年月日・入社年月日・在留資格・在留期間・在留期間満了日・職務内容を含んだもの": [
     "Including nationality, name, sex, date of birth, date of joining, status of residence, period of stay, expiry date of the period of stay and job duties",
     "국적·성명·성별·생년월일·입사일·체류자격·체류기간·체류기간 만료일·직무 내용을 포함한 것",
-  ],
-  "同意書": [
-    "Consent form",
-    "동의서",
   ],
   "用紙は地方出入国在留管理官署に用意されている": [
     "The form is available at the regional immigration services bureaus",
     "용지는 지방출입국·외국인관서에 비치되어 있다",
   ],
-  "活動の内容、期間、地位及び報酬を証する文書（次のいずれか）": [
-    "Document certifying the activity, period, position and remuneration (any of the following)",
-    "활동의 내용, 기간, 지위 및 보수를 증명하는 문서(다음 중 하나)",
-  ],
   "(1)受入れ機関（本邦の機関）との雇用契約書の写し／(2)辞令の写し／(3)採用通知書の写し／(4)上記(1)〜(3)に準ずる文書": [
     "(1) Copy of the employment contract with the host organization (Japanese organization) / (2) copy of the letter of appointment / (3) copy of the notice of hiring / (4) documents equivalent to (1) to (3)",
     "(1) 수용 기관(일본 기관)과의 고용계약서 사본 / (2) 발령장 사본 / (3) 채용 통지서 사본 / (4) 위 (1)~(3)에 준하는 문서",
-  ],
-  "卒業証明書及び職歴その他経歴を証する文書": [
-    "Graduation certificate and documents certifying work history and other background",
-    "졸업증명서 및 경력 기타 이력을 증명하는 문서",
   ],
   "卒業証明書、在職証明書、履歴書（各1通）": [
     "Graduation certificate, certificate of employment and curriculum vitae (one of each)",
@@ -1066,6 +1050,43 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、源泉徴収票及び当該期間の給与明細書の写し、賃金台帳の写し等を提出する": [
     "One stating a year's total income and tax payment status. If one certificate states both, either one is sufficient (issued by the municipality of the address as of January 1). If it cannot be issued because of recent arrival or a move, submit the withholding slip and copies of the payslips for the period, a copy of the wage ledger, etc.",
     "1년간의 총소득 및 납세 상황이 기재된 것. 둘 다 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 주소지의 시구정촌에서 발급). 입국 직후나 이사 등으로 발급되지 않을 때는 원천징수영수증 및 해당 기간의 급여명세서 사본, 임금대장 사본 등을 제출",
+  ],
+  // 特定活動（特定情報処理活動。Issue #334）
+  "在留資格「特定活動」（特定情報処理活動）（出入国在留管理庁）": [
+    "Status of residence \"Designated Activities\" (Designated Information Processing Activities) (Immigration Services Agency of Japan)",
+    "체류자격 「특정활동」(특정 정보처리 활동)(출입국재류관리청)",
+  ],
+  "特定活動（特定情報処理活動） 在留資格認定証明書交付申請": [
+    "Designated Activities (Designated information processing activities): application for certificate of eligibility",
+    "특정활동(특정 정보처리 활동) 사증발급인정서 교부 신청",
+  ],
+  "特定活動（特定情報処理活動） 在留資格変更許可申請": [
+    "Designated Activities (Designated information processing activities): application for permission for change of status of residence",
+    "특정활동(특정 정보처리 활동) 체류자격 변경 허가 신청",
+  ],
+  "特定活動（特定情報処理活動） 在留期間更新許可申請": [
+    "Designated Activities (Designated information processing activities): application for permission for extension of the period of stay",
+    "특정활동(특정 정보처리 활동) 체류기간 연장 허가 신청",
+  ],
+  "(1)雇用契約書の写し／(2)辞令の写し／(3)採用通知書の写し／(4)上記(1)〜(3)に準ずる文書": [
+    "(1) Copy of the employment contract / (2) copy of the letter of appointment / (3) copy of the notice of hiring / (4) documents equivalent to (1) to (3)",
+    "(1) 고용계약서 사본 / (2) 발령장 사본 / (3) 채용 통지서 사본 / (4) 위 (1)~(3)에 준하는 문서",
+  ],
+  "派遣で就労する場合：派遣の根拠となる契約書及び派遣先の事業活動を明らかにする資料": [
+    "If the applicant will work as a dispatched worker: the contract that is the basis for the dispatch and materials showing the business activities of the destination",
+    "파견으로 근무하는 경우: 파견의 근거가 되는 계약서 및 파견처의 사업 활동을 밝히는 자료",
+  ],
+  "派遣で就労する場合のみ": [
+    "Only if the applicant will work as a dispatched worker",
+    "파견으로 근무하는 경우에만",
+  ],
+  "契約機関が変更された場合のみ": [
+    "Only if the contracting organization has changed",
+    "계약 기관이 변경된 경우에만",
+  ],
+  "契約機関が変更された場合のみ。1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる": [
+    "Only if the contracting organization has changed. A certificate stating total income and tax payment status for one year. A certificate stating both is sufficient on its own (issued by the municipality of the address as of January 1). If it cannot be issued, e.g. soon after entry or because of relocation, consult the nearest regional immigration services bureau",
+    "계약 기관이 변경된 경우에만. 1년간의 총소득 및 납세 상황이 기재된 것. 둘 다 기재된 증명서라면 어느 한쪽이라도 된다(1월 1일 현재 주소지의 시·구·읍·면에서 발급). 입국 후 얼마 안 된 경우나 이사 등으로 발급되지 않을 때는 가까운 출입국·외국인관서에 문의한다",
   ],
 };
 

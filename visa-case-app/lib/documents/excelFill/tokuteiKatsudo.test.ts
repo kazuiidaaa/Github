@@ -41,10 +41,16 @@ describe("入国目的（11）：特定活動（研究活動等）の□（M43�
     expect(await cellText(buffer, COE_PURPOSE_CHECKBOXES["特定活動（本邦大学卒業者）"])).toBe("□");
   });
 
-  it.each(["", "tokuteiJoho", "other"] as const)("種別が「%s」のときは、M43 を■にせず、一致しない旨の警告を出す", async (type) => {
+  it.each(["", "other"] as const)("種別が「%s」のときは、M43 を■にせず、一致しない旨の警告を出す", async (type) => {
     const { buffer, warnings } = await fill("特定活動", type);
     expect(await cellText(buffer, "M43")).toBe("□");
     expect(warnings.join("\n")).toContain("入国目的（特定活動）は、様式の選択肢と一致しないため");
+  });
+
+  it("希望する在留資格が特定活動で、種別が tokuteiJoho（告示37号）なら、様式Nの職種一覧の注記が36号と同じ扱いのため、M43 を■にし、警告は出さない", async () => {
+    const { buffer, warnings } = await fill("特定活動", "tokuteiJoho");
+    expect(await cellText(buffer, "M43")).toBe("■");
+    expect(warnings.join("\n")).not.toContain("様式の選択肢と一致しない");
   });
 
   it("希望する在留資格が特定活動で、種別が daigakuSotsugyo なら、AD43（特定活動（本邦大学卒業者））を■にし、研究活動等の M43 は□のまま。警告は出さない", async () => {
@@ -134,5 +140,28 @@ describe("特定活動（本邦大学卒業者。告示46号）の注意（職�
     expect(r.warnings.join("\n")).not.toContain(WARN_ROOM);
     const ok = await fillOfficialExcel({ ...base, formDetails: formWith({ tokuteiKatsudoType: "daigakuSotsugyo", occupationCode: "10" }) });
     expect(ok.warnings.join("\n")).not.toContain(WARN_DAIGAKU);
+  });
+});
+
+describe("特定活動（特定情報処理活動。告示37号）の注意（職種）", () => {
+  const joho = (occupationCode: string) => ({ occupationCode, tokuteiKatsudoType: "tokuteiJoho" as const });
+  const WARN_JOHO = "職種の番号は、特定活動（特定情報処理活動・告示37号）では";
+
+  it("研究室の欄（告示36号の項目）の注意は出さない", () => {
+    expect(tokuteiKatsudoWarnings(true, joho("")).join("\n")).not.toContain(WARN_ROOM);
+  });
+
+  it.each(["12", "42", "43", "44", "999"])("職種の番号 %s は、一覧の範囲内なので警告しない", (code) => {
+    expect(tokuteiKatsudoWarnings(true, joho(code))).toEqual([]);
+  });
+
+  it.each(["3", "11", "45", "1"])("職種の番号 %s は、一覧の範囲外なので、告示37号の文面で警告する（告示36号の文面は出さない）", (code) => {
+    const text = tokuteiKatsudoWarnings(true, joho(code)).join("\n");
+    expect(text).toContain(WARN_JOHO);
+    expect(text).not.toContain(WARN_OCC);
+  });
+
+  it("様式Nの対象でない案件には、注意を付けない", () => {
+    expect(tokuteiKatsudoWarnings(false, joho("3"))).toEqual([]);
   });
 });
