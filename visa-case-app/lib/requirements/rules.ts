@@ -2416,7 +2416,7 @@ export const KIGYONAI_RENEWAL: RuleSet = {
 
 // 在留資格「特定活動」のうち、特定研究等活動（告示36号）の本人（種別 tokuteiKenkyu。Issue #299）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
 // 提出書類は、入管庁の案内ページ（designatedactivities07）の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
-// 範囲外：告示37号（特定情報処理活動）は、対応する Issue なし（未対応）。特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+// 範囲外：特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
 const TOKUTEI_KENKYU_STATUS = "特定活動";
 const TOKUTEI_KENKYU_CHECKED_AT = "2026-10-12";
 const TOKUTEI_KENKYU_PAGE_SOURCE = { title: "在留資格「特定活動」（特定研究等活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities07.html" };
@@ -2556,7 +2556,7 @@ export const TOKUTEI_KENKYU_RENEWAL: RuleSet = {
 // 在留資格「特定活動」のうち、本邦大学等卒業者（告示46号）の本人（種別 daigakuSotsugyo。Issue #300）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
 // 提出書類は、入管庁の案内ページ（designatedactivities11）の「本邦大学等卒業者の場合に必要な書類」の列の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
 // 告示の番号は、案内ページ・様式Nの注記とも「告示46号」（Issue #300 の依頼文の「44号」「45号」とは異なる）。
-// 範囲外：本邦大学等卒業者の家族（案内ページの家族の列）は種別「その他」。告示37号（特定情報処理活動）は、対応する Issue なし（未対応）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+// 範囲外：本邦大学等卒業者の家族（案内ページの家族の列）は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
 const DAIGAKU_SOTSUGYO_STATUS = "特定活動";
 const DAIGAKU_SOTSUGYO_CHECKED_AT = "2026-10-12";
 const DAIGAKU_SOTSUGYO_PAGE_SOURCE = { title: "在留資格「特定活動」（本邦大学等卒業者及びその配偶者等）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities11.html" };
@@ -2669,6 +2669,133 @@ export const DAIGAKU_SOTSUGYO_RENEWAL: RuleSet = {
   rules: [...procedureCommonRules("renewal"), daigakuSotsugyoRepresentative, daigakuSotsugyoResidentTax],
 };
 
+// 在留資格「特定活動」のうち、特定情報処理活動（告示37号）の本人（種別 tokuteiJoho。Issue #334）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
+// 提出書類は、入管庁の案内ページ（designatedactivities08。ページ名「在留資格「特定活動」（特定情報処理活動）」）による（2026-10-17 に確認）。
+// 確認の限界：入管庁のサイトは機械的な取得（curl）を拒否するため、案内ページは本文の要約の取得（2回、内容は一致）で確認した。原文の逐語の照合は未了。
+//   案内ページに認定・変更・更新のチェックシートの掲載はなく、照合していない。入管庁の案内にない書類は足していない。
+// 旅券・申請書・写真は共通ルール（procedureCommonRules）に任せ、ここには書かない。案内ページに「任意」の区分に当たる書類（提示不要だが実務では取得するのが通例）の記載はなく、
+// 「任意」は、認定の旅券の写し（共通ルール）のみ。
+// 案内ページの36号（designatedactivities07）との差：変更に「卒業証明書、在職証明書、履歴書」の記載がない（36号の変更には記載あり）。独自に足していない。行政書士の確認を待つ。
+// 範囲外：特定情報処理活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも。lib/hspForm.ts の FORM_N_TOKUTEI_TYPES）。
+const TOKUTEI_JOHO_STATUS = "特定活動";
+const TOKUTEI_JOHO_CHECKED_AT = "2026-10-17";
+const TOKUTEI_JOHO_PAGE_SOURCE = { title: "在留資格「特定活動」（特定情報処理活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities08.html" };
+
+const tokuteiJohoOrganizationRules: RequirementRule[] = [
+  { id: "organization_brochure", name: "契約機関の概要及び事業活動を明らかにする資料：案内書（パンフレット等）", party: "organization", categories: ALL, level: "required" },
+  { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: ALL, level: "required", note: "商業・法人登記" },
+  {
+    id: "organization_equivalent_documents",
+    name: "上記の案内書及び登記事項証明書に準ずる文書",
+    party: "organization",
+    categories: ALL,
+    level: "check",
+    note: "適宜。案内書・登記事項証明書だけでは機関の概要・事業活動が明らかにならない場合に提出する",
+  },
+  {
+    id: "foreign_staff_list",
+    name: "外国人社員リスト",
+    party: "organization",
+    categories: ALL,
+    level: "required",
+    note: "国籍・氏名・性別・生年月日・入社年月日・在留資格・在留期間・在留期間満了日・職務内容を含んだもの",
+  },
+  { id: "consent_form", name: "同意書", party: "organization", categories: ALL, level: "required", note: "用紙は地方出入国在留管理官署に用意されている" },
+];
+const tokuteiJohoActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "活動の内容、期間、地位及び報酬を証する文書（次のいずれか）",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+  note: "(1)雇用契約書の写し／(2)辞令の写し／(3)採用通知書の写し／(4)上記(1)〜(3)に準ずる文書",
+};
+const tokuteiJohoCareerDocuments: RequirementRule = {
+  id: "career_documents",
+  name: "卒業証明書及び職歴その他経歴を証する文書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "卒業証明書、在職証明書、履歴書（各1通）",
+};
+const tokuteiJohoDispatch: RequirementRule = {
+  id: "dispatch_documents",
+  name: "派遣で就労する場合：派遣の根拠となる契約書及び派遣先の事業活動を明らかにする資料",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: "派遣で就労する場合のみ",
+};
+const tokuteiJohoResidentTax: RequirementRule = {
+  id: "resident_tax_certificates",
+  name: "住民税の課税（又は非課税）証明書及び納税証明書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる",
+};
+
+export const TOKUTEI_JOHO_COE: RuleSet = {
+  id: "tokutei_joho_coe",
+  title: "特定活動（特定情報処理活動） 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: TOKUTEI_JOHO_STATUS,
+  subtype: "tokuteiJoho",
+  checkedAt: TOKUTEI_JOHO_CHECKED_AT,
+  sources: [TOKUTEI_JOHO_PAGE_SOURCE],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    ...tokuteiJohoOrganizationRules,
+    tokuteiJohoActivityDocuments,
+    tokuteiJohoCareerDocuments,
+    tokuteiJohoDispatch,
+  ],
+};
+
+export const TOKUTEI_JOHO_CHANGE: RuleSet = {
+  id: "tokutei_joho_change",
+  title: "特定活動（特定情報処理活動） 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: TOKUTEI_JOHO_STATUS,
+  subtype: "tokuteiJoho",
+  checkedAt: TOKUTEI_JOHO_CHECKED_AT,
+  sources: [TOKUTEI_JOHO_PAGE_SOURCE],
+  rules: [
+    ...procedureCommonRules("change"),
+    ...tokuteiJohoOrganizationRules,
+    tokuteiJohoActivityDocuments,
+    tokuteiJohoDispatch,
+    {
+      id: "resignation_certificate",
+      name: "前雇用先機関が作成した退職証明書（退職日を明記したもの）",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      note: "契約機関が変更された場合のみ",
+    },
+    { ...tokuteiJohoResidentTax, level: "check", note: `契約機関が変更された場合のみ。${tokuteiJohoResidentTax.note}` },
+  ],
+};
+
+export const TOKUTEI_JOHO_RENEWAL: RuleSet = {
+  id: "tokutei_joho_renewal",
+  title: "特定活動（特定情報処理活動） 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: TOKUTEI_JOHO_STATUS,
+  subtype: "tokuteiJoho",
+  checkedAt: TOKUTEI_JOHO_CHECKED_AT,
+  sources: [TOKUTEI_JOHO_PAGE_SOURCE],
+  rules: [...procedureCommonRules("renewal"), tokuteiJohoActivityDocuments, tokuteiJohoResidentTax],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -2728,4 +2855,8 @@ export const RULE_SETS: RuleSet[] = [
   DAIGAKU_SOTSUGYO_RENEWAL,
   DAIGAKU_SOTSUGYO_CHANGE,
   DAIGAKU_SOTSUGYO_COE,
+  // 特定活動（特定情報処理活動。Issue #334）
+  TOKUTEI_JOHO_RENEWAL,
+  TOKUTEI_JOHO_CHANGE,
+  TOKUTEI_JOHO_COE,
 ];

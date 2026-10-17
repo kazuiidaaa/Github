@@ -83,6 +83,27 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Documents proving the applicant's education, work history, and other background (résumé, graduation certificate, employment certificate, etc.)",
     "신청인의 학력 및 경력 등을 증명하는 문서(이력서, 졸업증명서, 재직증명서 등)",
   ],
+  // 特定活動（特定研究等活動・特定情報処理活動）の書類名。画面の訳表（ruleTexts.ts）が案内書類の訳表から引くため、ここに置く（Issue #334）
+  "外国人社員リスト": [
+    "List of foreign employees",
+    "외국인 사원 리스트",
+  ],
+  "同意書": [
+    "Consent form",
+    "동의서",
+  ],
+  "活動の内容、期間、地位及び報酬を証する文書（次のいずれか）": [
+    "Document certifying the activity, period, position and remuneration (any of the following)",
+    "활동의 내용, 기간, 지위 및 보수를 증명하는 문서(다음 중 하나)",
+  ],
+  "卒業証明書及び職歴その他経歴を証する文書": [
+    "Graduation certificate and documents certifying work history and other background",
+    "졸업증명서 및 경력 기타 이력을 증명하는 문서",
+  ],
+  "契約機関の概要及び事業活動を明らかにする資料：案内書（パンフレット等）": [
+    "Materials showing the outline and business activities of the contracting organization: brochure (pamphlet, etc.)",
+    "계약 기관의 개요 및 사업 활동을 밝히는 자료: 안내서(팸플릿 등)",
+  ],
   "登記事項証明書": ["Certificate of registered matters (commercial registry certificate)", "등기사항증명서"],
   "事業内容を明らかにする資料（沿革・役員・組織・事業内容が記載された案内書等）": [
     "Materials showing the business (e.g., a brochure describing the company history, officers, organization, and business)",

@@ -18,7 +18,7 @@ const tFor = (lang: "ja" | "en" | "ko") => (key: MessageKey, params?: MessagePar
 type Subtype = FormDetails["tokuteiKatsudoType"];
 const TYPES: Subtype[] = ["", "tokuteiKenkyu", "tokuteiJoho", "daigakuSotsugyo", "other"];
 
-describe("様式Nの対象範囲：特定活動は種別が tokuteiKenkyu・daigakuSotsugyo のときだけ", () => {
+describe("様式Nの対象範囲：特定活動は種別が tokuteiKenkyu・daigakuSotsugyo・tokuteiJoho のときだけ", () => {
   it("在留資格の一覧（FORM_STATUSES）は変えない：特定活動は一覧に入らず、在留資格の文字列だけでは範囲外", () => {
     expect(Object.values(FORM_STATUSES).flat()).not.toContain("特定活動");
     expect(formCodeOfStatus("特定活動")).toBeUndefined();
@@ -26,7 +26,7 @@ describe("様式Nの対象範囲：特定活動は種別が tokuteiKenkyu・daig
   });
 
   it.each(TYPES)("種別「%s」：特定活動の範囲判定", (type) => {
-    const expected = type === "tokuteiKenkyu" || type === "daigakuSotsugyo";
+    const expected = type === "tokuteiKenkyu" || type === "daigakuSotsugyo" || type === "tokuteiJoho";
     expect(isStatusInFormScope("特定活動", type)).toBe(expected);
     expect(isStatusInFormScope("特定活動（告示36号）", type)).toBe(expected);
     expect(isFormNTokuteiCase("特定活動", type)).toBe(expected);
@@ -41,8 +41,8 @@ describe("様式Nの対象範囲：特定活動は種別が tokuteiKenkyu・daig
 
   const scope = (over: Partial<OfficialFormScope>): OfficialFormScope => ({ procedureType: "renewal", currentStatus: "", residenceStatus: "", ...over });
 
-  it.each(TYPES)("更新・変更：種別「%s」のとき、様式の警告が出るのは tokuteiKenkyu・daigakuSotsugyo 以外", (type) => {
-    const warn = type === "tokuteiKenkyu" || type === "daigakuSotsugyo" ? 0 : 1;
+  it.each(TYPES)("更新・変更：種別「%s」のとき、様式の警告が出るのは tokuteiKenkyu・daigakuSotsugyo・tokuteiJoho 以外", (type) => {
+    const warn = type === "tokuteiKenkyu" || type === "daigakuSotsugyo" || type === "tokuteiJoho" ? 0 : 1;
     expect(officialFormScopeWarnings(scope({ procedureType: "renewal", currentStatus: "特定活動", residenceStatus: "特定活動", tokuteiKatsudoType: type }))).toHaveLength(warn);
     expect(officialFormScopeWarnings(scope({ procedureType: "change", currentStatus: "留学", targetStatus: "特定活動", tokuteiKatsudoType: type }))).toHaveLength(warn);
   });
@@ -90,7 +90,7 @@ describe("特定研究等活動の規則集合", () => {
     for (const proc of ["coe", "change", "renewal"]) {
       expect(evaluate(make(proc, "")).ruleSet).toBeNull();
       expect(evaluate(make(proc, "")).needsSubtype).toBe(true);
-      for (const type of ["tokuteiJoho", "other"] as const) {
+      for (const type of ["other"] as const) {
         expect(evaluate(make(proc, type)).ruleSet, `${proc}/${type}`).toBeNull();
         expect(evaluate(make(proc, type)).needsSubtype).toBe(false);
       }
