@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useId, type ButtonHTMLAttributes, type ReactElement, type ReactNode } from "react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 /** 押しやすさのため、最小の高さは 44px（人の決定。Issue #392）。画面ごとの min-h-[44px] は不要 */
 export function Button({
@@ -19,6 +20,24 @@ export function Button({
   );
 }
 
+type FieldControlProps = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean | "true" | "false" };
+
+/** 説明・誤りの id を、既存の aria-describedby の後ろにつなげる（重複は除く） */
+export function mergeDescribedBy(...ids: (string | undefined)[]): string | undefined {
+  const list = ids.flatMap((v) => (v ? v.split(/\s+/) : [])).filter(Boolean);
+  const unique = [...new Set(list)];
+  return unique.length > 0 ? unique.join(" ") : undefined;
+}
+
+const LINKABLE_CONTROLS = ["input", "select", "textarea"];
+
+/**
+ * 入力欄の見出し・説明・誤りをまとめる共通部品。
+ * - 必須は、色や「*」だけに頼らず「必須」の文字で示す（人の決定。Issue #392）。
+ * - 子が input・select・textarea の1要素なら、説明・誤りの文を aria-describedby で結び付け、誤りがあれば aria-invalid を付ける。
+ *   子が自分の id・aria-describedby を持つ場合は、それを残して後ろに加える（上書きしない）。
+ *   DateField など独自の部品は、自分で結び付けるため、ここでは触らない。
+ */
 export function Field({
   label,
   required,
@@ -32,15 +51,44 @@ export function Field({
   error?: string;
   children: ReactNode;
 }) {
+  const t = useT();
+  const autoId = useId();
+  const only = Children.count(children) === 1 ? Children.toArray(children)[0] : null;
+  const control =
+    isValidElement<FieldControlProps>(only) && typeof only.type === "string" && LINKABLE_CONTROLS.includes(only.type)
+      ? (only as ReactElement<FieldControlProps>)
+      : null;
+  const base = control?.props.id ?? `field-${autoId.replace(/[^A-Za-z0-9_-]/g, "")}`;
+  const hintId = `${base}-hint`;
+  const errorId = `${base}-error`;
+  const showHint = Boolean(hint) && !error;
+  const content = control
+    ? cloneElement(control, {
+        "aria-describedby": mergeDescribedBy(control.props["aria-describedby"], showHint ? hintId : undefined, error ? errorId : undefined),
+        "aria-invalid": error ? true : control.props["aria-invalid"],
+      })
+    : children;
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-bold">
+      <span className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold">
         {label}
-        {required && <span className="ml-1 text-danger">*</span>}
+        {required && (
+          <Badge tone="red" icon={false}>
+            {t("input.field_required")}
+          </Badge>
+        )}
       </span>
-      {children}
-      {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
-      {error && <span className="mt-1 block text-xs font-bold text-red-700">{error}</span>}
+      {content}
+      {showHint && (
+        <span id={hintId} className="mt-1 block text-xs text-muted">
+          {hint}
+        </span>
+      )}
+      {error && (
+        <span id={errorId} className="mt-1 block text-xs font-bold text-red-700">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

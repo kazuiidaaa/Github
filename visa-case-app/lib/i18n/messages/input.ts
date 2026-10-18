@@ -1,11 +1,12 @@
 import { defineMessages } from "../define";
 
 /**
- * 入力・選択の共通部品（ChoiceGroup、StatusSelect、DateField、AcceptedDateField、AddressField、PasswordField）の文言。
+ * 入力・選択の共通部品（Field、ChoiceGroup、StatusSelect、DateField、AcceptedDateField、AddressField、PasswordField）の文言。
  * 在留資格名・号・手続名は、法令用語・保存値のため訳さない（日本語のまま表示する）。
  */
 export const input = defineMessages({
   ja: {
+    field_required: "必須",
     choiceGroup_required: "必須",
     choiceGroup_filterAria: "{legend}を項目名で絞り込む",
     choiceGroup_filterPlaceholder: "項目名で絞り込む",
@@ -55,6 +56,7 @@ export const input = defineMessages({
     passwordField_hide: "表示を隠す",
   },
   en: {
+    field_required: "Required",
     choiceGroup_required: "Required",
     choiceGroup_filterAria: "Filter {legend} by item name",
     choiceGroup_filterPlaceholder: "Filter by item name",
@@ -104,6 +106,7 @@ export const input = defineMessages({
     passwordField_hide: "Hide",
   },
   ko: {
+    field_required: "필수",
     choiceGroup_required: "필수",
     choiceGroup_filterAria: "{legend} 항목명으로 필터링",
     choiceGroup_filterPlaceholder: "항목명으로 필터링",
