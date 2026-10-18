@@ -51,9 +51,33 @@ export interface RuleSet {
    * 在留資格によって区分の範囲・意味が違う場合に指定する（例：教授＝1常勤・2非常勤）。規則の categories が ALL でも、定義の範囲内でだけ判定する。
    */
   categoryDefinition?: Partial<Record<Category, string>>;
-  sources: { title: string; url: string }[];
+  sources: RuleSource[];
   checkedAt: string;
   rules: RequirementRule[];
+}
+
+/** 出典の種類。page＝案内ページ（html）、pdf＝PDF（チェックシート・ガイドライン・改正概要など）、form＝申請書様式（xlsx・docx など） */
+export type SourceKind = "page" | "pdf" | "form";
+
+export interface RuleSource {
+  title: string;
+  url: string;
+  /** 出典の種類。移行中は省略可（Issue #374 項目2）。データ投入後に必須にするかは別途判断する */
+  kind?: SourceKind;
+  /** この出典の原文と突き合わせた日 "YYYY-MM-DD"（checkedAt と同じ書式）。照合していない出典は省略し、推測で入れない */
+  comparedAt?: string;
+}
+
+/**
+ * 規則集合の「原文と照合した日」。出典の comparedAt のうち最も新しい日を返す。1件もなければ undefined。
+ * 画面の表示は `ruleSetComparedAt(rs) ?? rs.checkedAt`（照合日がなければ従来の checkedAt）にする想定。checkedAt 自体は変えない。
+ */
+export function ruleSetComparedAt(ruleSet: Pick<RuleSet, "sources">): string | undefined {
+  let latest: string | undefined;
+  for (const s of ruleSet.sources) {
+    if (s.comparedAt && (latest === undefined || s.comparedAt > latest)) latest = s.comparedAt;
+  }
+  return latest;
 }
 
 export const ACQUISITION_CAUSE_LABELS: Record<AcquisitionCause, string> = {
