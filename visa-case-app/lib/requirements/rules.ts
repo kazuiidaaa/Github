@@ -149,7 +149,7 @@ export function procedureCommonRules(procedure: CommonProcedure): RequirementRul
 // ページとチェックシートが食い違う書類は要確認（verify）とする: 専門士・高度専門士の書類のうち認定学科修了証明書（認定・変更。ページにあり、PDFにない）。
 // 区分は、○は必須、△と条件付きの行は要確認。更新の「転職後の初回」の枠（No.8〜13）は、要確認とする。
 const GIJIN_CHECKED_AT = "2026-10-18";
-const GIJIN_PAGE_SOURCE = { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html" };
+const GIJIN_PAGE_SOURCE: RuleSource = { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html", kind: "page", comparedAt: "2026-10-18" };
 const GIJIN_STATUTORY_REPORT_NAME = "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）";
 const GIJIN_LANGUAGE_NAME = "業務上使用する言語について、CEFR・B2相当の言語能力を有することを証する資料";
 // ページの【お知らせ】注1（CEFR・B2相当の日本語能力とみなす場合）
@@ -234,7 +234,7 @@ export const GIJINKOKU_RENEWAL: RuleSet = {
   checkedAt: GIJIN_CHECKED_AT,
   sources: [
     GIJIN_PAGE_SOURCE,
-    { title: "提出書類のカテゴリー別一覧（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367009.pdf" },
+    { title: "提出書類のカテゴリー別一覧（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367009.pdf", kind: "pdf", comparedAt: "2026-10-18" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -311,8 +311,8 @@ export const GIJINKOKU_COE: RuleSet = {
   checkedAt: GIJIN_CHECKED_AT,
   sources: [
     GIJIN_PAGE_SOURCE,
-    { title: "【認定】提出書類チェックシート（カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404131.pdf" },
-    { title: "【認定】提出書類チェックシート（カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437254.pdf" },
+    { title: "【認定】提出書類チェックシート（カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404131.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "【認定】提出書類チェックシート（カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437254.pdf", kind: "pdf", comparedAt: "2026-10-18" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -417,8 +417,8 @@ export const GIJINKOKU_CHANGE: RuleSet = {
   checkedAt: GIJIN_CHECKED_AT,
   sources: [
     GIJIN_PAGE_SOURCE,
-    { title: "提出書類チェックシート（変更・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367001.pdf" },
-    { title: "提出書類チェックシート（変更・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437255.pdf" },
+    { title: "提出書類チェックシート（変更・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367001.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "提出書類チェックシート（変更・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437255.pdf", kind: "pdf", comparedAt: "2026-10-18" },
   ],
   rules: [
     ...procedureCommonRules("change"),
@@ -527,7 +527,7 @@ export const ACQUISITION_BY_CAUSE: RuleSet = {
   anyResidenceStatus: true,
   basis: "acquisitionCause",
   checkedAt: "2026-10-04",
-  sources: [{ title: "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/930004121.xlsx" }],
+  sources: [{ title: "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/930004121.xlsx", kind: "form" }],
   rules: [
     {
       id: "application_form",
@@ -631,7 +631,7 @@ export const ACQUISITION_BY_CAUSE: RuleSet = {
 // 提出書類は案内ページの本文と、チェックシート（PDF）5点（認定2・変更2・更新1）による。照合済み（2026-10-18。docs/official/reconciliation/keiei-kanri-2026-10-18.md）。
 // ページとチェックシートが食い違う書類は要確認とする: 更新のチェックシートだけにある JETRO の項目（category_proof）、案内ページだけにある本邦事業所の設置の委託（認定）、更新の案内ページ・チェックシートにない事務所用施設の資料（更新）。
 const KEIEI_KANRI = "経営・管理";
-const KEIEI_KANRI_SOURCE = { title: "在留資格「経営・管理」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/businessmanager.html" };
+const KEIEI_KANRI_SOURCE: RuleSource = { title: "在留資格「経営・管理」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/businessmanager.html", kind: "page", comparedAt: "2026-10-18" };
 const KEIEI_KANRI_CHECKED_AT = "2026-10-18";
 
 const KEIEI_CATEGORY_PROOF_NAME = "所属機関がいずれのカテゴリーに該当するかを証明する文書";
@@ -1197,28 +1197,61 @@ export const HSP_RENEWAL: RuleSet = {
 };
 
 /**
- * 高度専門職の在留資格取得許可申請（Issue #212）。号の有無・種類（1号イ・ロ・ハ、2号、号なしの旧データ）によらず適用する。
- * 取得の事由別の共通書類は、ACQUISITION_BY_CAUSE の規則をそのまま再利用する（文言は変えない）。
- * 取得の高度専門職の具体的な提出書類は、入管庁の案内ページ（HTML）で確認できていないため、ポイント計算表・疎明資料のみを「要確認」で足す。
+ * 高度専門職（1号）の在留資格取得許可申請（Issue #212・#374 項目1）。号なし（号の未選択）にも適用し、2号は含めない（2号の取得は原文に記載がなく、取得の事由別の規則集合で扱う）。
+ * 案内ページの取得の節（在留資格取得許可申請（高度専門職１号））と照合済み（2026-10-18。照合表は docs/official/reconciliation/acquisition-2026-10-18.md）。人の判断「原文に合わせる」で、R-1〜R-9 を反映した。
+ * 取得の事由別の共通書類は、ACQUISITION_BY_CAUSE の規則を再利用する。ただし、ACQUISITION_BY_CAUSE は他の在留資格の取得も扱い（高度専門職以外の取得は、手続案内が各在留資格のページに委ねるため未照合）、
+ * その文言は変えない。高度専門職の取得でのみ、原文に合わせて上書きする（写真・活動に応じた資料・申請取次者の書類・事由の証明）か、外す（旅券の理由書・出生の両親質問書・出生の世帯全員の住民票）。
+ * 書類の追加はしない（原文にない書類は足さない）。`checkedAt` は変えない（reconciliation/README.md の2-2章）。
  */
-const HSP_ACQUISITION_NOTE = "ポイント制の案内では、1号は70点以上、2号は別途要件がある。取得でポイント計算表が必要かは、入管庁の案内で確認できていないため要確認";
+const HSP_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "parents_questionnaire", "household_residence_certificate"];
+const HSP_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  // R-1・R-2：事由を問わず写真1葉。年齢の注記は原文のとおり
+  photo: {
+    causes: ALL_CAUSES,
+    note: "指定の規格を満たした写真を用意し、申請書に添付して提出する。規格を満たさない写真の場合は撮り直しになる。在留カードの交付の日において年齢が1歳に満たない方は、写真の提出は不要。令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは1歳以上の方について必要",
+  },
+  // R-5：申請人本人以外が提出する場合
+  agent_identity_document: {
+    note: "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示",
+  },
+  // R-7：原文にない注記の例を外す
+  cause_proof: { note: undefined },
+  // R-3：事由を問わず、活動に応じた資料
+  activity_materials: {
+    causes: ALL_CAUSES,
+    name: "本邦において行おうとする活動に応じた資料",
+    note: "入管法施行規則別表第３の「教授」から「報道」まで又は「経営・管理」から「技能」までのいずれかの在留資格の項の下欄に掲げる資料（各在留資格の案内ページから提出書類を確認する）。その資料がカテゴリーにより分かれている場合は、当該カテゴリーに応じた資料",
+  },
+};
+const HSP_ACQUISITION_POINT_TABLE_NOTE = "参考書式。活動の区分（高度専門職1号イ・ロ・ハ）に応じ、いずれかの分野のものを1通";
+const HSP_ACQUISITION_EVIDENCE_NOTE = "ポイント計算表の各項目に関する疎明資料。ポイントの合計が70点以上あることを確認できる資料を提出すれば足り、該当する項目全ての疎明資料を提出する必要はない。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）";
+// 出典：高度専門職ページ（取得の節）と、取得許可申請の手続案内。どちらも 2026-10-18 に原文と照合済み。申請書の様式は記載事項を照合していないため、日付を入れない。
+// HSP_SOURCE（ポイント計算表の題名）は、高度専門職の認定・変更・更新と共有し、それらは照合していないため、触らない
+const HSP_ACQUISITION_SOURCES: RuleSource[] = [
+  { title: "在留資格「高度専門職」在留資格取得許可申請（高度専門職１号）（出入国在留管理庁）", url: HSP_SOURCE.url, kind: "page", comparedAt: "2026-10-18" },
+  { title: "在留資格取得許可申請の手続案内（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/procedures/16-10.html", kind: "page", comparedAt: "2026-10-18" },
+  ...ACQUISITION_BY_CAUSE.sources,
+];
 export const HSP_ACQUISITION: RuleSet = {
   id: "hsp_acquisition",
   title: "高度専門職 在留資格取得許可申請（一部のみ整備）",
   procedureType: "acquisition",
   residenceStatus: HSP,
+  excludeStatuses: [HSP_GRADE_2],
   basis: "acquisitionCause",
   checkedAt: "2026-10-07",
-  sources: [HSP_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: HSP_ACQUISITION_SOURCES,
   rules: [
-    ...ACQUISITION_BY_CAUSE.rules,
+    ...ACQUISITION_BY_CAUSE.rules
+      .filter((r) => !HSP_ACQUISITION_REMOVED_IDS.includes(r.id))
+      .map((r) => (HSP_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...HSP_ACQUISITION_OVERRIDES[r.id] } : r)),
     {
       id: "hsp_point_table",
       name: "ポイント計算表（高度専門職 第1号イ・ロ・ハのうち、活動の区分に応じたもの）",
       party: "applicant",
       causes: ALL_CAUSES,
-      level: "check",
-      note: HSP_ACQUISITION_NOTE,
+      level: "required",
+      note: HSP_ACQUISITION_POINT_TABLE_NOTE,
       verify: true,
     },
     {
@@ -1227,7 +1260,7 @@ export const HSP_ACQUISITION: RuleSet = {
       party: "applicant",
       causes: ALL_CAUSES,
       level: "check",
-      note: "ポイント計算表を提出する場合の疎明資料。提出の要否は、入管庁の案内で確認できていないため要確認。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）",
+      note: HSP_ACQUISITION_EVIDENCE_NOTE,
       verify: true,
     },
   ],
@@ -1237,7 +1270,7 @@ export const HSP_ACQUISITION: RuleSet = {
 // 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は、2026-10-18 に照合済み（照合表は docs/official/reconciliation/kaigo-2026-10-18.md、Issue #333）。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 // 更新の「派遣先での活動内容の資料」は、チェックシートで△、案内ページに記載なし（要確認で足した。#312 の規則に基づく人の判断）。技能移転に係る申告書は、更新の案内ページ・チェックシートにない。
 const KAIGO = "介護";
-const KAIGO_SOURCE = { title: "在留資格「介護」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/nursingcare.html" };
+const KAIGO_SOURCE: RuleSource = { title: "在留資格「介護」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/nursingcare.html", kind: "page", comparedAt: "2026-10-18" };
 const KAIGO_CHECKED_AT = "2026-10-07";
 
 // 認定・変更・更新で共通に使う書類（手続別の規則集合が、必要なものを選んで並べる）
@@ -1362,7 +1395,7 @@ export const KAIGO_RENEWAL: RuleSet = {
 // 提出書類は案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/houmu-kaikei-2026-10-18.md、Issue #333。書類の食い違いはなかった）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 // 更新は、共通書類（申請書・写真・パスポート及び在留カードの提示）以外の書類が案内ページにない。
 const HOUMU_KAIKEI = "法律・会計業務";
-const HOUMU_KAIKEI_SOURCE = { title: "在留資格「法律・会計業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/legalaccountingservices.html" };
+const HOUMU_KAIKEI_SOURCE: RuleSource = { title: "在留資格「法律・会計業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/legalaccountingservices.html", kind: "page", comparedAt: "2026-10-18" };
 const HOUMU_KAIKEI_CHECKED_AT = "2026-10-07";
 
 const houmuKaikeiLicense: RequirementRule = {
@@ -1507,7 +1540,7 @@ export const PROFESSOR_RENEWAL: RuleSet = {
 // 提出書類は、案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/iryo-2026-10-18.md、Issue #333）。ページとチェックシートが食い違う書類は「要確認」にしている。この区分は formDetails.medicalApplicantType に持ち、basis: "applicantType" で判定する（Issue #310。
 // 所属機関のカテゴリーには依存しないため、categories は ALL のまま）。区分が未選択の間は、区分で要否が分かれる書類を要確認（check）で表示する（Issue #302 と同じ）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const IRYO = "医療";
-const IRYO_SOURCE = { title: "在留資格「医療」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/medicalservices.html" };
+const IRYO_SOURCE: RuleSource = { title: "在留資格「医療」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/medicalservices.html", kind: "page", comparedAt: "2026-10-18" };
 const IRYO_CHECKED_AT = "2026-10-07";
 const IRYO_DOCTOR_NOTE = "医師・歯科医師の場合のみ（入管庁の案内の「カテゴリー1」。所属機関のカテゴリーではなく、申請人の区分）";
 const IRYO_OTHER_NOTE = "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）";
@@ -1620,7 +1653,7 @@ export const IRYO_RENEWAL: RuleSet = {
 // 申請書は様式N（認定・変更・更新とも）。「転勤」は様式Lで、出力は別 Issue で扱う（ここでは書類のみ「要確認」で案内）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const KENKYU = "研究";
 const KENKYU_CHECKED_AT = "2026-10-07";
-const KENKYU_SOURCE = { title: "在留資格「研究」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/researcher.html" };
+const KENKYU_SOURCE: RuleSource = { title: "在留資格「研究」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/researcher.html", kind: "page", comparedAt: "2026-10-18" };
 const KENKYU_EXCLUDE = ["特定活動"]; // 「特定活動（研究活動等）」は別の在留資格（Issue #299）
 
 const kenkyuCategoryProof: RequirementRule = {
@@ -2106,11 +2139,14 @@ export const HODO_RENEWAL: RuleSet = {
 // 申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const GINO = "技能";
 const GINO_CHECKED_AT = "2026-10-12";
-const GINO_SOURCES = [
-  { title: "在留資格「技能」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor.html" },
-  { title: "在留資格「技能」調理師としての活動の場合（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor01.html" },
-  { title: "在留資格「技能」調理師以外の活動の場合（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor02.html" },
+const GINO_SOURCES: RuleSource[] = [
+  { title: "在留資格「技能」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor.html", kind: "page" },
+  { title: "在留資格「技能」調理師としての活動の場合（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor01.html", kind: "page" },
+  { title: "在留資格「技能」調理師以外の活動の場合（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/skilledlabor02.html", kind: "page" },
 ];
+// 変更だけ、2026-10-18 に案内ページ（調理師・調理師以外）の原文と照合した（照合表は gino-change-2026-10-18.md）。認定・更新は今回の照合の対象外のため、日付を入れない。
+// 総合のページ（skilledlabor.html）は原文を保存していないため、日付を入れない
+const GINO_SOURCES_CHANGE: RuleSource[] = GINO_SOURCES.map((x) => (x.url.endsWith("skilledlabor.html") ? x : { ...x, comparedAt: "2026-10-18" }));
 // 「特定技能」「技能実習」は、在留資格名に「技能」を含むが、別の在留資格
 const GINO_EXCLUDE = ["特定技能", "技能実習"];
 
@@ -2240,7 +2276,7 @@ export const GINO_CHANGE: RuleSet = {
   residenceStatus: GINO,
   excludeStatuses: GINO_EXCLUDE,
   checkedAt: GINO_CHECKED_AT,
-  sources: GINO_SOURCES,
+  sources: GINO_SOURCES_CHANGE,
   rules: [
     ...procedureCommonRules("change"),
     ginoCategoryProof,
@@ -2301,7 +2337,7 @@ export const GINO_RENEWAL: RuleSet = {
 // 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const KIGYONAI = "企業内転勤";
 const KIGYONAI_CHECKED_AT = "2026-10-12";
-const KIGYONAI_PAGE_SOURCE = { title: "在留資格「企業内転勤」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/intracompanytransfee.html" };
+const KIGYONAI_PAGE_SOURCE: RuleSource = { title: "在留資格「企業内転勤」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/intracompanytransfee.html", kind: "page", comparedAt: "2026-10-18" };
 
 const kigyonaiCategoryProof: RequirementRule = {
   id: "category_proof",
@@ -2428,9 +2464,9 @@ export const KIGYONAI_COE: RuleSet = {
   checkedAt: KIGYONAI_CHECKED_AT,
   sources: [
     KIGYONAI_PAGE_SOURCE,
-    { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404133.pdf" },
-    { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366542.pdf" },
-    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404133.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366542.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf", kind: "pdf", comparedAt: "2026-10-18" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2454,9 +2490,9 @@ export const KIGYONAI_CHANGE: RuleSet = {
   checkedAt: KIGYONAI_CHECKED_AT,
   sources: [
     KIGYONAI_PAGE_SOURCE,
-    { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366563.pdf" },
-    { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366564.pdf" },
-    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366563.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366564.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf", kind: "pdf", comparedAt: "2026-10-18" },
   ],
   rules: [...procedureCommonRules("change"), ...kigyonaiCategoryRules],
 };
@@ -2469,8 +2505,8 @@ export const KIGYONAI_RENEWAL: RuleSet = {
   checkedAt: KIGYONAI_CHECKED_AT,
   sources: [
     KIGYONAI_PAGE_SOURCE,
-    { title: "「企業内転勤」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366562.pdf" },
-    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf" },
+    { title: "「企業内転勤」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366562.pdf", kind: "pdf", comparedAt: "2026-10-18" },
+    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf", kind: "pdf", comparedAt: "2026-10-18" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2492,7 +2528,7 @@ export const KIGYONAI_RENEWAL: RuleSet = {
 // 範囲外：特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
 const TOKUTEI_KENKYU_STATUS = "特定活動";
 const TOKUTEI_KENKYU_CHECKED_AT = "2026-10-12";
-const TOKUTEI_KENKYU_PAGE_SOURCE = { title: "在留資格「特定活動」（特定研究等活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities07.html" };
+const TOKUTEI_KENKYU_PAGE_SOURCE: RuleSource = { title: "在留資格「特定活動」（特定研究等活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities07.html", kind: "page", comparedAt: "2026-10-18" };
 
 const tokuteiKenkyuOrganizationRules: RequirementRule[] = [
   {
@@ -2632,7 +2668,7 @@ export const TOKUTEI_KENKYU_RENEWAL: RuleSet = {
 // 範囲外：本邦大学等卒業者の家族（案内ページの家族の列）は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
 const DAIGAKU_SOTSUGYO_STATUS = "特定活動";
 const DAIGAKU_SOTSUGYO_CHECKED_AT = "2026-10-12";
-const DAIGAKU_SOTSUGYO_PAGE_SOURCE = { title: "在留資格「特定活動」（本邦大学等卒業者及びその配偶者等）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities11.html" };
+const DAIGAKU_SOTSUGYO_PAGE_SOURCE: RuleSource = { title: "在留資格「特定活動」（本邦大学等卒業者及びその配偶者等）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities11.html", kind: "page", comparedAt: "2026-10-18" };
 
 const daigakuSotsugyoLaborConditions: RequirementRule = {
   id: "labor_conditions_document",
@@ -2752,7 +2788,7 @@ export const DAIGAKU_SOTSUGYO_RENEWAL: RuleSet = {
 // 範囲外：特定情報処理活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも。lib/hspForm.ts の FORM_N_TOKUTEI_TYPES）。
 const TOKUTEI_JOHO_STATUS = "特定活動";
 const TOKUTEI_JOHO_CHECKED_AT = "2026-10-17";
-const TOKUTEI_JOHO_PAGE_SOURCE = { title: "在留資格「特定活動」（特定情報処理活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities08.html" };
+const TOKUTEI_JOHO_PAGE_SOURCE: RuleSource = { title: "在留資格「特定活動」（特定情報処理活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities08.html", kind: "page", comparedAt: "2026-10-18" };
 
 const tokuteiJohoOrganizationRules: RequirementRule[] = [
   { id: "organization_brochure", name: "契約機関の概要及び事業活動を明らかにする資料：案内書（パンフレット等）", party: "organization", categories: ALL, level: "required" },

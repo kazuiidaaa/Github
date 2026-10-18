@@ -450,11 +450,11 @@ describe("高度専門職の規則（Issue #186）", () => {
     expect(find("renewal", "経営・管理").ruleSet?.id).toBe("keiei_kanri_renewal");
   });
 
-  it("取得許可申請の高度専門職は、号の有無・種類を問わず HSP_ACQUISITION で引く。他の在留資格は取得の事由の規則集合のまま（Issue #212）", () => {
-    for (const status of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）", "高度専門職（2号）"]) {
+  it("取得許可申請の高度専門職は、1号と号なしを HSP_ACQUISITION で引く。2号と他の在留資格は取得の事由の規則集合（原文の取得の節は1号のみ。Issue #212・#374）", () => {
+    for (const status of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
       expect(find("acquisition", status).ruleSet?.id, status).toBe("hsp_acquisition");
     }
-    for (const status of ["", "技術・人文知識・国際業務", "留学"]) {
+    for (const status of ["", "技術・人文知識・国際業務", "留学", "高度専門職（2号）"]) {
       expect(find("acquisition", status).ruleSet?.id, status).toBe("acquisition_by_cause");
     }
   });

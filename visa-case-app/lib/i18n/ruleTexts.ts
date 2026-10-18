@@ -290,13 +290,25 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Highly Skilled Professional: application for permission for acquisition of status of residence (only partly covered)",
     "고도전문직 체류자격 취득 허가 신청(일부만 정비)",
   ],
-  "ポイント制の案内では、1号は70点以上、2号は別途要件がある。取得でポイント計算表が必要かは、入管庁の案内で確認できていないため要確認": [
-    "According to the points-based system guidance, Type 1 requires 70 points or more and Type 2 has separate requirements. Whether the points calculation table is required for acquisition has not been confirmed in the Immigration Services Agency guidance, so confirmation is needed",
-    "포인트제 안내에 따르면 1호는 70점 이상, 2호는 별도 요건이 있다. 취득에서 포인트 계산표가 필요한지는 출입국재류관리청 안내로 확인하지 못했으므로 확인 필요",
+  "参考書式。活動の区分（高度専門職1号イ・ロ・ハ）に応じ、いずれかの分野のものを1通": [
+    "Reference form. One sheet from any one field, according to the category of activity (Highly Skilled Professional Type 1 (a), (b) or (c))",
+    "참고 서식. 활동 구분(고도전문직 1호 이·로·하)에 따라 어느 한 분야의 것을 1통",
   ],
-  "ポイント計算表を提出する場合の疎明資料。提出の要否は、入管庁の案内で確認できていないため要確認。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）": [
-    "Supporting materials for the points calculation table, if submitted. Whether submission is required has not been confirmed in the Immigration Services Agency guidance, so confirmation is needed. When you select items in the points calculation table, entries for each supporting material number (① to ㉑) appear below (docs/hsp-point-evidence.md)",
-    "포인트 계산표를 제출하는 경우의 소명 자료. 제출 필요 여부는 출입국재류관리청 안내로 확인하지 못했으므로 확인 필요. 포인트 계산표의 항목을 선택하면 그 소명 자료 번호(①~㉑)별 항목이 이 아래에 표시된다(docs/hsp-point-evidence.md)",
+  "ポイント計算表の各項目に関する疎明資料。ポイントの合計が70点以上あることを確認できる資料を提出すれば足り、該当する項目全ての疎明資料を提出する必要はない。ポイント計算表の項目を選ぶと、その疎明資料の番号（①〜㉑）ごとの項目が、この下に出る（docs/hsp-point-evidence.md）": [
+    "Supporting materials for each item of the points calculation table. It is sufficient to submit materials confirming that the total is 70 points or more; supporting materials for all applicable items need not be submitted. When you select items in the points calculation table, entries for each supporting material number (① to ㉑) appear below (docs/hsp-point-evidence.md)",
+    "포인트 계산표의 각 항목에 관한 소명 자료. 포인트 합계가 70점 이상임을 확인할 수 있는 자료를 제출하면 충분하며, 해당하는 모든 항목의 소명 자료를 제출할 필요는 없다. 포인트 계산표의 항목을 선택하면 그 소명 자료 번호(①~㉑)별 항목이 이 아래에 표시된다(docs/hsp-point-evidence.md)",
+  ],
+  "指定の規格を満たした写真を用意し、申請書に添付して提出する。規格を満たさない写真の場合は撮り直しになる。在留カードの交付の日において年齢が1歳に満たない方は、写真の提出は不要。令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは1歳以上の方について必要": [
+    "Prepare a photo that meets the specified standards and attach it to the application form. If a photo that does not meet the standards is used, you will be asked to retake it. A photo is not required for a person who is under 1 year of age on the date the residence card is issued. Until June 13, 2026 (Reiwa 8), persons under 16 were exempt, but for residence cards issued on or after June 14, 2026, a photo is required for persons aged 1 or older",
+    "지정된 규격을 충족하는 사진을 준비하여 신청서에 첨부해 제출한다. 규격을 충족하지 않는 사진인 경우에는 다시 촬영하게 된다. 재류카드 교부일 기준으로 만 1세 미만인 사람은 사진 제출이 필요하지 않다. 2026년(레이와 8년) 6월 13일까지는 16세 미만인 사람이 불필요했으나, 2026년 6월 14일 이후에 교부되는 재류카드부터는 만 1세 이상인 사람에 대해 필요하다",
+  ],
+  "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示": [
+    "If submitted by a person other than the applicant. Presentation of a document proving the identity of the person submitting (certificate of an application agent, family register transcript, etc.)",
+    "신청인 본인 이외의 사람이 제출하는 경우. 제출하는 사람의 신분을 증명하는 문서(신청 대행자(申請取次者) 증명서, 호적등본 등)의 제시",
+  ],
+  "入管法施行規則別表第３の「教授」から「報道」まで又は「経営・管理」から「技能」までのいずれかの在留資格の項の下欄に掲げる資料（各在留資格の案内ページから提出書類を確認する）。その資料がカテゴリーにより分かれている場合は、当該カテゴリーに応じた資料": [
+    "Materials listed in the lower column of the entry for any of the statuses from \"Professor\" to \"Journalist\" or from \"Business Manager\" to \"Skilled Labor\" in Appended Table 3 of the Ordinance for Enforcement of the Immigration Control Act (check the submission documents on the guidance page of each status). If the materials differ by category, the materials for the relevant category",
+    "입관법 시행규칙 별표 제3의 '교수'부터 '보도'까지 또는 '경영·관리'부터 '기능'까지 중 어느 하나의 체류자격 항의 하란에 기재된 자료(각 체류자격의 안내 페이지에서 제출 서류를 확인한다). 그 자료가 카테고리에 따라 나뉘어 있는 경우에는 해당 카테고리에 따른 자료",
   ],
   "在留資格取得許可申請（取得の事由別）": [
     "Application for permission for acquisition of status of residence (by cause of acquisition)",
@@ -335,6 +347,14 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "在留資格「高度専門職」ポイント計算表（出入国在留管理庁）": [
     "Status of residence \"Highly Skilled Professional\" points calculation table (Immigration Services Agency of Japan)",
     "체류자격 '고도전문직' 포인트 계산표(출입국재류관리청)",
+  ],
+  "在留資格「高度専門職」在留資格取得許可申請（高度専門職１号）（出入国在留管理庁）": [
+    "Status of residence \"Highly Skilled Professional\": application for permission for acquisition of status of residence (Highly Skilled Professional Type 1) (Immigration Services Agency of Japan)",
+    "체류자격 '고도전문직' 체류자격 취득 허가 신청(고도전문직 1호)(출입국재류관리청)",
+  ],
+  "在留資格取得許可申請の手続案内（出入国在留管理庁）": [
+    "Guidance on the procedure for application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 취득 허가 신청 절차 안내(출입국재류관리청)",
   ],
   "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）": [
     "Application for permission for acquisition of status of residence (Appended Form No. 36) (Immigration Services Agency of Japan)",
