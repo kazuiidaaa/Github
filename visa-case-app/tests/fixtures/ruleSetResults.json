@@ -217,7 +217,6 @@
       "application_form",
       "photo",
       "passport_presentation",
-      "passport_reason_statement",
       "agent_identity_document",
       "nationality_proof",
       "cause_proof",
@@ -227,10 +226,9 @@
       "supporter_income_active",
       "supporter_income_other",
       "parents_questionnaire",
-      "household_residence_certificate",
-      "activity_materials"
+      "household_residence_certificate"
     ],
-    "digest": "656c258843e1fe1d1e5472e53afbd628a2e9349f08779bdd1af5103bd2a4bf8c"
+    "digest": "697fccc79ce183e45ba649fa495911cd0cc9276737d75dc6cc4ef70d28901d33"
   },
   "acquisition_by_cause": {
     "ruleIds": [

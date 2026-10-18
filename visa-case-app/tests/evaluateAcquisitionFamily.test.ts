@@ -4,7 +4,7 @@ import { evaluate, hasRuleSetFor, shouldShowNoRuleGuide } from "../lib/requireme
 import { RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
-// Issue #396：照合表 acquisition-gijinkoku-kazokutaizai-2026-10-18.md の、人の判断「推奨のとおり」（2026-10-18）の9件（R-2〜R-5・R-8・R-9・R-10・R-12・R-17）
+// Issue #396：照合表 acquisition-gijinkoku-kazokutaizai-2026-10-18.md の、人の判断「推奨のとおり」（2026-10-18）の R-2〜R-18・R-20（R-19 は判断待ち）
 type Cause = FormDetails["acquisitionCause"];
 
 function make(cause: Cause, over: Partial<CaseRecord> = {}): CaseRecord {
@@ -44,7 +44,9 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
   const BIRTH_THREE = ["birth_certificate", "parents_questionnaire", "household_residence_certificate"];
   const FAMILY_REQUIRED = ["family_relationship_proof", "supporter_card_or_passport_copy"];
   const FAMILY_CHECK = ["supporter_income_active", "supporter_income_other"];
-  const COMMON_CHECK = ["passport_reason_statement", "agent_identity_document"];
+  // 旅券の理由書は、技人国（R-7）・家族滞在（R-14）とも外した
+  const COMMON_CHECK = ["agent_identity_document"];
+  const AGENT_NOTE = "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示";
 
   it("技人国：gijinkoku_acquisition が引かれ、題名に「一部のみ整備」と示す。在留資格が技人国を含む表記でも同じ", () => {
     for (const status of ["技術・人文知識・国際業務", "技術・人文知識・国際業務（旧在留資格）"]) {
@@ -93,11 +95,25 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     for (const cause of ALL) expect(gijEval(cause).items.some((i) => i.rule.id === "activity_materials"), cause).toBe(false);
   });
 
-  it("技人国：R-2〜R-5 以外（申請取次者・旅券の理由書など、未反映の R）は ACQUISITION_BY_CAUSE のまま", () => {
+  it("R-6：申請取次者の書類の注記を、原文の「申請人本人以外の方が提出する場合」にする。名称・区分は変えない（高度専門職の取得と同じ文言）", () => {
+    const agent = gij.rules.find((r) => r.id === "agent_identity_document")!;
+    expect(agent.note).toBe(AGENT_NOTE);
+    expect(agent.note).toBe(RULE_SETS.find((r) => r.id === "hsp_acquisition")!.rules.find((r) => r.id === "agent_identity_document")!.note);
+    expect(agent.name).toBe(base.rules.find((r) => r.id === "agent_identity_document")!.name);
+    expect(agent.level).toBe("check");
+    for (const cause of ALL) expect(ids(gijEval(cause), "check"), cause).toContain("agent_identity_document");
+  });
+
+  it("R-7：旅券の理由書（原文に記載なし）は外す", () => {
+    expect(gij.rules.some((r) => r.id === "passport_reason_statement")).toBe(false);
+    for (const cause of ALL) expect(gijEval(cause).items.some((i) => i.rule.id === "passport_reason_statement"), cause).toBe(false);
+  });
+
+  it("技人国：上書き・削除しない書類は ACQUISITION_BY_CAUSE のまま", () => {
     expect(ids(gijEval("nationalityLoss"), "required")).toEqual(["application_form", "photo", "passport_presentation", "nationality_proof"]);
     expect(ids(gijEval("other"), "required")).toEqual(["application_form", "photo", "passport_presentation", "cause_proof"]);
     expect(ids(gijEval(""), "required")).toEqual(["application_form", "photo", "passport_presentation"]);
-    for (const id of ["application_form", "passport_presentation", "passport_reason_statement", "agent_identity_document", "nationality_proof"]) {
+    for (const id of ["application_form", "passport_presentation", "nationality_proof"]) {
       expect(gij.rules.find((r) => r.id === id), id).toBe(base.rules.find((r) => r.id === id));
     }
   });
@@ -163,11 +179,14 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     }
   });
 
-  it("R-17：質問書は出生のみ、要確認（△）。必須にしない。名称は変えない（R-11 は未反映）", () => {
+  it("R-17・R-11：質問書は出生のみ、要確認（△）。必須にしない。名称は原文のとおり「質問書」（R-11。全事由には載せない）", () => {
     const rule = kazoku.rules.find((r) => r.id === "parents_questionnaire")!;
     expect(rule.causes).toEqual(["birth"]);
     expect(rule.level).toBe("check");
-    expect(rule.name).toBe("両親の情報を記載した質問書");
+    expect(rule.name).toBe("質問書");
+    expect(rule.note).not.toContain("両親");
+    // ACQUISITION_BY_CAUSE の名称は変えない
+    expect(base.rules.find((r) => r.id === "parents_questionnaire")!.name).toBe("両親の情報を記載した質問書");
     expect(rule.note).toContain("△");
     expect(ids(kazokuEval("birth"), "check")).toContain("parents_questionnaire");
     expect(ids(kazokuEval("birth"), "required")).not.toContain("parents_questionnaire");
@@ -179,10 +198,10 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
   it("家族滞在：事由別の必須・要確認・任意の書類が、過不足なく判定される", () => {
     const optional = (e: ReturnType<typeof evaluate>) => e.items.filter((i) => i.effective === "optional").map((i) => i.rule.id);
     const rows: { cause: Cause; required: string[]; check: string[] }[] = [
-      { cause: "", required: ["application_form", "passport_presentation", ...FAMILY_REQUIRED], check: [...COMMON_CHECK, ...FAMILY_CHECK] },
-      { cause: "nationalityLoss", required: ["application_form", "photo", "passport_presentation", "nationality_proof", ...FAMILY_REQUIRED, "activity_materials"], check: [...COMMON_CHECK, ...FAMILY_CHECK] },
-      { cause: "birth", required: ["application_form", "passport_presentation", "birth_certificate", ...FAMILY_REQUIRED], check: [...COMMON_CHECK, ...FAMILY_CHECK, "parents_questionnaire"] },
-      { cause: "other", required: ["application_form", "photo", "passport_presentation", "cause_proof", ...FAMILY_REQUIRED, "activity_materials"], check: [...COMMON_CHECK, ...FAMILY_CHECK] },
+      { cause: "", required: ["application_form", "photo", "passport_presentation", ...FAMILY_REQUIRED], check: [...COMMON_CHECK, ...FAMILY_CHECK] },
+      { cause: "nationalityLoss", required: ["application_form", "photo", "passport_presentation", "nationality_proof", ...FAMILY_REQUIRED], check: [...COMMON_CHECK, ...FAMILY_CHECK] },
+      { cause: "birth", required: ["application_form", "photo", "passport_presentation", "birth_certificate", ...FAMILY_REQUIRED], check: [...COMMON_CHECK, ...FAMILY_CHECK, "parents_questionnaire"] },
+      { cause: "other", required: ["application_form", "photo", "passport_presentation", "cause_proof", ...FAMILY_REQUIRED], check: [...COMMON_CHECK, ...FAMILY_CHECK] },
     ];
     for (const row of rows) {
       const e = kazokuEval(row.cause);
@@ -192,8 +211,44 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     }
   });
 
-  it("家族滞在：未反映の R（写真・注記・旅券の理由書・活動に応じた資料など）は ACQUISITION_BY_CAUSE のまま", () => {
-    for (const id of ["application_form", "photo", "passport_presentation", "passport_reason_statement", "agent_identity_document", "nationality_proof", "cause_proof", "birth_certificate", "activity_materials"]) {
+  it("R-13・R-18：写真は事由の別なく必須（出生・未選択も含む）。名称は申請書のとおり（技人国と同じ）。注記は年齢の注記とチェックシートの規格。中長期在留者の条件は書かない", () => {
+    const photo = kazoku.rules.find((r) => r.id === "photo")!;
+    expect(photo.causes).toEqual(["nationalityLoss", "birth", "other"]);
+    expect(photo.level).toBe("required");
+    expect(photo.name).toBe("写真（40mm×30mm）");
+    expect(photo.name).toBe(gij.rules.find((r) => r.id === "photo")!.name);
+    // ページの年齢の注記（技人国・高度専門職の取得と同じ文言）から始まる
+    expect(photo.note!.startsWith(gij.rules.find((r) => r.id === "photo")!.note!)).toBe(true);
+    for (const w of ["1歳に満たない方は、写真の提出は不要", "令和8年6月14日以降", "6か月以内", "無帽・無背景", "裏面に申請人の氏名", "写真欄に貼付"]) expect(photo.note, w).toContain(w);
+    expect(photo.note).not.toContain("中長期在留者");
+    expect(photo.note).not.toContain("出生には写真の記載がない");
+    for (const cause of ALL) expect(ids(kazokuEval(cause), "required"), cause).toContain("photo");
+  });
+
+  it("R-14：旅券の理由書と、活動に応じた資料は外す", () => {
+    for (const id of ["passport_reason_statement", "activity_materials"]) {
+      expect(kazoku.rules.some((r) => r.id === id), id).toBe(false);
+      for (const cause of ALL) expect(kazokuEval(cause).items.some((i) => i.rule.id === id), `${cause}:${id}`).toBe(false);
+    }
+  });
+
+  it("R-15・R-20：事由を証する書類の注記の例（日米地位協定）を外し、申請取次者の書類の注記を原文のとおりにする（名称は変えない）", () => {
+    const cause = kazoku.rules.find((r) => r.id === "cause_proof")!;
+    expect(cause.note).toBeUndefined();
+    expect(cause.causes).toEqual(["other"]);
+    expect(cause.name).toBe(base.rules.find((r) => r.id === "cause_proof")!.name);
+    const agent = kazoku.rules.find((r) => r.id === "agent_identity_document")!;
+    expect(agent.note).toBe(AGENT_NOTE);
+    expect(agent.name).toBe(base.rules.find((r) => r.id === "agent_identity_document")!.name);
+    expect(agent.level).toBe("check");
+  });
+
+  it("R-19 は判断待ち：扶養者の職業及び収入の書類は、R-10 の形（要確認の2行）のまま", () => {
+    for (const id of FAMILY_CHECK) expect(kazoku.rules.find((r) => r.id === id)?.level, id).toBe("check");
+  });
+
+  it("家族滞在：上書き・削除しない書類は ACQUISITION_BY_CAUSE のまま", () => {
+    for (const id of ["application_form", "passport_presentation", "nationality_proof", "birth_certificate"]) {
       expect(kazoku.rules.find((r) => r.id === id), id).toBe(base.rules.find((r) => r.id === id));
     }
   });
