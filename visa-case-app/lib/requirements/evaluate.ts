@@ -3,7 +3,18 @@ import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../type
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
 import { isCollected } from "./progress";
-import { ACQUISITION_CAUSE_LABELS, RULE_SETS, categoryRangeOf, hspEvidenceRule, type Category, type RequirementRule, type RuleSet } from "./rules";
+import {
+  ACQUISITION_CAUSE_LABELS,
+  RULE_SETS,
+  categoryRangeOf,
+  hspEvidenceRule,
+  type AcquisitionCause,
+  type Category,
+  type MedicalApplicantType,
+  type RequirementRule,
+  type RuleAxis,
+  type RuleSet,
+} from "./rules";
 
 /** required：必要、not_required：不要、check：要確認、optional：任意（不足にも要確認にも数えない） */
 export type Result = "required" | "not_required" | "check" | "optional";
@@ -236,6 +247,11 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     };
   }
 
+  // 判定の軸を複数持つ規則集合（Issue #402）。alsoBasis を持たない規則集合は、下の従来の分岐で判定する（結果を変えない）
+  if (ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) {
+    return { ...evaluateByAxes(c, ruleSet), needsSubtype };
+  }
+
   const items: EvaluatedItem[] = [];
 
   // 申請人の区分（医療）で判定する規則集合は、所属機関のカテゴリーに依存しない（「カテゴリー未入力」の注意も出さない）
@@ -318,6 +334,74 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   }
 
   return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, false, items), needsSubtype };
+}
+
+const ALL_CAUSES = Object.keys(ACQUISITION_CAUSE_LABELS) as AcquisitionCause[];
+
+/**
+ * 判定の軸を複数持つ規則集合（basis ＋ alsoBasis）の判定（Issue #402）。
+ * - 規則は、宣言した全ての軸で案件の値と一致したときだけ適用する。規則が軸の項目を省略したら、その軸の全ての値で適用する。
+ * - 未選択の軸があるときは、その軸の全ての値に共通の規則だけを出し、軸ごとの注意（needsCategory・needsCause・needsApplicantType）を立てる。
+ * - 一致しない軸があれば「不要」。理由は、軸の並び（basis が先）で最初に一致しなかった軸の文にする（従来の文を使う）。
+ */
+function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
+  const axes = [ruleSet.basis ?? "category", ...(ruleSet.alsoBasis ?? [])].filter((a, i, all) => all.indexOf(a) === i) as RuleAxis[];
+  const has = (axis: RuleAxis) => axes.includes(axis);
+
+  // 入力済みのカテゴリーが、この規則集合の区分の範囲にないときは、未入力と同じに扱う（従来のカテゴリーの判定と同じ）
+  const range = categoryRangeOf(ruleSet);
+  const entered = c.employment.category;
+  const category: Category | "" = entered !== "" && range.includes(entered) ? entered : "";
+  const cause: AcquisitionCause | "" = c.formDetails.acquisitionCause;
+  const type: MedicalApplicantType | "" = c.formDetails.medicalApplicantType;
+
+  const needsCategory = has("category") && category === "";
+  const categoryOutOfRange = has("category") && entered !== "" && category === "";
+  const needsCause = has("acquisitionCause") && cause === "";
+  const needsApplicantType = has("applicantType") && type === "";
+
+  const items: EvaluatedItem[] = [];
+  for (const rule of ruleSet.rules) {
+    const categories = rule.categories ?? range;
+    const causes = rule.causes ?? ALL_CAUSES;
+    const types = rule.applicantTypes ?? MEDICAL_APPLICANT_TYPES;
+    // 未選択の軸では、全ての値に共通の規則だけを出す
+    if (needsCategory && !range.every((k) => categories.includes(k))) continue;
+    if (needsCause && !ALL_CAUSES.every((k) => causes.includes(k))) continue;
+    if (needsApplicantType && !MEDICAL_APPLICANT_TYPES.every((k) => types.includes(k))) continue;
+
+    // 軸の並びで、最初に一致しない軸の「原則不要」の理由
+    let notRequired: ReasonCode | undefined;
+    for (const axis of axes) {
+      if (axis === "category" && category !== "" && !categories.includes(category)) notRequired = { kind: "categoryNotRequired", category };
+      else if (axis === "acquisitionCause" && cause !== "" && !causes.includes(cause)) notRequired = { kind: "causeNotRequired", cause };
+      else if (axis === "applicantType" && type !== "" && !types.includes(type)) notRequired = { kind: "applicantTypeNotRequired", type };
+      if (notRequired) break;
+    }
+
+    let result: Result;
+    let reasonCode: ReasonCode;
+    if (notRequired) {
+      result = "not_required";
+      reasonCode = notRequired;
+    } else if (rule.when && !c.employment[rule.when]) {
+      result = "not_required";
+      reasonCode = { kind: "conditionNotMet", note: rule.note };
+    } else {
+      result = rule.level;
+      // 選択済みの軸の値だけを、理由の文に入れる（全て未選択なら「共通」）
+      reasonCode = {
+        kind: "axesLevel",
+        level: rule.level,
+        ...(has("acquisitionCause") && cause !== "" ? { cause } : {}),
+        ...(has("category") && category !== "" ? { category } : {}),
+        ...(has("applicantType") && type !== "" ? { type } : {}),
+      };
+    }
+    const state = c.requirementStates[rule.id] ?? NO_STATE;
+    pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
+  }
+  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType };
 }
 
 function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {

@@ -15,11 +15,15 @@ export interface RequirementRule {
   id: string;
   name: string;
   party: Party;
-  /** この書類が必要となるカテゴリー（basis が acquisitionCause の規則集合では使わない） */
+  /**
+   * この書類が必要となるカテゴリー（軸 category を持つ規則集合のみ）。
+   * basis が category（省略時）だけの規則集合では、省略すると、どのカテゴリーでも出さない（従来どおり）。
+   * alsoBasis を持つ規則集合では、省略すると全カテゴリーで適用する
+   */
   categories?: Category[];
-  /** この書類が必要となる取得の事由（basis が acquisitionCause の規則集合のみ） */
+  /** この書類が必要となる取得の事由（軸 acquisitionCause を持つ規則集合のみ。alsoBasis を持つ規則集合では、省略すると全事由で適用する） */
   causes?: AcquisitionCause[];
-  /** この書類が必要となる申請人の区分（basis が applicantType の規則集合のみ。省略時は全区分） */
+  /** この書類が必要となる申請人の区分（軸 applicantType を持つ規則集合のみ。省略時は全区分） */
   applicantTypes?: MedicalApplicantType[];
   /** required：必要、check：必要となる場合があり確認を要する、optional：提出は必須でないが、実務では取得するのが通例（不足にも要確認にも数えない） */
   level: "required" | "check" | "optional";
@@ -29,6 +33,9 @@ export interface RequirementRule {
   /** 内容の確認が不十分な項目（画面に「要確認」を表示） */
   verify?: boolean;
 }
+
+/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分（いずれも案件の入力） */
+export type RuleAxis = "category" | "acquisitionCause" | "applicantType";
 
 export interface RuleSet {
   id: string;
@@ -44,8 +51,14 @@ export interface RuleSet {
    * 省略時は種別を見ない（特定活動以外の既存の規則集合は、すべて省略）。種別の規則集合は RULE_SETS の末尾に足す（#299・#300）
    */
   subtype?: TokuteiKatsudoType;
-  /** 規則の適用条件の基準。省略時は所属機関のカテゴリー（employment.category） */
-  basis?: "category" | "acquisitionCause" | "applicantType";
+  /** 規則の適用条件の基準（1つ目の軸）。省略時は所属機関のカテゴリー（employment.category） */
+  basis?: RuleAxis;
+  /**
+   * 2つ目以降の判定の軸（Issue #402）。省略時は無し（basis だけで判定する。従来どおり）。
+   * 指定した規則集合は、basis と alsoBasis の全ての軸で一致したときだけ規則を適用する。規則が軸の項目（categories・causes・applicantTypes）を省略したら、その軸の全ての値で適用する。
+   * 未選択の軸があるときは、その軸の全ての値に共通の規則だけを出し、needsCategory・needsCause・needsApplicantType を立てる（複数立つことがある）。
+   */
+  alsoBasis?: RuleAxis[];
   /**
    * カテゴリー区分の定義（選べる範囲と、各区分の意味。日本語の原文）。省略時は、所属機関の区分（1〜4。CATEGORY_LABELS）。
    * 在留資格によって区分の範囲・意味が違う場合に指定する（例：教授＝1常勤・2非常勤）。規則の categories が ALL でも、定義の範囲内でだけ判定する。
@@ -1269,7 +1282,7 @@ export const HSP_ACQUISITION: RuleSet = {
 
 /**
  * 技術・人文知識・国際業務／家族滞在の在留資格取得許可申請（Issue #396。照合表は docs/official/reconciliation/acquisition-gijinkoku-kazokutaizai-2026-10-18.md）。
- * 人の判断「推奨のとおり」（2026-10-18）の R-2・R-8・R-9・R-10・R-12・R-17 だけを反映した専用の規則集合。それ以外の R（技人国のカテゴリー別の書類〔R-1。#402 で設計〕・写真・注記・名称など）は未反映で、
+ * 人の判断「推奨のとおり」（2026-10-18）の R-2・R-8・R-9・R-10・R-12・R-17 と、技人国のカテゴリー別の書類（R-1。#402）を反映した専用の規則集合。それ以外の R（写真・注記・名称など）は未反映で、
  * ACQUISITION_BY_CAUSE の規則をそのまま引き継ぐ。ACQUISITION_BY_CAUSE の文言は変えない（他の在留資格の取得は未照合）。HSP_ACQUISITION と同じく、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する。
  * `checkedAt` は新しい規則集合の作成日。
  */
@@ -1285,12 +1298,56 @@ const ACQUISITION_PROCEDURE_GUIDE_SOURCE: RuleSource = {
 // 出生の乳児が取得する実務の扱いは原文に記載がなく、推測しない（注記に「行政書士が確認」）。他の注記・名称（R-3〜R-7）は未反映のまま
 const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate"];
 const GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE = "出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）";
+
+// 技人国（R-1。Issue #402）：取得も、所属機関のカテゴリー（1〜4）で提出書類が異なる。判定の軸を、取得の事由と所属機関のカテゴリーの2つにする（alsoBasis）。
+// 事由別の書類（ACQUISITION_BY_CAUSE から引き継ぐもの）は categories を持たないため、全カテゴリーで適用する。カテゴリー別の書類は causes を持たないため、全事由で適用する。
+// カテゴリー別の書類は、認定（GIJINKOKU_COE）の同名の書類を、取得の原文（docs/official/gijinkoku_2026-10-18.txt の「在留資格取得許可申請」の節）に合わせて写す。
+// 返信用封筒は認定のみ（取得の節に無い）のため写さない。
+// 割り当て（どの書類がどのカテゴリーか）は、認定のチェックシートと同じにした（人の判断。#402）。取得のチェックシートは無く、取得の原文のコピーには表の列の位置が無いため、
+// 取得の列の位置そのものは未確認。また、学歴・職歴の書類の注「【共通】６の資料を提出している場合は不要」の【共通】６が指す書類は、原文から確定できず未確認（推測で決めない）。
+const GIJINKOKU_ACQUISITION_CATEGORY_IDS = [
+  "category_proof",
+  "online_approval_proof",
+  "vocational_school_certificate",
+  "dispatch_documents",
+  "activity_documents",
+  "career_documents",
+  "registry_certificate",
+  "business_description",
+  "financial_statements",
+  "representative_declaration",
+  "language_ability",
+  "withholding_exemption",
+  "payroll_office_notification",
+  "withholding_tax_receipts",
+  "withholding_special_approval",
+];
+// 認定の注記のうち、取得に合わないもの（認定のチェックシートとの食い違いの説明）と、取得の原文にだけある注（【共通】６）を差し替える
+const GIJINKOKU_ACQUISITION_CATEGORY_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  vocational_school_certificate: {
+    note: "専門学校を卒業した場合のみ。外国人留学生キャリア形成促進プログラムの認定学科修了者は認定学科修了証明書",
+    verify: undefined,
+  },
+  career_documents: {
+    note: "履歴書と、学歴又は職歴を証明する文書。外国の文化に基盤を有する業務では、3年以上の実務経験を証明する文書など、業務内容により異なる。IT技術者の資格証書は、案内ページに「【共通】６の資料を提出している場合は不要」とあるが、【共通】６が指す書類は未確認（行政書士が確認する）",
+    verify: true,
+  },
+};
+const gijinkokuAcquisitionCategoryRules: RequirementRule[] = GIJINKOKU_ACQUISITION_CATEGORY_IDS.map((id) => {
+  const rule = GIJINKOKU_COE.rules.find((r) => r.id === id);
+  if (!rule) throw new Error(`GIJINKOKU_COE に規則 ${id} がない`);
+  const merged: RequirementRule = { ...rule, ...GIJINKOKU_ACQUISITION_CATEGORY_OVERRIDES[id] };
+  if (merged.verify === undefined) delete merged.verify;
+  return merged;
+});
+
 export const GIJINKOKU_ACQUISITION: RuleSet = {
   id: "gijinkoku_acquisition",
   title: "技術・人文知識・国際業務 在留資格取得許可申請（一部のみ整備）",
   procedureType: "acquisition",
   residenceStatus: "技術・人文知識・国際業務",
   basis: "acquisitionCause",
+  alsoBasis: ["category"],
   checkedAt: "2026-10-18",
   sources: [
     {
@@ -1302,13 +1359,16 @@ export const GIJINKOKU_ACQUISITION: RuleSet = {
     ACQUISITION_PROCEDURE_GUIDE_SOURCE,
     ...ACQUISITION_BY_CAUSE.sources,
   ],
-  rules: ACQUISITION_BY_CAUSE.rules
-    .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id))
-    .map((r) =>
-      r.id === "cause_proof"
-        ? { ...r, causes: ["birth", "other"] as AcquisitionCause[], note: [r.note, GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE].filter(Boolean).join("。") }
-        : r,
-    ),
+  rules: [
+    ...ACQUISITION_BY_CAUSE.rules
+      .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id))
+      .map((r) =>
+        r.id === "cause_proof"
+          ? { ...r, causes: ["birth", "other"] as AcquisitionCause[], note: [r.note, GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE].filter(Boolean).join("。") }
+          : r,
+      ),
+    ...gijinkokuAcquisitionCategoryRules,
+  ],
 };
 
 // 家族滞在（R-8・R-9・R-10・R-12・R-17）。原文はカテゴリーによる区分が無く、事由は国籍離脱・出生・その他の3区分

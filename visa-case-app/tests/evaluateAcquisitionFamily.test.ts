@@ -64,7 +64,8 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     expect(cause.note).toContain("日米地位協定");
     const e = gijEval("birth");
     expect(ids(e, "required")).toEqual(["application_form", "passport_presentation", "cause_proof"]);
-    expect(ids(e, "check")).toEqual(COMMON_CHECK);
+    // カテゴリーが未選択の間に出る、全カテゴリー共通の要確認（専門士・派遣。#402 の R-1）
+    expect(ids(e, "check")).toEqual([...COMMON_CHECK, "vocational_school_certificate", "dispatch_documents"]);
   });
 
   it("技人国：R-2 以外（写真・活動に応じた資料・注記など、未反映の R）は ACQUISITION_BY_CAUSE のまま", () => {
@@ -76,13 +77,13 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     }
   });
 
-  it("技人国：カテゴリー別の書類（R-1）は足さない（#402 で扱う）。所属機関のカテゴリーによらず同じ", () => {
-    expect(gij.rules.some((r) => r.categories !== undefined)).toBe(false);
-    const ref = gijEval("other").items.map((i) => [i.rule.id, i.effective]);
+  it("技人国：事由別の書類（ACQUISITION_BY_CAUSE から引き継ぐもの）は、所属機関のカテゴリーによらず同じ（カテゴリー別の書類は #402。tests/evaluateAxes.test.ts）", () => {
+    const fromBase = new Set(base.rules.map((r) => r.id));
+    const ref = gijEval("other").items.filter((i) => fromBase.has(i.rule.id)).map((i) => [i.rule.id, i.effective]);
     for (const category of ["1", "2", "3", "4"] as OrgCategory[]) {
       const e = gijEval("other", { employment: { ...EMPTY_EMPLOYMENT, category } });
       expect(e.needsCategory).toBe(false);
-      expect(e.items.map((i) => [i.rule.id, i.effective])).toEqual(ref);
+      expect(e.items.filter((i) => fromBase.has(i.rule.id)).map((i) => [i.rule.id, i.effective])).toEqual(ref);
     }
   });
 
@@ -189,7 +190,8 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
   it("規則集合：すべて verify: true、IDは重複せず、basis は取得の事由。HSP_ACQUISITION の後、ACQUISITION_BY_CAUSE の前に照合する", () => {
     for (const set of [gij, kazoku]) {
       expect(set.basis).toBe("acquisitionCause");
-      expect(set.rules.every((r) => r.verify === true), set.id).toBe(true);
+      // 技人国のカテゴリー別の書類（#402。認定から写したもの）は除く
+      expect(set.rules.filter((r) => r.categories === undefined).every((r) => r.verify === true), set.id).toBe(true);
       const rids = set.rules.map((r) => r.id);
       expect(new Set(rids).size, set.id).toBe(rids.length);
     }

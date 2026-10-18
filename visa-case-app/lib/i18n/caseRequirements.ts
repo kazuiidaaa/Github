@@ -27,7 +27,9 @@ export type ReasonCode =
   | { kind: "applicantTypeNotRequired"; type: MedicalApplicantType }
   | { kind: "applicantTypeCommon" }
   | { kind: "applicantTypeUnknown" }
-  | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] };
+  | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] }
+  /** 判定の軸を複数持つ規則集合（RuleSet.alsoBasis。Issue #402）。選択済みの軸の値だけを持つ。どれも持たなければ「全事由・全区分に共通」 */
+  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
@@ -49,7 +51,17 @@ const LEVEL_KEYS = {
     check: "caseRequirements.reasonApplicantTypeCheck",
     optional: "caseRequirements.reasonApplicantTypeOptional",
   },
+  axes: { required: "caseRequirements.reasonAxesRequired", check: "caseRequirements.reasonAxesCheck", optional: "caseRequirements.reasonAxesOptional" },
 } as const;
+
+/** 複数の軸の理由の文で、選択済みの軸の値を並べる（取得の事由・カテゴリー・申請人の区分の順） */
+function axesConditions(t: T, code: Extract<ReasonCode, { kind: "axesLevel" }>): string[] {
+  const parts: string[] = [];
+  if (code.cause) parts.push(t("caseRequirements.axisCause", { cause: t(CAUSE_KEYS[code.cause]) }));
+  if (code.category) parts.push(t("caseRequirements.axisCategory", { category: code.category }));
+  if (code.type) parts.push(t("caseRequirements.axisApplicantType", { type: t(APPLICANT_TYPE_KEYS[code.type]) }));
+  return parts;
+}
 
 /** 判定の理由の文。noteText は、条件に該当しない理由に含める規則の注記の訳（日本語は原文のまま） */
 export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => string = (n) => n): string {
@@ -86,6 +98,11 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
       return t(LEVEL_KEYS.applicantType[code.level], {
         type: t(APPLICANT_TYPE_KEYS[code.type]),
       });
+    case "axesLevel": {
+      const conditions = axesConditions(t, code);
+      if (conditions.length === 0) return t("caseRequirements.reasonAxesCommon");
+      return t(LEVEL_KEYS.axes[code.level], { conditions: conditions.join(t("caseRequirements.axesSeparator")) });
+    }
   }
 }
 
@@ -102,4 +119,26 @@ export function requirementName(t: T, lang: Lang, rule: RequirementRule): string
 /** 規則の注記の表示 */
 export function requirementNote(lang: Lang, note: string): string {
   return ruleText(lang, note);
+}
+
+/**
+ * 必要書類タブで、区分・事由が未選択のときに出す案内（Issue #402）。
+ * - category：所属機関のカテゴリーの案内の文（「雇用・会社」タブへ移るボタンと並べる）。出さないときは null
+ * - cause：取得の事由の案内（needsCause）を、別の文として出すか
+ * 判定の軸を複数持つ規則集合（alsoBasis）では、カテゴリーが申請人ではなく所属機関の区分であることを補足する文にし、
+ * 事由も未選択なら、案内を2つ並べずに1つの文にまとめる。alsoBasis を持たない規則集合は、従来の文のまま。
+ */
+export function selectionNotices(ev: {
+  ruleSet: { alsoBasis?: readonly string[] } | null;
+  needsCategory: boolean;
+  categoryOutOfRange: boolean;
+  needsCause: boolean;
+}): { category: MessageKey | null; cause: boolean } {
+  if (!ev.ruleSet) return { category: null, cause: false };
+  const multi = (ev.ruleSet.alsoBasis?.length ?? 0) > 0;
+  if (!ev.needsCategory) return { category: null, cause: ev.needsCause };
+  if (ev.categoryOutOfRange) return { category: "caseRequirements.categoryOutOfRange", cause: ev.needsCause };
+  if (!multi) return { category: "caseRequirements.needsCategory", cause: ev.needsCause };
+  if (ev.needsCause) return { category: "caseRequirements.needsCategoryAndCause", cause: false };
+  return { category: "caseRequirements.needsCategoryAxes", cause: false };
 }

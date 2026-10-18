@@ -1227,6 +1227,14 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "If mainly engaged in interpersonal work that uses language ability (translation, interpreting, customer service, etc.). For Japanese, the applicant is deemed to have Japanese ability equivalent to CEFR B2 if any of the following applies: JLPT N2 or higher, BJT Business Japanese Proficiency Test 400 points or more, Examination for Japanese University Admission for International Students (Japanese) 200 points or more, JPT Japanese Proficiency Test 525 points or more, residence in Japan as a mid- to long-term resident for 20 years or more, graduation from a Japanese university or completion of the specialized course or advanced course of a Japanese college of technology or specialized training college, or completion of compulsory education in Japan and graduation from high school",
     "주로 언어 능력을 사용하는 대인 업무 등에 종사하는 경우(번역·통역, 접객 등). 일본어의 경우 JLPT N2 이상, BJT 비즈니스 일본어 능력 테스트 400점 이상, 일본유학시험(일본어) 200점 이상, JPT 일본어 능력시험 525점 이상, 중장기 재류자로서 20년 이상 재류, 일본 대학 졸업 또는 고등전문학교·전수학교 전문과정·전공과 수료, 일본 의무교육 수료 및 고등학교 졸업 중 어느 하나에 해당하면 CEFR B2 상당의 일본어 능력을 갖춘 것으로 본다",
   ],
+  "専門学校を卒業した場合のみ。外国人留学生キャリア形成促進プログラムの認定学科修了者は認定学科修了証明書": [
+    "Only if graduated from a specialized training college. Persons who completed a department certified under the Career Formation Promotion Program for International Students must submit the certificate of completion of the certified department",
+    "전수학교를 졸업한 경우에만. 외국인 유학생 커리어 형성 촉진 프로그램으로 인정받은 학과 수료자는 인정학과 수료증명서",
+  ],
+  "履歴書と、学歴又は職歴を証明する文書。外国の文化に基盤を有する業務では、3年以上の実務経験を証明する文書など、業務内容により異なる。IT技術者の資格証書は、案内ページに「【共通】６の資料を提出している場合は不要」とあるが、【共通】６が指す書類は未確認（行政書士が確認する）": [
+    "A résumé and a document proving educational background or work history. Requirements differ by the type of work, such as a document proving 3 or more years of practical experience for work based on a foreign culture. For IT engineers' qualification certificates, the guidance page says they are \"not required if the materials in [Common] 6 have been submitted\", but which document [Common] 6 refers to has not been confirmed (to be confirmed by the scrivener)",
+    "이력서와 학력 또는 경력을 증명하는 문서. 외국 문화에 기반을 둔 업무에서는 3년 이상의 실무 경험을 증명하는 문서 등 업무 내용에 따라 다르다. IT 기술자의 자격증서는 안내 페이지에 '[공통] 6의 자료를 제출한 경우에는 불필요'라고 되어 있으나, [공통] 6이 가리키는 서류는 미확인(행정서사가 확인한다)",
+  ],
   "申請人が被派遣者の場合のみ": [
     "Only if the applicant is a dispatched worker",
     "신청인이 피파견자인 경우에만",
