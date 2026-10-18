@@ -252,6 +252,9 @@
 - `RuleSet.anyResidenceStatus = true` により、取得の規則は、希望する在留資格(`targetStatus`)が空でも何であっても、手続種別(`acquisition`)だけで適用する。案件作成画面の「規則が未整備」の案内も、取得では出さない(`shouldShowNoRuleGuide` と `evaluate` は同じ `matchRuleSet` を使う)。
 - 事由が未選択の間は、全事由に共通の書類(申請書・旅券の提示・旅券を提示できない場合の理由書・申請取次者の身分証明書等)のみ判定し、必要書類タブに「事由の選択後に判定」と案内する(`Evaluation.needsCause`)。
 - 申請期限(30日以内)と手数料無料は、既存の `note` の仕組みで、申請書の規則に記載した。新しいUIは作っていない。
+- 追記(#402。判定の軸を複数にする仕組み): `RuleSet.alsoBasis`(2つ目以降の軸。`"category" | "acquisitionCause" | "applicantType"`)を足した。指定した規則集合は、`basis` と `alsoBasis` の全ての軸で一致したときだけ規則を適用する。規則が軸の項目(`categories`・`causes`・`applicantTypes`)を省略したら、その軸の全ての値で適用する。未選択の軸があるときは、全ての値に共通の規則だけを出し、`needsCategory`・`needsCause`(・`needsApplicantType`)を立てる(両方立つことがある)。`alsoBasis` を持たない規則集合は従来の分岐で判定し、結果を変えない(`tests/ruleSetRegression.test.ts` で固定)。
+  - 区分の保存先は、既存の `employment.category`(雇用・会社タブ)を取得でも使う。DB の変更は無い。必要書類タブでは、区分が未選択のとき、所属機関の区分であることを補足した案内と、雇用・会社タブへ移るボタンを出す。事由も未選択なら、1つの文にまとめる。
+  - 現在の対象は、技人国の取得(`GIJINKOKU_ACQUISITION`。`alsoBasis: ["category"]`)のみ。カテゴリー別の書類は、認定のチェックシートと同じ割り当て(取得のチェックシートは無い)。他の資格は、経営・管理 → 研究 → 技能(調理)→ 医療の順に、資格ごとの照合表を作ってから別の PR で足す。
 
 ### 事由別の必要書類
 

@@ -1,0 +1,784 @@
+{
+  "gijinkoku_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category1_proof",
+      "statutory_report_total",
+      "online_approval_proof",
+      "dispatch_documents",
+      "representative_declaration",
+      "resident_tax_certificates",
+      "employment_contract",
+      "registry_certificate",
+      "business_description",
+      "financial_statements",
+      "language_ability",
+      "withholding_exemption",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "98df3d945d26a88247f12876e51601324cddfabf2a9c8dbd5c2e8604cd5f897b"
+  },
+  "gijinkoku_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category1_proof",
+      "statutory_report_total",
+      "online_approval_proof",
+      "omission_statement",
+      "vocational_school_certificate",
+      "dispatch_pledge",
+      "dispatch_contract_documents",
+      "activity_documents",
+      "career_documents",
+      "registry_certificate",
+      "business_overview",
+      "financial_statements",
+      "representative_declaration",
+      "language_ability",
+      "withholding_exemption",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "11c17a02fa0cc69e28e18f047834c761acb47927d231dbc509c296ab65a045ed"
+  },
+  "gijinkoku_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "category_proof",
+      "online_approval_proof",
+      "vocational_school_certificate",
+      "dispatch_documents",
+      "activity_documents",
+      "career_documents",
+      "registry_certificate",
+      "business_description",
+      "financial_statements",
+      "representative_declaration",
+      "language_ability",
+      "withholding_exemption",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "e708467403919623b1e2f6715d1d02be3c19c4b538198b67faea256af73ea860"
+  },
+  "keiei_kanri_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "statutory_report_total",
+      "financial_statements",
+      "registry_certificate",
+      "representative_declaration",
+      "business_licenses",
+      "withholding_exemption_documents",
+      "full_time_staff_documents",
+      "japanese_ability",
+      "activity_summary_document",
+      "resident_tax_certificates",
+      "public_dues_documents",
+      "office_facility_documents"
+    ],
+    "digest": "e7f685eeec1febf5718860e3a653bbcadcea3f38373c099ef55f9bcdf26bda82"
+  },
+  "keiei_kanri_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "activity_documents",
+      "business_plan",
+      "business_description",
+      "financial_statements",
+      "business_licenses",
+      "office_facility_documents",
+      "business_scale_documents",
+      "japanese_ability",
+      "career_documents",
+      "representative_declaration",
+      "statutory_report_unavailable_reason"
+    ],
+    "digest": "c5e34ce672fdbdc56dfc2bf4cf010ef6ffab7ebdd123738890ab1eaa6d82dfba"
+  },
+  "keiei_kanri_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "category_proof",
+      "activity_documents",
+      "business_plan",
+      "business_description",
+      "financial_statements",
+      "representative_declaration",
+      "business_licenses",
+      "statutory_report_unavailable_reason",
+      "office_facility_documents",
+      "business_scale_documents",
+      "japanese_ability",
+      "career_documents",
+      "office_commission_documents"
+    ],
+    "digest": "f263d93b955b45db793c4ad3e9a11aa8f4f03268d3e015db549c1b18d96cb07d"
+  },
+  "hsp_change_2": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "hsp_point_table",
+      "hsp_point_evidence",
+      "hsp2_resident_tax_certificates",
+      "hsp2_resident_tax_payment",
+      "hsp2_resident_tax_reason",
+      "hsp2_national_tax_certificates",
+      "hsp2_income_proof",
+      "hsp2_public_pension",
+      "hsp2_public_health_insurance",
+      "hsp2_employer_insurance",
+      "hsp2_80points_evidence"
+    ],
+    "digest": "0cbe082658ad2215a7774de501d9962e037f7a59ef64ec9d9690abdb661ca458"
+  },
+  "hsp_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "hsp_point_table",
+      "hsp_point_evidence"
+    ],
+    "digest": "3cb6fa4150170fa6e38bcda678aa92533f942b8fbd9bb9bdb9a431f28adf336f"
+  },
+  "hsp_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "hsp_point_table",
+      "hsp_point_evidence"
+    ],
+    "digest": "e225d40b233af6bc8d4afb5c229b926789fa57c6f0b3140ab649794e6085eeb7"
+  },
+  "hsp_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "hsp_point_table",
+      "hsp_point_evidence"
+    ],
+    "digest": "cee0d5ea88b730ad6353304b8c385c48628f7b16b2bd37de96dc93cd8601b3d1"
+  },
+  "hsp_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "birth_certificate",
+      "activity_materials",
+      "hsp_point_table",
+      "hsp_point_evidence"
+    ],
+    "digest": "27a989dbd913823c9ab6d42d67155ea4491e74b2769c9dbcbee977299d062dae"
+  },
+  "gijinkoku_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "passport_reason_statement",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "activity_materials"
+    ],
+    "digest": "b7bd28400415a3d7165cc01f865b182b3a46d2cce3bb2a9220e915685ba58740"
+  },
+  "kazokutaizai_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "passport_reason_statement",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "birth_certificate",
+      "family_relationship_proof",
+      "supporter_card_or_passport_copy",
+      "supporter_income_active",
+      "supporter_income_other",
+      "parents_questionnaire",
+      "household_residence_certificate",
+      "activity_materials"
+    ],
+    "digest": "656c258843e1fe1d1e5472e53afbd628a2e9349f08779bdd1af5103bd2a4bf8c"
+  },
+  "acquisition_by_cause": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "passport_reason_statement",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "birth_certificate",
+      "parents_questionnaire",
+      "household_residence_certificate",
+      "activity_materials"
+    ],
+    "digest": "e37f8e42e381de3686608818108ef36a6d8351b29abc82185f7e5280eeaa93ad"
+  },
+  "kaigo_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "representative_declaration",
+      "resident_tax_certificates",
+      "working_conditions_document",
+      "dispatch_documents",
+      "organization_overview"
+    ],
+    "digest": "0abd61253931435f92b6771650aa404862e8946797fb595dbed008386dd128ad"
+  },
+  "kaigo_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "care_worker_registration",
+      "working_conditions_document",
+      "dispatch_documents",
+      "organization_overview",
+      "representative_declaration",
+      "skill_transfer_declaration"
+    ],
+    "digest": "785d5fbc3913176804c6cef309fb8e7460ea8861c6c7c6d06074983333c6e5c4"
+  },
+  "kaigo_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "care_worker_registration",
+      "working_conditions_document",
+      "dispatch_documents",
+      "organization_overview",
+      "representative_declaration",
+      "skill_transfer_declaration"
+    ],
+    "digest": "e7ab8a07f893591fbf3e016ab084f3b7950f6472b7e97b781d2cd40ad32e1d0b"
+  },
+  "houmu_kaikei_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card"
+    ],
+    "digest": "6a741431c4f9eeb90067c2d47d82071ebd8563076b0c3787fab8dd0995d18ccb"
+  },
+  "houmu_kaikei_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "legal_accounting_license"
+    ],
+    "digest": "af74370729044662c620acf48d979671939788ba4e50647f8640f63ab7f5f924"
+  },
+  "houmu_kaikei_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "legal_accounting_license"
+    ],
+    "digest": "d4d154b5c1bbf8824f3c01595f44b27adf6869446973f25e48b4c134b2cb5399"
+  },
+  "professor_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "resident_tax_certificates",
+      "activity_proof_document"
+    ],
+    "digest": "07de76de15022bf0bf8473daf3c28b45de374a7645f2f32d4b52231742a248c6"
+  },
+  "professor_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "activity_proof_document"
+    ],
+    "digest": "42aa25c09ab1b487742740812b4a55c3ee15b0d93335f39c32b588ff25ce59f4"
+  },
+  "professor_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "activity_proof_document"
+    ],
+    "digest": "0c928d57934b72deefe92dc9bf9138fa701588331366c42a1362175142bf42da"
+  },
+  "iryo_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "resident_tax_certificates",
+      "employment_certificate",
+      "medical_license_other",
+      "facility_overview"
+    ],
+    "digest": "79b2577c4b5e2804db6059d6c4bb03e0b9ab7c184fb0ff3ead2d364e391b0f2f"
+  },
+  "iryo_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "medical_license_doctor",
+      "medical_license_other",
+      "facility_overview"
+    ],
+    "digest": "22245044d4b1271e977e3c28e08fe214101ab732e41ff0695677498f9975ba0a"
+  },
+  "iryo_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "medical_license_doctor",
+      "medical_license_other",
+      "facility_overview"
+    ],
+    "digest": "0fd242cfba6e5a84a3d0dcab935eeb1b1741e98804e4360484c36bcf70b325b5"
+  },
+  "kenkyu_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "online_approval_proof",
+      "dispatch_documents",
+      "resident_tax_certificates",
+      "activity_documents",
+      "business_description",
+      "financial_statements",
+      "financial_statements_transfer",
+      "representative_declaration",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "9fad030e597d12a73141f4dcc1f9f7a4feeecba03a00477d3959c68e41804666"
+  },
+  "kenkyu_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "online_approval_proof",
+      "omission_statement",
+      "dispatch_documents",
+      "activity_documents",
+      "career_documents",
+      "transfer_documents",
+      "business_description",
+      "financial_statements",
+      "financial_statements_transfer",
+      "representative_declaration",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "f9b9d73de15892504d5439ea56eeab6ba33ff5e702d56c10849d8257d0641c17"
+  },
+  "kenkyu_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "category_proof",
+      "online_approval_proof",
+      "dispatch_documents",
+      "activity_documents",
+      "career_documents",
+      "transfer_documents",
+      "business_description",
+      "financial_statements",
+      "financial_statements_transfer",
+      "representative_declaration",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "3aaa9ef0419ceeffa36cec4fa89a343c872abb0c1d72501cedb0087d0fd2bc67"
+  },
+  "education_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "resident_tax_certificates",
+      "non_employment_contract_copy",
+      "activity_content_documents",
+      "business_content_documents",
+      "financial_statements"
+    ],
+    "digest": "dddb6691b7509647c3d00ad2bd711d1d936e691aaba188ed0a00b427c074441e"
+  },
+  "education_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "activity_content_documents",
+      "career_documents",
+      "business_content_documents",
+      "financial_statements"
+    ],
+    "digest": "e5855914a3e6108f8c12295cb11ff64fe73bc94eed117c751d6ef0991c2d7829"
+  },
+  "education_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "activity_content_documents",
+      "career_documents",
+      "business_content_documents",
+      "financial_statements"
+    ],
+    "digest": "f3d78c4d70bf1a9ef8cf077e80c028a80d5f565a1aca5a92579e34897a70507b"
+  },
+  "hodo_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "press_registration_copy",
+      "employment_certificate",
+      "resident_tax_certificates",
+      "registered_employer_proof",
+      "activity_documents",
+      "organization_overview"
+    ],
+    "digest": "a307133e39f723c0a9d67c5272c47cffab35343f640497f177c94b0116db0b9f"
+  },
+  "hodo_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "registered_employer_proof",
+      "activity_documents",
+      "organization_overview"
+    ],
+    "digest": "bfc4bbd3a49144b2f39a428fd4891ac07e261293c46a2202696e1676090879fa"
+  },
+  "hodo_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "registered_employer_proof",
+      "activity_documents",
+      "organization_overview"
+    ],
+    "digest": "e04cd5fa3a7831859026b4556397223cf1567fffe6096762970030513aa6c8c8"
+  },
+  "gino_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "online_approval_proof",
+      "dispatch_documents",
+      "representative_declaration",
+      "resident_tax_certificates",
+      "activity_documents",
+      "business_description",
+      "financial_statements",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "91ddab6c9f7ba9891905702940006e9ceb4ce211ee242583d675a1db4d229182"
+  },
+  "gino_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "online_approval_proof",
+      "work_content_document",
+      "skill_resume",
+      "dispatch_documents",
+      "career_cook",
+      "career_thai_cook",
+      "career_special_skill",
+      "career_pilot",
+      "career_sports_instructor",
+      "career_sommelier",
+      "activity_documents",
+      "business_description",
+      "financial_statements",
+      "representative_declaration",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "08382021b3d74ab4dfcf2069f043adacf383a0bb105ddc1e227be422274b2492"
+  },
+  "gino_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "category_proof",
+      "online_approval_proof",
+      "work_content_document",
+      "skill_resume",
+      "dispatch_documents",
+      "career_cook",
+      "career_thai_cook",
+      "career_special_skill",
+      "career_pilot",
+      "career_sports_instructor",
+      "career_sommelier",
+      "activity_documents",
+      "business_description",
+      "financial_statements",
+      "representative_declaration",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "cdcd9ba2d36d4ba1900255bc63f5168d2a3eec79043128be52b79028d0096f24"
+  },
+  "kigyonai_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "online_approval_proof",
+      "resident_tax_certificates"
+    ],
+    "digest": "af87dde68b4c0dac21b91172ba1957eb8118e7f22cda39a88b940d21aaac7a19"
+  },
+  "kigyonai_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "category_proof",
+      "online_approval_proof",
+      "activity_documents",
+      "workplace_relation_documents",
+      "previous_workplace_existence",
+      "career_documents",
+      "business_description",
+      "registry_certificate",
+      "workplace_existence",
+      "financial_statements",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "7d92affb8cc4e54ae203b97d046cc624d43a95e32129cf33f961a88b32c00e16"
+  },
+  "kigyonai_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "category_proof",
+      "online_approval_proof",
+      "activity_documents",
+      "workplace_relation_documents",
+      "previous_workplace_existence",
+      "career_documents",
+      "business_description",
+      "registry_certificate",
+      "workplace_existence",
+      "financial_statements",
+      "withholding_exemption_certificate",
+      "payroll_office_notification",
+      "withholding_tax_receipts",
+      "withholding_special_approval"
+    ],
+    "digest": "7fbfe861244f8ff7cd9385c74cea1191ad9032015b3a176f0ff03a35aec4c6a3"
+  },
+  "tokutei_kenkyu_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "activity_documents",
+      "resident_tax_certificates",
+      "profit_loss_statement"
+    ],
+    "digest": "f22fef4113b5cd51b635fa8dc2c2ee721b97fa9e35ed86b47da2ee14a392fcb0"
+  },
+  "tokutei_kenkyu_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "organization_brochure",
+      "registry_certificate",
+      "organization_equivalent_documents",
+      "foreign_staff_list",
+      "consent_form",
+      "activity_documents",
+      "career_documents",
+      "resignation_certificate",
+      "resident_tax_certificates"
+    ],
+    "digest": "a97c53acdc443d90aeac56c1953d0cbd705065b0b068fce7f0de71374d9da0fa"
+  },
+  "tokutei_kenkyu_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "organization_brochure",
+      "registry_certificate",
+      "organization_equivalent_documents",
+      "foreign_staff_list",
+      "consent_form",
+      "activity_documents",
+      "career_documents"
+    ],
+    "digest": "d61a2226d79f8f72915a0e111ee91350076ff1be0b049cba0bc6b26b29e8367b"
+  },
+  "daigaku_sotsugyo_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "representative_declaration",
+      "resident_tax_certificates"
+    ],
+    "digest": "2fa4548c08a4a678120cec8f698b0a59b9e42c69624f4ac76b14e7b53e200f52"
+  },
+  "daigaku_sotsugyo_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "labor_conditions_document",
+      "employment_reason",
+      "education_documents",
+      "japanese_ability",
+      "business_description",
+      "representative_declaration"
+    ],
+    "digest": "c33b1a0c0f9e0804ec102be6da421c9471dc8224472dc1e3b7be6d47f186155e"
+  },
+  "daigaku_sotsugyo_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "labor_conditions_document",
+      "employment_reason",
+      "education_documents",
+      "japanese_ability",
+      "business_description",
+      "representative_declaration"
+    ],
+    "digest": "ae9eec7538c9bc51ace665036464d72ce21db713508043cf068dbcb9481e54c7"
+  },
+  "tokutei_joho_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "activity_documents",
+      "resident_tax_certificates"
+    ],
+    "digest": "2d3b392385a98191f1c81fbbd5559fea96bd37770ce441b998132cc7e3486add"
+  },
+  "tokutei_joho_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "organization_brochure",
+      "registry_certificate",
+      "organization_equivalent_documents",
+      "foreign_staff_list",
+      "consent_form",
+      "activity_documents",
+      "dispatch_documents",
+      "resignation_certificate",
+      "resident_tax_certificates"
+    ],
+    "digest": "fa36beef34d727e49597b959683d8c711d054181a97c3e2462a1e4c162848d71"
+  },
+  "tokutei_joho_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "organization_brochure",
+      "registry_certificate",
+      "organization_equivalent_documents",
+      "foreign_staff_list",
+      "consent_form",
+      "activity_documents",
+      "career_documents",
+      "dispatch_documents"
+    ],
+    "digest": "0ed869c61c06fa9a95535786f46c6491affb3a54ef383ed5d5e27bdcb3b6c7fd"
+  }
+}
