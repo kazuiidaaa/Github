@@ -9,13 +9,13 @@ import { applicantFieldId, type JumpField } from "@/lib/applicantFields";
  */
 export function MissingValue({ field, label, onJump }: { field: JumpField; label: string; onJump?: (id: string) => void }) {
   const t = useT();
-  if (!onJump) return <span className="text-slate-400">{t("dialog.missingValue_text")}</span>;
+  if (!onJump) return <span className="text-muted">{t("dialog.missingValue_text")}</span>;
   return (
     <button
       type="button"
       onClick={() => onJump(applicantFieldId(field))}
       aria-label={t("dialog.missingValue_aria", { label })}
-      className="min-h-10 rounded text-left font-medium text-accent underline underline-offset-2 md:min-h-0"
+      className="min-h-[44px] rounded text-left font-medium text-accent underline underline-offset-2 active:opacity-70"
     >
       {t("dialog.missingValue_action")}
     </button>
