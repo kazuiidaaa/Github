@@ -15,9 +15,9 @@ function kindFromUrl(url: string): SourceKind | null {
 const ALL_SOURCES = RULE_SETS.flatMap((rs) => rs.sources.map((src) => ({ rs: rs.title, src })));
 
 describe("RuleSource の kind", () => {
-  it("kind がある出典は、3値のいずれかで、URL の拡張子と矛盾しない", () => {
+  it("全出典に kind があり、3値のいずれかで、URL の拡張子と矛盾しない", () => {
     for (const { rs, src } of ALL_SOURCES) {
-      if (src.kind === undefined) continue;
+      expect(src.kind, `${rs}: ${src.title}（kind が未設定）`).toBeDefined();
       expect(KINDS, `${rs}: ${src.title}`).toContain(src.kind);
       const expected = kindFromUrl(src.url);
       if (expected !== null) expect(src.kind, `${rs}: ${src.url}`).toBe(expected);
@@ -40,7 +40,7 @@ describe("RuleSource の comparedAt", () => {
 });
 
 describe("ruleSetComparedAt", () => {
-  const src = (comparedAt?: string) => ({ title: "t", url: "https://example.test/a.html", comparedAt });
+  const src = (comparedAt?: string) => ({ title: "t", url: "https://example.test/a.html", kind: "page" as const, comparedAt });
 
   it("出典の comparedAt のうち最も新しい日を返す", () => {
     expect(ruleSetComparedAt({ sources: [src("2026-10-12"), src("2026-10-18"), src(undefined), src("2026-10-07")] })).toBe("2026-10-18");
