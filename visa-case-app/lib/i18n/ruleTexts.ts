@@ -34,19 +34,7 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   ],
   "カテゴリーを証明する文書として提出する": ["Submitted as the document proving the category", "카테고리를 증명하는 문서로 제출한다"],
   "納期の特例の承認を受けている場合": ["If the special payment deadline has been approved", "납기 특례의 승인을 받은 경우"],
-  "提出の要否を、出入国在留管理局の案内で確認すること": [
-    "Check whether submission is required in the guidance of the Immigration Services Agency",
-    "제출 필요 여부를 출입국재류관리국의 안내로 확인할 것",
-  ],
   "2026年4月15日以降の申請で提出する": ["Submit for applications made on or after April 15, 2026", "2026년 4월 15일 이후의 신청에서 제출한다"],
-  "言語能力を用いた対人業務に従事する場合。更新では、以前から同様の業務に継続して従事している場合は不要（審査で求められる場合あり）": [
-    "If engaged in interpersonal work that uses language ability. For renewals, not required if the applicant has continued the same kind of work (may be requested during examination)",
-    "언어 능력을 활용한 대인 업무에 종사하는 경우. 연장에서는 이전부터 같은 업무에 계속 종사하고 있는 경우 불필요(심사에서 요구될 수 있음)",
-  ],
-  "派遣形態で就労する場合のみ。公式案内で資料の範囲を確認すること": [
-    "Only if working as a dispatched worker. Check the scope of the materials in the official guidance",
-    "파견 형태로 근무하는 경우에만. 자료의 범위는 공식 안내로 확인할 것",
-  ],
   "公式案内に列挙された文書のうち、提出可能なものを提出する。提出可能な文書がなければカテゴリー4となる": [
     "Submit whichever of the documents listed in the official guidance can be submitted. If none can be submitted, the organization falls under Category 4",
     "공식 안내에 열거된 문서 중 제출 가능한 것을 제출한다. 제출 가능한 문서가 없으면 카테고리 4가 된다",
@@ -54,14 +42,6 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "カテゴリー2と同様の添付資料での申請を希望し、利用申出が承認された機関の場合のみ": [
     "Only for an organization that wishes to apply with the same attachments as Category 2 and whose application for use has been approved",
     "카테고리 2와 같은 첨부 자료로 신청하기를 희망하며 이용 신청이 승인된 기관의 경우에만",
-  ],
-  "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合": [
-    "For a change from \"Student\", when treated as Category 2 (graduates or expected graduates of universities, junior colleges, graduate schools, etc.)",
-    "'유학'에서의 변경으로 카테고리 2(대학·단기대학·대학원 졸업(예정)자 등)로 취급하는 경우",
-  ],
-  "専門学校を卒業した場合のみ。外国人留学生キャリア形成促進プログラムの認定学科修了者は認定学科修了証明書": [
-    "Only for graduates of a vocational school. For those who completed a department certified under the Career Development Promotion Program for International Students, the certificate of completion of the certified department",
-    "전문학교를 졸업한 경우에만. 외국인 유학생 경력 형성 촉진 프로그램의 인정 학과 수료자는 인정 학과 수료 증명서",
   ],
   "派遣契約に基づいて就労する場合（申請人が被派遣者の場合）のみ": [
     "Only if working under a dispatch contract (where the applicant is the dispatched worker)",
@@ -79,22 +59,6 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "A résumé and either a graduation certificate, an employment certificate, etc. For IT engineers, a certificate of an information processing qualification; for work based on foreign culture, proof of 3 or more years of practical experience",
     "이력서와 졸업증명서·재직증명서 등 중 하나. IT 기술자는 정보처리기술 자격증서, 외국 문화에 기반한 업무는 3년 이상의 실무 경험 증명",
   ],
-  "公式ページの本文にはカテゴリー3は「その他の資料は原則不要」との記載があり、チェックシートと食い違う。チェックシートに従いカテゴリー3も必要としている": [
-    "The body text of the official page says that for Category 3 \"other materials are generally not required\", which differs from the checklist. Following the checklist, Category 3 is also treated as requiring it",
-    "공식 페이지 본문에는 카테고리 3은 '기타 자료는 원칙적으로 불필요'라고 기재되어 있어 체크시트와 다르다. 체크시트에 따라 카테고리 3도 필요로 하고 있다",
-  ],
-  "主に言語能力を用いて対人業務等に従事する場合（翻訳・通訳、接客等）": [
-    "If mainly engaged in interpersonal work using language ability (translation, interpreting, customer service, etc.)",
-    "주로 언어 능력을 활용하여 대인 업무 등에 종사하는 경우(번역·통역, 접객 등)",
-  ],
-  "源泉徴収の免除を受ける外国法人等の場合は、免除証明書その他の源泉徴収を要しないことを明らかにする資料": [
-    "For a foreign corporation etc. exempt from withholding, an exemption certificate or other material showing that withholding is not required",
-    "원천징수를 면제받는 외국 법인 등의 경우에는 면제 증명서 기타 원천징수가 필요하지 않음을 밝히는 자료",
-  ],
-  "この書類、又は納期の特例の承認を受けていることを明らかにする資料のいずれか": [
-    "Either this document or material showing that the special payment deadline has been approved",
-    "이 서류 또는 납기 특례의 승인을 받았음을 밝히는 자료 중 하나",
-  ],
   "申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。裏面に申請人の氏名を記載し、申請書の写真欄に貼付する": [
     "A clear photo taken from the front within 6 months before the application, without a hat and with a plain background. Write the applicant's name on the back and attach it to the photo field of the application form",
     "신청 전 6개월 이내에 정면에서 촬영한, 모자와 배경이 없는 선명한 것. 뒷면에 신청인의 성명을 기재하고 신청서의 사진란에 붙인다",
@@ -106,11 +70,6 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる": [
     "Category 1: a copy of the Japan Company Handbook, etc. / Categories 2 and 3: a copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year. For Category 2, if approval to use the online system has been obtained, a document showing that approval. If no document can be submitted, the organization falls under Category 4",
     "카테고리 1: 『회사사계보』 사본 등／카테고리 2·3: 전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본). 카테고리 2는 온라인 이용 신청의 승인을 받은 경우 그 승인을 나타내는 문서. 제출 가능한 서류가 없으면 카테고리 4가 된다",
-  ],
-  "専門学校を卒業した場合のみ": ["Only for graduates of a vocational school", "전문학교를 졸업한 경우에만"],
-  "申請人が被派遣者の場合のみ。公式案内で資料の範囲を確認すること": [
-    "Only if the applicant is a dispatched worker. Check the scope of the materials in the official guidance",
-    "신청인이 피파견자인 경우에만. 자료의 범위는 공식 안내로 확인할 것",
   ],
   "労働契約の場合は労働条件通知書等。役員就任・外国法人の日本支店への転勤の場合は、公式案内の資料を提出する": [
     "For an employment contract, the notice of working conditions, etc. For appointment as an officer or transfer to the Japan branch of a foreign company, submit the materials given in the official guidance",
@@ -125,10 +84,6 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "연혁, 임원, 조직, 사업 내용(주요 거래처와 거래 실적 포함) 등이 기재된 것 또는 이에 준하는 문서",
   ],
   "新規事業の場合は事業計画書": ["For a new business, a business plan", "신규 사업의 경우에는 사업계획서"],
-  "翻訳・通訳、接客等、言語能力を用いた対人業務に主に従事する場合。それ以外でも審査で求められる場合がある": [
-    "If mainly engaged in interpersonal work using language ability, such as translation, interpreting or customer service. It may also be requested during examination in other cases",
-    "번역·통역, 접객 등 언어 능력을 활용한 대인 업무에 주로 종사하는 경우. 그 외의 경우에도 심사에서 요구될 수 있다",
-  ],
   "法定調書合計表を提出できない理由を明らかにする資料。源泉徴収の免除を受ける機関の場合のみ。この場合、下記の開設届出書等は別途確認すること": [
     "Material explaining why the summary table of statutory reports cannot be submitted. Only for an organization exempt from withholding. In this case, check separately the notification of establishment and other documents below",
     "법정조서합계표를 제출할 수 없는 이유를 밝히는 자료. 원천징수를 면제받는 기관의 경우에만. 이 경우 아래의 개설신고서 등은 별도로 확인할 것",
@@ -1128,6 +1083,56 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "契約機関が変更された場合のみ。1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる": [
     "Only if the contracting organization has changed. A certificate stating total income and tax payment status for one year. A certificate stating both is sufficient on its own (issued by the municipality of the address as of January 1). If it cannot be issued, e.g. soon after entry or because of relocation, consult the nearest regional immigration services bureau",
     "계약 기관이 변경된 경우에만. 1년간의 총소득 및 납세 상황이 기재된 것. 둘 다 기재된 증명서라면 어느 한쪽이라도 된다(1월 1일 현재 주소지의 시·구·읍·면에서 발급). 입국 후 얼마 안 된 경우나 이사 등으로 발급되지 않을 때는 가까운 출입국·외국인관서에 문의한다",
+  ],
+
+  // 技術・人文知識・国際業務（照合済み 2026-10-18。#333 手順E）
+  "派遣形態で就労する場合（申請人が被派遣者の場合）のみ。直近の在留期間中の資料も提出する": [
+    "Only if working under a dispatch arrangement (the applicant is a dispatched worker). Also submit the materials for the most recent period of stay",
+    "파견 형태로 근무하는 경우(신청인이 피파견자인 경우)에만. 직전 체류기간 중의 자료도 제출한다",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。労働契約の場合は労働条件通知書等。役員就任・外国法人の日本支店への転勤の場合は、公式案内の資料を提出する": [
+    "Only for the first renewal application after changing jobs. For an employment contract, the notice of working conditions, etc. For appointment as an officer or transfer to the Japanese branch of a foreign corporation, submit the materials listed in the official guidance",
+    "이직 후 첫 연장 허가 신청의 경우에만. 근로계약의 경우 근로조건통지서 등. 임원 취임·외국 법인의 일본 지점으로의 전근의 경우에는 공식 안내의 자료를 제출한다",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が記載されたもの、又はこれに準ずる文書": [
+    "Only for the first renewal application after changing jobs. A document describing the history, officers, organization, and business (including main clients and transaction record), or an equivalent document",
+    "이직 후 첫 연장 허가 신청의 경우에만. 연혁, 임원, 조직, 사업 내용(주요 거래처와 거래 실적 포함) 등이 기재된 것 또는 이에 준하는 문서",
+  ],
+  "言語能力を用いた対人業務に従事する場合。業務内容の変更や転職等により、言語能力を用いた対人業務等に主に従事することとなった場合は、更新時に提出が必要。以前から同様の業務に継続して従事している場合は不要（審査で求められる場合あり）。日本語の場合は、JLPT・N2以上、BJTビジネス日本語能力テスト400点以上、日本留学試験（日本語）200点以上、JPT日本語能力試験525点以上、中長期在留者として20年以上の在留、本邦の大学卒業又は高等専門学校・専修学校の専門課程・専攻科の修了、我が国の義務教育修了と高等学校卒業のいずれかに該当すれば、B2相当の日本語能力を有するものとみなす": [
+    "If engaged in interpersonal work that uses language ability. If, due to a change in duties or a job change, the applicant has come to mainly engage in such work, it must be submitted at renewal. Not required if the applicant has continuously engaged in similar work (it may be requested during examination). For Japanese, the applicant is deemed to have Japanese ability equivalent to CEFR B2 if any of the following applies: JLPT N2 or higher, BJT Business Japanese Proficiency Test 400 points or more, Examination for Japanese University Admission for International Students (Japanese) 200 points or more, JPT Japanese Proficiency Test 525 points or more, residence in Japan as a mid- to long-term resident for 20 years or more, graduation from a Japanese university or completion of the specialized course or advanced course of a Japanese college of technology or specialized training college, or completion of compulsory education in Japan and graduation from high school",
+    "언어 능력을 사용하는 대인 업무에 종사하는 경우. 업무 내용의 변경이나 이직 등으로 언어 능력을 사용하는 대인 업무 등에 주로 종사하게 된 경우에는 연장 시 제출이 필요하다. 이전부터 같은 업무에 계속 종사하고 있는 경우에는 불필요(심사에서 요구될 수 있음). 일본어의 경우 JLPT N2 이상, BJT 비즈니스 일본어 능력 테스트 400점 이상, 일본유학시험(일본어) 200점 이상, JPT 일본어 능력시험 525점 이상, 중장기 재류자로서 20년 이상 재류, 일본 대학 졸업 또는 고등전문학교·전수학교 전문과정·전공과 수료, 일본 의무교육 수료 및 고등학교 졸업 중 어느 하나에 해당하면 CEFR B2 상당의 일본어 능력을 갖춘 것으로 본다",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。カテゴリー3は源泉徴収の資料が不要。源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要": [
+    "Only for the first renewal application after changing jobs. Category 3 does not need the withholding documents. Only for an organization exempt from withholding. In that case, the notification of opening a payroll office and the like below are not required",
+    "이직 후 첫 연장 허가 신청의 경우에만. 카테고리 3은 원천징수 관련 자료가 불필요. 원천징수 면제를 받는 기관의 경우에만. 이 경우 아래의 급여지급사무소 개설 신고서 등은 불필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。カテゴリー3は源泉徴収の資料が不要": [
+    "Only for the first renewal application after changing jobs. Category 3 does not need the withholding documents",
+    "이직 후 첫 연장 허가 신청의 경우에만. 카테고리 3은 원천징수 관련 자료가 불필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。カテゴリー3は源泉徴収の資料が不要。納期の特例の承認を受けている場合": [
+    "Only for the first renewal application after changing jobs. Category 3 does not need the withholding documents. If the special payment deadline has been approved",
+    "이직 후 첫 연장 허가 신청의 경우에만. 카테고리 3은 원천징수 관련 자료가 불필요. 납기 특례의 승인을 받은 경우",
+  ],
+  "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合。チェックシートでは、カテゴリーを証明する文書の選択肢の一つとして○。カテゴリー2として扱う「留学」からの変更は、a.本邦の大学院・大学・短大の卒業（予定）者、b.海外の優秀大学の卒業者（3つの世界ランキング中2つ以上で上位300位の外国の大学）、c.「留学」から就労資格に変更して就労し、その後当該所属機関において在留期間更新した者を現に受け入れている機関において就労する者": [
+    "Only for a change from \"Student\" treated as Category 2 (graduates or prospective graduates of universities, junior colleges, graduate schools, etc.). On the checksheet it is marked ○ as one of the options for the document proving the category. Changes from \"Student\" treated as Category 2 are: (a) graduates or prospective graduates of a Japanese graduate school, university, or junior college; (b) graduates of an excellent overseas university (a foreign university ranked in the top 300 in at least 2 of 3 world rankings); (c) persons who work at an organization that currently employs a person who changed from \"Student\" to a work status, worked there, and then renewed the period of stay with that organization",
+    "'유학'에서의 변경으로 카테고리 2(대학·단기대학·대학원 졸업(예정)자 등)로 취급하는 경우에만. 체크시트에서는 카테고리를 증명하는 문서의 선택지 중 하나로 ○. 카테고리 2로 취급하는 '유학'에서의 변경은 a. 일본 대학원·대학·단기대학 졸업(예정)자, b. 해외 우수 대학 졸업자(3개 세계 랭킹 중 2개 이상에서 상위 300위인 외국 대학), c. '유학'에서 취업 자격으로 변경하여 취업하고 이후 해당 소속 기관에서 체류기간을 갱신한 사람을 현재 받아들이고 있는 기관에서 근무하는 사람",
+  ],
+  "専門学校を卒業した場合のみ。外国人留学生キャリア形成促進プログラムの認定学科修了者は認定学科修了証明書。認定学科修了証明書は、案内ページにあるが、チェックシート（PDF）にはないため要確認": [
+    "Only if graduated from a specialized training college. Persons who completed a department certified under the Career Formation Promotion Program for International Students must submit the certificate of completion of the certified department. The certificate of completion of the certified department appears on the guidance page but not on the checksheet (PDF), so confirmation is required",
+    "전수학교를 졸업한 경우에만. 외국인 유학생 커리어 형성 촉진 프로그램으로 인정받은 학과 수료자는 인정학과 수료증명서. 인정학과 수료증명서는 안내 페이지에는 있으나 체크시트(PDF)에는 없으므로 확인 필요",
+  ],
+  "主に言語能力を用いて対人業務等に従事する場合（翻訳・通訳、接客等）。日本語の場合は、JLPT・N2以上、BJTビジネス日本語能力テスト400点以上、日本留学試験（日本語）200点以上、JPT日本語能力試験525点以上、中長期在留者として20年以上の在留、本邦の大学卒業又は高等専門学校・専修学校の専門課程・専攻科の修了、我が国の義務教育修了と高等学校卒業のいずれかに該当すれば、B2相当の日本語能力を有するものとみなす": [
+    "If mainly engaged in interpersonal work that uses language ability (translation, interpreting, customer service, etc.). For Japanese, the applicant is deemed to have Japanese ability equivalent to CEFR B2 if any of the following applies: JLPT N2 or higher, BJT Business Japanese Proficiency Test 400 points or more, Examination for Japanese University Admission for International Students (Japanese) 200 points or more, JPT Japanese Proficiency Test 525 points or more, residence in Japan as a mid- to long-term resident for 20 years or more, graduation from a Japanese university or completion of the specialized course or advanced course of a Japanese college of technology or specialized training college, or completion of compulsory education in Japan and graduation from high school",
+    "주로 언어 능력을 사용하는 대인 업무 등에 종사하는 경우(번역·통역, 접객 등). 일본어의 경우 JLPT N2 이상, BJT 비즈니스 일본어 능력 테스트 400점 이상, 일본유학시험(일본어) 200점 이상, JPT 일본어 능력시험 525점 이상, 중장기 재류자로서 20년 이상 재류, 일본 대학 졸업 또는 고등전문학교·전수학교 전문과정·전공과 수료, 일본 의무교육 수료 및 고등학교 졸업 중 어느 하나에 해당하면 CEFR B2 상당의 일본어 능력을 갖춘 것으로 본다",
+  ],
+  "申請人が被派遣者の場合のみ": [
+    "Only if the applicant is a dispatched worker",
+    "신청인이 피파견자인 경우에만",
+  ],
+  "翻訳・通訳、接客等、言語能力を用いた対人業務に主に従事する場合。それ以外でも審査で求められる場合がある。日本語の場合は、JLPT・N2以上、BJTビジネス日本語能力テスト400点以上、日本留学試験（日本語）200点以上、JPT日本語能力試験525点以上、中長期在留者として20年以上の在留、本邦の大学卒業又は高等専門学校・専修学校の専門課程・専攻科の修了、我が国の義務教育修了と高等学校卒業のいずれかに該当すれば、B2相当の日本語能力を有するものとみなす": [
+    "If mainly engaged in interpersonal work that uses language ability, such as translation, interpreting, and customer service. It may be requested during examination even in other cases. For Japanese, the applicant is deemed to have Japanese ability equivalent to CEFR B2 if any of the following applies: JLPT N2 or higher, BJT Business Japanese Proficiency Test 400 points or more, Examination for Japanese University Admission for International Students (Japanese) 200 points or more, JPT Japanese Proficiency Test 525 points or more, residence in Japan as a mid- to long-term resident for 20 years or more, graduation from a Japanese university or completion of the specialized course or advanced course of a Japanese college of technology or specialized training college, or completion of compulsory education in Japan and graduation from high school",
+    "번역·통역, 접객 등 언어 능력을 사용하는 대인 업무에 주로 종사하는 경우. 그 외의 경우에도 심사에서 요구될 수 있다. 일본어의 경우 JLPT N2 이상, BJT 비즈니스 일본어 능력 테스트 400점 이상, 일본유학시험(일본어) 200점 이상, JPT 일본어 능력시험 525점 이상, 중장기 재류자로서 20년 이상 재류, 일본 대학 졸업 또는 고등전문학교·전수학교 전문과정·전공과 수료, 일본 의무교육 수료 및 고등학교 졸업 중 어느 하나에 해당하면 CEFR B2 상당의 일본어 능력을 갖춘 것으로 본다",
   ],
 };
 

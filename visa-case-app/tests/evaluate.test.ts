@@ -1,7 +1,7 @@
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { describe, expect, it } from "vitest";
 import { evaluate, hasRuleSetFor, notApplicableMessage, shouldShowNoRuleGuide, statusForRules } from "../lib/requirements/evaluate";
-import { RULE_SETS, type RuleSet } from "../lib/requirements/rules";
+import { GIJINKOKU_CHANGE, GIJINKOKU_COE, GIJINKOKU_RENEWAL, RULE_SETS, type RuleSet } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, PROCEDURE_TYPES, type CaseRecord, type OrgCategory } from "../lib/types";
 
 function make(over: Partial<CaseRecord> = {}, category: OrgCategory = "", withholdingSpecial = false): CaseRecord {
@@ -61,9 +61,9 @@ describe("evaluate", () => {
     expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card"]);
   });
 
-  it("カテゴリー1は、共通の書類のみ必要", () => {
+  it("カテゴリー1は、共通の書類とカテゴリー1の証明が必要", () => {
     const e = evaluate(make({}, "1"));
-    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card"]);
+    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card", "category1_proof"]);
     expect(e.items.find((i) => i.rule.id === "employment_contract")?.effective).toBe("not_required");
   });
 
@@ -88,14 +88,19 @@ describe("evaluate", () => {
   it("カテゴリー3は、法定調書合計表が必要で、開設届出書は不要", () => {
     const required = ids(evaluate(make({}, "3")), "required");
     expect(required).toContain("statutory_report_total");
-    expect(required).toContain("employment_contract");
     expect(required).not.toContain("payroll_office_notification");
+    // 活動内容は、転職後の初回の更新のみの追加書類（要確認）
+    expect(ids(evaluate(make({}, "3")), "check")).toContain("employment_contract");
   });
 
   it("カテゴリー4は、納期の特例の承認がある場合のみ承認申請書が必要", () => {
     expect(ids(evaluate(make({}, "4", false)), "required")).not.toContain("withholding_special_approval");
-    expect(ids(evaluate(make({}, "4", true)), "required")).toContain("withholding_special_approval");
-    expect(ids(evaluate(make({}, "4")), "check")).toContain("business_materials");
+    // 更新の源泉徴収の資料は、転職後の初回の更新のみの追加書類（要確認）。納期の特例の承認がある場合のみ出る
+    expect(ids(evaluate(make({}, "4", false)), "check")).not.toContain("withholding_special_approval");
+    expect(ids(evaluate(make({}, "4", true)), "check")).toContain("withholding_special_approval");
+    expect(ids(evaluate(make({}, "4")), "check")).toEqual(
+      expect.arrayContaining(["registry_certificate", "business_description", "financial_statements"]),
+    );
   });
 
   it("行政書士の上書きと提出状況を反映して、不足書類を算出する", () => {
@@ -170,8 +175,8 @@ describe("在留資格変更許可申請（技術・人文知識・国際業務�
       check: [...ALWAYS_CHECK, "language_ability"],
     },
     "4": {
-      required: [...COMMON, ...TABLE2, "payroll_office_notification"],
-      check: [...ALWAYS_CHECK, "language_ability", "withholding_tax_receipts"],
+      required: [...COMMON, ...TABLE2, "payroll_office_notification", "withholding_tax_receipts"],
+      check: [...ALWAYS_CHECK, "language_ability", "withholding_exemption"],
       special: ["withholding_special_approval"],
     },
   };
@@ -230,11 +235,55 @@ describe("在留資格変更許可申請（技術・人文知識・国際業務�
     expect(ids(change("4", true), "required")).toContain("withholding_special_approval");
   });
 
-  // 暫定のガード: 行政書士の確認（docs の6章）が済み、要確認の表示を外す際は、このテストも合わせて外す・更新する
-  it("追加した規則は、共通の3件を除き、すべて要確認として表示する（確認前の暫定のガード）", () => {
-    const rules = change("4").ruleSet?.rules ?? [];
-    for (const r of rules) {
-      if (!["application_form", "photo", "passport_card"].includes(r.id)) expect(r.verify).toBe(true);
+  // 照合済み（2026-10-18）。案内ページとチェックシートが一致した書類には verify を付けず、食い違う書類（認定学科修了証明書）にだけ付ける
+  it("案内ページとチェックシートが食い違う書類にだけ、verify を付ける（照合済み 2026-10-18）", () => {
+    for (const rs of [GIJINKOKU_COE, GIJINKOKU_CHANGE, GIJINKOKU_RENEWAL]) {
+      expect(rs.rules.filter((r) => r.verify).map((r) => r.id)).toEqual(
+        rs === GIJINKOKU_RENEWAL ? [] : ["vocational_school_certificate"],
+      );
+    }
+  });
+
+  it("変更の決算文書の注記に、案内ページとチェックシートの食い違いを書かない（ページの「原則不要」は No.14 のこと）", () => {
+    const r = change("3").ruleSet?.rules.find((x) => x.id === "financial_statements");
+    expect(r?.categories).toEqual(["3", "4"]);
+    expect(r?.note).toBe("新規事業の場合は事業計画書");
+  });
+
+  it("納期の特例の資料の名称は、認定・変更・更新とも原文と同じ", () => {
+    for (const rs of [GIJINKOKU_COE, GIJINKOKU_CHANGE, GIJINKOKU_RENEWAL]) {
+      expect(rs.rules.find((r) => r.id === "withholding_special_approval")?.name).toBe(
+        "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
+      );
+    }
+  });
+
+  it("更新の「転職後の初回」の資料（No.8〜13）は要確認で、カテゴリー3は源泉徴収の資料が不要", () => {
+    const first = ["employment_contract", "registry_certificate", "business_description", "financial_statements"];
+    const renewal = GIJINKOKU_RENEWAL.rules;
+    for (const id of first) {
+      const r = renewal.find((x) => x.id === id);
+      expect(r?.level).toBe("check");
+      expect(r?.categories).toEqual(["3", "4"]);
+    }
+    for (const id of ["withholding_exemption", "payroll_office_notification", "withholding_tax_receipts", "withholding_special_approval"]) {
+      const r = renewal.find((x) => x.id === id);
+      expect(r?.level).toBe("check");
+      expect(r?.categories).toEqual(["4"]);
+    }
+    expect(renewal.some((r) => r.id === "business_materials")).toBe(false);
+  });
+
+  it("更新にも、カテゴリー1の証明・カテゴリー2のオンライン承認・免除証明書の行がある", () => {
+    const ids2 = GIJINKOKU_RENEWAL.rules.map((r) => r.id);
+    expect(ids2).toEqual(expect.arrayContaining(["category1_proof", "online_approval_proof", "withholding_exemption"]));
+    expect(GIJINKOKU_CHANGE.rules.map((r) => r.id)).toContain("withholding_exemption");
+    expect(GIJINKOKU_COE.rules.map((r) => r.id)).toContain("online_approval_proof");
+  });
+
+  it("法定調書合計表の名称に「受付印のあるもの」を含めない（原文は「（写し）」のみ）", () => {
+    for (const rs of [GIJINKOKU_CHANGE, GIJINKOKU_RENEWAL]) {
+      expect(rs.rules.find((r) => r.id === "statutory_report_total")?.name).toBe("前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）");
     }
   });
 

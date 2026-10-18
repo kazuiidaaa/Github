@@ -11,17 +11,9 @@ type Translated = readonly [en: string, ko: string];
 export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
   "写真（縦4cm×横3cm）": ["Photo (4 cm tall x 3 cm wide)", "사진(세로 4cm×가로 3cm)"],
   "パスポート及び在留カード（提示）": ["Passport and Residence Card (to be presented)", "여권 및 재류카드(제시)"],
-  "申請人の活動内容を明らかにする書類（雇用契約書・労働条件通知書の写し等）": [
-    "Documents showing the applicant's activities (e.g., a copy of the employment contract or the notice of working conditions)",
-    "신청인의 활동 내용을 밝히는 서류(고용계약서·근로조건통지서 사본 등)",
-  ],
   "住民税の課税（又は非課税）証明書及び納税証明書": [
     "Resident tax assessment (or exemption) certificate and tax payment certificate",
     "주민세 과세(또는 비과세) 증명서 및 납세증명서",
-  ],
-  "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（受付印のあるものの写し）": [
-    "Summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year (a copy bearing the receipt stamp)",
-    "전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(접수인이 찍힌 것의 사본)",
   ],
   "給与支払事務所等の開設届出書の写し": [
     "Copy of the notification of establishment of a salary payment office, etc.",
@@ -35,21 +27,9 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Copy of the application for approval of the special payment deadline for withholding income tax",
     "원천소득세 납기 특례 승인 신청서 사본",
   ],
-  "勤務先の事業内容・経営状況を明らかにする資料（決算文書の写し等）": [
-    "Materials showing the employer's business and financial condition (e.g., a copy of the financial statements)",
-    "근무처의 사업 내용·경영 상황을 밝히는 자료(결산 서류 사본 등)",
-  ],
   "所属機関の代表者に関する申告書（参考様式）": [
     "Declaration concerning the representative of the affiliated organization (reference form)",
     "소속 기관 대표자에 관한 신고서(참고 양식)",
-  ],
-  "言語能力（CEFR・B2相当）を示す資料": [
-    "Materials showing language ability (equivalent to CEFR B2)",
-    "언어 능력(CEFR B2 상당)을 나타내는 자료",
-  ],
-  "派遣契約に基づいて就労する場合の資料（誓約書、派遣個別契約書、管理台帳等）": [
-    "Materials if working under a dispatch contract (written pledge, individual dispatch contract, management ledger, etc.)",
-    "파견계약에 따라 근무하는 경우의 자료(서약서, 파견 개별계약서, 관리대장 등)",
   ],
   "カテゴリー1に該当することを証明する文書（四季報の写し、上場を証明する文書の写し等）": [
     "Document proving that the organization falls under Category 1 (e.g., a copy of the Japan Company Handbook, a copy of a document proving a stock exchange listing)",
@@ -74,10 +54,6 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
   "派遣先での活動内容及び派遣契約期間を明らかにする資料の写し（労働条件通知書（雇用契約書）、労働者派遣個別契約書）": [
     "Copies of materials showing the activities at the client company and the dispatch contract period (notice of working conditions (employment contract), individual worker dispatch contract)",
     "파견처에서의 활동 내용 및 파견 계약 기간을 밝히는 자료의 사본(근로조건통지서(고용계약서), 근로자 파견 개별계약서)",
-  ],
-  "申請人の活動の内容等を明らかにする書類（労働条件通知書・役員報酬を定める定款等）": [
-    "Documents showing the applicant's activities, etc. (notice of working conditions, articles of incorporation setting officers' remuneration, etc.)",
-    "신청인의 활동 내용 등을 밝히는 서류(근로조건통지서·임원 보수를 정한 정관 등)",
   ],
   "申請人の学歴及び職歴その他経歴等を証明する文書（履歴書、卒業証明書、在職証明書等）": [
     "Documents proving the applicant's education, work history, and other background (résumé, graduation certificate, employment certificate, etc.)",
@@ -109,14 +85,6 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Materials showing the business (e.g., a brochure describing the company history, officers, organization, and business)",
     "사업 내용을 밝히는 자료(연혁·임원·조직·사업 내용이 기재된 안내서 등)",
   ],
-  "直近年度の決算文書の写し（新規事業の場合は事業計画書）": [
-    "Copy of the financial statements of the most recent fiscal year (a business plan for a new business)",
-    "최근 사업연도 결산 서류 사본(신규 사업의 경우 사업계획서)",
-  ],
-  "給与支払事務所等の開設届出書の写し（法定調書合計表を提出できない理由の資料）": [
-    "Copy of the notification of establishment of a salary payment office, etc. (material explaining why the summary table of statutory reports cannot be submitted)",
-    "급여지급사무소 등 개설신고서 사본(법정조서합계표를 제출할 수 없는 이유의 자료)",
-  ],
   "直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）": [
     "Copy of the income tax collection statements for the most recent 3 months (bearing the receipt date stamp)",
     "최근 3개월분 소득세 징수액 계산서 사본(영수일부인이 찍힌 것)",
@@ -132,10 +100,6 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
   "所属機関のカテゴリーを証明する文書": [
     "Document proving the category of the affiliated organization",
     "소속 기관의 카테고리를 증명하는 문서",
-  ],
-  "専門士・高度専門士の称号を付与されたことを証明する文書（専攻科修了の場合は修了証明）": [
-    "Document proving that the title of Senmonshi or Advanced Senmonshi was awarded (a certificate of completion if the advanced course was completed)",
-    "전문사·고도전문사 칭호를 부여받았음을 증명하는 문서(전공과를 수료한 경우 수료 증명)",
   ],
   "派遣契約に基づいて就労する場合の資料（誓約書（派遣元用・派遣先用）、労働条件通知書、労働者派遣個別契約書）": [
     "Materials if working under a dispatch contract (written pledges (one for the dispatching company and one for the client company), notice of working conditions, individual worker dispatch contract)",
@@ -299,6 +263,22 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
   "日本での活動内容に応じた資料": [
     "Materials according to the activities in Japan",
     "일본에서의 활동 내용에 따른 자료",
+  ],
+  "派遣契約に基づいて就労する場合の資料（誓約書（派遣元用・派遣先用）、労働条件通知書、労働者派遣個別契約書、派遣元管理台帳、派遣先管理台帳、就業状況報告書）": [
+    "Materials if working under a dispatch contract (written pledges (one for the dispatching company and one for the client company), notice of working conditions, individual worker dispatch contract, ledger of the dispatching company, ledger of the client company, work status report)",
+    "파견계약에 따라 근무하는 경우의 자료(서약서(파견 회사용·파견처용), 근로조건통지서, 근로자 파견 개별계약서, 파견 회사 관리대장, 파견처 관리대장, 취업상황보고서)",
+  ],
+  "活動内容等を明らかにするいずれかの資料（労働条件を明示する文書、役員報酬を定める定款の写し等）": [
+    "Any one of the materials showing the activities, etc. (a document stating the working conditions, a copy of the articles of incorporation setting officers' remuneration, etc.)",
+    "활동 내용 등을 밝히는 자료 중 하나(근로조건을 명시한 문서, 임원 보수를 정한 정관 사본 등)",
+  ],
+  "業務上使用する言語について、CEFR・B2相当の言語能力を有することを証する資料": [
+    "Materials certifying that the applicant has language ability equivalent to CEFR B2 in the language used in the work",
+    "업무상 사용하는 언어에 대해 CEFR B2 상당의 언어 능력을 갖추고 있음을 증명하는 자료",
+  ],
+  "申請人の活動の内容等を明らかにする資料（労働条件通知書・役員報酬を定める定款等）": [
+    "Materials showing the applicant's activities, etc. (notice of working conditions, articles of incorporation setting officers' remuneration, etc.)",
+    "신청인의 활동 내용 등을 밝히는 자료(근로조건통지서·임원 보수를 정한 정관 등)",
   ],
 };
 
