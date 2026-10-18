@@ -254,6 +254,7 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
   "事由を証する書類": ["Document proving the reason", "사유를 증명하는 서류"],
   "出生したことを証する書類": ["Document proving the birth", "출생했음을 증명하는 서류"],
   "両親の情報を記載した質問書": ["Questionnaire stating information on the parents", "부모의 정보를 기재한 질문서"],
+  "質問書": ["Questionnaire", "질문서"],
   "世帯全員の住民票": [
     "Certificate of residence (Juminhyo) listing all household members",
     "세대원 전원의 주민표",

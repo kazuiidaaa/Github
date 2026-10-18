@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { AddressField } from "@/components/AddressField";
-import { Button, Field, inputClass } from "@/components/ui";
+import { Button, Field, inputClass, ToneIcon } from "@/components/ui";
 import { isValidDate } from "@/lib/format";
 import { DateField, useDateInvalidMessage } from "@/components/DateField";
+import { focusField } from "@/lib/formFocus";
 import { categoryOptions } from "@/lib/i18n/caseNew";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
 import { ruleSetOfCase } from "@/lib/requirements/evaluate";
@@ -14,6 +15,10 @@ import { logAudit, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import { EMPLOYMENT_ZENKAKU, zenkakuHandlers, zenkakuModeOf } from "@/lib/zenkaku";
 import type { CaseRecord, EmploymentInfo, OrgCategory } from "@/lib/types";
+
+/** 雇用開始日の入力欄の id。保存時に誤りがあれば、ここへフォーカスを移す */
+export const EMPLOYMENT_START_DATE_ID = "employment-startDate";
+const ERROR_SUMMARY_ID = "employment-error-summary";
 
 const TEXT_FIELDS: { key: keyof EmploymentInfo; label: MessageKey; placeholder?: MessageKey }[] = [
   { key: "companyName", label: "employment.companyName" },
@@ -61,6 +66,7 @@ export function EmploymentFields({
         )}
         <Field label={t("employment.startDate")}>
           <DateField
+            id={EMPLOYMENT_START_DATE_ID}
             className={inputClass}
             value={form.employmentStartDate}
             error={dateError ? dateInvalid : undefined}
@@ -79,8 +85,9 @@ export function EmploymentFields({
             </select>
           </Field>
         </div>
-        <label className="flex items-center gap-2 text-sm md:col-span-2">
-          <input type="checkbox" checked={form.withholdingSpecial} onChange={(e) => set("withholdingSpecial", e.target.checked)} />
+        {/* 押しやすさのため、行の高さは 44px（人の決定。Issue #392） */}
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-sm md:col-span-2">
+          <input type="checkbox" className="size-5 shrink-0" checked={form.withholdingSpecial} onChange={(e) => set("withholdingSpecial", e.target.checked)} />
           {t("employment.withholdingSpecial")}
         </label>
       </div>
@@ -93,6 +100,7 @@ export function hasEmploymentDateError(form: EmploymentInfo): boolean {
 
 export function EmploymentForm({ record }: { record: CaseRecord }) {
   const t = useT();
+  const dateInvalid = useDateInvalidMessage();
   const [form, setForm] = useState<EmploymentInfo>(record.employment);
   const [saved, setSaved] = useState(false);
   const dateError = hasEmploymentDateError(form);
@@ -114,19 +122,37 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
   const { markSaved } = useAutoSaveForm(form, persist);
 
   function save() {
+    // 誤りがあるときは保存せず、誤りの欄へフォーカスを移す（申請人情報のフォームと同じ方式）
+    if (dateError) {
+      focusField(EMPLOYMENT_START_DATE_ID);
+      return;
+    }
     if (persist(form)) markSaved(form);
   }
 
   return (
-    <section className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6">
+    <section className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
       <h2 className="mb-1 font-semibold">{t("employment.title")}</h2>
-      <p className="mb-5 text-xs text-slate-500">{t("employment.note")}</p>
+      <p className="mb-5 text-xs text-muted">{t("employment.note")}</p>
+      {/* 誤りの要約（申請人情報のフォームと同じ見た目・文言） */}
+      {dateError && (
+        <div id={ERROR_SUMMARY_ID} role="alert" className="mb-5 rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+          <p className="flex items-center gap-1.5 font-bold">
+            <ToneIcon tone="red" />
+            {t("caseForm.errorSummary", { count: 1 })}
+          </p>
+          <ul className="mt-1 list-disc pl-5">
+            <li>{t("caseForm.errorItem", { label: t("employment.startDate"), error: dateInvalid })}</li>
+          </ul>
+        </div>
+      )}
       <EmploymentFields form={form} set={set} ruleSet={ruleSetOfCase(record)} />
-      <div className="mt-6 flex items-center gap-3">
-        <Button disabled={dateError} onClick={save}>
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        {/* 誤りがあっても押せるようにし、押したら誤りの欄へ移す（押せない理由が分からない状態を避ける） */}
+        <Button aria-describedby={dateError ? ERROR_SUMMARY_ID : undefined} onClick={save}>
           {t("employment.save")}
         </Button>
-        <span role="status" className="text-sm text-green-700">
+        <span role="status" className="text-sm text-success">
           {saved && t("employment.saved")}
         </span>
       </div>

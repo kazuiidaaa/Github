@@ -129,7 +129,8 @@ describe("evaluate: 技人国の取得のカテゴリー別の書類（R-1。Iss
   const gij = (cause: Cause, category: OrgCategory = "", over: Partial<CaseRecord> = {}) => evaluate(make(cause, category, over));
   // 活動に応じた資料は、技人国の取得では外した（R-5。カテゴリー別の書類がこれに当たる）
   const COMMON_REQUIRED_OTHER = ["application_form", "photo", "passport_presentation", "cause_proof"];
-  const COMMON_CHECK = ["passport_reason_statement", "agent_identity_document"];
+  // 旅券の理由書は、技人国の取得では外した（#396 R-7）
+  const COMMON_CHECK = ["agent_identity_document"];
   const C34_REQUIRED = ["activity_documents", "career_documents", "registry_certificate", "business_description", "financial_statements", "representative_declaration"];
 
   it("規則集合：basis は取得の事由、alsoBasis はカテゴリー。区分の定義は所属機関の区分（1〜4）", () => {
