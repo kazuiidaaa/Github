@@ -9,7 +9,7 @@ export function Footer() {
   const t = useT();
   return (
     <footer className="border-t border-slate-200 print:hidden">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-1 px-6 py-4 text-xs text-slate-600">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-1 px-4 py-4 text-xs sm:px-6 text-slate-600">
         <p>{t("footer.prototypeNotice")}</p>
         <p>{t("footer.reviewNotice")}</p>
         <Link href={ABOUT_PATH} className="font-bold text-blue-700 underline-offset-2 hover:underline">

@@ -283,7 +283,8 @@ button:not(:disabled):active {
 }
 
 .anim-page-enter {
-  animation: page-enter 0.28s var(--ease-apple) both;
+  /* 画面の切り替えは、移動なしのフェードのみ（Issue #392 PR-3）。毎回の移動は、読む妨げになるため。page-enter は一覧の anim-stagger が使う */
+  animation: fade-in var(--dur-fade) linear both;
 }
 
 @keyframes fade-in {

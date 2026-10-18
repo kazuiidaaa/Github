@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useId, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { exitDemo, signOut, useSession } from "@/lib/auth";
 import { useDemo } from "@/lib/demo";
@@ -20,86 +21,119 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const t = useT();
+  const menuId = useId();
+  const menuButton = useRef<HTMLButtonElement>(null);
+  // 狭い幅のメニューが開いている画面のパス。別の画面に移ると、自然に閉じた扱いになる
+  const [openAt, setOpenAt] = useState<string | null>(null);
+  const open = openAt === pathname;
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/75 backdrop-blur-xl backdrop-saturate-150">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 max-md:gap-y-1 max-md:py-2 lg:flex-nowrap lg:justify-between lg:px-6 lg:py-4">
-        <span className="contents lg:flex lg:items-center lg:gap-6">
-        <Link href="/" aria-label={t("header.homeAria")} className="order-1 text-lg font-bold lg:order-none">
-          {t("header.siteName")}
-        </Link>
-        <nav aria-label={t("header.navAria")} className="order-4 flex items-center gap-4 text-sm lg:order-none">
-          {NAV.map((n) => {
-            const current = n.match(pathname);
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                aria-current={current ? "page" : undefined}
-                className={`py-1 font-bold ${current ? "underline decoration-2 underline-offset-8" : "text-slate-600 hover:text-slate-900"}`}
-              >
-                {t(n.label)}
-              </Link>
-            );
-          })}
-        </nav>
-        </span>
-        {/* 狭い幅では、ここで改行して2段目を始める */}
-        <span aria-hidden="true" className="order-3 h-0 basis-full lg:hidden" />
-        <span className="contents lg:flex lg:items-center lg:gap-3">
-        <span className="order-2 ml-auto lg:order-none lg:ml-0">
-          <span className="inline-flex items-center gap-2">
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </span>
-        </span>
-        {demo ? (
-          <span className="order-5 ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 text-sm lg:order-none lg:ml-0 max-md:flex-nowrap lg:flex-nowrap lg:justify-start lg:gap-3">
-            <span
-              title={t("header.demoLong")}
-              className="rounded-xl bg-amber-100 lg:rounded-full px-3 py-1 text-xs font-bold text-amber-800 max-md:shrink-0 max-md:whitespace-nowrap"
-            >
-              <span className="md:hidden">{t("header.demoShort")}</span>
-              <span className="max-md:hidden">{t("header.demoLong")}</span>
-            </span>
-            <button
-              onClick={() => {
-                exitDemo();
-                router.replace("/login");
-              }}
-              className="shrink-0 whitespace-nowrap rounded-full border border-line-strong bg-white px-3 py-1 font-bold text-slate-700 hover:bg-slate-100"
-            >
-              {t("header.exitDemo")}
-            </button>
-          </span>
-        ) : !isSupabaseEnabled ? (
-          <span
-            title={t("header.prototypeLong")}
-            className="order-5 ml-auto rounded-xl bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 max-md:whitespace-nowrap lg:order-none lg:ml-0 lg:rounded-full"
+    <>
+      <a
+        href="#main"
+        onClick={(e) => {
+          // 次の読み込みを伴わず、本文へフォーカスを移す
+          const main = document.getElementById("main");
+          if (!main) return;
+          e.preventDefault();
+          main.focus();
+        }}
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+      >
+        {t("header.skipToMain")}
+      </a>
+      <header
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && open) {
+            setOpenAt(null);
+            menuButton.current?.focus();
+          }
+        }}
+        className="sticky top-0 z-40 border-b border-slate-200 bg-white/75 backdrop-blur-xl backdrop-saturate-150"
+      >
+        {/* 狭い幅（lg 未満）は1段：ロゴとメニューボタン。残りはメニューに入れる。lg 以上は従来どおり横一列 */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 px-4 py-2 lg:flex-nowrap lg:px-6 lg:py-4">
+          <Link href="/" aria-label={t("header.homeAria")} className="min-w-0 flex-1 truncate text-lg font-bold lg:flex-none">
+            {t("header.siteName")}
+          </Link>
+          <button
+            ref={menuButton}
+            type="button"
+            aria-expanded={open}
+            aria-controls={menuId}
+            onClick={() => setOpenAt(open ? null : pathname)}
+            className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-100 lg:hidden"
           >
-            <span className="md:hidden">{t("header.prototypeShort")}</span>
-            <span className="max-md:hidden">{t("header.prototypeLong")}</span>
-          </span>
-        ) : (
-          session && (
-            <span className="order-5 ml-auto flex min-w-0 max-w-full items-center justify-end gap-2 text-sm text-slate-600 lg:order-none lg:ml-0 lg:justify-start lg:gap-3">
-              <Link
-                href="/account"
-                title={session.user.email}
-                className="block min-w-0 max-w-[14rem] truncate font-bold text-blue-700 max-md:max-w-[6.5rem] hover:underline lg:max-w-none"
-              >
-                {session.user.email}
-              </Link>
-              <button
-                onClick={() => void signOut()}
-                className="shrink-0 whitespace-nowrap rounded-full border border-line-strong bg-white px-3 py-1 font-bold text-slate-700 hover:bg-slate-100"
-              >
-                {t("header.logout")}
-              </button>
-            </span>
-          )
-        )}
-        </span>
-      </div>
-    </header>
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M2 4h12M2 8h12M2 12h12" />
+            </svg>
+            {t("header.menu")}
+          </button>
+          <div
+            id={menuId}
+            className={`${open ? "flex" : "hidden"} basis-full flex-col items-start gap-3 pb-3 pt-1 lg:flex lg:flex-1 lg:basis-auto lg:flex-row lg:items-center lg:gap-6 lg:p-0`}
+          >
+            <nav aria-label={t("header.navAria")} className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+              {NAV.map((n) => {
+                const current = n.match(pathname);
+                return (
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    aria-current={current ? "page" : undefined}
+                    className={`py-2 font-bold lg:py-1 ${current ? "underline decoration-2 underline-offset-8" : "text-slate-600 hover:text-slate-900"}`}
+                  >
+                    {t(n.label)}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="flex w-full min-w-0 flex-col items-start gap-3 lg:ml-auto lg:w-auto lg:flex-row lg:items-center">
+              <span className="inline-flex items-center gap-2">
+                <LanguageSwitcher />
+                <ThemeToggle />
+              </span>
+              {demo ? (
+                <span className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-sm lg:flex-nowrap lg:gap-3">
+                  <span title={t("header.demoLong")} className="rounded-xl bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 lg:rounded-full">
+                    {t("header.demoLong")}
+                  </span>
+                  <button
+                    onClick={() => {
+                      exitDemo();
+                      router.replace("/login");
+                    }}
+                    className="shrink-0 whitespace-nowrap rounded-full border border-line-strong bg-white px-3 py-1 font-bold text-slate-700 hover:bg-slate-100"
+                  >
+                    {t("header.exitDemo")}
+                  </button>
+                </span>
+              ) : !isSupabaseEnabled ? (
+                <span title={t("header.prototypeLong")} className="rounded-xl bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 lg:rounded-full">
+                  {t("header.prototypeLong")}
+                </span>
+              ) : (
+                session && (
+                  <span className="flex min-w-0 max-w-full items-center gap-2 text-sm text-slate-600 lg:gap-3">
+                    <Link
+                      href="/account"
+                      title={session.user.email}
+                      className="block min-w-0 max-w-[14rem] truncate font-bold text-blue-700 hover:underline lg:max-w-none"
+                    >
+                      {session.user.email}
+                    </Link>
+                    <button
+                      onClick={() => void signOut()}
+                      className="shrink-0 whitespace-nowrap rounded-full border border-line-strong bg-white px-3 py-1 font-bold text-slate-700 hover:bg-slate-100"
+                    >
+                      {t("header.logout")}
+                    </button>
+                  </span>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+    </>
   );
 }
