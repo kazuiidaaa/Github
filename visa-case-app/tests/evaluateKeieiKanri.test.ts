@@ -145,8 +145,32 @@ describe("経営・管理 認定証明書交付申請のカテゴリー別判定
   it("事業規模の資料に、事業内容を明らかにする資料（1）で登記事項証明書を提出済みなら不要の備考がある（認定・変更とも）", () => {
     for (const rs of [KEIEI_KANRI_COE, KEIEI_KANRI_CHANGE]) {
       const r = rs.rules.find((x) => x.id === "business_scale_documents");
-      expect(r?.note).toBe("事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要");
+      expect(r?.note).toContain("事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要");
     }
+  });
+
+  // 改正概要による注記（照合表 11章 R-1〜R-8。書類は足していない）
+  it("改正概要の注記が、該当する書類に付いている（R-1〜R-8）", () => {
+    const note = (rs: typeof KEIEI_KANRI_COE, id: string) => rs.rules.find((x) => x.id === id)?.note ?? "";
+    const all = [KEIEI_KANRI_RENEWAL, KEIEI_KANRI_COE, KEIEI_KANRI_CHANGE];
+    expect(note(KEIEI_KANRI_RENEWAL, "full_time_staff_documents")).toContain("少なくとも1名");
+    for (const rs of [KEIEI_KANRI_COE, KEIEI_KANRI_CHANGE]) expect(note(rs, "business_scale_documents")).toContain("少なくとも1名");
+    expect(note(KEIEI_KANRI_COE, "business_scale_documents")).toContain("設立時又は設立後の任意の時点の貸借対照表");
+    for (const rs of [KEIEI_KANRI_COE, KEIEI_KANRI_CHANGE]) expect(note(rs, "financial_statements")).toContain("個人事業主");
+    for (const rs of all) {
+      expect(note(rs, "japanese_ability")).toContain("申請人又は常勤職員のいずれか");
+      expect(note(rs, "business_licenses")).toContain("様式自由");
+    }
+    for (const rs of [KEIEI_KANRI_COE, KEIEI_KANRI_CHANGE]) {
+      expect(note(rs, "career_documents")).toContain("起業準備活動");
+      expect(note(rs, "business_plan")).toContain("中小企業診断士・公認会計士・税理士");
+      expect(note(rs, "office_facility_documents")).toContain("自宅を事業所と兼ねる");
+    }
+    expect(note(KEIEI_KANRI_RENEWAL, "public_dues_documents")).toContain("各職員の国民健康保険の加入状況は不要");
+  });
+
+  it("注記を足しても、書類の数は変わらない（更新に事業計画書は足さない）", () => {
+    expect(KEIEI_KANRI_RENEWAL.rules.some((x) => x.id === "business_plan")).toBe(false);
   });
 });
 
