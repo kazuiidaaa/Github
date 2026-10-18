@@ -65,6 +65,25 @@ describe("特定情報処理活動（告示37号）の規則集合", () => {
     expect(ids(TOKUTEI_JOHO_RENEWAL)).not.toContain("career_documents");
   });
 
+  it("更新の活動内容の文書は、原文どおり在職証明書・辞令・雇用契約書（採用通知書なし）。認定・変更は採用通知書を含む現状のまま（Issue #334）", () => {
+    const note = (set: RuleSet) => set.rules.find((r) => r.id === "activity_documents")?.note ?? "";
+    expect(note(TOKUTEI_JOHO_RENEWAL)).toContain("在職証明書");
+    expect(note(TOKUTEI_JOHO_RENEWAL)).toContain("雇用契約書");
+    expect(note(TOKUTEI_JOHO_RENEWAL)).not.toContain("採用通知書");
+    for (const s of [TOKUTEI_JOHO_COE, TOKUTEI_JOHO_CHANGE]) {
+      expect(note(s)).toContain("採用通知書");
+      expect(note(s)).not.toContain("在職証明書");
+    }
+  });
+
+  it("派遣の注記に、派遣先の資料の範囲（機関の資料。同意書を除く）がある", () => {
+    for (const s of [TOKUTEI_JOHO_COE, TOKUTEI_JOHO_CHANGE]) {
+      const note = s.rules.find((r) => r.id === "dispatch_documents")?.note ?? "";
+      expect(note).toContain("案内書");
+      expect(note).toContain("同意書を除く");
+    }
+  });
+
   it("旅券・申請書・写真は共通ルールに任せ、37号の側で独自の定義をしない（36号・46号と同じ定義）", () => {
     for (const id of ["application_form", "photo", "passport_copy", "passport_card"]) {
       for (const s of sets) {
