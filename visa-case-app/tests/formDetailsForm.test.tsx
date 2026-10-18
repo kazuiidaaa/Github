@@ -204,3 +204,30 @@ describe("医療の申請人の区分の入力欄（Issue #310）", () => {
     expect(m).toContain("医師・歯科医師以外（カテゴリー2）");
   });
 });
+
+describe("誤りの要約と、誤りの欄への移動の準備（Issue #392 PR-9）", () => {
+  const record = makeRecord({
+    procedureType: "renewal",
+    formDetails: { ...EMPTY_FORM_DETAILS, graduationDate: "2024-13-01", passportExpiry: "2024-02-30" },
+  });
+  const m = renderToStaticMarkup(<FormDetailsForm record={record} />);
+  it("誤りの要約を role=alert で出し、画面の並び順（旅券の有効期限→卒業年月日）で並べる", () => {
+    const summary = m.match(/<div id="form-details-error-summary" role="alert".*?<\/ul><\/div>/)?.[0] ?? "";
+    expect(summary).toContain("2 件の誤り");
+    expect(summary.indexOf("旅券の有効期限")).toBeGreaterThan(-1);
+    expect(summary.indexOf("旅券の有効期限")).toBeLessThan(summary.indexOf("卒業年月日"));
+  });
+  it("誤りの日付の欄に、フォーカスの移動先の id と aria-invalid を付ける", () => {
+    expect(m).toMatch(/<input id="form-details-passportExpiry"[^>]*aria-invalid="true"/);
+    expect(m).toMatch(/<input id="form-details-graduationDate"[^>]*aria-invalid="true"/);
+  });
+  it("保存ボタンは押せる（押したら最初の誤りの欄へ移る）。要約を説明として結び付ける", () => {
+    const save = [...m.matchAll(/<button[^>]*>/g)].map((x) => x[0]).find((b) => b.includes('aria-describedby="form-details-error-summary"'));
+    expect(save).toBeDefined();
+    expect(save).not.toMatch(/\sdisabled(="")?[\s>]/);
+  });
+  it("誤りがなければ、要約を出さない", () => {
+    const ok = renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal" })} />);
+    expect(ok).not.toContain("form-details-error-summary");
+  });
+});

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { AddressField } from "@/components/AddressField";
-import { Button, Field, inputClass } from "@/components/ui";
+import { Button, Field, inputClass, ToneIcon } from "@/components/ui";
 import { DateField } from "@/components/DateField";
+import { firstErrorKey, focusField } from "@/lib/formFocus";
 import {
   EDUCATION_LEVELS,
   getFormDetailsWarnings,
@@ -38,15 +39,32 @@ const EDUCATION_KEYS: Record<(typeof EDUCATION_LEVELS)[number], MessageKey> = {
   "その他": "caseForm.edu_other",
 };
 
+/**
+ * 誤りを確かめる欄（日付の欄。lib/formDetails.ts の DATE_FIELD_KEYS）を、画面の上からの並び順にしたもの。
+ * 保存を押したとき、この順で最初の誤りの欄へフォーカスを移す（新規登録・案件情報と同じ方式。Issue #392）
+ */
+const ERROR_ORDER = [
+  "passportExpiry",
+  "plannedEntryDate",
+  "entryHistoryLastFrom",
+  "entryHistoryLastTo",
+  "deportationLastDate",
+  "graduationDate",
+] as const satisfies readonly (keyof FormDetails)[];
+const fieldId = (key: keyof FormDetails) => `form-details-${key}`;
+
+/** 文字のリンク型のボタンも、押しやすさのため高さ 44px（人の決定。Issue #392。新規登録・案件詳細と同じ） */
+const textLinkClass = "inline-flex min-h-[44px] items-center text-sm text-blue-700 underline underline-offset-2 active:opacity-70";
+
 type TextKey = {
   [K in keyof FormDetails]: FormDetails[K] extends string ? K : never;
 }[keyof FormDetails];
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
       <h2 className="font-semibold">{title}</h2>
-      {hint && <p className="mb-4 mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mb-4 mt-1 text-xs text-muted">{hint}</p>}
       <div className={`grid gap-4 md:grid-cols-2 ${hint ? "" : "mt-4"}`}>{children}</div>
     </section>
   );
@@ -76,7 +94,11 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const errors = validateFormDetails(form, layout, t);
   const warnings = getFormDetailsWarnings(form, t);
   const hasError = Object.keys(errors).length > 0;
-  const errorFields = (Object.keys(errors) as (keyof FormDetails)[]).filter((k) => errors[k]);
+  // 要約も、画面の並び順で並べる（並び順の表にない欄の誤りは、後ろに足して漏らさない）
+  const errorFields = [
+    ...ERROR_ORDER.filter((k) => errors[k]),
+    ...(Object.keys(errors) as (keyof FormDetails)[]).filter((k) => errors[k] && !(ERROR_ORDER as readonly string[]).includes(k)),
+  ];
 
   function set<K extends keyof FormDetails>(key: K, value: FormDetails[K]) {
     setSaved(false);
@@ -109,7 +131,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         onChange={(e) => set(key, e.target.value as never)}
       />
     ) : opts.date ? (
-      <DateField className={inputClass} value={form[key]} error={errors[key]} onChange={(v) => set(key, v as never)} />
+      <DateField id={fieldId(key)} className={inputClass} value={form[key]} error={errors[key]} onChange={(v) => set(key, v as never)} />
     ) : (
       <input
         className={inputClass}
@@ -182,6 +204,12 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const { markSaved } = useAutoSaveForm(form, persist);
 
   function save() {
+    // 誤りがあるときは保存せず、最初の誤りの欄へフォーカスを移す（誤りの要約と欄の表示は、入力のたびに出ている）
+    const first = firstErrorKey(errors, ERROR_ORDER);
+    if (first) {
+      focusField(fieldId(first));
+      return;
+    }
     if (persist(form)) markSaved(form);
   }
 
@@ -192,8 +220,11 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       </p>
 
       {errorFields.length > 0 && (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          <p className="font-medium">{t("caseForm.errorSummary", { count: errorFields.length })}</p>
+        <div id="form-details-error-summary" role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+          <p className="flex items-center gap-1.5 font-bold">
+            <ToneIcon tone="red" />
+            {t("caseForm.errorSummary", { count: errorFields.length })}
+          </p>
           <ul className="mt-1 list-disc pl-5">
             {errorFields.map((k) => (
               <li key={k}>
@@ -205,10 +236,16 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {warnings.length > 0 && (
-        <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          <ul className="list-disc pl-5">
+        <div role="status" className="rounded-xl border border-warning-line bg-warning-soft p-3 text-sm text-warning-text">
+          {/* 注意は色だけでなく、三角の図形でも示す */}
+          <ul className="space-y-1">
             {warnings.map((w) => (
-              <li key={w}>{w}</li>
+              <li key={w} className="flex items-start gap-1.5">
+                <span className="mt-1 shrink-0">
+                  <ToneIcon tone="yellow" />
+                </span>
+                {w}
+              </li>
             ))}
           </ul>
         </div>
@@ -235,10 +272,10 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
           // 希望する在留資格は、案件情報の targetStatus を表示するのみ（二重入力を避ける）
           <div>
             <Field label={L(layout.desiredStatusLabel)} hint={t("caseForm.hintDesiredStatus", { caseLabel: L(layout.desiredStatusCaseLabel ?? t("caseForm.defaultDesiredCaseLabel")) })}>
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                <span className="font-medium">{record.targetStatus || t("caseForm.notSet")}</span>
+              <div className="flex min-h-[44px] flex-wrap items-center gap-x-3 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm">
+                <span className="break-words py-2 font-medium">{record.targetStatus || t("caseForm.notSet")}</span>
                 {onGoOverview && (
-                  <button type="button" onClick={onGoOverview} className="text-xs underline">
+                  <button type="button" onClick={onGoOverview} className={textLinkClass}>
                     {t("caseForm.goOverview")}
                   </button>
                 )}
@@ -300,14 +337,14 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {layout.sectionTitles.relatives && (
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">{L(layout.sectionTitles.relatives)}</h2>
         <div className="mt-4 max-w-xs">{select("relativesPresent", [["yes", t("caseForm.yes")], ["no", t("caseForm.no")]], t("caseForm.relativesPresentFallback"))}</div>
         {form.relativesPresent === "yes" && (
           <div className="mt-4 space-y-4">
             {form.relatives.map((r, i) => (
               <div key={r.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-3">
-                <p className="text-xs font-medium text-slate-500 md:col-span-3">{t("caseForm.relativeNth", { n: i + 1 })}</p>
+                <p className="text-xs font-medium text-muted md:col-span-3">{t("caseForm.relativeNth", { n: i + 1 })}</p>
                 <Field label={t("caseForm.relRelationship")}>
                   <input className={inputClass} value={r.relationship} onChange={(e) => updateRelative(r.id, { relationship: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.relationship, (v) => updateRelative(r.id, { relationship: v }))} />
                 </Field>
@@ -394,7 +431,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {layout.sectionTitles.workHistory && (
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">{L(layout.sectionTitles.workHistory)}</h2>
         <div className="mt-4 space-y-3">
           {form.workHistory.map((w) => (
@@ -451,11 +488,12 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         onChange={set}
       />
 
-      <div className="flex items-center gap-3">
-        <Button disabled={hasError} onClick={save}>
+      <div className="flex flex-wrap items-center gap-3">
+        {/* 誤りがあっても押せるようにし、押したら最初の誤りの欄へ移す（押せない理由が分からない状態を避ける） */}
+        <Button aria-describedby={hasError ? "form-details-error-summary" : undefined} onClick={save}>
           {t("caseForm.save")}
         </Button>
-        <span role="status" className="text-sm text-green-700">
+        <span role="status" className="text-sm text-success">
           {saved && t("caseForm.saved")}
         </span>
       </div>
