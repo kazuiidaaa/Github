@@ -100,7 +100,7 @@ function AccountContent() {
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">{t("account.title")}</h1>
       {error && (
-        <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm text-danger-text">
           {text.error(error)}
         </p>
       )}
@@ -108,13 +108,13 @@ function AccountContent() {
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 font-semibold">{t("account.infoTitle")}</h2>
         {info ? (
-          <dl className="grid grid-cols-[10rem_1fr] gap-y-3 text-sm">
+          <dl className="grid grid-cols-1 text-sm sm:grid-cols-[10rem_1fr] sm:gap-y-3">
             <dt className="text-slate-500">{t("account.email")}</dt>
-            <dd>{info.email}</dd>
+            <dd className="mb-3 break-all sm:mb-0">{info.email}</dd>
             <dt className="text-slate-500">{t("account.userId")}</dt>
-            <dd className="font-mono text-xs">{info.userId}</dd>
+            <dd className="mb-3 break-all font-mono text-xs sm:mb-0">{info.userId}</dd>
             <dt className="text-slate-500">{t("account.lastSignIn")}</dt>
-            <dd>{info.lastSignInAt ? formatDateTime(info.lastSignInAt) : "-"}</dd>
+            <dd className="mb-3 sm:mb-0">{info.lastSignInAt ? formatDateTime(info.lastSignInAt) : "-"}</dd>
             <dt className="text-slate-500">{t("account.office")}</dt>
             <dd>
               {t("account.officeWithRole", { name: info.organizationName, role: text.role(info.role) })}
@@ -124,7 +124,7 @@ function AccountContent() {
           !error && <p role="status" className="text-sm text-slate-500">{t("account.loading")}</p>
         )}
         <div className="mt-5">
-          <Button variant="secondary" onClick={() => void signOut()}>
+          <Button variant="secondary" className="min-h-[44px]" onClick={() => void signOut()}>
             {t("account.logout")}
           </Button>
         </div>
@@ -138,7 +138,7 @@ function AccountContent() {
               <input className={inputClass} value={orgName} disabled={!isOwner} onChange={(e) => setOrgName(e.target.value)} />
             </Field>
           </div>
-          <Button disabled={!isOwner || busy} onClick={() => void saveOrg()}>
+          <Button className="min-h-[44px]" disabled={!isOwner || busy} onClick={() => void saveOrg()}>
             {t("account.save")}
           </Button>
         </div>
@@ -161,17 +161,18 @@ function AccountContent() {
           <input type="password" required autoComplete="new-password" className={inputClass} value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
         </Field>
         {pwMsg && (
-          <p role="alert" className={`text-sm ${pwMsg.ok ? "text-green-700" : "text-red-600"}`}>
+          <p role="alert" className={`text-sm ${pwMsg.ok ? "text-success" : "text-danger-text"}`}>
             {pwMsg.text}
           </p>
         )}
-        <Button type="submit" disabled={busy || !info}>
+        <Button type="submit" className="min-h-[44px]" disabled={busy || !info}>
           {t("account.pwSubmit")}
         </Button>
       </form>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">{t("account.auditTitle")}</h2>
+        <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
@@ -204,6 +205,7 @@ function AccountContent() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   );
