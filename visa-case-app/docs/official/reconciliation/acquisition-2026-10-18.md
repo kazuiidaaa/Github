@@ -3,7 +3,7 @@
 - Issue: #374 項目1（取得の照合。#333 手順D に当たる）
 - 照合日: 2026-10-18
 - 照合元の種別: **案内ページの本文**（逐語の原文の控え。人がブラウザでコピーしたもの）。チェックシートのPDFは無い。
-  - 取得許可申請の手続案内: `acquisition_2026-10-18.txt`（URL: **未確認**。人が提示していない。事由別ページのURLは、今も未確認）
+  - 取得許可申請の手続案内: `acquisition_2026-10-18.txt`（URL: https://www.moj.go.jp/isa/applications/procedures/16-10.html（人が2026-10-18に提示））
   - 高度専門職のページ、節「在留資格取得許可申請（高度専門職１号）」: `highlyskilledprofessional_2026-10-18.txt`（URL: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html 。人が2026-10-18に提示。`docs/official/README.md` が高度専門職の出典ページとして記録しているものと同じ）
 - 申請書: `acquisition-application-form_930004121.xlsx`（別記第三十六号様式）。保存済み。ただし、記載事項（セルの中身）は照合していない（**未照合**）。
 - 画面側: `visa-case-app/lib/requirements/rules.ts` の `HSP_ACQUISITION`（高度専門職の取得）と、それが再利用する `ACQUISITION_BY_CAUSE`（取得の事由別）。照合時点の main。**コードは変更していない。**
@@ -75,7 +75,7 @@
 
 | 項目 | 原文・記録 | コード（`rules.ts`） | 判定 |
 | --- | --- | --- | --- |
-| `HSP_ACQUISITION.sources` | 高度専門職ページのURLは、人が提示（2026-10-18）。事由別ページ（手続案内）のURLは**未確認** | `[HSP_SOURCE, …ACQUISITION_BY_CAUSE.sources]`。`HSP_SOURCE` は題名「…ポイント計算表（出入国在留管理庁）」でURLは高度専門職ページ。`ACQUISITION_BY_CAUSE.sources` は申請書様式（xlsx）のURL。`kind`・`comparedAt` は無し | 食い違いではないが、題名と照合日の記録が現状に合わない → R-9 |
+| `HSP_ACQUISITION.sources` | 高度専門職ページのURLは、人が提示（2026-10-18）。事由別ページ（手続案内）のURLも人が提示（https://www.moj.go.jp/isa/applications/procedures/16-10.html） | `[HSP_SOURCE, …ACQUISITION_BY_CAUSE.sources]`。`HSP_SOURCE` は題名「…ポイント計算表（出入国在留管理庁）」でURLは高度専門職ページ。`ACQUISITION_BY_CAUSE.sources` は申請書様式（xlsx）のURL。`kind`・`comparedAt` は無し | 食い違いではないが、題名と照合日の記録が現状に合わない → R-9 |
 | `HSP_ACQUISITION.checkedAt` | — | 2026-10-07（`ACQUISITION_BY_CAUSE` は 2026-10-04） | README 2-2 の方針で、変えない |
 | 見出しコメント | 取得の項が案内ページに書かれていることを確認した | 「出典は行政書士提供の実務資料（入管庁の公式資料の逐語確認ではない）」「取得の高度専門職の具体的な提出書類は、入管庁の案内ページ（HTML）で確認できていないため…要確認で足す」 | 原文と合わない記述が残る → R-9 |
 
