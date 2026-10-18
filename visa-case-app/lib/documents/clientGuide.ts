@@ -2,6 +2,7 @@ import { formatDate } from "../format";
 import { evaluate } from "../requirements/evaluate";
 import { isCollected } from "../requirements/progress";
 import type { CaseRecord } from "../types";
+import { legacyRequirementNameTranslation } from "./clientGuideLegacyNames";
 import { isRuleItemId, translatedRequirementName } from "./clientGuideNames";
 import {
   CLIENT_GUIDE_TEXTS,
@@ -93,8 +94,10 @@ export function buildClientGuide(c: CaseRecord, includeReceived = false): Client
  * 日本語を選んだ場合と、行政書士が追加した書類名（自由記述）は、翻訳せず、原文のまま載せる。
  */
 export function requirementNameCell(id: string, name: string, lang: Lang): { text: string; untranslated: boolean } {
-  if (lang === "ja" || !isRuleItemId(id)) return { text: name, untranslated: false };
+  if (lang === "ja") return { text: name, untranslated: false };
   const t = translatedRequirementName(name, lang);
+  // 古い名称の訳がある書類は、規則の id が今は無くても（例：3つに分けた書類の元の id）、規則の書類として扱う
+  if (!isRuleItemId(id) && !legacyRequirementNameTranslation(name, lang)) return { text: name, untranslated: false };
   if (t) return { text: `${t}（${name}）`, untranslated: false };
   return { text: `${name}（${CLIENT_GUIDE_TEXTS[lang].untranslatedMark}）`, untranslated: true };
 }

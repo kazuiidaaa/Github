@@ -1,4 +1,5 @@
 import { HSP_EVIDENCE_RULE_PREFIX, RULE_SETS } from "../requirements/rules";
+import { legacyRequirementNameTranslation } from "./clientGuideLegacyNames";
 import type { Lang } from "./lang";
 
 // ご案内書類に載せる、規則（lib/requirements/rules.ts）の書類名の訳表。
@@ -288,9 +289,9 @@ export function isRuleItemId(id: string): boolean {
   return RULE_IDS.has(id) || id.startsWith(HSP_EVIDENCE_RULE_PREFIX);
 }
 
-/** 書類名の訳。訳がなければ undefined（日本語の指定、または未登録） */
+/** 書類名の訳。訳がなければ undefined（日本語の指定、または未登録）。現在の訳表で見つからなければ、古い名称の訳（clientGuideLegacyNames.ts）を引く */
 export function translatedRequirementName(name: string, lang: Lang): string | undefined {
   if (lang === "ja") return undefined;
   const t = REQUIREMENT_NAME_TRANSLATIONS[name];
-  return t ? t[lang === "en" ? 0 : 1] : undefined;
+  return t ? t[lang === "en" ? 0 : 1] : legacyRequirementNameTranslation(name, lang);
 }
