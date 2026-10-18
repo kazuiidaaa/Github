@@ -62,8 +62,8 @@ export type SourceKind = "page" | "pdf" | "form";
 export interface RuleSource {
   title: string;
   url: string;
-  /** 出典の種類。移行中は省略可（Issue #374 項目2）。データ投入後に必須にするかは別途判断する */
-  kind?: SourceKind;
+  /** 出典の種類（必須。URL の拡張子と矛盾しないこと。Issue #398） */
+  kind: SourceKind;
   /** この出典の原文と突き合わせた日 "YYYY-MM-DD"（checkedAt と同じ書式）。照合していない出典は省略し、推測で入れない */
   comparedAt?: string;
 }
@@ -1000,9 +1000,10 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
 // 手続ごとの提出の要否は、出入国在留管理庁の案内ページ（高度専門職）による。取得許可申請（Issue #212）は、取得の事由で判定する
 // ACQUISITION_BY_CAUSE の書類に、ポイント計算表・疎明資料を足した HSP_ACQUISITION を、号の有無・種類を問わず適用する。
 const HSP = "高度専門職";
-const HSP_SOURCE = {
+const HSP_SOURCE: RuleSource = {
   title: "在留資格「高度専門職」ポイント計算表（出入国在留管理庁）",
   url: "https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html",
+  kind: "page",
 };
 const HSP_PARTIAL = "（共通書類・ポイント計算表・疎明資料のみ整備。他の書類は未整備）";
 
@@ -1452,7 +1453,7 @@ export const HOUMU_KAIKEI_RENEWAL: RuleSet = {
 // 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-07 に照合済み（Issue #292）。申請書は様式 I（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const PROFESSOR = "教授";
 const PROFESSOR_CHECKED_AT = "2026-10-07";
-const PROFESSOR_PAGE_SOURCE = { title: "在留資格「教授」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/professor.html" };
+const PROFESSOR_PAGE_SOURCE: RuleSource = { title: "在留資格「教授」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/professor.html", kind: "page" };
 const PROFESSOR_CATEGORIES: Partial<Record<Category, string>> = {
   "1": "カテゴリー1（常勤職員）",
   "2": "カテゴリー2（非常勤職員）",
@@ -1476,7 +1477,7 @@ export const PROFESSOR_COE: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf" },
+    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -1501,7 +1502,7 @@ export const PROFESSOR_CHANGE: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf" },
+    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf", kind: "pdf" },
   ],
   rules: [...procedureCommonRules("change"), professorActivityProof],
 };
@@ -1515,7 +1516,7 @@ export const PROFESSOR_RENEWAL: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf" },
+    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -1883,7 +1884,7 @@ export const KENKYU_RENEWAL: RuleSet = {
 // 申請書は様式 I（認定・変更・更新とも。公式の教育の様式は、教授と同じファイル）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const EDUCATION = "教育";
 const EDUCATION_CHECKED_AT = "2026-10-07";
-const EDUCATION_PAGE_SOURCE = { title: "在留資格「教育」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/instructor.html" };
+const EDUCATION_PAGE_SOURCE: RuleSource = { title: "在留資格「教育」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/instructor.html", kind: "page" };
 const EDUCATION_CATEGORIES: Partial<Record<Category, string>> = {
   "1": "カテゴリー1（小学校・中学校・高等学校・中等教育学校・特別支援学校に常勤）",
   "2": "カテゴリー2（上記以外の教育機関に常勤）",
@@ -1935,7 +1936,7 @@ export const EDUCATION_COE: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf" },
+    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -1963,7 +1964,7 @@ export const EDUCATION_CHANGE: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf" },
+    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("change"),
@@ -1985,7 +1986,7 @@ export const EDUCATION_RENEWAL: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf" },
+    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2018,7 +2019,7 @@ export const EDUCATION_RENEWAL: RuleSet = {
 // 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const HODO = "報道";
 const HODO_CHECKED_AT = "2026-10-12";
-const HODO_PAGE_SOURCE = { title: "在留資格「報道」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/journalist.html" };
+const HODO_PAGE_SOURCE: RuleSource = { title: "在留資格「報道」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/journalist.html", kind: "page" };
 const HODO_CATEGORIES: Partial<Record<Category, string>> = {
   "1": "カテゴリー1（外務省報道官から外国記者登録証を発行された者を雇用する外国の報道機関に雇用される場合）",
   "2": "カテゴリー2（上記に該当しない団体・個人）",
@@ -2059,7 +2060,7 @@ export const HODO_COE: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf" },
+    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2086,7 +2087,7 @@ export const HODO_CHANGE: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf" },
+    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf", kind: "pdf" },
   ],
   rules: [...procedureCommonRules("change"), hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
 };
@@ -2100,7 +2101,7 @@ export const HODO_RENEWAL: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf" },
+    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf", kind: "pdf" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
