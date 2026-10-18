@@ -86,6 +86,20 @@ describe("介護の規則集合", () => {
     expect(e.items.some((i) => i.rule.id === "care_worker_registration")).toBe(false);
   });
 
+  it("更新：派遣先での活動内容の資料が要確認で入り、注記にチェックシートで△・ページに記載なしと書く。技能移転申告書は入らない（#333 K-A2）", () => {
+    const e = evaluate(make("renewal"));
+    expect(ids(e, "check")).toContain("dispatch_documents");
+    const note = KAIGO_RENEWAL.rules.find((r) => r.id === "dispatch_documents")?.note ?? "";
+    expect(note).toContain("チェックシートで△");
+    expect(note).toContain("ページには記載なし");
+    expect(e.items.some((i) => i.rule.id === "skill_transfer_declaration")).toBe(false);
+  });
+
+  it("更新：住民税の注記に、両方が記載された証明書ならいずれか一方でよい旨がある（#333 K-A3）", () => {
+    const note = KAIGO_RENEWAL.rules.find((r) => r.id === "resident_tax_certificates")?.note ?? "";
+    expect(note).toContain("いずれか一方でかまわない");
+  });
+
   it("出典は入管庁の介護の案内ページで、規則の識別子が各集合内で重複しない", () => {
     for (const rs of [KAIGO_RENEWAL, KAIGO_CHANGE, KAIGO_COE]) {
       expect(rs.sources.map((s) => s.url)).toContain("https://www.moj.go.jp/isa/applications/status/nursingcare.html");
