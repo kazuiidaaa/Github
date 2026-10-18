@@ -454,9 +454,12 @@ describe("高度専門職の規則（Issue #186）", () => {
     for (const status of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
       expect(find("acquisition", status).ruleSet?.id, status).toBe("hsp_acquisition");
     }
-    for (const status of ["", "技術・人文知識・国際業務", "留学", "高度専門職（2号）"]) {
+    for (const status of ["", "留学", "高度専門職（2号）"]) {
       expect(find("acquisition", status).ruleSet?.id, status).toBe("acquisition_by_cause");
     }
+    // 技人国・家族滞在は専用の規則集合（Issue #396）
+    expect(find("acquisition", "技術・人文知識・国際業務").ruleSet?.id).toBe("gijinkoku_acquisition");
+    expect(find("acquisition", "家族滞在").ruleSet?.id).toBe("kazokutaizai_acquisition");
   });
 });
 

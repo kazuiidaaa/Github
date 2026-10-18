@@ -1267,6 +1267,128 @@ export const HSP_ACQUISITION: RuleSet = {
   ],
 };
 
+/**
+ * 技術・人文知識・国際業務／家族滞在の在留資格取得許可申請（Issue #396。照合表は docs/official/reconciliation/acquisition-gijinkoku-kazokutaizai-2026-10-18.md）。
+ * 人の判断「推奨のとおり」（2026-10-18）の R-2・R-8・R-9・R-10・R-12・R-17 だけを反映した専用の規則集合。それ以外の R（技人国のカテゴリー別の書類〔R-1。#402 で設計〕・写真・注記・名称など）は未反映で、
+ * ACQUISITION_BY_CAUSE の規則をそのまま引き継ぐ。ACQUISITION_BY_CAUSE の文言は変えない（他の在留資格の取得は未照合）。HSP_ACQUISITION と同じく、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する。
+ * `checkedAt` は新しい規則集合の作成日。
+ */
+const ACQUISITION_PAGE_COMPARED_AT = "2026-10-18";
+const ACQUISITION_PROCEDURE_GUIDE_SOURCE: RuleSource = {
+  title: "在留資格取得許可申請の手続案内（出入国在留管理庁）",
+  url: "https://www.moj.go.jp/isa/applications/procedures/16-10.html",
+  kind: "page",
+  comparedAt: ACQUISITION_PAGE_COMPARED_AT,
+};
+
+// 技人国（R-2）：出生の3書類（出生したことを証する書類・両親の質問書・世帯全員の住民票）を外し、出生は「その事由を証する書類」として扱う。
+// 出生の乳児が取得する実務の扱いは原文に記載がなく、推測しない（注記に「行政書士が確認」）。他の注記・名称（R-3〜R-7）は未反映のまま
+const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate"];
+const GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE = "出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）";
+export const GIJINKOKU_ACQUISITION: RuleSet = {
+  id: "gijinkoku_acquisition",
+  title: "技術・人文知識・国際業務 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "技術・人文知識・国際業務",
+  basis: "acquisitionCause",
+  checkedAt: "2026-10-18",
+  sources: [
+    {
+      title: "在留資格「技術・人文知識・国際業務」在留資格取得許可申請（出入国在留管理庁）",
+      url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html",
+      kind: "page",
+      comparedAt: ACQUISITION_PAGE_COMPARED_AT,
+    },
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  rules: ACQUISITION_BY_CAUSE.rules
+    .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id))
+    .map((r) =>
+      r.id === "cause_proof"
+        ? { ...r, causes: ["birth", "other"] as AcquisitionCause[], note: [r.note, GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE].filter(Boolean).join("。") }
+        : r,
+    ),
+};
+
+// 家族滞在（R-8・R-9・R-10・R-12・R-17）。原文はカテゴリーによる区分が無く、事由は国籍離脱・出生・その他の3区分
+const KAZOKU_RELATIONSHIP_NAME = "申請人と扶養者との身分関係を証する文書（戸籍謄本・婚姻届受理証明書・結婚証明書の写し・出生証明書の写しのいずれか、又はこれらに準ずる文書）";
+const KAZOKU_SUPPORTER_CARD_NAME = "扶養者の在留カード又は旅券の写し";
+const KAZOKU_INCOME_ACTIVE_NAME = "扶養者の職業及び収入を証する文書（(1)扶養者が収入を伴う事業を運営する活動又は報酬を受ける活動を行っている場合）";
+const KAZOKU_INCOME_OTHER_NAME = "扶養者の職業及び収入を証する文書（(2)(1)以外の活動を行っている場合）";
+const KAZOKU_INCOME_BRANCH_NOTE = "扶養者の活動により(1)(2)のどちらかを提出する。画面に扶養者の活動を入力する項目が無いため、どちらも要確認とする";
+const KAZOKU_RESIDENCE_CERTIFICATE_NOTE =
+  "必要書類ではないが、提出すると、許可後の在留カードに住民票の住居地が記載される。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。住民票があれば許可後の市区町村での住居地の届出は不要（入管法第19条の8第4項）で、なければ許可後14日以内の届出が必要（同条第1項）";
+const KAZOKU_QUESTIONNAIRE_NOTE =
+  "出生した者の申請である場合（チェックシートでは△。案内ページは事由の別なく「質問書」を列挙しており、チェックシートに合わせて出生のみ要確認とする）。質問書の様式・記載内容は未確認";
+const KAZOKU_NEW_RULES: RequirementRule[] = [
+  {
+    id: "family_relationship_proof",
+    name: KAZOKU_RELATIONSHIP_NAME,
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "次のいずれか。(1)戸籍謄本 1通 (2)婚姻届受理証明書 1通 (3)結婚証明書（写し）1通 (4)出生証明書（写し）1通 (5)(1)〜(4)に準ずる文書（適宜）",
+    verify: true,
+  },
+  {
+    id: "supporter_card_or_passport_copy",
+    name: KAZOKU_SUPPORTER_CARD_NAME,
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通",
+    verify: true,
+  },
+  {
+    id: "supporter_income_active",
+    name: KAZOKU_INCOME_ACTIVE_NAME,
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "check",
+    note: `${KAZOKU_INCOME_BRANCH_NOTE}。在職証明書又は営業許可書の写し等（扶養者の職業がわかる証明書）1通、住民税の課税（又は非課税）証明書及び納税証明書 各1通。1年間の総所得と納税状況の両方が記載された証明書であれば、課税（非課税）証明書と納税証明書のいずれか一方でよい。入国後間もない場合などは、最寄りの地方出入国在留管理官署に問い合わせる`,
+    verify: true,
+  },
+  {
+    id: "supporter_income_other",
+    name: KAZOKU_INCOME_OTHER_NAME,
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "check",
+    note: `${KAZOKU_INCOME_BRANCH_NOTE}。扶養者名義の預金残高証明書又は給付金額及び給付期間を明示した奨学金給付に関する証明書（適宜）、又は、これらに準ずるもので申請人の生活費用を支弁できることを証するもの（適宜）`,
+    verify: true,
+  },
+];
+const KAZOKU_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  // R-17：チェックシートに合わせ、出生のみ要確認（△）
+  parents_questionnaire: { level: "check", note: KAZOKU_QUESTIONNAIRE_NOTE },
+  // R-12：全事由に載せ、任意（推奨）。名称は「住民票」
+  household_residence_certificate: { causes: ALL_CAUSES, level: "optional", name: "住民票", note: KAZOKU_RESIDENCE_CERTIFICATE_NOTE },
+};
+export const KAZOKUTAIZAI_ACQUISITION: RuleSet = {
+  id: "kazokutaizai_acquisition",
+  title: "家族滞在 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "家族滞在",
+  basis: "acquisitionCause",
+  checkedAt: "2026-10-18",
+  sources: [
+    {
+      title: "在留資格「家族滞在」在留資格取得許可申請（出入国在留管理庁）",
+      url: "https://www.moj.go.jp/isa/applications/status/dependent.html",
+      kind: "page",
+      comparedAt: ACQUISITION_PAGE_COMPARED_AT,
+    },
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  // 身分関係・扶養者の書類は、出生の書類（事由別の書類の次）の後ろに入れる
+  rules: ACQUISITION_BY_CAUSE.rules.flatMap((r) => {
+    const rule = KAZOKU_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...KAZOKU_ACQUISITION_OVERRIDES[r.id] } : r;
+    return r.id === "birth_certificate" ? [rule, ...KAZOKU_NEW_RULES] : [rule];
+  }),
+};
+
 // 在留資格「介護」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #297）。
 // 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は、2026-10-18 に照合済み（照合表は docs/official/reconciliation/kaigo-2026-10-18.md、Issue #333）。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 // 更新の「派遣先での活動内容の資料」は、チェックシートで△、案内ページに記載なし（要確認で足した。#312 の規則に基づく人の判断）。技能移転に係る申告書は、更新の案内ページ・チェックシートにない。
@@ -2925,6 +3047,9 @@ export const RULE_SETS: RuleSet[] = [
   HSP_RENEWAL,
   // 高度専門職の取得は、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する
   HSP_ACQUISITION,
+  // 技人国・家族滞在の取得（Issue #396）も、ACQUISITION_BY_CAUSE より先に照合する
+  GIJINKOKU_ACQUISITION,
+  KAZOKUTAIZAI_ACQUISITION,
   ACQUISITION_BY_CAUSE,
   // 介護（Issue #297）
   KAIGO_RENEWAL,

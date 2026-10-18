@@ -11,7 +11,7 @@
 
 | 照合元 | ファイル | 内容 | 備考 |
 | --- | --- | --- | --- |
-| 案内ページの本文（逐語の控え。人がブラウザでコピー） | `gijinkoku_2026-10-18.txt` | 認定・変更・更新の提出書類（取得の項は省略） | URL: https://www.moj.go.jp/isa/applications/status/gijinkoku.html（コード上の出典と同じ） |
+| 案内ページの本文（逐語の控え。人がブラウザでコピー） | `gijinkoku_2026-10-18.txt` | 認定・変更・更新の提出書類（このファイルの照合の範囲。同じ控えの取得の節は、`acquisition-gijinkoku-kazokutaizai-2026-10-18.md` で照合した） | URL: https://www.moj.go.jp/isa/applications/status/gijinkoku.html（コード上の出典と同じ） |
 | チェックシート 認定（カテゴリー共通・1〜4）（人が提供） | `gijinkoku-coe-checksheet-common_001404131.pdf` | 【カテゴリー1・2・3・4共通】（認定用）〈表1〉 No.1〜6 | 1ページ。元は `001404131.pdf` |
 | チェックシート 認定（カテゴリー3・4のみ）（人が提供） | `gijinkoku-coe-checksheet-cat34_001437254.pdf` | 【カテゴリー3・4】（認定用）〈表2〉 No.7〜14 | 1ページ。元は `001437254.pdf` |
 | チェックシート 変更（カテゴリー共通・1〜4）（人が提供） | `gijinkoku-change-checksheet-common_001367001.pdf` | 【カテゴリー1・2・3・4共通】（変更用）〈表1〉 No.1〜6 | 1ページ。元は `001367001.pdf` |
