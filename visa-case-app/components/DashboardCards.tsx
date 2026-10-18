@@ -9,7 +9,7 @@ import { HOME_METRIC_KEYS, metricsFor, type CardKey, type MetricDefinition } fro
 
 export type { CardKey };
 
-const CARD_BASE = "rounded-2xl border bg-white hover:-translate-y-0.5 hover:shadow-md";
+const CARD_BASE = "rounded-2xl border bg-white hover:-translate-y-0.5 hover:shadow-raised";
 
 /**
  * 説明文は操作できる要素の外に置く（タップで誤って絞り込まれないようにする）。

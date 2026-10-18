@@ -4,9 +4,10 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, useS
 import { DEFAULT_LANG } from "@/lib/documents/lang";
 import { readUiLang, subscribeUiLang } from "@/lib/i18n/store";
 import { translate } from "@/lib/i18n/translate";
+import { exitDelayMs } from "@/lib/motion";
 
 type ToastKind = "success" | "error";
-type ToastItem = { id: number; kind: ToastKind; message: string };
+type ToastItem = { id: number; kind: ToastKind; message: string; /** 退場の動きの最中 */ closing?: boolean };
 
 type ToastApi = {
   /** 成功の通知。数秒で自動的に消える */
@@ -29,7 +30,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const nextId = useRef(1);
 
   const dismiss = useCallback((id: number) => {
-    setItems((list) => list.filter((t) => t.id !== id));
+    const remove = () => setItems((list) => list.filter((t) => t.id !== id));
+    // 出る動き（透明になりながら下がる）を見せてから取り除く。動きを減らす設定では、即時に取り除く
+    const delay = exitDelayMs();
+    if (delay === 0) {
+      remove();
+      return;
+    }
+    setItems((list) => list.map((t) => (t.id === id ? { ...t, closing: true } : t)));
+    window.setTimeout(remove, delay);
   }, []);
 
   const push = useCallback(
@@ -75,7 +84,8 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: (id: number) =
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose(item.id);
       }}
-      className={`anim-pop-in pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border p-4 text-sm shadow-lg ${
+      data-state={item.closing ? "closed" : "open"}
+      className={`motion-toast pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border p-4 text-sm shadow-overlay ${
         isError ? "border-red-800 bg-red-50 text-red-900" : "border-line-strong bg-white text-foreground"
       }`}
     >

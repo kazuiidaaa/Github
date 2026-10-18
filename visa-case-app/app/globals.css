@@ -303,6 +303,69 @@ button:not(:disabled):active {
   animation: pop-in 0.2s var(--ease-apple) both;
 }
 
+/*
+ * ダイアログ・通知の出入り（Issue #392 PR-2）。@keyframes ではなく transition で書く。
+ * 理由：途中で閉じても、現在の値から逆向きに動かせる（割り込み可能）。
+ * 入り：@starting-style で、表示された最初の値（透明・小さい）から最終値へ動く。
+ *   @starting-style が使えない環境では、動かずに最終値でそのまま表示される（壊れない）。
+ * 出：data-state="closed" を付けると、同じ経路を逆に、短く（--dur-fade）戻る。この属性は @starting-style に依存しない。
+ */
+.motion-scrim {
+  background-color: rgb(0 0 0 / 0.4);
+  opacity: 1;
+  transition: opacity var(--dur-fade) linear;
+}
+:root[data-theme="dark"] .motion-scrim {
+  background-color: rgb(0 0 0 / 0.6);
+}
+.motion-scrim[data-state="closed"] {
+  opacity: 0;
+}
+
+.motion-panel,
+.motion-toast {
+  opacity: 1;
+  transform: none;
+}
+.motion-panel {
+  transition:
+    opacity var(--dur-fade) linear,
+    transform var(--spring-sheet-duration) var(--ease-spring-sheet);
+}
+.motion-toast {
+  transition:
+    opacity var(--dur-fade) linear,
+    transform var(--spring-move-duration) var(--ease-spring-move);
+}
+.motion-panel[data-state="closed"] {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity var(--dur-fade) linear,
+    transform var(--dur-fade) var(--ease-apple);
+}
+.motion-toast[data-state="closed"] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--dur-fade) linear,
+    transform var(--dur-fade) var(--ease-apple);
+}
+
+@starting-style {
+  .motion-scrim {
+    opacity: 0;
+  }
+  .motion-panel {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  .motion-toast {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
 /* 一覧などで、子要素を順に表示する（先頭の 8 件まで、30 ミリ秒ずつずらす） */
 .anim-stagger > * {
   animation: page-enter 0.28s var(--ease-apple) both;
@@ -336,5 +399,18 @@ button:not(:disabled):active {
   }
   button:not(:disabled):active {
     transform: none;
+  }
+  /* ダイアログ・通知：移動と拡大をやめ、不透明度のみ（時間は上の指定で 0.01ms） */
+  .motion-panel,
+  .motion-panel[data-state="closed"],
+  .motion-toast,
+  .motion-toast[data-state="closed"] {
+    transform: none;
+  }
+  @starting-style {
+    .motion-panel,
+    .motion-toast {
+      transform: none;
+    }
   }
 }

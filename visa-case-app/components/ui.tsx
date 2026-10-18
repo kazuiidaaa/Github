@@ -35,17 +35,18 @@ export function Field({
     <label className="block">
       <span className="mb-1 block text-sm font-bold">
         {label}
-        {required && <span className="ml-1 text-red-600">*</span>}
+        {required && <span className="ml-1 text-danger">*</span>}
       </span>
       {children}
-      {hint && !error && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
+      {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
       {error && <span className="mt-1 block text-xs font-bold text-red-700">{error}</span>}
     </label>
   );
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/40";
+  // 16px 未満だと iOS Safari がフォーカス時に拡大するため text-base。高さは押しやすさのため 44px 以上（Issue #392）
+  "min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/40";
 
 export type Tone = "green" | "yellow" | "red" | "gray" | "blue";
 
