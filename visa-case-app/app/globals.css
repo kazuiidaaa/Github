@@ -196,11 +196,43 @@
   --color-green-800: #8fdcec;
 }
 
+/*
+ * 文字の大きさ（Issue #392）。スマホ幅（md 未満）は本文 16px・補足 14px、md 以上は従来の 14px・12px。
+ * text-sm / text-xs の変数を差し替えるので、各画面の指定は変えない。
+ * 紙のプレビュー（.paper）と印刷は、従来の大きさのまま（紙の見た目は変えない）。
+ */
+:root {
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.5;
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.43;
+}
+@media (min-width: 48rem) {
+  :root {
+    --text-sm: 0.875rem;
+    --text-sm--line-height: calc(1.25 / 0.875);
+    --text-xs: 0.75rem;
+    --text-xs--line-height: calc(1 / 0.75);
+  }
+}
+@media print {
+  :root {
+    --text-sm: 0.875rem;
+    --text-sm--line-height: calc(1.25 / 0.875);
+    --text-xs: 0.75rem;
+    --text-xs--line-height: calc(1 / 0.75);
+  }
+}
+
 /* 書類のプレビュー（紙の見た目）は、暗色表示でも白地に黒字のまま表示する */
 .paper {
   /* 書体は Noto Sans JP・KR で明示する。画面の書体（--font-sans）の変更を受けない（Issue #216）。氏名のハングルのため KR も指定する */
   font-family: var(--font-noto-sans-jp), var(--font-noto-sans-kr), "Noto Sans JP", "Noto Sans KR", sans-serif;
   color-scheme: light;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
   --color-white: #ffffff;
   --color-slate-50: #f5f5f7;
   --color-slate-100: #ececf0;
@@ -260,17 +292,6 @@ button:not(:disabled):active {
   outline-offset: 2px;
 }
 
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes pop-in {
   from {
     opacity: 0;
@@ -283,7 +304,7 @@ button:not(:disabled):active {
 }
 
 .anim-page-enter {
-  /* 画面の切り替えは、移動なしのフェードのみ（Issue #392 PR-3）。毎回の移動は、読む妨げになるため。page-enter は一覧の anim-stagger が使う */
+  /* 画面の切り替えは、移動なしのフェードのみ（Issue #392 PR-3）。毎回の移動は、読む妨げになるため */
   animation: fade-in var(--dur-fade) linear both;
 }
 
@@ -367,17 +388,31 @@ button:not(:disabled):active {
   }
 }
 
-/* 一覧などで、子要素を順に表示する（先頭の 8 件まで、30 ミリ秒ずつずらす） */
+/*
+ * 一覧などで、子要素を順に表示する（先頭の 8 件まで、30 ミリ秒ずつずらす）。
+ * @keyframes ではなく transition＋@starting-style（使えない環境では、動かずそのまま表示される）。
+ * このクラスは、画面を開いた最初だけ付ける（絞り込み・並べ替え・再訪では付けない）。
+ */
 .anim-stagger > * {
-  animation: page-enter 0.28s var(--ease-apple) both;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.28s var(--ease-apple),
+    transform 0.28s var(--ease-apple);
 }
-.anim-stagger > *:nth-child(2) { animation-delay: 30ms; }
-.anim-stagger > *:nth-child(3) { animation-delay: 60ms; }
-.anim-stagger > *:nth-child(4) { animation-delay: 90ms; }
-.anim-stagger > *:nth-child(5) { animation-delay: 120ms; }
-.anim-stagger > *:nth-child(6) { animation-delay: 150ms; }
-.anim-stagger > *:nth-child(7) { animation-delay: 180ms; }
-.anim-stagger > *:nth-child(n + 8) { animation-delay: 210ms; }
+@starting-style {
+  .anim-stagger > * {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.anim-stagger > *:nth-child(2) { transition-delay: 30ms; }
+.anim-stagger > *:nth-child(3) { transition-delay: 60ms; }
+.anim-stagger > *:nth-child(4) { transition-delay: 90ms; }
+.anim-stagger > *:nth-child(5) { transition-delay: 120ms; }
+.anim-stagger > *:nth-child(6) { transition-delay: 150ms; }
+.anim-stagger > *:nth-child(7) { transition-delay: 180ms; }
+.anim-stagger > *:nth-child(n + 8) { transition-delay: 210ms; }
 
 /*
  * 動きを減らす設定（設計書 3章C の代替表）：
@@ -386,8 +421,7 @@ button:not(:disabled):active {
  */
 @media (prefers-reduced-motion: reduce) {
   .anim-page-enter,
-  .anim-pop-in,
-  .anim-stagger > * {
+  .anim-pop-in {
     animation-name: fade-in;
   }
   *,
@@ -408,9 +442,14 @@ button:not(:disabled):active {
   .motion-toast[data-state="closed"] {
     transform: none;
   }
+  /* 一覧の順次表示：移動なし、不透明度のみ（待ち時間も 0） */
+  .anim-stagger > * {
+    transition-delay: 0ms !important;
+  }
   @starting-style {
     .motion-panel,
-    .motion-toast {
+    .motion-toast,
+    .anim-stagger > * {
       transform: none;
     }
   }

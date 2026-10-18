@@ -29,7 +29,7 @@ export function LanguageSwitcher() {
         ))}
       </select>
       {draft && (
-        <span id={noteId} role="note" title={t("common.languageDraftNote")} className="max-w-[9rem] text-[0.65rem] leading-tight font-normal text-slate-500 max-md:hidden">
+        <span id={noteId} role="note" title={t("common.languageDraftNote")} className="max-w-[9rem] text-xs leading-tight font-normal text-slate-500 max-md:hidden">
           {t("common.languageDraftNote")}
         </span>
       )}

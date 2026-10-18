@@ -124,7 +124,7 @@ function AccountContent() {
           !error && <p role="status" className="text-sm text-slate-500">{t("account.loading")}</p>
         )}
         <div className="mt-5">
-          <Button variant="secondary" className="min-h-[44px]" onClick={() => void signOut()}>
+          <Button variant="secondary" onClick={() => void signOut()}>
             {t("account.logout")}
           </Button>
         </div>
@@ -138,7 +138,7 @@ function AccountContent() {
               <input className={inputClass} value={orgName} disabled={!isOwner} onChange={(e) => setOrgName(e.target.value)} />
             </Field>
           </div>
-          <Button className="min-h-[44px]" disabled={!isOwner || busy} onClick={() => void saveOrg()}>
+          <Button disabled={!isOwner || busy} onClick={() => void saveOrg()}>
             {t("account.save")}
           </Button>
         </div>
@@ -165,7 +165,7 @@ function AccountContent() {
             {pwMsg.text}
           </p>
         )}
-        <Button type="submit" className="min-h-[44px]" disabled={busy || !info}>
+        <Button type="submit" disabled={busy || !info}>
           {t("account.pwSubmit")}
         </Button>
       </form>
