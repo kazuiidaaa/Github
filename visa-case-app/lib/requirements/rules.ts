@@ -1184,7 +1184,7 @@ export const HSP_ACQUISITION: RuleSet = {
 };
 
 // 在留資格「介護」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #297）。
-// 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は照合済み（docs/official/reconciliation/kaigo-2026-10-18.md）。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は、2026-10-18 に照合済み（照合表は docs/official/reconciliation/kaigo-2026-10-18.md、Issue #333）。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 // 更新の「派遣先での活動内容の資料」は、チェックシートで△、案内ページに記載なし（要確認で足した。#312 の規則に基づく人の判断）。技能移転に係る申告書は、更新の案内ページ・チェックシートにない。
 const KAIGO = "介護";
 const KAIGO_SOURCE = { title: "在留資格「介護」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/nursingcare.html" };
@@ -2434,7 +2434,7 @@ export const KIGYONAI_RENEWAL: RuleSet = {
 };
 
 // 在留資格「特定活動」のうち、特定研究等活動（告示36号）の本人（種別 tokuteiKenkyu。Issue #299）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
-// 提出書類は、入管庁の案内ページ（designatedactivities07）の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
+// 提出書類は、入管庁の案内ページ（designatedactivities07）の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。逐語の原文（docs/official/designatedactivities11_2026-10-18.txt）との照合も済み、チェックシートの掲載がないことも確認した（2026-10-18。照合表は docs/official/reconciliation/tokutei-katsudo-2026-10-18.md、Issue #333）。逐語の原文（docs/official/designatedactivities07_2026-10-18.txt）との照合も済み、チェックシートの掲載がないことも確認した（2026-10-18。照合表は docs/official/reconciliation/tokutei-katsudo-2026-10-18.md、Issue #333）。
 // 範囲外：特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
 const TOKUTEI_KENKYU_STATUS = "特定活動";
 const TOKUTEI_KENKYU_CHECKED_AT = "2026-10-12";
