@@ -1218,11 +1218,14 @@ export const HSP_RENEWAL: RuleSet = {
  * 書類の追加はしない（原文にない書類は足さない）。`checkedAt` は変えない（reconciliation/README.md の2-2章）。
  */
 const HSP_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "parents_questionnaire", "household_residence_certificate"];
+// 取得の写真の注記（年齢）。高度専門職の取得と技人国の取得（#396 R-3）で共有する
+const ACQUISITION_PHOTO_AGE_NOTE =
+  "指定の規格を満たした写真を用意し、申請書に添付して提出する。規格を満たさない写真の場合は撮り直しになる。在留カードの交付の日において年齢が1歳に満たない方は、写真の提出は不要。令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは1歳以上の方について必要";
 const HSP_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
   // R-1・R-2：事由を問わず写真1葉。年齢の注記は原文のとおり
   photo: {
     causes: ALL_CAUSES,
-    note: "指定の規格を満たした写真を用意し、申請書に添付して提出する。規格を満たさない写真の場合は撮り直しになる。在留カードの交付の日において年齢が1歳に満たない方は、写真の提出は不要。令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは1歳以上の方について必要",
+    note: ACQUISITION_PHOTO_AGE_NOTE,
   },
   // R-5：申請人本人以外が提出する場合
   agent_identity_document: {
@@ -1282,7 +1285,7 @@ export const HSP_ACQUISITION: RuleSet = {
 
 /**
  * 技術・人文知識・国際業務／家族滞在の在留資格取得許可申請（Issue #396。照合表は docs/official/reconciliation/acquisition-gijinkoku-kazokutaizai-2026-10-18.md）。
- * 人の判断「推奨のとおり」（2026-10-18）の R-2・R-8・R-9・R-10・R-12・R-17 と、技人国のカテゴリー別の書類（R-1。#402）を反映した専用の規則集合。それ以外の R（写真・注記・名称など）は未反映で、
+ * 人の判断「推奨のとおり」（2026-10-18）の R-2〜R-5・R-8・R-9・R-10・R-12・R-17 と、技人国のカテゴリー別の書類（R-1。#402）を反映した専用の規則集合。それ以外の R（家族滞在の写真・注記・名称など）は未反映で、
  * ACQUISITION_BY_CAUSE の規則をそのまま引き継ぐ。ACQUISITION_BY_CAUSE の文言は変えない（他の在留資格の取得は未照合）。HSP_ACQUISITION と同じく、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する。
  * `checkedAt` は新しい規則集合の作成日。
  */
@@ -1295,9 +1298,21 @@ const ACQUISITION_PROCEDURE_GUIDE_SOURCE: RuleSource = {
 };
 
 // 技人国（R-2）：出生の3書類（出生したことを証する書類・両親の質問書・世帯全員の住民票）を外し、出生は「その事由を証する書類」として扱う。
-// 出生の乳児が取得する実務の扱いは原文に記載がなく、推測しない（注記に「行政書士が確認」）。他の注記・名称（R-3〜R-7）は未反映のまま
-const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate"];
+// 出生の乳児が取得する実務の扱いは原文に記載がなく、推測しない（注記に「行政書士が確認」）。
+// 技人国（R-5）：活動に応じた資料（activity_materials）も外す。取得の原文（docs/official/gijinkoku_2026-10-18.txt 346行からの「在留資格取得許可申請」の節）では、
+// 活動に応じた資料はカテゴリー別の書類群（R-1。下の gijinkokuAcquisitionCategoryRules）に当たり、別の1行としての記載は無い。
+// 申請取次者の書類（R-6）・旅券の理由書（R-7）は未反映のまま
+const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate", "activity_materials"];
+// R-4：ACQUISITION_BY_CAUSE の注記の例（日米地位協定による在留者など）は、原文（gijinkoku_2026-10-18.txt 374〜376行。「（２）（１）以外の者で在留資格の取得を必要とするもの：その事由を証する書類」）に無いため外し、R-2 の注記だけにする
 const GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE = "出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）";
+// R-3：写真は事由の別なく1葉（出生も含む）。注記は原文（gijinkoku_2026-10-18.txt 371〜373行）の年齢の注記（高度専門職の取得と同じ文言）。
+// 原文 373行の「中長期在留者とならない在留資格の取得では不要」は、技人国は中長期在留者となるため、人の判断（2026-10-18）で注記に書かない。
+// 名称の大きさは、人の判断（2026-10-18）で申請書のとおりにする。申請書（docs/official/acquisition-application-form_930004121.xlsx の写真欄の図形。xl/drawings/drawing1.xml）の表記は「40mm×30mm」
+const GIJINKOKU_ACQUISITION_PHOTO_NAME = "写真（40mm×30mm）";
+const GIJINKOKU_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  photo: { causes: ALL_CAUSES, name: GIJINKOKU_ACQUISITION_PHOTO_NAME, note: ACQUISITION_PHOTO_AGE_NOTE },
+  cause_proof: { causes: ["birth", "other"], note: GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE },
+};
 
 // 技人国（R-1。Issue #402）：取得も、所属機関のカテゴリー（1〜4）で提出書類が異なる。判定の軸を、取得の事由と所属機関のカテゴリーの2つにする（alsoBasis）。
 // 事由別の書類（ACQUISITION_BY_CAUSE から引き継ぐもの）は categories を持たないため、全カテゴリーで適用する。カテゴリー別の書類は causes を持たないため、全事由で適用する。
@@ -1362,11 +1377,7 @@ export const GIJINKOKU_ACQUISITION: RuleSet = {
   rules: [
     ...ACQUISITION_BY_CAUSE.rules
       .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id))
-      .map((r) =>
-        r.id === "cause_proof"
-          ? { ...r, causes: ["birth", "other"] as AcquisitionCause[], note: [r.note, GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE].filter(Boolean).join("。") }
-          : r,
-      ),
+      .map((r) => (GIJINKOKU_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...GIJINKOKU_ACQUISITION_OVERRIDES[r.id] } : r)),
     ...gijinkokuAcquisitionCategoryRules,
   ],
 };

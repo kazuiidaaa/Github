@@ -372,9 +372,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Status of residence \"Dependent\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
     "체류자격 '가족체재' 체류자격 취득 허가 신청(출입국재류관리청)",
   ],
-  "主に日米地位協定による在留者が、協定上の地位を失った場合など。出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）": [
-    "Mainly for persons residing under the Japan-U.S. Status of Forces Agreement who lose their status under the agreement, etc. Birth is also treated as this \"document proving the reason\" (the practical handling when an infant acquires status by birth is not stated on the guidance page, so the administrative scrivener confirms it)",
-    "주로 미일 지위협정에 따른 재류자가 협정상의 지위를 잃은 경우 등. 출생의 경우에도 이 '사유를 증명하는 서류'로 취급한다(출생한 영아가 취득하는 경우의 실무 취급은 안내 페이지에 기재가 없으므로 행정서사가 확인한다)",
+  "出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）": [
+    "Birth is also treated as this \"document proving the reason\" (the practical handling when an infant acquires status by birth is not stated on the guidance page, so the administrative scrivener confirms it)",
+    "출생의 경우에도 이 '사유를 증명하는 서류'로 취급한다(출생한 영아가 취득하는 경우의 실무 취급은 안내 페이지에 기재가 없으므로 행정서사가 확인한다)",
   ],
   "次のいずれか。(1)戸籍謄本 1通 (2)婚姻届受理証明書 1通 (3)結婚証明書（写し）1通 (4)出生証明書（写し）1通 (5)(1)〜(4)に準ずる文書（適宜）": [
     "Any one of the following: (1) family register transcript (1 copy) (2) certificate of acceptance of marriage notification (1 copy) (3) marriage certificate (copy, 1 copy) (4) birth certificate (copy, 1 copy) (5) a document equivalent to (1) to (4) (as appropriate)",

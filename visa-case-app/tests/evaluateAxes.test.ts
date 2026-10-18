@@ -127,7 +127,8 @@ describe("evaluate: 判定の軸を複数持つ規則集合（alsoBasis。Issue 
 
 describe("evaluate: 技人国の取得のカテゴリー別の書類（R-1。Issue #402）", () => {
   const gij = (cause: Cause, category: OrgCategory = "", over: Partial<CaseRecord> = {}) => evaluate(make(cause, category, over));
-  const COMMON_REQUIRED_OTHER = ["application_form", "photo", "passport_presentation", "cause_proof", "activity_materials"];
+  // 活動に応じた資料は、技人国の取得では外した（R-5。カテゴリー別の書類がこれに当たる）
+  const COMMON_REQUIRED_OTHER = ["application_form", "photo", "passport_presentation", "cause_proof"];
   const COMMON_CHECK = ["passport_reason_statement", "agent_identity_document"];
   const C34_REQUIRED = ["activity_documents", "career_documents", "registry_certificate", "business_description", "financial_statements", "representative_declaration"];
 
@@ -211,7 +212,8 @@ describe("evaluate: 技人国の取得のカテゴリー別の書類（R-1。Iss
     const e = gij("");
     expect(e.needsCause).toBe(true);
     expect(e.needsCategory).toBe(true);
-    expect(ids(e, "required")).toEqual(["application_form", "passport_presentation"]);
+    // 写真は事由を問わない（R-3）
+    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_presentation"]);
     expect(ids(e, "check")).toEqual([...COMMON_CHECK, "vocational_school_certificate", "dispatch_documents"]);
   });
 
@@ -219,12 +221,12 @@ describe("evaluate: 技人国の取得のカテゴリー別の書類（R-1。Iss
     const e = gij("", "3");
     expect(e.needsCause).toBe(true);
     expect(e.needsCategory).toBe(false);
-    expect(ids(e, "required")).toEqual(["application_form", "passport_presentation", "category_proof", ...C34_REQUIRED]);
+    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_presentation", "category_proof", ...C34_REQUIRED]);
   });
 
   it("事由別の書類は、カテゴリーを選んでも従来どおり（出生は「その事由を証する書類」）", () => {
-    expect(ids(gij("birth", "1"), "required")).toEqual(["application_form", "passport_presentation", "cause_proof", "category_proof"]);
-    expect(ids(gij("nationalityLoss", "1"), "required")).toEqual(["application_form", "photo", "passport_presentation", "nationality_proof", "activity_materials", "category_proof"]);
+    expect(ids(gij("birth", "1"), "required")).toEqual(["application_form", "photo", "passport_presentation", "cause_proof", "category_proof"]);
+    expect(ids(gij("nationalityLoss", "1"), "required")).toEqual(["application_form", "photo", "passport_presentation", "nationality_proof", "category_proof"]);
   });
 });
 
