@@ -145,27 +145,36 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Presenting it is not required in the Immigration Services Agency guidance, but in practice it is usually obtained. If the name on the certificate of eligibility differs from the name on the passport, submit it together if possible",
     "출입국재류관리청 안내에서는 제시가 불필요하지만, 실무에서는 취득하는 것이 통례이다. 사증발급인정서상의 성명과 여권상의 성명 표기가 다른 경우, 제출이 가능하면 함께 제출한다",
   ],
-  "更新の一覧が未提供のため、公開情報に基づく暫定の内容": [
-    "Provisional content based on public information, because the list for renewals has not been provided",
-    "연장 목록이 제공되지 않았으므로 공개 정보에 근거한 잠정 내용",
-  ],
   "申請人が事業の管理に従事する場合のみ": ["Only if the applicant is engaged in business management", "신청인이 사업 관리에 종사하는 경우에만"],
-  "カテゴリー1：四季報の写し等／カテゴリー2：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる": [
-    "Category 1: a copy of the Japan Company Handbook, etc. / Category 2: a copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year. If no document can be submitted, the organization falls under Category 4",
-    "카테고리 1: 『회사사계보』 사본 등／카테고리 2: 전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본). 제출 가능한 서류가 없으면 카테고리 4가 된다",
-  ],
-  "変更の一覧が未提供のため、認定証明書交付申請の一覧に準じた暫定の内容": [
-    "Provisional content following the list for certificate of eligibility applications, because the list for changes has not been provided",
-    "변경 목록이 제공되지 않았으므로 사증발급인정서 교부 신청 목록에 준한 잠정 내용",
-  ],
-  "申請人が事業の管理に従事する場合のみ（提供された一覧で△）": [
-    "Only if the applicant is engaged in business management (marked △ in the provided list)",
-    "신청인이 사업 관리에 종사하는 경우에만(제공된 목록에서 △)",
-  ],
   "カテゴリー4のみ": ["Category 4 only", "카테고리 4만"],
-  "事業内容を明らかにする資料として登記事項証明書を提出済みの場合は不要": [
-    "Not required if a certificate of registered matters has already been submitted as material showing the business content",
-    "사업 내용을 밝히는 자료로 등기사항증명서를 이미 제출한 경우에는 불필요",
+  "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる": [
+    "Category 1: a copy of the Japan Company Handbook, etc. / Categories 2 and 3: a copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year. If no document can be submitted, the organization falls under Category 4",
+    "카테고리 1: 『회사사계보』 사본 등／카테고리 2·3: 전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본). 제출 가능한 서류가 없으면 카테고리 4가 된다",
+  ],
+  "カテゴリー1：四季報の写し等のうち、提出可能な書類。日本貿易振興機構（JETRO）により対日投資支援企業として認定された企業であることを証明する文書は、更新のチェックシートのみに記載（案内ページには記載なし）。提出可能な書類がなければカテゴリー4となる": [
+    "Category 1: whichever of the Japan Company Handbook copy, etc. can be submitted. The document proving that the company has been certified as a company supported for investment in Japan by the Japan External Trade Organization (JETRO) appears only in the renewal checklist (not on the guidance page). If no document can be submitted, the organization falls under Category 4",
+    "카테고리 1: 『회사사계보』 사본 등 중 제출 가능한 서류. 일본무역진흥기구(JETRO)로부터 대일투자지원기업으로 인정받은 기업임을 증명하는 문서는 연장 체크시트에만 기재되어 있다(안내 페이지에는 기재 없음). 제출 가능한 서류가 없으면 카테고리 4가 된다",
+  ],
+  "事業を法人において行う場合のみ": ["Only if the business is conducted through a corporation", "사업을 법인에서 하는 경우에만"],
+  "申請人が事業の管理に従事する場合のみ（チェックシートで△）": [
+    "Only if the applicant is engaged in business management (marked △ in the checklist)",
+    "신청인이 사업 관리에 종사하는 경우에만(체크시트에서 △)",
+  ],
+  "事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要": [
+    "Not required if a certificate of registered matters has already been submitted as material (1) showing the business content",
+    "사업 내용을 밝히는 자료(1)로 등기사항증명서를 이미 제출한 경우에는 불필요",
+  ],
+  "更新の案内ページ・チェックシートには記載なし": [
+    "Not listed on the guidance page or in the checklist for renewals",
+    "연장 안내 페이지·체크시트에는 기재 없음",
+  ],
+  "案内ページに記載あり（提示）、チェックシートには記載なし。本邦に新たに事業所を設置する場合で、事業所の経営者又は管理者が不在の間の事業所設置業務全般を任されている方が申請書類を提出するときのみ": [
+    "Listed on the guidance page (to be presented) but not in the checklist. Only when the person submitting the application documents is entrusted with all the work of setting up a new business office in Japan while the manager or administrator of the office is absent",
+    "안내 페이지에는 기재(제시)되어 있으나 체크시트에는 기재 없음. 본방에 새로 사업소를 설치하는 경우로서, 사업소의 경영자 또는 관리자가 부재한 동안 사업소 설치 업무 전반을 맡은 사람이 신청서류를 제출할 때에만",
+  ],
+  "申請に当たっての説明書（参考様式）と、公租公課の履行を証する資料のうち該当する全て。所属機関が法人の場合は、労働保険・社会保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・法人税・消費税及び地方消費税の納税証明書、法人住民税・法人事業税の納税証明書。所属機関が個人の場合は、労働保険・社会保険・国民健康保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・申告所得税及び復興特別所得税・消費税及び地方消費税・相続税・贈与税の納税証明書、個人住民税・個人事業税の納税証明書。社会保険への加入義務のない個人事業主は、社会保険の強制適用事業所に該当しないことを説明する資料": [
+    "The explanatory statement for the application (reference form), and all applicable materials proving payment of public taxes and charges. If the organization is a corporation: documents proving enrollment in and payment for labor insurance and social insurance; tax payment certificates for withholding income tax and special reconstruction income tax, corporate tax, and consumption tax and local consumption tax; tax payment certificates for corporate inhabitant tax and corporate business tax. If the organization is an individual: documents proving enrollment in and payment for labor insurance, social insurance and national health insurance; tax payment certificates for withholding income tax and special reconstruction income tax, income tax on final return and special reconstruction income tax, consumption tax and local consumption tax, inheritance tax and gift tax; tax payment certificates for individual inhabitant tax and individual business tax. A sole proprietor not obliged to enroll in social insurance submits material explaining that the business is not a mandatory-coverage business establishment for social insurance",
+    "신청에 관한 설명서(참고 양식)와, 공조공과 이행을 증명하는 자료 중 해당하는 모든 것. 소속 기관이 법인인 경우: 노동보험·사회보험의 가입 상황 및 요금 납부 상황을 증명하는 문서, 원천소득세 및 부흥특별소득세·법인세·소비세 및 지방소비세의 납세증명서, 법인주민세·법인사업세의 납세증명서. 소속 기관이 개인인 경우: 노동보험·사회보험·국민건강보험의 가입 상황 및 요금 납부 상황을 증명하는 문서, 원천소득세 및 부흥특별소득세·신고소득세 및 부흥특별소득세·소비세 및 지방소비세·상속세·증여세의 납세증명서, 개인주민세·개인사업세의 납세증명서. 사회보험 가입 의무가 없는 개인사업자는 사회보험의 강제적용사업소에 해당하지 않음을 설명하는 자료",
   ],
   "1号イ・ロ・ハのいずれかのシート。要件：1号又は高度外国人材としての特定活動で3年以上在留し、70点以上であること。合計70点以上が必要。年収が300万円に満たないときは、他の項目の合計が70点以上でも、高度専門職外国人としては認められない": [
     "Any one of the sheets for Type 1 (a), (b) or (c). Requirement: having resided for 3 or more years under Type 1 or Designated Activities as a highly skilled foreign professional, with 70 points or more. A total of 70 points or more is required. If the annual income is under 3 million yen, the person is not recognized as a highly skilled foreign professional even if the other items total 70 points or more",
