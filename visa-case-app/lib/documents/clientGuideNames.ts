@@ -24,10 +24,6 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Copy of the income tax collection statements for the most recent 3 months",
     "최근 3개월분 소득세 징수액 계산서 사본",
   ],
-  "源泉所得税の納期の特例の承認に関する申請書の写し": [
-    "Copy of the application for approval of the special payment deadline for withholding income tax",
-    "원천소득세 납기 특례 승인 신청서 사본",
-  ],
   "所属機関の代表者に関する申告書（参考様式）": [
     "Declaration concerning the representative of the affiliated organization (reference form)",
     "소속 기관 대표자에 관한 신고서(참고 양식)",

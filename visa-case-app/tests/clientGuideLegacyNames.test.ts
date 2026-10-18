@@ -17,7 +17,7 @@ const currentRuleNames = new Set<string>([
 
 describe("古い名称の訳（別表）", () => {
   it("古い名称の書類は、英語・韓国語で「訳文（原文）」になる（訳なしの目印は付かない）", () => {
-    expect(LEGACY_NAMES.length).toBe(15);
+    expect(LEGACY_NAMES.length).toBe(16);
     for (const name of LEGACY_NAMES) {
       for (const lang of OTHER) {
         const cell = requirementNameCell("passport_card", name, lang);
