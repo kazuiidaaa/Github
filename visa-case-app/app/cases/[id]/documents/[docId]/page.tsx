@@ -23,6 +23,9 @@ import { getConfirmerName, useCan, useCase } from "@/lib/store";
 
 type StatusChange = "reviewed" | "submitted" | "archived";
 
+/** 文字のリンクも、押しやすさのため高さ 44px（人の決定。Issue #392。新規登録・案件詳細と同じ） */
+const textLinkClass = "inline-flex min-h-[44px] items-center text-sm text-blue-700 hover:underline active:opacity-70";
+
 /** 状態変更の確認ダイアログの文言のキー。影響は changeStatus（lib/documents/store.ts）の実際の処理に即して書く */
 const STATUS_CONFIRM: Record<StatusChange, { title: MessageKey; message: MessageKey; note: MessageKey; label: MessageKey }> = {
   reviewed: {
@@ -66,8 +69,8 @@ export default function DocumentPreviewPage() {
   if (!doc) {
     return loaded ? (
       <div>
-        <p className="mb-4">{t("documentView.notFound")}</p>
-        <Link href={`/cases/${id}/documents`} className="text-blue-700 hover:underline">
+        <p className="mb-1">{t("documentView.notFound")}</p>
+        <Link href={`/cases/${id}/documents`} className={textLinkClass}>
           {t("documentView.back")}
         </Link>
       </div>
@@ -124,7 +127,7 @@ export default function DocumentPreviewPage() {
       {/* 印刷時は、画面上部のヘッダーと操作部を隠す */}
       <style>{`@media print { header { display: none; } }`}</style>
       <div className="mb-4 space-y-3 print:hidden">
-        <Link href={`/cases/${id}/documents`} className="text-sm text-blue-700 hover:underline">
+        <Link href={`/cases/${id}/documents`} className={textLinkClass}>
           {t("documentView.back")}
         </Link>
         {stale && (

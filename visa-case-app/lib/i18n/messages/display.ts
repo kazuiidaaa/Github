@@ -1,7 +1,7 @@
 import { defineMessages } from "../define";
 
 /**
- * 表示部品の文言（ExpiryBadge、WorkflowBadge、UploadBox、DashboardCards）。
+ * 表示部品の文言（ExpiryBadge、WorkflowBadge、UploadBox、DashboardCards、ImageZoom）。
  * 期限の水準・文は lib/i18n/expiry.ts から、書類の種別名は UploadBox から引く。
  * lib の関数や props から受け取る日本語の文言（検証メッセージ、指標カードの名称・説明など）は、ここに含めない。
  */
@@ -36,6 +36,11 @@ export const display = defineMessages({
     metricInfoShow: "{label}の説明を表示する",
     metricInfoHide: "{label}の説明を閉じる",
     metricLabelDescJoin: "：",
+    zoomOut: "縮小",
+    zoomIn: "拡大",
+    zoomReset: "元に戻す",
+    zoomViewerRole: "拡大表示",
+    zoomHint: "ボタン・ホイール・ピンチ・キー（＋ と −、0 で元に戻す）で拡大し、拡大中はドラッグまたは矢印キーで移動できます。",
   },
   en: {
     expiryUnknown: "Not entered",
@@ -67,6 +72,11 @@ export const display = defineMessages({
     metricInfoShow: "Show description of {label}",
     metricInfoHide: "Hide description of {label}",
     metricLabelDescJoin: ": ",
+    zoomOut: "Zoom out",
+    zoomIn: "Zoom in",
+    zoomReset: "Reset",
+    zoomViewerRole: "Zoomable image",
+    zoomHint: "Zoom with the buttons, the mouse wheel, a pinch, or the keys (+ and −, 0 to reset). While zoomed in, drag or use the arrow keys to move.",
   },
   ko: {
     expiryUnknown: "미입력",
@@ -98,5 +108,10 @@ export const display = defineMessages({
     metricInfoShow: "{label} 설명 표시",
     metricInfoHide: "{label} 설명 닫기",
     metricLabelDescJoin: ": ",
+    zoomOut: "축소",
+    zoomIn: "확대",
+    zoomReset: "원래대로",
+    zoomViewerRole: "확대 보기",
+    zoomHint: "버튼·마우스 휠·핀치·키(+와 −, 0은 원래대로)로 확대하고, 확대 중에는 드래그 또는 화살표 키로 이동할 수 있습니다.",
   },
 });
