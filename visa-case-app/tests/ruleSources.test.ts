@@ -58,3 +58,31 @@ describe("ruleSetComparedAt", () => {
     expect(ruleSetComparedAt(rs) ?? rs.checkedAt).toBe("2026-10-18");
   });
 });
+
+// 照合表がある資格（reconciliation/README.md の1章の表）。出典に kind があり、案内ページの出典に comparedAt（2026-10-18）が入っていること（Issue #374 項目2 手順2）
+const RECONCILED_IDS = [
+  ...["gijinkoku", "keiei_kanri", "kaigo", "houmu_kaikei", "iryo", "kenkyu", "kigyonai", "tokutei_kenkyu", "daigaku_sotsugyo", "tokutei_joho"].flatMap((p) => ["renewal", "change", "coe"].map((x) => `${p}_${x}`)),
+  "gino_change", // 技能は変更のみ 2026-10-18 に照合。認定・更新は日付を入れない
+  "hsp_acquisition",
+];
+
+describe("照合表がある資格の出典", () => {
+  it("すべての出典に kind があり、案内ページの出典に comparedAt（2026-10-18）がある", () => {
+    for (const id of RECONCILED_IDS) {
+      const rs = RULE_SETS.find((r) => r.id === id);
+      expect(rs, id).toBeDefined();
+      expect(rs!.sources.every((s) => s.kind !== undefined), `${id}: kind`).toBe(true);
+      const pages = rs!.sources.filter((s) => s.kind === "page" && s.comparedAt);
+      expect(pages.length, `${id}: comparedAt のある案内ページ`).toBeGreaterThan(0);
+      expect(ruleSetComparedAt(rs!), id).toBe("2026-10-18");
+    }
+  });
+
+  it("照合していない出典（技能の認定・更新、高度専門職の認定・変更・更新）は日付を入れない（推測しない）", () => {
+    for (const id of ["gino_coe", "gino_renewal", "hsp_coe", "hsp_change", "hsp_change_2", "hsp_renewal"]) {
+      const rs = RULE_SETS.find((r) => r.id === id);
+      expect(rs, id).toBeDefined();
+      expect(ruleSetComparedAt(rs!), id).toBeUndefined();
+    }
+  });
+});

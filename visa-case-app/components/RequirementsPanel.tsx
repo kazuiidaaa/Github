@@ -14,6 +14,7 @@ import { useLang, useT } from "@/lib/i18n/LanguageProvider";
 import { useLabels } from "@/lib/i18n/labels";
 import { ruleText } from "@/lib/i18n/ruleTexts";
 import { evaluate, type EvaluatedItem, type Result } from "@/lib/requirements/evaluate";
+import { ruleSetComparedAt } from "@/lib/requirements/rules";
 import { isOverdue, progressOf } from "@/lib/requirements/progress";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSave } from "@/lib/useAutoSave";
@@ -151,7 +152,7 @@ export function RequirementsPanel({
         {ev.ruleSet && (
           <>
             <p className="mt-2">
-              {t("caseRequirements.ruleSetHeading", { title: ruleText(lang, ev.ruleSet.title), date: ev.ruleSet.checkedAt })}
+              {t("caseRequirements.ruleSetHeading", { title: ruleText(lang, ev.ruleSet.title), date: ruleSetComparedAt(ev.ruleSet) ?? ev.ruleSet.checkedAt })}
             </p>
             <p className="mt-1">
               {t("caseRequirements.referenceNotice")}

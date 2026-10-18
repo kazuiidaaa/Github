@@ -261,6 +261,10 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Materials according to the activities in Japan",
     "일본에서의 활동 내용에 따른 자료",
   ],
+  "本邦において行おうとする活動に応じた資料": [
+    "Materials according to the activities to be conducted in Japan",
+    "일본에서 하려는 활동에 따른 자료",
+  ],
   "派遣契約に基づいて就労する場合の資料（誓約書（派遣元用・派遣先用）、労働条件通知書、労働者派遣個別契約書、派遣元管理台帳、派遣先管理台帳、就業状況報告書）": [
     "Materials if working under a dispatch contract (written pledges (one for the dispatching company and one for the client company), notice of working conditions, individual worker dispatch contract, ledger of the dispatching company, ledger of the client company, work status report)",
     "파견계약에 따라 근무하는 경우의 자료(서약서(파견 회사용·파견처용), 근로조건통지서, 근로자 파견 개별계약서, 파견 회사 관리대장, 파견처 관리대장, 취업상황보고서)",
