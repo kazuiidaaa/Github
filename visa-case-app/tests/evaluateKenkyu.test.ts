@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { evaluate } from "../lib/requirements/evaluate";
-import { KENKYU_CHANGE, KENKYU_COE, KENKYU_RENEWAL, RULE_SETS } from "../lib/requirements/rules";
+import { GINO_COE, KENKYU_CHANGE, KENKYU_COE, KENKYU_RENEWAL, RULE_SETS } from "../lib/requirements/rules";
 import { isFormIStatus, isFormUStatus } from "../lib/hspForm";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
@@ -85,10 +85,10 @@ describe("研究の規則集合", () => {
   it("認定：カテゴリー4は、カテゴリーを証明する文書の代わりに、決算文書と、源泉徴収の資料が必要", () => {
     const e = evaluate(make("coe", "4"));
     expect(all(e)).not.toContain("category_proof");
-    expect(ids(e, "required")).toEqual(
-      expect.arrayContaining(["financial_statements", "representative_declaration", "payroll_office_notification", "withholding_tax_receipts"]),
-    );
-    expect(ids(e, "check")).toContain("withholding_exemption_certificate");
+    expect(ids(e, "required")).toEqual(expect.arrayContaining(["representative_declaration", "payroll_office_notification", "withholding_tax_receipts"]));
+    // 決算文書（カテゴリー4）は、ページとチェックシートの読み方が食い違うため、認定でも要確認（照合表 K-2〜K-4）
+    expect(ids(e, "required")).not.toContain("financial_statements");
+    expect(ids(e, "check")).toEqual(expect.arrayContaining(["financial_statements", "withholding_exemption_certificate"]));
   });
 
   it("納期の特例の承認の書類は、案件の「納期の特例」が真のときだけ判定する（カテゴリー4）", () => {
@@ -134,6 +134,55 @@ describe("研究の規則集合", () => {
     expect(find(KENKYU_CHANGE, "financial_statements", "4")?.verify).toBe(true);
     // 転勤の書類は、チェックシートの「学歴及び職歴等」の(3)（基準省令ただし書）で確認できたため、要確認にしない
     expect(find(KENKYU_COE, "transfer_documents", "3,4")?.verify).toBeUndefined();
-    expect(find(KENKYU_RENEWAL, "financial_statements_transfer", "3")?.note).toContain("「転勤の場合に限る」と「提出書類10は不要」の2つの文言");
+    expect(find(KENKYU_RENEWAL, "financial_statements_transfer", "3")?.note).toContain("チェックシート（更新）は△（条件付き）のため要確認");
+  });
+
+  it("カテゴリー4の決算文書は、認定・変更・更新のすべてで要確認（check）で、ページとチェックシートの両方の読み方を注記に書く（K-2〜K-4）", () => {
+    for (const [rs, mark] of [[KENKYU_COE, "○（認定）"], [KENKYU_CHANGE, "△（変更）"], [KENKYU_RENEWAL, "△（更新）"]] as const) {
+      const r = rs.rules.find((x) => x.id === "financial_statements" && x.categories?.join() === "4");
+      expect(r?.level, rs.id).toBe("check");
+      expect(r?.verify, rs.id).toBe(true);
+      expect(r?.note, rs.id).toContain("ページの読み方は、カテゴリー4は必要");
+      expect(r?.note, rs.id).toContain("行全体（カテゴリー3・4）に「転勤して研究を行う業務に従事する場合に限る」");
+      expect(r?.note, rs.id).toContain(mark);
+    }
+    // カテゴリー3は従来どおり（認定・変更は要確認の区分のみ、更新は verify あり）
+    expect(KENKYU_COE.rules.find((x) => x.id === "financial_statements_transfer")?.verify).toBeUndefined();
+    expect(KENKYU_CHANGE.rules.find((x) => x.id === "financial_statements_transfer")?.verify).toBeUndefined();
+  });
+
+  it("更新カテゴリー3の「10は不要」は、代表者申告書の注記にだけ書き、決算文書の注記には書かない（K-1）", () => {
+    const rep = KENKYU_RENEWAL.rules.find((x) => x.id === "representative_declaration");
+    expect(rep?.level).toBe("check");
+    expect(rep?.note).toContain("ページは「提出書類10は不要」、チェックシート（PDF）は「提出資料11は不要」");
+    for (const rs of [KENKYU_COE, KENKYU_CHANGE, KENKYU_RENEWAL]) {
+      for (const r of rs.rules.filter((x) => x.id.startsWith("financial_statements"))) expect(r.note ?? "", `${rs.id}/${r.id}`).not.toContain("10は不要");
+    }
+  });
+
+  it("注記：受付印（K-5）、省略説明書の○（K-9）。書類名は変えない", () => {
+    expect(KENKYU_CHANGE.rules.find((x) => x.id === "category_proof")?.name).toBe("所属機関のカテゴリーを証明する文書");
+    for (const rs of [KENKYU_COE, KENKYU_CHANGE, KENKYU_RENEWAL]) {
+      expect(rs.rules.find((x) => x.id === "category_proof")?.note).toContain("チェックシートでは、変更・更新に「受付印のあるものの写し」とある");
+    }
+    const om = KENKYU_CHANGE.rules.find((x) => x.id === "omission_statement");
+    expect(om?.level).toBe("check");
+    expect(om?.note).toContain("チェックシートでは、カテゴリーを証明する文書の選択肢の一つとして○");
+  });
+
+  it("納期の特例の資料の名称は、原文（承認を受けていることを明らかにする資料）に合わせる。構成（条件付きの別行）は変えない（K-7）", () => {
+    for (const rs of [KENKYU_COE, KENKYU_CHANGE, KENKYU_RENEWAL]) {
+      const r = rs.rules.find((x) => x.id === "withholding_special_approval");
+      expect(r?.name, rs.id).toBe("源泉所得税の納期の特例の承認を受けていることを明らかにする資料");
+      expect(r?.when, rs.id).toBe("withholdingSpecial");
+      expect(rs.rules.some((x) => x.id === "withholding_tax_receipts"), rs.id).toBe(true);
+    }
+  });
+
+  it("研究の判断（K-2〜K-7）は、技能に及ばない（技能は変更前の定義のまま）", () => {
+    const find = (id: string) => GINO_COE.rules.find((r) => r.id === id && (id !== "financial_statements" || r.categories?.includes("3")));
+    expect(find("financial_statements")?.level).toBe("required");
+    expect(find("withholding_special_approval")?.name).toBe("源泉所得税の納期の特例の承認に関する申請書の写し");
+    expect(find("category_proof")?.note).not.toContain("受付印");
   });
 });
