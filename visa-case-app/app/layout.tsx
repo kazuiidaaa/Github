@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ToastProvider>
           <LanguageProvider>
           <Header />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+          <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none sm:px-6 md:py-8">
             <AuthGate>
               <StoreErrorBanner />
               <PageTransition>{children}</PageTransition>
