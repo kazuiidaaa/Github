@@ -1453,7 +1453,8 @@ export const PROFESSOR_RENEWAL: RuleSet = {
 };
 
 // 在留資格「医療」。入管庁の案内ページ・チェックシートの「カテゴリー1・2」は、所属機関のカテゴリー（1〜4）ではなく、申請人の区分
-// （カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外の者）。この区分は formDetails.medicalApplicantType に持ち、basis: "applicantType" で判定する（Issue #310。
+// （カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外の者）。
+// 提出書類は、案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/iryo-2026-10-18.md、Issue #333）。ページとチェックシートが食い違う書類は「要確認」にしている。この区分は formDetails.medicalApplicantType に持ち、basis: "applicantType" で判定する（Issue #310。
 // 所属機関のカテゴリーには依存しないため、categories は ALL のまま）。区分が未選択の間は、区分で要否が分かれる書類を要確認（check）で表示する（Issue #302 と同じ）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const IRYO = "医療";
 const IRYO_SOURCE = { title: "在留資格「医療」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/medicalservices.html" };
@@ -1485,7 +1486,8 @@ const iryoFacilityOverview: RequirementRule = {
   party: "organization",
   categories: ALL,
   level: "check",
-  note: IRYO_OTHER_NOTE,
+  // 認定・変更：チェックシートは、カテゴリー2（医師・歯科医師以外）だけ○。ページは区分を読み取れないため、両区分に要確認で出す（照合表 M-1）
+  note: "医師・歯科医師以外の場合のみ（入管庁の案内の「カテゴリー2」）。チェックシートでは医師・歯科医師以外のみ○",
 };
 
 export const IRYO_COE: RuleSet = {
@@ -1553,8 +1555,8 @@ export const IRYO_RENEWAL: RuleSet = {
     {
       ...iryoOtherLicense,
       level: "check",
-      // 更新の案内には、資格を証明する文書の記載がない（住民税の証明書・在職証明書・転職後の初回の機関概要のみ）。認定・変更と同じ書類を、念のため確認として案内する
-      note: "更新の案内ページには記載がありません。医師・歯科医師以外の方は、念のため日本の資格（免状又は証明書等）の写しを用意し、管轄の出入国在留管理官署に要否を確認してください",
+      // 更新の案内ページには、資格を証明する文書の記載がない。チェックシートは、転職後の初回の更新で、医師・歯科医師以外の方に○（照合表 M-2）
+      note: "チェックシートで○（医師・歯科医師以外）。案内ページには記載なし",
       verify: true,
     },
     { ...iryoFacilityOverview, applicantTypes: ["other"], note: "医師・歯科医師以外の方が、転職後の初回の更新許可申請を行う場合のみ" },
