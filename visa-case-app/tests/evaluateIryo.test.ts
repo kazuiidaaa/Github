@@ -88,7 +88,19 @@ describe("医療の規則集合", () => {
     const r = IRYO_RENEWAL.rules.find((x) => x.id === "medical_license_other")!;
     expect(r.level).toBe("check");
     expect(r.verify).toBe(true);
-    expect(r.note).toContain("更新の案内ページには記載がありません");
+    expect(r.note).toBe("チェックシートで○（医師・歯科医師以外）。案内ページには記載なし");
+  });
+
+  it("認定・変更：機関の概要は両区分に要確認で出し、注記にチェックシートの○の位置を書く", () => {
+    for (const rs of [IRYO_COE, IRYO_CHANGE]) {
+      const r = rs.rules.find((x) => x.id === "facility_overview")!;
+      expect(r.level).toBe("check");
+      expect(r.applicantTypes).toBeUndefined();
+      expect(r.note).toContain("チェックシートでは医師・歯科医師以外のみ○");
+    }
+    for (const t of ["doctor", "other"] as const) {
+      expect(ids(evaluate(make("coe", "", t)), "check")).toContain("facility_overview");
+    }
   });
 
   it("出典は入管庁の医療の案内ページで、規則の識別子が各集合内で重複しない", () => {
