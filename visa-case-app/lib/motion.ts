@@ -7,6 +7,14 @@ export function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** 出る動き（ダイアログ・通知）の長さ（ミリ秒）。globals.css の --dur-fade（0.15 秒）と同じ値にそろえる */
+export const EXIT_MS = 150;
+
+/** 出る動きを待つ時間。動きを減らす設定では 0（待たずに即時に閉じる） */
+export function exitDelayMs(): number {
+  return prefersReducedMotion() ? 0 : EXIT_MS;
+}
+
 /** scrollIntoView / scrollTo の behavior に渡す値。動きを減らす設定では "auto"（即時） */
 export function scrollBehavior(): "smooth" | "auto" {
   return prefersReducedMotion() ? "auto" : "smooth";

@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useRef, type ReactNode } from "react";
-import { useDialogA11y } from "@/lib/useDialogA11y";
+import { useId, type ReactNode } from "react";
 import { useT } from "@/lib/i18n/LanguageProvider";
+import { Modal } from "./Modal";
 import { Button } from "./ui";
 
 /**
@@ -32,27 +32,27 @@ export function ConfirmDialog({
   onConfirm: () => void;
 }) {
   const t = useT();
-  const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  // 処理中は、Escape で閉じない
-  useDialogA11y(dialogRef, () => !busy && onCancel());
+  // 処理中は、Escape とキャンセルで閉じない（Modal の busy）
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm anim-fade-in">
-      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby={titleId} className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl anim-pop-in">
-        <h2 id={titleId} className="text-lg font-semibold">
-          {title}
-        </h2>
-        <p className="mt-3 text-sm">{message}</p>
-        {note && <p className="mt-3 text-xs text-slate-500">{note}</p>}
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" onClick={onCancel} disabled={busy} data-autofocus>
-            {t("dialog.confirm_cancel")}
-          </Button>
-          <Button variant={tone === "caution" ? "danger" : "primary"} onClick={onConfirm} disabled={busy}>
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <Modal titleId={titleId} busy={busy} onCancel={onCancel}>
+      {({ cancel }) => (
+        <>
+          <h2 id={titleId} className="text-lg font-semibold">
+            {title}
+          </h2>
+          <p className="mt-3 text-sm">{message}</p>
+          {note && <p className="mt-3 text-xs text-slate-500">{note}</p>}
+          <div className="mt-6 flex justify-end gap-2">
+            <Button variant="secondary" onClick={cancel} disabled={busy} data-autofocus>
+              {t("dialog.confirm_cancel")}
+            </Button>
+            <Button variant={tone === "caution" ? "danger" : "primary"} onClick={onConfirm} disabled={busy}>
+              {confirmLabel}
+            </Button>
+          </div>
+        </>
+      )}
+    </Modal>
   );
 }

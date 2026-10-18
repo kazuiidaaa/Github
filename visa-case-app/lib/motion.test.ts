@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { prefersReducedMotion, scrollBehavior } from "./motion";
+import { EXIT_MS, exitDelayMs, prefersReducedMotion, scrollBehavior } from "./motion";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -19,5 +19,11 @@ describe("motion", () => {
   it("減らす設定でなければ smooth", () => {
     stub(false);
     expect(scrollBehavior()).toBe("smooth");
+  });
+  it("出る動きの待ち時間：通常は EXIT_MS、減らす設定では 0", () => {
+    stub(false);
+    expect(exitDelayMs()).toBe(EXIT_MS);
+    stub(true);
+    expect(exitDelayMs()).toBe(0);
   });
 });
