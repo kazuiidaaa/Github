@@ -812,9 +812,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Documents proving the work history and skill level of a Thai cook",
     "태국 요리사의 경력·기능 수준을 증명하는 문서",
   ],
-  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（タイ料理人）。タイ料理人として5年以上の実務経験を証明する文書、初級以上のタイ料理人としての技能水準に関する証明書、申請の直前1年間にタイでタイ料理人として妥当な報酬を受けていたことを証明する文書": [
-    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (Thai cook). A document proving at least 5 years of practical experience as a Thai cook, a certificate of skill level as a Thai cook at beginner level or above, and a document proving that the applicant received appropriate remuneration as a Thai cook in Thailand during the year immediately before the application",
-    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(태국 요리사). 태국 요리사로서 5년 이상의 실무 경험을 증명하는 문서, 초급 이상의 태국 요리사로서의 기능 수준에 관한 증명서, 신청 직전 1년 동안 태국에서 태국 요리사로서 적정한 보수를 받았음을 증명하는 문서",
+  "職種によって提出する文書が異なる（案内ページの「職歴を証明する文書」）。該当する職種の場合のみ（タイ料理人）。タイ料理人として5年以上の実務経験を証明する文書（タイ労働省が発行するタイ料理人としての技能水準に関する証明書を取得するための要件を満たすために教育機関において教育を受けた期間を含む）、初級以上のタイ料理人としての技能水準に関する証明書、申請の直前1年間にタイでタイ料理人として妥当な報酬を受けていたことを証明する文書": [
+    "The documents to submit differ by occupation (\\\"Documents proving work history\\\" in the guidance). Only for the following occupation (Thai cook). A document proving at least 5 years of practical experience as a Thai cook (including the period of education received at an educational institution to meet the requirements for obtaining the certificate of skill level as a Thai cook issued by the Thai Ministry of Labour), a certificate of skill level as a Thai cook at beginner level or above, and a document proving that the applicant received appropriate remuneration as a Thai cook in Thailand during the year immediately before the application",
+    "직종에 따라 제출하는 문서가 다릅니다(안내 페이지의 '경력을 증명하는 문서'). 해당 직종인 경우에만(태국 요리사). 태국 요리사로서 5년 이상의 실무 경험을 증명하는 문서(태국 노동부가 발급하는 태국 요리사 기능 수준 증명서를 취득하기 위한 요건을 충족하기 위해 교육기관에서 교육을 받은 기간을 포함), 초급 이상의 태국 요리사로서의 기능 수준에 관한 증명서, 신청 직전 1년 동안 태국에서 태국 요리사로서 적정한 보수를 받았음을 증명하는 문서",
   ],
   "外国特有の建築技術者等の職歴を証明する文書（在職証明書等）": [
     "Document proving the work history of a foreign-specific architectural engineer, etc. (certificate of employment, etc.)",

@@ -2049,7 +2049,8 @@ export const HODO_RENEWAL: RuleSet = {
 
 // 在留資格「技能」。所属機関のカテゴリー（1〜4）は、技術・人文知識・国際業務と同じ区分で、書類もカテゴリーごとに異なる（Issue #298）。
 // 案内ページは「調理師」と「調理師以外」の2ページに分かれ、書類の違いは職歴を証明する文書のみ（職種別）。案件情報に職種の入力欄がないため、職歴の証明は職種ごとに要確認（check）とし、注記に職種を示す。
-// 職種の入力欄は、Issue #298 に提案として書く。提出書類は案内ページの本文による。チェックシート（カテゴリー3・4の認定と、更新）の○の位置は、案内ページと一致することを確認した。
+// 職種の入力欄は、Issue #298 に提案として書く。提出書類は案内ページの本文による。チェックシート（認定・変更のカテゴリー3・4と、更新。変更のカテゴリー共通2点を含む）の○・△の位置は、案内ページと一致することを確認した（2026-10-18。照合表は docs/official/reconciliation/gino-change-2026-10-18.md。認定・更新は照合済み）。
+// 研究の定義との共用: online_approval_proof・dispatch_documents・business_description・representative_declaration は研究の定義をそのまま使う（研究側を直すと技能も変わるため、tests/evaluateGino.test.ts で内容を固定している）。category_proof（受付印の注記を除く）と financial_statements（必須・注記のみ）は、技能のPDF・ページに合わせて上書きしている。源泉徴収の資料（withholding_*）は、納期の特例の名称を含め研究と同じ（G-1）。
 // 申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const GINO = "技能";
 const GINO_CHECKED_AT = "2026-10-12";
@@ -2092,7 +2093,7 @@ const ginoCareerRules: RequirementRule[] = [
     party: "applicant",
     categories: ["3", "4"],
     level: "check",
-    note: `${GINO_CAREER_NOTE}（タイ料理人）。タイ料理人として5年以上の実務経験を証明する文書、初級以上のタイ料理人としての技能水準に関する証明書、申請の直前1年間にタイでタイ料理人として妥当な報酬を受けていたことを証明する文書`,
+    note: `${GINO_CAREER_NOTE}（タイ料理人）。タイ料理人として5年以上の実務経験を証明する文書（タイ労働省が発行するタイ料理人としての技能水準に関する証明書を取得するための要件を満たすために教育機関において教育を受けた期間を含む）、初級以上のタイ料理人としての技能水準に関する証明書、申請の直前1年間にタイでタイ料理人として妥当な報酬を受けていたことを証明する文書`,
   },
   {
     id: "career_special_skill",
@@ -2136,7 +2137,7 @@ const ginoActivityDocuments: RequirementRule = {
   note: "労働契約の場合は、労働条件を明示する文書（労働基準法第15条第1項・同法施行規則第5条に基づき交付されるもの）。日本法人の役員に就任する場合は、役員報酬を定める定款の写し又は役員報酬を決議した株主総会の議事録の写し",
 };
 // 決算文書は、案内ページ・チェックシートとも、カテゴリー3・4の両方に必要（カテゴリー3は源泉徴収の理由書類のみ不要）
-// 研究の食い違いの判断（#333 K-2〜K-7）は技能に及ぼさないため、技能は研究の変更前の定義を持つ（技能のチェックシートとの照合は別に行う）。
+// 研究の決算文書の判断（#333 K-2〜K-4）は技能に及ばない。技能のPDF・ページには「転勤の場合に限る」が無く、カテゴリー3・4とも必要（変更の照合で確認）。そのため、研究の「要確認＋verify」を外して必須にしている。
 const ginoFinancialStatements: RequirementRule = {
   ...kenkyuFinancialStatements,
   categories: ["3", "4"],
@@ -2145,9 +2146,8 @@ const ginoFinancialStatements: RequirementRule = {
   verify: undefined,
 };
 const ginoCategoryProof: RequirementRule = { ...kenkyuCategoryProof, note: kenkyuCategoryProof.note?.replace("。チェックシートでは、変更・更新に「受付印のあるものの写し」とある", "") };
-const ginoWithholdingRules: RequirementRule[] = kenkyuWithholdingRules.map((r) =>
-  r.id === "withholding_special_approval" ? { ...r, name: "源泉所得税の納期の特例の承認に関する申請書の写し" } : r,
-);
+// 源泉徴収の資料は、研究と同じ（納期の特例の名称は、ページ・PDFの原文に合わせたもの。#333 K-7・G-1）
+const ginoWithholdingRules: RequirementRule[] = kenkyuWithholdingRules;
 
 export const GINO_COE: RuleSet = {
   id: "gino_coe",
