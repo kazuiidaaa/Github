@@ -20,9 +20,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "在留資格取得許可申請書": ["Application for permission for acquisition of status of residence", "체류자격 취득 허가 신청서"],
 
   // 注記
-  "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの": [
-    "A clear photo meeting the specifications, taken from the front within 6 months before the application, without a hat and with a plain background",
-    "규격을 충족하며 신청 전 6개월 이내에 정면에서 촬영한, 모자와 배경이 없는 선명한 것",
+  "規格を満たした、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。令和8年6月14日以降に交付される在留カードからは、1歳以上の方について写真の提出が必要": [
+    "A clear photo meeting the specifications, taken from the front within 6 months before the application, without a hat and with a plain background. For residence cards issued on or after June 14, 2026 (Reiwa 8), a photo is required for persons aged 1 or older",
+    "규격을 충족하며 신청 전 6개월 이내에 정면에서 촬영한, 모자와 배경이 없는 선명한 것. 2026년(레이와 8년) 6월 14일 이후에 교부되는 재류카드부터는 만 1세 이상인 사람에 대해 사진 제출이 필요하다",
   ],
   "直近1年分の総所得及び納税状況が記載されたもの": [
     "One showing the total income and tax payment status for the most recent year",

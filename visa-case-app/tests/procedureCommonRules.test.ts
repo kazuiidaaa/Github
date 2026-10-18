@@ -65,4 +65,13 @@ describe("手続共通の書類（Issue #291）", () => {
       expect(new Set(ids).size, set.id).toBe(ids.length);
     }
   });
+
+  it("変更・更新の写真の注記に、令和8年6月14日以降は1歳以上が必要という記載がある。認定には足さない（原文の確認範囲が変更・更新だけのため）", () => {
+    const note = (p: CommonProcedure) => procedureCommonRules(p).find((r) => r.id === "photo")?.note ?? "";
+    for (const p of ["change", "renewal"] as const) {
+      expect(note(p), p).toContain("令和8年6月14日以降");
+      expect(note(p), p).toContain("1歳以上");
+    }
+    expect(note("coe")).not.toContain("令和8年6月14日");
+  });
 });
