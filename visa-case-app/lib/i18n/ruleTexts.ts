@@ -356,6 +356,47 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Guidance on the procedure for application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
     "체류자격 취득 허가 신청 절차 안내(출입국재류관리청)",
   ],
+  "技術・人文知識・国際業務 在留資格取得許可申請（一部のみ整備）": [
+    "Technical/Humanities/International Services: application for permission for acquisition of status of residence (only partly covered)",
+    "기술·인문지식·국제업무 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "家族滞在 在留資格取得許可申請（一部のみ整備）": [
+    "Dependent: application for permission for acquisition of status of residence (only partly covered)",
+    "가족체재 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "在留資格「技術・人文知識・国際業務」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Engineer/Specialist in Humanities/International Services\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '기술·인문지식·국제업무' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「家族滞在」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Dependent\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '가족체재' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "主に日米地位協定による在留者が、協定上の地位を失った場合など。出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）": [
+    "Mainly for persons residing under the Japan-U.S. Status of Forces Agreement who lose their status under the agreement, etc. Birth is also treated as this \"document proving the reason\" (the practical handling when an infant acquires status by birth is not stated on the guidance page, so the administrative scrivener confirms it)",
+    "주로 미일 지위협정에 따른 재류자가 협정상의 지위를 잃은 경우 등. 출생의 경우에도 이 '사유를 증명하는 서류'로 취급한다(출생한 영아가 취득하는 경우의 실무 취급은 안내 페이지에 기재가 없으므로 행정서사가 확인한다)",
+  ],
+  "次のいずれか。(1)戸籍謄本 1通 (2)婚姻届受理証明書 1通 (3)結婚証明書（写し）1通 (4)出生証明書（写し）1通 (5)(1)〜(4)に準ずる文書（適宜）": [
+    "Any one of the following: (1) family register transcript (1 copy) (2) certificate of acceptance of marriage notification (1 copy) (3) marriage certificate (copy, 1 copy) (4) birth certificate (copy, 1 copy) (5) a document equivalent to (1) to (4) (as appropriate)",
+    "다음 중 하나. (1) 호적등본 1통 (2) 혼인신고 수리증명서 1통 (3) 결혼증명서(사본) 1통 (4) 출생증명서(사본) 1통 (5) (1)~(4)에 준하는 문서(적절히)",
+  ],
+  "1通": ["1 copy", "1통"],
+  "扶養者の活動により(1)(2)のどちらかを提出する。画面に扶養者の活動を入力する項目が無いため、どちらも要確認とする。在職証明書又は営業許可書の写し等（扶養者の職業がわかる証明書）1通、住民税の課税（又は非課税）証明書及び納税証明書 各1通。1年間の総所得と納税状況の両方が記載された証明書であれば、課税（非課税）証明書と納税証明書のいずれか一方でよい。入国後間もない場合などは、最寄りの地方出入国在留管理官署に問い合わせる": [
+    "Submit either (1) or (2), depending on the supporter's activity. Because the screen has no field for the supporter's activity, both are shown as needing confirmation. Certificate of employment or copy of business license, etc. (a certificate showing the supporter's occupation): 1 copy; resident tax assessment (or non-assessment) certificate and tax payment certificate: 1 copy each. If a single certificate states both the total income for one year and the tax payment status, either the assessment (non-assessment) certificate or the tax payment certificate is sufficient. If the supporter entered Japan only recently, inquire at the nearest regional immigration services office",
+    "부양자의 활동에 따라 (1)(2) 중 하나를 제출한다. 화면에 부양자의 활동을 입력하는 항목이 없으므로 둘 다 확인 필요로 한다. 재직증명서 또는 영업허가서 사본 등(부양자의 직업을 알 수 있는 증명서) 1통, 주민세 과세(또는 비과세) 증명서 및 납세증명서 각 1통. 1년간의 총소득과 납세 상황이 모두 기재된 증명서라면 과세(비과세) 증명서와 납세증명서 중 어느 한쪽이면 된다. 입국한 지 얼마 되지 않은 경우 등은 가장 가까운 지방출입국재류관리관서에 문의한다",
+  ],
+  "扶養者の活動により(1)(2)のどちらかを提出する。画面に扶養者の活動を入力する項目が無いため、どちらも要確認とする。扶養者名義の預金残高証明書又は給付金額及び給付期間を明示した奨学金給付に関する証明書（適宜）、又は、これらに準ずるもので申請人の生活費用を支弁できることを証するもの（適宜）": [
+    "Submit either (1) or (2), depending on the supporter's activity. Because the screen has no field for the supporter's activity, both are shown as needing confirmation. A bank balance certificate in the supporter's name, or a certificate of scholarship payment stating the amount and period of payment (as appropriate), or a document equivalent to these proving that the applicant's living expenses can be covered (as appropriate)",
+    "부양자의 활동에 따라 (1)(2) 중 하나를 제출한다. 화면에 부양자의 활동을 입력하는 항목이 없으므로 둘 다 확인 필요로 한다. 부양자 명의의 예금잔액증명서 또는 급부 금액 및 급부 기간을 명시한 장학금 급부에 관한 증명서(적절히), 또는 이에 준하는 것으로 신청인의 생활비용을 지불할 수 있음을 증명하는 것(적절히)",
+  ],
+  "出生した者の申請である場合（チェックシートでは△。案内ページは事由の別なく「質問書」を列挙しており、チェックシートに合わせて出生のみ要確認とする）。質問書の様式・記載内容は未確認": [
+    "If the application is for a person born in Japan (marked △ on the checklist; the guidance page lists the \"questionnaire\" without distinguishing the cause, and it is shown as needing confirmation for birth only, in line with the checklist). The form and contents of the questionnaire have not been confirmed",
+    "출생한 사람의 신청인 경우(체크시트에서는 △. 안내 페이지는 사유 구분 없이 '질문서'를 열거하고 있으며, 체크시트에 맞추어 출생만 확인 필요로 한다). 질문서의 양식·기재 내용은 확인하지 못했다",
+  ],
+  "必要書類ではないが、提出すると、許可後の在留カードに住民票の住居地が記載される。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。住民票があれば許可後の市区町村での住居地の届出は不要（入管法第19条の8第4項）で、なければ許可後14日以内の届出が必要（同条第1項）": [
+    "Not a required document, but if submitted, the address on the residence certificate is entered on the residence card issued after approval. Omit the individual number (My Number); other items must not be omitted. With a residence certificate, notifying the municipality of the residence after approval is not required (Immigration Control Act Art. 19-8(4)); without it, notification is required within 14 days after approval (Art. 19-8(1))",
+    "필수 서류는 아니지만, 제출하면 허가 후의 재류카드에 주민표의 주거지가 기재된다. 개인번호(마이넘버)는 생략하고, 다른 사항은 생략이 없는 것. 주민표가 있으면 허가 후 시구정촌에서의 주거지 신고는 불필요(입관법 제19조의8 제4항)하고, 없으면 허가 후 14일 이내에 신고가 필요(같은 조 제1항)",
+  ],
   "在留資格取得許可申請書（別記第三十六号様式）（出入国在留管理庁）": [
     "Application for permission for acquisition of status of residence (Appended Form No. 36) (Immigration Services Agency of Japan)",
     "체류자격 취득 허가 신청서(별기 제36호 양식)(출입국재류관리청)",

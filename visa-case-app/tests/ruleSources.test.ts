@@ -64,6 +64,8 @@ const RECONCILED_IDS = [
   ...["gijinkoku", "keiei_kanri", "kaigo", "houmu_kaikei", "iryo", "kenkyu", "kigyonai", "tokutei_kenkyu", "daigaku_sotsugyo", "tokutei_joho"].flatMap((p) => ["renewal", "change", "coe"].map((x) => `${p}_${x}`)),
   "gino_change", // 技能は変更のみ 2026-10-18 に照合。認定・更新は日付を入れない
   "hsp_acquisition",
+  "gijinkoku_acquisition",
+  "kazokutaizai_acquisition",
 ];
 
 describe("照合表がある資格の出典", () => {
