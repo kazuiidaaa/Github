@@ -12,6 +12,10 @@ import type { Lang } from "./lang";
 type Translated = readonly [en: string, ko: string];
 
 export const LEGACY_REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
+  "源泉所得税の納期の特例の承認に関する申請書の写し": [
+    "Copy of the application for approval of the special payment deadline for withholding income tax",
+    "원천소득세 납기 특례 승인 신청서 사본",
+  ],
   "申請人の活動内容を明らかにする書類（雇用契約書・労働条件通知書の写し等）": [
     "Documents showing the applicant's activities (e.g., a copy of the employment contract or the notice of working conditions)",
     "신청인의 활동 내용을 밝히는 서류(고용계약서·근로조건통지서 사본 등)",

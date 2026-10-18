@@ -71,6 +71,10 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Category 1: a copy of the Japan Company Handbook, etc. / Categories 2 and 3: a copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year. For Category 2, if approval to use the online system has been obtained, a document showing that approval. If no document can be submitted, the organization falls under Category 4",
     "카테고리 1: 『회사사계보』 사본 등／카테고리 2·3: 전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본). 카테고리 2는 온라인 이용 신청의 승인을 받은 경우 그 승인을 나타내는 문서. 제출 가능한 서류가 없으면 카테고리 4가 된다",
   ],
+"カテゴリー1：四季報の写し又は日本の証券取引所に上場していることを証明する文書（写し）／主務官庁から設立の許可を受けたことを証明する文書（写し）／イノベーション創出企業であることを証明する文書（例：補助金交付決定通知書の写し）／「一定の条件を満たす企業等」であることを証明する文書（例：認定証等の写し）のうち、提出可能なもの／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる": [
+    "Category 1: whichever can be submitted of a copy of the Japan Company Handbook or a document proving listing on a Japanese stock exchange (copy) / a document proving that permission of establishment was received from the competent ministry or agency (copy) / a document proving that the organization is an innovation-creating company (e.g., a copy of the subsidy grant decision notice) / a document proving that the organization is one of the 'companies, etc. satisfying certain conditions' (e.g., a copy of a certificate) / Categories 2 and 3: a copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year. For Category 2, if approval to use the online system has been obtained, a document showing that approval. If no document can be submitted, the organization falls under Category 4",
+    "카테고리 1: 『회사사계보』 사본 또는 일본 증권거래소 상장을 증명하는 문서(사본)／주무 관청으로부터 설립 허가를 받았음을 증명하는 문서(사본)／혁신 창출 기업임을 증명하는 문서(예: 보조금 교부 결정 통지서 사본)／'일정 조건을 충족하는 기업 등'임을 증명하는 문서(예: 인정증 등의 사본) 중 제출 가능한 것／카테고리 2·3: 전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본). 카테고리 2는 온라인 이용 신청의 승인을 받은 경우 그 승인을 나타내는 문서. 제출 가능한 서류가 없으면 카테고리 4가 된다",
+  ],
   "労働契約の場合は労働条件通知書等。役員就任・外国法人の日本支店への転勤の場合は、公式案内の資料を提出する": [
     "For an employment contract, the notice of working conditions, etc. For appointment as an officer or transfer to the Japan branch of a foreign company, submit the materials given in the official guidance",
     "근로계약의 경우에는 근로조건통지서 등. 임원 취임·외국 법인의 일본 지점으로의 전근의 경우에는 공식 안내의 자료를 제출한다",
@@ -856,6 +860,10 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）": [
     "List of documents to submit for \"Intra-company Transferee\" (for change of status of residence, categories 3 and 4 only, Table 2) (Immigration Services Agency of Japan)",
     "「기업 내 전근」 제출서류 일람(체류자격 변경 허가 신청용·카테고리 3·4 전용·표 2)(출입국재류관리청)",
+  ],
+  "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）": [
+    "Changes to the documents to submit for \"Intra-company Transferee\" (effective April 1, 2026 (Reiwa 8)) (Immigration Services Agency of Japan)",
+    "「기업 내 전근」 제출서류 변경에 대하여(2026년 4월 1일 운용 개시)(출입국재류관리청)",
   ],
   "「企業内転勤」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": [
     "List of documents to submit for \"Intra-company Transferee\" (for extension of the period of stay) (Immigration Services Agency of Japan)",

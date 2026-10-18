@@ -74,6 +74,27 @@ describe("企業内転勤の規則集合", () => {
     for (const rs of [KIGYONAI_RENEWAL, KIGYONAI_CHANGE, KIGYONAI_COE]) expect(rs.rules.some((r) => r.verify)).toBe(false);
   });
 
+  it("出典に、提出書類の変更の案内（001457117）が入っている（#373 E-6）", () => {
+    for (const rs of [KIGYONAI_RENEWAL, KIGYONAI_CHANGE, KIGYONAI_COE]) {
+      expect(rs.sources.map((s) => s.url)).toContain("https://www.moj.go.jp/isa/content/001457117.pdf");
+    }
+  });
+
+  it("書類の名称は、案内ページ・チェックシートの原文に合わせてある（#373 E-1〜E-3）。id は変えない", () => {
+    const name = (rs: typeof KIGYONAI_COE, id: string) => rs.rules.find((r) => r.id === id);
+    for (const rs of [KIGYONAI_RENEWAL, KIGYONAI_CHANGE, KIGYONAI_COE]) {
+      const proof = name(rs, "category_proof");
+      expect(proof?.name).toBe("所属機関がいずれのカテゴリーに該当するかを証明する文書");
+      for (const kind of ["四季報の写し又は日本の証券取引所に上場している", "主務官庁から設立の許可を受けた", "イノベーション創出企業", "「一定の条件を満たす企業等」"]) {
+        expect(proof?.note, kind).toContain(kind);
+      }
+    }
+    for (const rs of [KIGYONAI_CHANGE, KIGYONAI_COE]) {
+      expect(name(rs, "withholding_special_approval")?.name).toBe("源泉所得税の納期の特例の承認を受けていることを明らかにする資料");
+      expect(name(rs, "withholding_tax_receipts")?.name).toBe("直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）");
+    }
+  });
+
   it("カテゴリーは会社の1〜4区分（独自の区分定義を持たない）", () => {
     for (const rs of [KIGYONAI_RENEWAL, KIGYONAI_CHANGE, KIGYONAI_COE]) expect(rs.categoryDefinition).toBeUndefined();
     expect(evaluate(make("coe", "4")).categoryOutOfRange).toBe(false);

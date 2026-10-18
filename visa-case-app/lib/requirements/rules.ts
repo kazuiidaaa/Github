@@ -2245,8 +2245,9 @@ export const GINO_RENEWAL: RuleSet = {
 
 // 在留資格「企業内転勤」。所属機関のカテゴリーは、技術・人文知識・国際業務と同じ1〜4区分（CATEGORY_LABELS）。
 // 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-12 に照合済み（Issue #295）。
+// 案内ページの原文とPDF7点を照合済み（2026-10-18。docs/official/reconciliation/kigyonai-2026-10-18.md。Issue #333・#373）。名称は原文に合わせた（E-1〜E-3）。
 // 案内ページとチェックシートの食い違いはなかったため、要確認（verify）の項目はない。
-// 「在留資格『企業内転勤』の提出書類の変更について（令和8年4月1日運用開始）」（001457117.pdf）は、認定・変更の表2の9に「登記事項証明書」を選択肢として足すが、10の登記事項証明書は引き続き必要で、提出する書類の範囲は変わらない。
+// 「在留資格『企業内転勤』の提出書類の変更について（令和8年4月1日運用開始）」（001457117.pdf）は、認定・変更の表2の9から「(3)登記事項証明書」を削除した（取り消し線）。10の登記事項証明書は引き続き必要で、提出する書類の範囲は変わらない。
 // 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const KIGYONAI = "企業内転勤";
 const KIGYONAI_CHECKED_AT = "2026-10-12";
@@ -2254,11 +2255,11 @@ const KIGYONAI_PAGE_SOURCE = { title: "在留資格「企業内転勤」（出�
 
 const kigyonaiCategoryProof: RequirementRule = {
   id: "category_proof",
-  name: "所属機関のカテゴリーを証明する文書",
+  name: "所属機関がいずれのカテゴリーに該当するかを証明する文書",
   party: "organization",
   categories: ["1", "2", "3"],
   level: "required",
-  note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
+  note: "カテゴリー1：四季報の写し又は日本の証券取引所に上場していることを証明する文書（写し）／主務官庁から設立の許可を受けたことを証明する文書（写し）／イノベーション創出企業であることを証明する文書（例：補助金交付決定通知書の写し）／「一定の条件を満たす企業等」であることを証明する文書（例：認定証等の写し）のうち、提出可能なもの／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
 };
 const kigyonaiOnlineApproval: RequirementRule = {
   id: "online_approval_proof",
@@ -2343,10 +2344,10 @@ const kigyonaiWithholdingRules: RequirementRule[] = [
     note: "源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要",
   },
   { id: "payroll_office_notification", name: "給与支払事務所等の開設届出書の写し", party: "organization", categories: ["4"], level: "required" },
-  { id: "withholding_tax_receipts", name: "直近3か月分の所得税徴収高計算書の写し", party: "organization", categories: ["4"], level: "required" },
+  { id: "withholding_tax_receipts", name: "直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）", party: "organization", categories: ["4"], level: "required" },
   {
     id: "withholding_special_approval",
-    name: "源泉所得税の納期の特例の承認に関する申請書の写し",
+    name: "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
     party: "organization",
     categories: ["4"],
     level: "required",
@@ -2379,6 +2380,7 @@ export const KIGYONAI_COE: RuleSet = {
     KIGYONAI_PAGE_SOURCE,
     { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404133.pdf" },
     { title: "「企業内転勤」に係る提出書類一覧（在留資格認定証明書交付申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366542.pdf" },
+    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2404,6 +2406,7 @@ export const KIGYONAI_CHANGE: RuleSet = {
     KIGYONAI_PAGE_SOURCE,
     { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366563.pdf" },
     { title: "「企業内転勤」に係る提出書類一覧（在留資格変更許可申請用・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366564.pdf" },
+    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf" },
   ],
   rules: [...procedureCommonRules("change"), ...kigyonaiCategoryRules],
 };
@@ -2417,6 +2420,7 @@ export const KIGYONAI_RENEWAL: RuleSet = {
   sources: [
     KIGYONAI_PAGE_SOURCE,
     { title: "「企業内転勤」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001366562.pdf" },
+    { title: "「企業内転勤」に係る提出書類の変更について（令和8年4月1日運用開始）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001457117.pdf" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
