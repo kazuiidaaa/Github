@@ -4,7 +4,7 @@ import { evaluate, hasRuleSetFor, shouldShowNoRuleGuide } from "../lib/requireme
 import { RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
-// Issue #396：照合表 acquisition-gijinkoku-kazokutaizai-2026-10-18.md の、人の判断「推奨のとおり」（2026-10-18）の6件（R-2・R-8・R-9・R-10・R-12・R-17）
+// Issue #396：照合表 acquisition-gijinkoku-kazokutaizai-2026-10-18.md の、人の判断「推奨のとおり」（2026-10-18）の9件（R-2〜R-5・R-8・R-9・R-10・R-12・R-17）
 type Cause = FormDetails["acquisitionCause"];
 
 function make(cause: Cause, over: Partial<CaseRecord> = {}): CaseRecord {
@@ -60,19 +60,39 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     expect(cause.causes).toEqual(["birth", "other"]);
     expect(cause.level).toBe("required");
     expect(cause.note).toContain("行政書士が確認");
-    // 既存の注記（R-4。未反映）は残す
-    expect(cause.note).toContain("日米地位協定");
     const e = gijEval("birth");
-    expect(ids(e, "required")).toEqual(["application_form", "passport_presentation", "cause_proof"]);
+    // 写真は出生にも出す（R-3）
+    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_presentation", "cause_proof"]);
     // カテゴリーが未選択の間に出る、全カテゴリー共通の要確認（専門士・派遣。#402 の R-1）
     expect(ids(e, "check")).toEqual([...COMMON_CHECK, "vocational_school_certificate", "dispatch_documents"]);
   });
 
-  it("技人国：R-2 以外（写真・活動に応じた資料・注記など、未反映の R）は ACQUISITION_BY_CAUSE のまま", () => {
-    expect(ids(gijEval("nationalityLoss"), "required")).toEqual(["application_form", "photo", "passport_presentation", "nationality_proof", "activity_materials"]);
-    expect(ids(gijEval("other"), "required")).toEqual(["application_form", "photo", "passport_presentation", "cause_proof", "activity_materials"]);
-    expect(ids(gijEval(""), "required")).toEqual(["application_form", "passport_presentation"]);
-    for (const id of ["application_form", "photo", "passport_presentation", "passport_reason_statement", "agent_identity_document", "nationality_proof", "activity_materials"]) {
+  it("R-3：写真は事由の別なく必須（出生・未選択も含む）。注記は原文のとおり（年齢、中長期在留者とならない在留資格の取得では不要）。名称は変えない", () => {
+    const photo = gij.rules.find((r) => r.id === "photo")!;
+    expect(photo.causes).toEqual(["nationalityLoss", "birth", "other"]);
+    expect(photo.level).toBe("required");
+    expect(photo.name).toBe(base.rules.find((r) => r.id === "photo")!.name);
+    for (const w of ["1歳に満たない方は、写真の提出は不要", "令和8年6月14日以降", "中長期在留者とならない在留資格の取得を希望する場合も、写真の提出は不要"]) expect(photo.note, w).toContain(w);
+    expect(photo.note).not.toContain("出生には写真の記載がない");
+    for (const cause of ALL) expect(ids(gijEval(cause), "required"), cause).toContain("photo");
+  });
+
+  it("R-4：事由を証する書類の注記から、原文に無い例（日米地位協定）を外す", () => {
+    const cause = gij.rules.find((r) => r.id === "cause_proof")!;
+    expect(cause.note).not.toContain("日米地位協定");
+    expect(cause.name).toBe(base.rules.find((r) => r.id === "cause_proof")!.name);
+  });
+
+  it("R-5：活動に応じた資料（activity_materials）は外す（カテゴリー別の書類がこれに当たる）", () => {
+    expect(gij.rules.some((r) => r.id === "activity_materials")).toBe(false);
+    for (const cause of ALL) expect(gijEval(cause).items.some((i) => i.rule.id === "activity_materials"), cause).toBe(false);
+  });
+
+  it("技人国：R-2〜R-5 以外（申請取次者・旅券の理由書など、未反映の R）は ACQUISITION_BY_CAUSE のまま", () => {
+    expect(ids(gijEval("nationalityLoss"), "required")).toEqual(["application_form", "photo", "passport_presentation", "nationality_proof"]);
+    expect(ids(gijEval("other"), "required")).toEqual(["application_form", "photo", "passport_presentation", "cause_proof"]);
+    expect(ids(gijEval(""), "required")).toEqual(["application_form", "photo", "passport_presentation"]);
+    for (const id of ["application_form", "passport_presentation", "passport_reason_statement", "agent_identity_document", "nationality_proof"]) {
       expect(gij.rules.find((r) => r.id === id), id).toBe(base.rules.find((r) => r.id === id));
     }
   });
