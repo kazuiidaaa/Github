@@ -117,11 +117,11 @@ export function UploadBox({
   }
 
   return (
-    <section className={compact ? "" : "rounded-2xl border border-slate-200 bg-white p-6"}>
+    <section className={compact ? "" : "rounded-2xl border border-slate-200 bg-white p-4 md:p-6"}>
       {!compact && (
         <>
           <h2 className="mb-1 font-semibold">{t(hasDocument ? "display.uploadReplaceTitle" : "display.uploadNewTitle", { label })}</h2>
-          <p className="mb-4 text-xs text-slate-500">
+          <p className="mb-4 text-xs text-muted">
             {isPhoto ? PHOTO_GUIDANCE : t("display.uploadNoteCard")}
             {lang === "ja" ? "" : " "}
             {t("display.uploadNotePrototype")}
@@ -139,22 +139,20 @@ export function UploadBox({
           setDragging(false);
           handle(e.dataTransfer.files[0]);
         }}
-        className={`rounded-2xl border-2 border-dashed text-center text-sm ${compact ? "p-4" : "p-10"} ${
+        className={`rounded-2xl border-2 border-dashed text-center text-sm ${compact ? "p-4" : "px-4 py-8 md:p-10"} ${
           dragging ? "border-slate-700 bg-slate-50" : "border-line-strong"
         }`}
       >
         {uploading ? (
-          <p className="text-slate-700">{t("display.uploading", { name: uploading.name })}</p>
+          <p role="status" className="break-all text-slate-700">
+            {t("display.uploading", { name: uploading.name })}
+          </p>
         ) : (
           <>
             <p className={`${compact ? "mb-2" : "mb-3"} text-slate-600`}>{t("display.dropHere")}</p>
-            <button
-              type="button"
-              onClick={() => input.current?.click()}
-              className="rounded-full border border-line-strong bg-white px-4 py-2 font-bold hover:bg-slate-50"
-            >
+            <Button type="button" variant="secondary" onClick={() => input.current?.click()}>
               {t(hasDocument ? "display.chooseReplaceFile" : "display.chooseFile")}
-            </button>
+            </Button>
             <input
               ref={input}
               type="file"
@@ -166,16 +164,20 @@ export function UploadBox({
               }}
             />
             {!compact && (
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-muted">
                 {t("display.formatAndSize", { formats: FORMAT_LABEL_BY_DOCUMENT_TYPE[documentType], size: MAX_FILE_BYTES / 1024 / 1024 })}
               </p>
             )}
           </>
         )}
       </div>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-2 break-words text-sm font-bold text-danger-text">
+          {error}
+        </p>
+      )}
       {notice && !error && (
-        <p role="status" className="mt-2 text-sm text-amber-700">
+        <p role="status" className="mt-2 text-sm text-warning">
           {notice}
         </p>
       )}
@@ -192,7 +194,7 @@ export function UploadBox({
         />
       )}
       {failed && !uploading && (
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           <Button onClick={() => void upload(failed)}>{t("display.retry")}</Button>
           <Button
             variant="secondary"
