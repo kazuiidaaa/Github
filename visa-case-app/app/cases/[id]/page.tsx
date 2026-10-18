@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
@@ -26,9 +26,11 @@ import { expiryLevel } from "@/lib/caseMetrics";
 import { canJumpToApplicantField } from "@/lib/applicantFields";
 import { unresolvedCount } from "@/lib/checks/definitions";
 import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
+import { focusField } from "@/lib/formFocus";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { useLabels } from "@/lib/i18n/labels";
+import { scrollBehavior } from "@/lib/motion";
 import { evaluate } from "@/lib/requirements/evaluate";
 import { deleteCase, getDocumentSignedUrl, logAudit, updateCase, useCan, useCase, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, type DocumentRecord } from "@/lib/types";
@@ -46,6 +48,15 @@ const TABS = [
 const TAB_KEYS = TABS.map((tb) => tb.key);
 function parseTab(value: string | null): Tab {
   return TAB_KEYS.find((k) => k === value) ?? "overview";
+}
+
+/** 文字のリンクも、押しやすさのため高さ 44px（人の決定。Issue #392。新規登録と同じ） */
+const textLinkClass = "inline-flex min-h-[44px] items-center text-sm text-blue-700 hover:underline active:opacity-70";
+
+/** タブバーの端の見切れ表示（続きがある側を 16px 薄くする）。色だけでなく形（切れ目）で、横に続くことを示す */
+function edgeMask(start: boolean, end: boolean): string | undefined {
+  if (!start && !end) return undefined;
+  return `linear-gradient(to right, ${start ? "transparent, #000 16px" : "#000, #000"}, ${end ? "#000 calc(100% - 16px), transparent" : "#000"})`;
 }
 
 /** アップロードした書類の種別名（表示部品の訳表を共用する） */
@@ -83,23 +94,23 @@ function DocumentRow({
   }
 
   return (
-    <div className="px-6 py-3 text-sm">
+    <div className="px-4 py-3 text-sm sm:px-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <span className="min-w-0 break-all">{t("casePage.documentLine", { label: t(UPLOADED_DOCUMENT_KEYS[doc.documentType]), file: doc.fileName })}</span>
         <span className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap">
           <Badge tone="blue">
             {labels.documentStatus(doc.status)}
           </Badge>
-          <span className="text-slate-500">{formatDateTime(doc.uploadedAt)}</span>
-          <Button variant="secondary" className="min-h-10 md:min-h-0" onClick={() => void open()}>
+          <span className="text-muted">{formatDateTime(doc.uploadedAt)}</span>
+          <Button variant="secondary" onClick={() => void open()}>
             {t("casePage.docView")}
           </Button>
-          <Button variant="danger" className="min-h-10 md:min-h-0" disabled={locked || readOnly} onClick={onDelete}>
+          <Button variant="danger" disabled={locked || readOnly} onClick={onDelete}>
             {t("casePage.delete")}
           </Button>
         </span>
       </div>
-      {locked && <p className="mt-1 text-xs text-slate-500">{t("casePage.docLocked")}</p>}
+      {locked && <p className="mt-1 text-xs text-muted">{t("casePage.docLocked")}</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
@@ -117,7 +128,10 @@ export default function CaseDetailPage() {
   const searchParams = useSearchParams();
   // 開いているタブは URL の ?tab= から決める。切替は履歴を増やさないよう replace を使う
   const tab = parseTab(searchParams.get("tab"));
+  // パネルの切替は不透明度のみ（設計書 3章B-3。内容は左右に動かさない）。最初の表示は画面全体のフェードに任せ、切替の後だけ付ける
+  const [switched, setSwitched] = useState(false);
   function setTab(next: Tab) {
+    setSwitched(true);
     router.replace(`/cases/${id}?tab=${next}`, { scroll: false });
   }
   function onTabKeyDown(e: React.KeyboardEvent, index: number) {
@@ -136,8 +150,34 @@ export default function CaseDetailPage() {
   // 案件の読み込み後にタブバーが現れるため、その時点でも位置を合わせる
   const tabBarShown = !!record;
   useEffect(() => {
-    // 選択中のタブが見える位置へ、タブバーだけを横にスクロールする
-    document.getElementById(`case-tab-${tab}`)?.scrollIntoView({ inline: "nearest", block: "nearest" });
+    // 選択中のタブが見える位置へ、タブバーだけを横にスクロールする（動きを減らす設定では即時）
+    document.getElementById(`case-tab-${tab}`)?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: scrollBehavior() });
+  }, [tab, tabBarShown]);
+  // 選択中のタブの下線（設計書 3章B-3）。1本の線を transform で隣のタブへ動かす（width は動かさない）。
+  // 連打しても CSS transition が現在の位置から動かし直す。動きを減らす設定では globals.css の指定で即時に移る。
+  const tabListRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState<{ x: number; w: number; animate: boolean } | null>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
+  function updateEdges() {
+    const list = tabListRef.current;
+    if (!list) return;
+    const start = list.scrollLeft > 1;
+    const end = list.scrollLeft + list.clientWidth < list.scrollWidth - 1;
+    setEdges((e) => (e.start === start && e.end === end ? e : { start, end }));
+  }
+  useLayoutEffect(() => {
+    const list = tabListRef.current;
+    if (!list || typeof ResizeObserver === "undefined") return;
+    // タブの幅は、言語の切替や件数の表示で変わるため、タブバーと各タブの大きさの変化で測り直す。
+    // ResizeObserver は監視を始めた直後にも1回呼ばれるため、最初の位置もここで決まる（描画の前）
+    const observer = new ResizeObserver(() => {
+      const el = document.getElementById(`case-tab-${tab}`);
+      if (el) setIndicator((prev) => ({ x: el.offsetLeft, w: el.offsetWidth, animate: prev !== null }));
+      updateEdges();
+    });
+    observer.observe(list);
+    for (const child of Array.from(list.children)) observer.observe(child);
+    return () => observer.disconnect();
   }, [tab, tabBarShown]);
   // 概要の「未入力」から移動するとき、タブの描画後にフォーカスする欄の id
   const pendingFocusId = useRef<string | null>(null);
@@ -147,16 +187,9 @@ export default function CaseDetailPage() {
   }
   useEffect(() => {
     if (tab !== "applicant" || !pendingFocusId.current) return;
-    const el = document.getElementById(pendingFocusId.current);
-    if (!el) return;
-    pendingFocusId.current = null;
-    // 選択式の欄（性別・在留資格）は、id が欄全体の枠にあるため、中の選択済み（または先頭）の項目へフォーカスする
-    const target = el.matches("input,select,textarea,button")
-      ? el
-      : (el.querySelector<HTMLElement>('[role="radio"][tabindex="0"]') ?? el.querySelector<HTMLElement>('[role="radio"]:not(:disabled)'));
-    if (!target) return;
-    target.scrollIntoView({ block: "center" });
-    target.focus();
+    // 選択式の欄（性別・在留資格）は、id が欄全体の枠にあるため、中の選択済み（または先頭）の項目へフォーカスする。
+    // 新規登録・申請人情報の誤りへの移動と同じ関数（lib/formFocus.ts。動きを減らす設定ではスクロールが即時）
+    if (focusField(pendingFocusId.current)) pendingFocusId.current = null;
   }, [tab, tabBarShown]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -167,8 +200,8 @@ export default function CaseDetailPage() {
   if (!record) {
     return (
       <div>
-        <p className="mb-4">{t("casePage.notFound")}</p>
-        <Link href="/cases" className="text-blue-700 hover:underline">
+        <p className="mb-1">{t("casePage.notFound")}</p>
+        <Link href="/cases" className={textLinkClass}>
           {t("casePage.backToCases")}
         </Link>
       </div>
@@ -201,29 +234,29 @@ export default function CaseDetailPage() {
 
   return (
     <div>
-      <Link href="/cases" className="text-sm text-blue-700 hover:underline">
+      <Link href="/cases" className={textLinkClass}>
         {t("casePage.backToCases")}
       </Link>
-      <div className="mt-2 mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div className="mt-1 mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold break-words">{record.caseName}</h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             {procedure}
             <WorkflowBadge status={record.workflowStatus} />
           </p>
         </div>
-        <div className="flex w-full items-center justify-between gap-2 md:w-auto md:shrink-0 md:justify-start">
-        <Link
-          href={`/cases/${record.id}/documents`}
-          className="inline-flex min-h-10 items-center whitespace-nowrap md:min-h-0 rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50"
-        >
-          {t("casePage.createDocuments")}
-        </Link>
-        {canDelete && (
-          <Button variant="danger" className="min-h-10 md:min-h-0" onClick={() => setConfirmingDelete(true)}>
-            {t("casePage.delete")}
-          </Button>
-        )}
+        <div className="flex w-full flex-wrap items-center justify-between gap-2 md:w-auto md:shrink-0 md:flex-nowrap md:justify-start">
+          <Link
+            href={`/cases/${record.id}/documents`}
+            className="inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50 active:bg-slate-100 md:whitespace-nowrap"
+          >
+            {t("casePage.createDocuments")}
+          </Link>
+          {canDelete && (
+            <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+              {t("casePage.delete")}
+            </Button>
+          )}
         </div>
       </div>
       {confirmingDelete && (
@@ -254,7 +287,14 @@ export default function CaseDetailPage() {
         />
       )}
 
-      <div role="tablist" aria-label={t("casePage.tabListLabel")} className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
+      <div
+        ref={tabListRef}
+        role="tablist"
+        aria-label={t("casePage.tabListLabel")}
+        onScroll={updateEdges}
+        style={{ maskImage: edgeMask(edges.start, edges.end), WebkitMaskImage: edgeMask(edges.start, edges.end) }}
+        className="relative mb-6 flex gap-1 overflow-x-auto border-b border-slate-200"
+      >
         {TABS.map((tb, i) => (
           <button
             key={tb.key}
@@ -266,9 +306,9 @@ export default function CaseDetailPage() {
             tabIndex={tab === tb.key ? 0 : -1}
             onClick={() => setTab(tb.key)}
             onKeyDown={(e) => onTabKeyDown(e, i)}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium ${
-              tab === tb.key ? "border-b-2 border-accent text-foreground" : "text-slate-500 hover:text-slate-800"
-            }`}
+            className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap px-4 py-2 text-sm font-medium active:bg-slate-100 ${
+              tab === tb.key ? "text-foreground" : "text-muted hover:text-slate-800"
+            } ${indicator ? "" : tab === tb.key ? "border-b-2 border-accent" : ""}`}
           >
             {t(tb.label)}
             {tabIndicators[tb.key] && (
@@ -278,9 +318,19 @@ export default function CaseDetailPage() {
             )}
           </button>
         ))}
+        {indicator && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-px origin-left bg-accent"
+            style={{
+              transform: `translateX(${indicator.x}px) scaleX(${indicator.w})`,
+              transition: indicator.animate ? "transform var(--spring-move-duration) var(--ease-spring-move)" : "none",
+            }}
+          />
+        )}
       </div>
 
-      <div id="case-tabpanel" role="tabpanel" aria-labelledby={`case-tab-${tab}`}>
+      <div key={tab} id="case-tabpanel" role="tabpanel" aria-labelledby={`case-tab-${tab}`} className={switched ? "anim-page-enter" : undefined}>
       {tab === "overview" && (
         <div className="space-y-4 md:space-y-6">
           {(() => {
@@ -290,8 +340,8 @@ export default function CaseDetailPage() {
             ) : null;
           })()}
           <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
-          <section className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h2 className="mb-4 flex items-center gap-2 font-semibold">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+            <h2 className="mb-4 flex flex-wrap items-center gap-2 font-semibold">
               {t("casePage.applicantInfo")}
               <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
                 {a.confirmationStatus === "confirmed" ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}
@@ -299,25 +349,25 @@ export default function CaseDetailPage() {
             </h2>
             <dl className="grid grid-cols-1 gap-y-1 text-sm md:grid-cols-[10rem_1fr] md:gap-y-3">
               {/* 未入力の項目は、編集できるときのみ、入力欄へ移動するボタンにする */}
-              <dt className="text-slate-500">{t("casePage.field_legalName")}</dt>
+              <dt className="text-muted">{t("casePage.field_legalName")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.legalName || <MissingValue field="legalName" label={t("casePage.field_legalName")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_nationality")}</dt>
+              <dt className="text-muted">{t("casePage.field_nationality")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.nationality || <MissingValue field="nationality" label={t("casePage.field_nationality")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_dateOfBirth")}</dt>
+              <dt className="text-muted">{t("casePage.field_dateOfBirth")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.dateOfBirth ? formatDate(a.dateOfBirth) : <MissingValue field="dateOfBirth" label={t("casePage.field_dateOfBirth")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_gender")}</dt>
+              <dt className="text-muted">{t("casePage.field_gender")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.gender || <MissingValue field="gender" label={t("casePage.field_gender")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_address")}</dt>
+              <dt className="text-muted">{t("casePage.field_address")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.address || <MissingValue field="address" label={t("casePage.field_address")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_residenceStatus")}</dt>
+              <dt className="text-muted">{t("casePage.field_residenceStatus")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <MissingValue field="residenceStatus" label={t("casePage.field_residenceStatus")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_residenceExpiryDate")}</dt>
+              <dt className="text-muted">{t("casePage.field_residenceExpiryDate")}</dt>
               <dd className="mb-2 md:mb-0">
                 {a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : <MissingValue field="residenceExpiryDate" label={t("casePage.field_residenceExpiryDate")} onJump={jump} />}
               </dd>
-              <dt className="text-slate-500">{t("casePage.field_residenceCardNumber")}</dt>
+              <dt className="text-muted">{t("casePage.field_residenceCardNumber")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <MissingValue field="residenceCardNumber" label={t("casePage.field_residenceCardNumber")} onJump={jump} />}</dd>
-              <dt className="text-slate-500">{t("casePage.field_workRestriction")}</dt>
+              <dt className="text-muted">{t("casePage.field_workRestriction")}</dt>
               <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <MissingValue field="workRestriction" label={t("casePage.field_workRestriction")} onJump={jump} />}</dd>
             </dl>
             {a.confirmationStatus === "confirmed" && (
@@ -350,8 +400,8 @@ export default function CaseDetailPage() {
             <UploadBox caseId={record.id} documentType="photo" currentFileName={photo?.fileName} onUploaded={() => {}} />
           )}
           <section className="rounded-2xl border border-slate-200 bg-white">
-            <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">{t("casePage.registeredDocuments")}</h2>
-            {record.documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">{t("casePage.noDocuments")}</p>}
+            <h2 className="border-b border-slate-100 px-4 py-3 font-semibold sm:px-6">{t("casePage.registeredDocuments")}</h2>
+            {record.documents.length === 0 && <p className="px-4 py-6 text-sm text-muted sm:px-6">{t("casePage.noDocuments")}</p>}
             {record.documents.map((d) => (
               <DocumentRow
                 key={d.id}
