@@ -1562,7 +1562,9 @@ export const IRYO_RENEWAL: RuleSet = {
 };
 
 // 在留資格「研究」。所属機関のカテゴリー（1〜4）は、技術・人文知識・国際業務と同じ区分で、書類もカテゴリーごとに異なる（Issue #296）。
-// 提出書類は案内ページの本文による（カテゴリー1・2は「その他の資料は原則不要」、3は4のうち源泉徴収に関する資料が不要）。チェックシート（PDF）の○の位置は未照合。
+// 提出書類は案内ページの本文と、チェックシート（PDF）による。カテゴリー1・2は「その他の資料は原則不要」、3は4のうち源泉徴収に関する資料が不要。
+// チェックシートの○・△の位置は、認定・変更・更新の5つのPDF（カテゴリー共通と、令和8年4月15日以降のカテゴリー3・4）すべてと照合済み（2026-10-18。照合表は docs/official/reconciliation/kenkyu-2026-10-18.md、Issue #333）。
+// ページとチェックシートが食い違う書類は「要確認」にし、ページにない書類は足さない（Issue #312 の規則）。食い違いの判断（K-1〜K-9）は、照合表の「食い違い一覧」に記録している。
 // 申請書は様式N（認定・変更・更新とも）。「転勤」は様式Lで、出力は別 Issue で扱う（ここでは書類のみ「要確認」で案内）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 const KENKYU = "研究";
 const KENKYU_CHECKED_AT = "2026-10-07";
@@ -1575,7 +1577,7 @@ const kenkyuCategoryProof: RequirementRule = {
   party: "organization",
   categories: ["1", "2", "3"],
   level: "required",
-  note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
+  note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる。チェックシートでは、変更・更新に「受付印のあるものの写し」とある",
 };
 const kenkyuOnlineApproval: RequirementRule = {
   id: "online_approval_proof",
@@ -1625,13 +1627,19 @@ const kenkyuBusinessMaterials: RequirementRule = {
   level: "required",
   note: "沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が詳細に記載された案内書、これに準ずる文書、又は登記事項証明書のいずれか",
 };
+// カテゴリー4の決算文書は、ページとチェックシートの読み方が食い違うため、認定・変更・更新とも「要確認」（照合表 K-2〜K-4）。
+//   ページ：カテゴリー4は必要で、カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」。
+//   チェックシート：行全体（カテゴリー3・4）に「転勤して研究を行う業務に従事する場合に限る」が付く。記号は、認定が○、変更・更新が△。
+const kenkyuFinancialStatementsNote = (mark: string) =>
+  `新規事業の場合は事業計画書。ページの読み方は、カテゴリー4は必要（カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」）。チェックシートの読み方は、行全体（カテゴリー3・4）に「転勤して研究を行う業務に従事する場合に限る」が付き、記号は${mark}。両者が食い違うため要確認`;
 const kenkyuFinancialStatements: RequirementRule = {
   id: "financial_statements",
   name: "直近年度の決算文書の写し",
   party: "organization",
   categories: ["4"],
-  level: "required",
-  note: "新規事業の場合は事業計画書",
+  level: "check",
+  note: kenkyuFinancialStatementsNote("○（認定）"),
+  verify: true,
 };
 const kenkyuFinancialStatementsCat3: RequirementRule = {
   ...kenkyuFinancialStatements,
@@ -1639,6 +1647,7 @@ const kenkyuFinancialStatementsCat3: RequirementRule = {
   categories: ["3"],
   level: "check",
   note: "カテゴリー3は、転勤して研究を行う業務に従事する場合に限る。新規事業の場合は事業計画書",
+  verify: undefined,
 };
 const kenkyuRepresentativeDeclaration: RequirementRule = {
   id: "representative_declaration",
@@ -1662,7 +1671,7 @@ const kenkyuWithholdingRules: RequirementRule[] = [
   { id: "withholding_tax_receipts", name: "直近3か月分の所得税徴収高計算書の写し", party: "organization", categories: ["4"], level: "required" },
   {
     id: "withholding_special_approval",
-    name: "源泉所得税の納期の特例の承認に関する申請書の写し",
+    name: "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
     party: "organization",
     categories: ["4"],
     level: "required",
@@ -1721,7 +1730,7 @@ export const KENKYU_CHANGE: RuleSet = {
       party: "organization",
       categories: ["2"],
       level: "check",
-      note: "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合",
+      note: "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合。チェックシートでは、カテゴリーを証明する文書の選択肢の一つとして○",
     },
     kenkyuDispatch,
     kenkyuActivityDocuments,
@@ -1729,7 +1738,7 @@ export const KENKYU_CHANGE: RuleSet = {
     kenkyuTransferDocuments,
     kenkyuBusinessMaterials,
     // 案内ページはカテゴリー4に必要とするが、チェックシート（変更）は△（条件付き）。食い違うため要確認
-    { ...kenkyuFinancialStatements, note: "新規事業の場合は事業計画書。案内ページでは必要とされているが、チェックシート（変更）では△（条件付き）のため要確認", verify: true },
+    { ...kenkyuFinancialStatements, note: kenkyuFinancialStatementsNote("△（変更）") },
     kenkyuFinancialStatementsCat3,
     kenkyuRepresentativeDeclaration,
     ...kenkyuWithholdingRules,
@@ -1737,7 +1746,7 @@ export const KENKYU_CHANGE: RuleSet = {
 };
 
 // 更新は、案内ページの「転職後の初回の更新申請」の資料（活動内容・事業内容・決算文書・代表者申告書）を、カテゴリー3・4の「要確認」とする。
-// 決算文書は、カテゴリー3について案内の文言が複数あり（転勤の場合に限る／提出書類10は不要）、読み取りに幅があるため要確認。
+// 決算文書は、ページとチェックシートで「転勤の場合に限る」の範囲の読み方が食い違うため要確認。カテゴリー3の「提出書類10は不要」は、チェックシートでは「提出資料11は不要」で、代表者申告書（No.10）に係る食い違いとして扱う（決算文書はNo.9）。
 // チェックシート（更新）では、決算文書は△（条件付き）、代表者申告書は○、源泉徴収の資料（11）はカテゴリー4のみで、いずれも転職後の初回の枠内。
 const KENKYU_FIRST_RENEWAL_NOTE = "転職後、初回の更新許可申請の場合のみ";
 const kenkyuFirstRenewalWithholding: RequirementRule[] = kenkyuWithholdingRules.map((r) => ({
@@ -1768,21 +1777,16 @@ export const KENKYU_RENEWAL: RuleSet = {
     },
     { ...kenkyuActivityDocuments, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE },
     { ...kenkyuBusinessMaterials, level: "check", note: KENKYU_FIRST_RENEWAL_NOTE },
-    {
-      ...kenkyuFinancialStatements,
-      level: "check",
-      note: `${KENKYU_FIRST_RENEWAL_NOTE}。案内ページでは必要とされているが、チェックシート（更新）では△（条件付き）のため要確認`,
-      verify: true,
-    },
+    { ...kenkyuFinancialStatements, note: `${KENKYU_FIRST_RENEWAL_NOTE}。${kenkyuFinancialStatementsNote("△（更新）")}` },
     {
       ...kenkyuFinancialStatementsCat3,
-      note: "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。案内に「転勤の場合に限る」と「提出書類10は不要」の2つの文言があり、チェックシート（更新）は△（条件付き）のため要確認",
+      note: "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。チェックシート（更新）は△（条件付き）のため要確認",
       verify: true,
     },
     {
       ...kenkyuRepresentativeDeclaration,
       level: "check",
-      note: `${KENKYU_FIRST_RENEWAL_NOTE}。カテゴリー3は、案内ページに「提出書類10は不要」とあるが、チェックシート（更新）では○のため要確認`,
+      note: `${KENKYU_FIRST_RENEWAL_NOTE}。カテゴリー3は、ページは「提出書類10は不要」、チェックシート（PDF）は「提出資料11は不要」で、代表者申告書（No.10）は○のため要確認`,
       verify: true,
     },
     ...kenkyuFirstRenewalWithholding,
@@ -2132,7 +2136,18 @@ const ginoActivityDocuments: RequirementRule = {
   note: "労働契約の場合は、労働条件を明示する文書（労働基準法第15条第1項・同法施行規則第5条に基づき交付されるもの）。日本法人の役員に就任する場合は、役員報酬を定める定款の写し又は役員報酬を決議した株主総会の議事録の写し",
 };
 // 決算文書は、案内ページ・チェックシートとも、カテゴリー3・4の両方に必要（カテゴリー3は源泉徴収の理由書類のみ不要）
-const ginoFinancialStatements: RequirementRule = { ...kenkyuFinancialStatements, categories: ["3", "4"] };
+// 研究の食い違いの判断（#333 K-2〜K-7）は技能に及ぼさないため、技能は研究の変更前の定義を持つ（技能のチェックシートとの照合は別に行う）。
+const ginoFinancialStatements: RequirementRule = {
+  ...kenkyuFinancialStatements,
+  categories: ["3", "4"],
+  level: "required",
+  note: "新規事業の場合は事業計画書",
+  verify: undefined,
+};
+const ginoCategoryProof: RequirementRule = { ...kenkyuCategoryProof, note: kenkyuCategoryProof.note?.replace("。チェックシートでは、変更・更新に「受付印のあるものの写し」とある", "") };
+const ginoWithholdingRules: RequirementRule[] = kenkyuWithholdingRules.map((r) =>
+  r.id === "withholding_special_approval" ? { ...r, name: "源泉所得税の納期の特例の承認に関する申請書の写し" } : r,
+);
 
 export const GINO_COE: RuleSet = {
   id: "gino_coe",
@@ -2152,7 +2167,7 @@ export const GINO_COE: RuleSet = {
       level: "required",
       note: "申請結果（認定証明書等）の返送に使用する",
     },
-    kenkyuCategoryProof,
+    ginoCategoryProof,
     kenkyuOnlineApproval,
     ginoWorkContent,
     ginoResume,
@@ -2162,7 +2177,7 @@ export const GINO_COE: RuleSet = {
     kenkyuBusinessMaterials,
     ginoFinancialStatements,
     kenkyuRepresentativeDeclaration,
-    ...kenkyuWithholdingRules,
+    ...ginoWithholdingRules,
   ],
 };
 
@@ -2176,7 +2191,7 @@ export const GINO_CHANGE: RuleSet = {
   sources: GINO_SOURCES,
   rules: [
     ...procedureCommonRules("change"),
-    kenkyuCategoryProof,
+    ginoCategoryProof,
     kenkyuOnlineApproval,
     ginoWorkContent,
     ginoResume,
@@ -2186,7 +2201,7 @@ export const GINO_CHANGE: RuleSet = {
     kenkyuBusinessMaterials,
     ginoFinancialStatements,
     kenkyuRepresentativeDeclaration,
-    ...kenkyuWithholdingRules,
+    ...ginoWithholdingRules,
   ],
 };
 
@@ -2203,7 +2218,7 @@ export const GINO_RENEWAL: RuleSet = {
   sources: GINO_SOURCES,
   rules: [
     ...procedureCommonRules("renewal"),
-    kenkyuCategoryProof,
+    ginoCategoryProof,
     kenkyuOnlineApproval,
     kenkyuDispatch,
     kenkyuRepresentativeDeclaration,
@@ -2218,7 +2233,7 @@ export const GINO_RENEWAL: RuleSet = {
     { ...ginoActivityDocuments, level: "check", note: GINO_FIRST_RENEWAL_NOTE },
     { ...kenkyuBusinessMaterials, level: "check", note: GINO_FIRST_RENEWAL_NOTE },
     { ...ginoFinancialStatements, level: "check", note: `${GINO_FIRST_RENEWAL_NOTE}。新規事業の場合は事業計画書` },
-    ...kenkyuWithholdingRules.map((r) => ({
+    ...ginoWithholdingRules.map((r) => ({
       ...r,
       level: "check" as const,
       note: r.note ? `${GINO_FIRST_RENEWAL_NOTE}。${r.note}` : GINO_FIRST_RENEWAL_NOTE,

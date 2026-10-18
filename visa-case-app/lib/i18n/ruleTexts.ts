@@ -568,21 +568,33 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "For Category 3, only when engaged in research work after a transfer. For a new business, a business plan",
     "카테고리 3은 전근하여 연구 업무에 종사하는 경우에 한함. 신규 사업의 경우 사업계획서",
   ],
-  "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。案内に「転勤の場合に限る」と「提出書類10は不要」の2つの文言があり、チェックシート（更新）は△（条件付き）のため要確認": [
-    "Only for the first renewal application after changing jobs, and only when engaged in research work after a transfer. The guidance has two wordings (\"only in case of a transfer\" and \"document 10 is not required\"), and the checklist (renewal) shows △ (conditional), so please verify",
-    "이직 후 첫 연장 허가 신청에서, 전근하여 연구 업무에 종사하는 경우에 한함. 안내에 '전근의 경우에 한함'과 '제출서류 10은 불필요'라는 두 문구가 있고 체크시트(연장)는 △(조건부)이므로 확인 필요",
+  "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる。チェックシートでは、変更・更新に「受付印のあるものの写し」とある": [
+    "Category 1: a copy of the Japan Company Handbook, etc. / Categories 2 and 3: a copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year. For Category 2, if approval to use the online system has been obtained, a document showing that approval. If no document can be submitted, the organization falls under Category 4. In the checklists, change and renewal say \"a copy bearing the receipt stamp\"",
+    "카테고리 1: 『회사사계보』 사본 등／카테고리 2·3: 전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본). 카테고리 2는 온라인 이용 신청의 승인을 받은 경우 그 승인을 나타내는 문서. 제출 가능한 서류가 없으면 카테고리 4가 된다. 체크시트에서는 변경·연장에 '접수인이 찍힌 것의 사본'이라고 되어 있다",
   ],
-  "新規事業の場合は事業計画書。案内ページでは必要とされているが、チェックシート（変更）では△（条件付き）のため要確認": [
-    "For a new business, a business plan. The guidance page requires it, but the checklist (change) shows △ (conditional), so please verify",
-    "신규 사업의 경우 사업계획서. 안내 페이지에서는 필요하다고 되어 있으나 체크시트(변경)에서는 △(조건부)이므로 확인 필요",
+  "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合。チェックシートでは、カテゴリーを証明する文書の選択肢の一つとして○": [
+    "For a change from \"Student\", when treated as Category 2 (graduates or expected graduates of universities, junior colleges, graduate schools, etc.). In the checklist, it is marked ○ as one of the options for the document proving the category",
+    "'유학'에서의 변경으로 카테고리 2(대학·단기대학·대학원 졸업(예정)자 등)로 취급하는 경우. 체크시트에서는 카테고리를 증명하는 문서의 선택지 중 하나로 ○로 되어 있다",
   ],
-  "転職後、初回の更新許可申請の場合のみ。案内ページでは必要とされているが、チェックシート（更新）では△（条件付き）のため要確認": [
-    "Only for the first renewal application after changing jobs. The guidance page requires it, but the checklist (renewal) shows △ (conditional), so please verify",
-    "이직 후 첫 연장 허가 신청의 경우에만. 안내 페이지에서는 필요하다고 되어 있으나 체크시트(연장)에서는 △(조건부)이므로 확인 필요",
+  "新規事業の場合は事業計画書。ページの読み方は、カテゴリー4は必要（カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」）。チェックシートの読み方は、行全体（カテゴリー3・4）に「転勤して研究を行う業務に従事する場合に限る」が付き、記号は○（認定）。両者が食い違うため要確認": [
+    "For a new business, a business plan. The guidance page reads it as required for Category 4 (only Category 3 is limited to \"when engaged in research work after a transfer\"). The checklist reads it as the whole row (Categories 3 and 4) being limited to \"when engaged in research work after a transfer\", with the mark ○ (certificate of eligibility). The two readings differ, so please verify",
+    "신규 사업의 경우 사업계획서. 안내 페이지에서는 카테고리 4는 필요하다고 읽히며(카테고리 3만 '전근하여 연구 업무에 종사하는 경우에 한함'), 체크시트에서는 행 전체(카테고리 3·4)에 '전근하여 연구 업무에 종사하는 경우에 한함'이 붙고 기호는 ○(인정증명서)입니다. 두 해석이 달라 확인 필요",
   ],
-  "転職後、初回の更新許可申請の場合のみ。カテゴリー3は、案内ページに「提出書類10は不要」とあるが、チェックシート（更新）では○のため要確認": [
-    "Only for the first renewal application after changing jobs. For Category 3, the guidance page says \"document 10 is not required\" but the checklist (renewal) shows ○, so please verify",
-    "이직 후 첫 연장 허가 신청의 경우에만. 카테고리 3은 안내 페이지에 '제출서류 10은 불필요'라고 되어 있으나 체크시트(연장)에서는 ○이므로 확인 필요",
+  "新規事業の場合は事業計画書。ページの読み方は、カテゴリー4は必要（カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」）。チェックシートの読み方は、行全体（カテゴリー3・4）に「転勤して研究を行う業務に従事する場合に限る」が付き、記号は△（変更）。両者が食い違うため要確認": [
+    "For a new business, a business plan. The guidance page reads it as required for Category 4 (only Category 3 is limited to \"when engaged in research work after a transfer\"). The checklist reads it as the whole row (Categories 3 and 4) being limited to \"when engaged in research work after a transfer\", with the mark △ (change). The two readings differ, so please verify",
+    "신규 사업의 경우 사업계획서. 안내 페이지에서는 카테고리 4는 필요하다고 읽히며(카테고리 3만 '전근하여 연구 업무에 종사하는 경우에 한함'), 체크시트에서는 행 전체(카테고리 3·4)에 '전근하여 연구 업무에 종사하는 경우에 한함'이 붙고 기호는 △(변경)입니다. 두 해석이 달라 확인 필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。新規事業の場合は事業計画書。ページの読み方は、カテゴリー4は必要（カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」）。チェックシートの読み方は、行全体（カテゴリー3・4）に「転勤して研究を行う業務に従事する場合に限る」が付き、記号は△（更新）。両者が食い違うため要確認": [
+    "Only for the first renewal application after changing jobs. For a new business, a business plan. The guidance page reads it as required for Category 4 (only Category 3 is limited to \"when engaged in research work after a transfer\"). The checklist reads it as the whole row (Categories 3 and 4) being limited to \"when engaged in research work after a transfer\", with the mark △ (renewal). The two readings differ, so please verify",
+    "이직 후 첫 연장 허가 신청의 경우에만. 신규 사업의 경우 사업계획서. 안내 페이지에서는 카테고리 4는 필요하다고 읽히며(카테고리 3만 '전근하여 연구 업무에 종사하는 경우에 한함'), 체크시트에서는 행 전체(카테고리 3·4)에 '전근하여 연구 업무에 종사하는 경우에 한함'이 붙고 기호는 △(연장)입니다. 두 해석이 달라 확인 필요",
+  ],
+  "転職後、初回の更新許可申請で、転勤して研究を行う業務に従事する場合に限る。チェックシート（更新）は△（条件付き）のため要確認": [
+    "Only for the first renewal application after changing jobs, and only when engaged in research work after a transfer. The checklist (renewal) shows △ (conditional), so please verify",
+    "이직 후 첫 연장 허가 신청에서, 전근하여 연구 업무에 종사하는 경우에 한함. 체크시트(연장)는 △(조건부)이므로 확인 필요",
+  ],
+  "転職後、初回の更新許可申請の場合のみ。カテゴリー3は、ページは「提出書類10は不要」、チェックシート（PDF）は「提出資料11は不要」で、代表者申告書（No.10）は○のため要確認": [
+    "Only for the first renewal application after changing jobs. For Category 3, the guidance page says \"document 10 is not required\" while the checklist (PDF) says \"document 11 is not required\", and the representative declaration (No. 10) is marked ○, so please verify",
+    "이직 후 첫 연장 허가 신청의 경우에만. 카테고리 3은 안내 페이지에는 '제출서류 10은 불필요', 체크시트(PDF)에는 '제출자료 11은 불필요'라고 되어 있고, 대표자 신고서(No.10)는 ○이므로 확인 필요",
   ],
   "転職後、初回の更新許可申請の場合のみ。源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要": [
     "Only for the first renewal application after changing jobs. Only for an organization exempt from withholding. In that case, the notification of opening a payroll office and the like below are not required",
