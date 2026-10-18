@@ -1309,7 +1309,7 @@ export const KAIGO_RENEWAL: RuleSet = {
 };
 
 // 在留資格「法律・会計業務」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #301）。
-// 提出書類は案内ページの本文による（チェックシート（PDF）は未照合）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/houmu-kaikei-2026-10-18.md、Issue #333。書類の食い違いはなかった）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
 // 更新は、共通書類（申請書・写真・パスポート及び在留カードの提示）以外の書類が案内ページにない。
 const HOUMU_KAIKEI = "法律・会計業務";
 const HOUMU_KAIKEI_SOURCE = { title: "在留資格「法律・会計業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/legalaccountingservices.html" };
