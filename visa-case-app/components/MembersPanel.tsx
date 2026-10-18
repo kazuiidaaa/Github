@@ -109,7 +109,6 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
                 {m.userId !== myUserId && canRemoveMember(myRole, m.role) && (
                   <Button
                     variant="danger"
-                    className="min-h-[44px]"
                     disabled={busy}
                     onClick={() => setRemoving(m)}
                   >
@@ -137,7 +136,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
         <div>
           <ChoiceGroup legend={t("account.members_roleLegend")} options={roleOptions(addable)} value={role} onChange={(v) => setRole(v as Role)} />
         </div>
-        <Button type="submit" className="min-h-[44px]" disabled={busy || !email.trim()}>
+        <Button type="submit" disabled={busy || !email.trim()}>
           {t("account.members_add")}
         </Button>
       </form>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
 import { DashboardCards, type CardKey } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
@@ -75,10 +75,10 @@ function SortHeader({ column, label, filter, onSort }: { column: SortColumn; lab
   return (
     <th
       scope="col"
-      className="whitespace-nowrap px-4 py-3"
+      className="whitespace-nowrap px-4 py-0"
       aria-sort={current ? (st.dir === "asc" ? "ascending" : "descending") : undefined}
     >
-      <button type="button" onClick={() => onSort(nextSort(filter.sort, column))} className="inline-flex items-center gap-1 font-bold hover:underline">
+      <button type="button" onClick={() => onSort(nextSort(filter.sort, column))} className="inline-flex min-h-[44px] items-center gap-1 font-bold hover:underline">
         {label}
         <span aria-hidden="true" className={current ? "" : "text-slate-400"}>
           {current ? (st.dir === "asc" ? "▲" : "▼") : "↕"}
@@ -170,6 +170,11 @@ function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: 
   );
 }
 
+/** 一覧の順次表示を再生済みか。同じ画面を開き直しても、再生しない（画面を開いた最初の一度だけ。Issue #392） */
+let introPlayed = false;
+/** 最初の表示が終わるまで（最大 約0.5秒＋余裕）の長さ */
+const INTRO_MS = 700;
+
 function CasesView() {
   const t = useT();
   const cases = useCases();
@@ -185,6 +190,17 @@ function CasesView() {
   const pageData = useMemo(() => paginate(rows, readPage(new URLSearchParams(params.toString()))), [rows, params]);
   const shown = pageData.items;
   const active = isFilterActive(filter);
+  // 順次表示は最初の一度だけ。絞り込み・並べ替え・ページ送りでは再生しない
+  const [intro, setIntro] = useState(() => !introPlayed);
+  useEffect(() => {
+    if (!loaded || !intro) return;
+    const id = setTimeout(() => {
+      introPlayed = true;
+      setIntro(false);
+    }, INTRO_MS);
+    return () => clearTimeout(id);
+  }, [loaded, intro]);
+  const stagger = intro ? "anim-stagger" : "";
   const pendingCount = useMemo(() => cases.filter((c) => !hasResidenceCard(c)).length, [cases]);
 
   // 絞り込み・並び順を変えたときは、1ページ目に戻す（page を付けない）。
@@ -207,7 +223,7 @@ function CasesView() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{t("caseList.pageTitle")}</h1>
         {canEdit && (
-          <Link href="/cases/new" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover">
+          <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
             {t("caseList.newCase")}
           </Link>
         )}
@@ -229,7 +245,7 @@ function CasesView() {
               {loaded && cases.length > 0 && pendingCount === 0 ? t("caseList.noCardNone") : empty}
             </p>
           ) : (
-            <ul className="anim-stagger space-y-3">
+            <ul className={`${stagger} space-y-3`}>
               {rows.map(({ record: c }) => (
                 <li key={c.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm md:grid-cols-[1fr_2fr] md:items-center">
                   <div>
@@ -272,19 +288,19 @@ function CasesView() {
               <SortHeader column="updated" label={t("caseList.colUpdated")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
             </tr>
           </thead>
-          <tbody className="anim-stagger">
+          <tbody className={stagger}>
             {empty && (
               <tr>
                 <td colSpan={7} role={emptyRole} className="px-4 py-10 text-center text-slate-500">
                   {empty}
                   {loaded && cases.length > 0 && active && (
-                    <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
+                    <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
                       {t("caseList.resetConditions")}
                     </button>
                   )}
                   {loaded && cases.length === 0 && canEdit && (
                     <div className="mt-4">
-                      <Link href="/cases/new" className="inline-block rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-text hover:bg-accent-hover">
+                      <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
                         {t("caseList.newCase")}
                       </Link>
                     </div>
@@ -293,7 +309,7 @@ function CasesView() {
               </tr>
             )}
             {shown.map(({ record: c, metrics: m }) => (
-              <tr key={c.id} className="relative border-t border-slate-100 align-top hover:bg-slate-50 transition-colors">
+              <tr key={c.id} className="relative border-t border-slate-100 align-top transition-colors hover:bg-slate-50 active:bg-slate-100">
                 <td className="px-4 py-3 font-medium">
                   <Link href={`/cases/${c.id}`} className="text-blue-700 after:absolute after:inset-0 hover:underline">
                     {c.caseName}
@@ -319,18 +335,18 @@ function CasesView() {
       </div>
 
       {/* 狭い画面幅（md 未満）では、表に代えてカード形式で表示する */}
-      <ul className="anim-stagger space-y-3 md:hidden">
+      <ul className={`${stagger} space-y-3 md:hidden`}>
         {empty && (
           <li role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
             {empty}
             {loaded && cases.length > 0 && active && (
-              <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 text-blue-700 hover:underline">
+              <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
                 {t("caseList.resetConditions")}
               </button>
             )}
             {loaded && cases.length === 0 && canEdit && (
               <div className="mt-4">
-                <Link href="/cases/new" className="inline-block rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-text hover:bg-accent-hover">
+                <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
                   {t("caseList.newCase")}
                 </Link>
               </div>
@@ -338,7 +354,7 @@ function CasesView() {
           </li>
         )}
         {shown.map(({ record: c, metrics: m }) => (
-          <li key={c.id} className="relative rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+          <li key={c.id} className="relative rounded-2xl border border-slate-200 bg-white p-4 text-sm transition-colors active:bg-slate-100">
             <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 after:absolute after:inset-0 hover:underline">
               {c.caseName}
             </Link>
@@ -370,7 +386,7 @@ function CasesView() {
             type="button"
             disabled={pageData.page <= 1}
             onClick={() => go(filter, pageData.page - 1)}
-            className="rounded-full border border-line-strong bg-white px-4 py-2 disabled:opacity-50"
+            className="min-h-[44px] rounded-full border border-line-strong bg-white px-4 py-2 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
           >
             {t("caseList.prevPage")}
           </button>
@@ -381,7 +397,7 @@ function CasesView() {
             type="button"
             disabled={pageData.page >= pageData.totalPages}
             onClick={() => go(filter, pageData.page + 1)}
-            className="rounded-full border border-line-strong bg-white px-4 py-2 disabled:opacity-50"
+            className="min-h-[44px] rounded-full border border-line-strong bg-white px-4 py-2 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
           >
             {t("caseList.nextPage")}
           </button>

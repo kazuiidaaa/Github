@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
+/** 押しやすさのため、最小の高さは 44px（人の決定。Issue #392）。画面ごとの min-h-[44px] は不要 */
 export function Button({
   variant = "primary",
   className = "",
@@ -13,7 +14,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`rounded-full px-5 py-2 text-sm font-bold disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`min-h-[44px] rounded-full px-5 py-2 text-sm font-bold disabled:cursor-not-allowed ${styles} ${className}`}
     />
   );
 }

@@ -11,7 +11,8 @@ import { SORT_KEYS } from "@/lib/caseMetrics";
 /** 入力が止まってから、検索語を URL（一覧）へ反映するまでの時間 */
 const SEARCH_DEBOUNCE_MS = 300;
 
-const select = "rounded-xl border border-line-strong bg-white px-3 py-2 text-sm";
+// 入力欄は 16px（iOS Safari の自動拡大を避ける）・高さ 44px。ui.tsx の inputClass と同じ規則
+const select = "min-h-[44px] rounded-xl border border-line-strong bg-white px-3 py-2 text-base";
 
 export function CaseFilters({
   filter,
@@ -77,7 +78,7 @@ export function CaseFilters({
     <div className="mb-4 space-y-3">
       <div className="flex flex-wrap gap-3">
         <input
-          className="w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm md:w-72"
+          className="min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base md:w-72"
           placeholder={t("caseList.searchLabel")}
           aria-label={t("caseList.searchLabel")}
           value={text}
@@ -102,7 +103,7 @@ export function CaseFilters({
         />
         <button
           type="button"
-          className="rounded-xl border border-line-strong bg-white px-3 py-2 text-sm md:hidden"
+          className="min-h-[44px] rounded-xl border border-line-strong bg-white px-3 py-2 text-sm active:bg-slate-100 md:hidden"
           aria-expanded={open}
           aria-controls="case-filter-panel"
           onClick={() => setOpen((v) => !v)}
@@ -137,31 +138,31 @@ export function CaseFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-wrap items-center gap-4 text-sm">
-        <div role="group" aria-label={t("caseList.conditionsGroup")} className="flex flex-wrap items-center gap-4">
-        <label className="flex items-center gap-1">
-          <input type="checkbox" checked={filter.within30} onChange={(e) => change({ within30: e.target.checked })} />
+      <div className="flex flex-wrap items-center gap-x-4 text-sm">
+        <div role="group" aria-label={t("caseList.conditionsGroup")} className="flex flex-wrap items-center gap-x-4">
+        <label className="flex min-h-[44px] items-center gap-2">
+          <input type="checkbox" className="size-5 shrink-0" checked={filter.within30} onChange={(e) => change({ within30: e.target.checked })} />
           {t("caseList.within30")}
         </label>
-        <label className="flex items-center gap-1">
-          <input type="checkbox" checked={filter.missingDocs} onChange={(e) => change({ missingDocs: e.target.checked })} />
+        <label className="flex min-h-[44px] items-center gap-2">
+          <input type="checkbox" className="size-5 shrink-0" checked={filter.missingDocs} onChange={(e) => change({ missingDocs: e.target.checked })} />
           {t("caseList.missingDocs")}
         </label>
-        <label className="flex items-center gap-1">
-          <input type="checkbox" checked={filter.noCard} onChange={(e) => change({ noCard: e.target.checked })} />
+        <label className="flex min-h-[44px] items-center gap-2">
+          <input type="checkbox" className="size-5 shrink-0" checked={filter.noCard} onChange={(e) => change({ noCard: e.target.checked })} />
           {t("caseList.noCard")}
         </label>
-        <label className="flex items-center gap-1">
-          <input type="checkbox" checked={filter.unconfirmed} onChange={(e) => change({ unconfirmed: e.target.checked })} />
+        <label className="flex min-h-[44px] items-center gap-2">
+          <input type="checkbox" className="size-5 shrink-0" checked={filter.unconfirmed} onChange={(e) => change({ unconfirmed: e.target.checked })} />
           {t("caseList.unconfirmed")}
         </label>
-        <label className="flex items-center gap-1">
-          <input type="checkbox" checked={filter.checksPending} onChange={(e) => change({ checksPending: e.target.checked })} />
+        <label className="flex min-h-[44px] items-center gap-2">
+          <input type="checkbox" className="size-5 shrink-0" checked={filter.checksPending} onChange={(e) => change({ checksPending: e.target.checked })} />
           {t("caseList.checksPending")}
         </label>
         </div>
         {active && (
-          <button onClick={reset} className="text-blue-700 hover:underline">
+          <button onClick={reset} className="min-h-[44px] text-blue-700 hover:underline">
             {t("caseList.resetConditions")}
           </button>
         )}

@@ -78,7 +78,7 @@ export default function LoginPage() {
             {t("auth.resetSent")}
           </p>
         )}
-        <Button type="submit" disabled={busy} className="min-h-[44px] w-full">
+        <Button type="submit" disabled={busy} className="w-full">
           {busy ? t("auth.resetSending") : t("auth.resetSubmit")}
         </Button>
         <button type="button" onClick={() => switchMode("login")} className="block min-h-[44px] w-full text-center text-sm font-bold text-accent underline underline-offset-2">
@@ -103,7 +103,7 @@ export default function LoginPage() {
           {tr(error)}
         </p>
       )}
-      <Button type="submit" disabled={busy} className="min-h-[44px] w-full">
+      <Button type="submit" disabled={busy} className="w-full">
         {busy ? t("auth.loggingIn") : t("auth.login")}
       </Button>
       <button type="button" disabled={busy} onClick={() => switchMode("reset")} className="block min-h-[44px] w-full text-center text-sm font-bold text-accent underline underline-offset-2">
@@ -113,7 +113,7 @@ export default function LoginPage() {
         <Button
           type="button"
           variant="secondary"
-          className="min-h-[44px] w-full"
+          className="w-full"
           onClick={() => {
             startDemo();
             router.push("/");

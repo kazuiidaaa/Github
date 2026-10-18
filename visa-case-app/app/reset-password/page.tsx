@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
           {tr(error)}
         </p>
       )}
-      <Button type="submit" disabled={busy} className="min-h-[44px] w-full">
+      <Button type="submit" disabled={busy} className="w-full">
         {busy ? t("auth.newPasswordSubmitting") : t("auth.newPasswordSubmit")}
       </Button>
     </form>
