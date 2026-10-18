@@ -179,10 +179,10 @@ describe("研究の規則集合", () => {
     }
   });
 
-  it("研究の判断（K-2〜K-7）は、技能に及ばない（技能は変更前の定義のまま）", () => {
+  it("研究の決算文書・受付印の判断（K-2〜K-5）は、技能に及ばない。納期の特例の名称（K-7）は、技能も原文に合わせる（G-1）", () => {
     const find = (id: string) => GINO_COE.rules.find((r) => r.id === id && (id !== "financial_statements" || r.categories?.includes("3")));
     expect(find("financial_statements")?.level).toBe("required");
-    expect(find("withholding_special_approval")?.name).toBe("源泉所得税の納期の特例の承認に関する申請書の写し");
+    expect(find("withholding_special_approval")?.name).toBe("源泉所得税の納期の特例の承認を受けていることを明らかにする資料");
     expect(find("category_proof")?.note).not.toContain("受付印");
   });
 });
