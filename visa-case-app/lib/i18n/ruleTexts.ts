@@ -1076,9 +1076,13 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "If the applicant will work as a dispatched worker: the contract that is the basis for the dispatch and materials showing the business activities of the destination",
     "파견으로 근무하는 경우: 파견의 근거가 되는 계약서 및 파견처의 사업 활동을 밝히는 자료",
   ],
-  "派遣で就労する場合のみ": [
-    "Only if the applicant will work as a dispatched worker",
-    "파견으로 근무하는 경우에만",
+  "(1)在職証明書／(2)辞令の写し／(3)雇用契約書の写し／(4)上記(1)〜(3)に準ずる文書": [
+    "(1) Certificate of employment / (2) copy of the letter of appointment / (3) copy of the employment contract / (4) documents equivalent to (1) to (3)",
+    "(1) 재직증명서 / (2) 발령장 사본 / (3) 고용계약서 사본 / (4) 위 (1)~(3)에 준하는 문서",
+  ],
+  "派遣で就労する場合のみ。派遣先の事業活動を明らかにする資料は、契約機関の資料（案内書・登記事項証明書・それらに準ずる文書・外国人社員リスト。同意書を除く）に当たるもの": [
+    "Only if the applicant will work as a dispatched worker. The materials showing the destination's business activities are those corresponding to the contracting organization's materials (brochure, certificate of registered matters, equivalent documents, list of foreign staff; excluding the consent form)",
+    "파견으로 근무하는 경우에만 해당. 파견처의 사업 활동을 밝히는 자료는 계약 기관의 자료(안내서, 등기사항증명서, 이에 준하는 문서, 외국인 직원 목록. 동의서 제외)에 해당하는 것",
   ],
   "契約機関が変更された場合のみ": [
     "Only if the contracting organization has changed",

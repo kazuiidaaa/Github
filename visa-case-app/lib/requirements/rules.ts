@@ -2710,6 +2710,11 @@ const tokuteiJohoActivityDocuments: RequirementRule = {
   level: "required",
   note: "(1)雇用契約書の写し／(2)辞令の写し／(3)採用通知書の写し／(4)上記(1)〜(3)に準ずる文書",
 };
+// 更新の原文は「(1)在職証明書／(2)辞令の写し／(3)雇用契約書の写し／(4)上記(1)〜(3)に準ずる文書」のいずれか（採用通知書は無い）。認定・変更と選択肢が違うため、更新だけ別の行にする。
+const tokuteiJohoRenewalActivityDocuments: RequirementRule = {
+  ...tokuteiJohoActivityDocuments,
+  note: "(1)在職証明書／(2)辞令の写し／(3)雇用契約書の写し／(4)上記(1)〜(3)に準ずる文書",
+};
 const tokuteiJohoCareerDocuments: RequirementRule = {
   id: "career_documents",
   name: "卒業証明書及び職歴その他経歴を証する文書",
@@ -2724,7 +2729,7 @@ const tokuteiJohoDispatch: RequirementRule = {
   party: "organization",
   categories: ALL,
   level: "check",
-  note: "派遣で就労する場合のみ",
+  note: "派遣で就労する場合のみ。派遣先の事業活動を明らかにする資料は、契約機関の資料（案内書・登記事項証明書・それらに準ずる文書・外国人社員リスト。同意書を除く）に当たるもの",
 };
 const tokuteiJohoResidentTax: RequirementRule = {
   id: "resident_tax_certificates",
@@ -2793,7 +2798,7 @@ export const TOKUTEI_JOHO_RENEWAL: RuleSet = {
   subtype: "tokuteiJoho",
   checkedAt: TOKUTEI_JOHO_CHECKED_AT,
   sources: [TOKUTEI_JOHO_PAGE_SOURCE],
-  rules: [...procedureCommonRules("renewal"), tokuteiJohoActivityDocuments, tokuteiJohoResidentTax],
+  rules: [...procedureCommonRules("renewal"), tokuteiJohoRenewalActivityDocuments, tokuteiJohoResidentTax],
 };
 
 export const RULE_SETS: RuleSet[] = [
