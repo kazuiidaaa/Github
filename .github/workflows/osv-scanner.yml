@@ -16,7 +16,7 @@ permissions:
 jobs:
   scan:
     name: 依存関係の検査
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.7.0
     with:
       scan-args: |-
         --lockfile=visa-case-app/package-lock.json
