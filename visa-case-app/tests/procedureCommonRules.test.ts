@@ -74,4 +74,13 @@ describe("手続共通の書類（Issue #291）", () => {
     }
     expect(note("coe")).not.toContain("令和8年6月14日");
   });
+
+  it("変更の写真の注記に、中長期在留者とならない在留資格への変更は不要という記載があり、更新には中長期在留者でない方・3月以下の更新は不要という記載がある（#333 K-A4）", () => {
+    const note = (p: CommonProcedure) => procedureCommonRules(p).find((r) => r.id === "photo")?.note ?? "";
+    expect(note("change")).toContain("中長期在留者とならない在留資格への変更");
+    expect(note("change")).toContain("不要");
+    expect(note("renewal")).toContain("中長期在留者でない方の更新");
+    expect(note("renewal")).toContain("3月以下の在留期間の更新");
+    expect(note("coe")).not.toContain("中長期在留者");
+  });
 });
