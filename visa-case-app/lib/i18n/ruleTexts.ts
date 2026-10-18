@@ -362,6 +362,14 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Only if the applicant has previously stayed under the status \"Technical Intern Training\"",
     "'기능실습' 체류자격으로 체류한 적이 있는 경우에만",
   ],
+  "直近1年分の総所得及び納税状況が記載されたもの。1年間の総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でかまわない": [
+    "One showing the total income and tax payment status for the most recent year. A certificate stating both the total income for one year and the tax payment status (whether taxes have been paid) is sufficient on its own, in place of the other",
+    "최근 1년분의 총소득 및 납세 상황이 기재된 것. 1년간의 총소득 및 납세 상황(세금을 납부했는지 여부)이 모두 기재된 증명서라면 어느 한쪽만으로도 된다",
+  ],
+  "派遣契約に基づいて就労する場合（申請人が被派遣者の場合）のみ。チェックシートで△。ページには記載なし": [
+    "Only if working under a dispatch contract (the applicant is a dispatched worker). Marked △ on the checksheet; not stated on the guidance page",
+    "파견 계약에 따라 취업하는 경우(신청인이 피파견자인 경우)에만. 체크시트에서 △. 안내 페이지에는 기재 없음",
+  ],
   "転職後、初回の更新許可申請の場合のみ": [
     "Only for the first renewal application after changing jobs",
     "이직 후 첫 연장 허가 신청의 경우에만",

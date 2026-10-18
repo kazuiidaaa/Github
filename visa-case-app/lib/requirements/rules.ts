@@ -1184,7 +1184,8 @@ export const HSP_ACQUISITION: RuleSet = {
 };
 
 // 在留資格「介護」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #297）。
-// 提出書類は案内ページの本文による。チェックシート（PDF）の内容は未照合。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は照合済み（docs/official/reconciliation/kaigo-2026-10-18.md）。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 更新の「派遣先での活動内容の資料」は、チェックシートで△、案内ページに記載なし（要確認で足した。#312 の規則に基づく人の判断）。技能移転に係る申告書は、更新の案内ページ・チェックシートにない。
 const KAIGO = "介護";
 const KAIGO_SOURCE = { title: "在留資格「介護」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/nursingcare.html" };
 const KAIGO_CHECKED_AT = "2026-10-07";
@@ -1299,9 +1300,10 @@ export const KAIGO_RENEWAL: RuleSet = {
       party: "applicant",
       categories: ALL,
       level: "required",
-      note: "直近1年分の総所得及び納税状況が記載されたもの",
+      note: "直近1年分の総所得及び納税状況が記載されたもの。1年間の総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でかまわない",
     },
     { ...kaigoWorkingConditions, level: "check", note: "転職後、初回の更新許可申請の場合のみ" },
+    { ...kaigoDispatch, note: "派遣契約に基づいて就労する場合（申請人が被派遣者の場合）のみ。チェックシートで△。ページには記載なし" },
     { ...kaigoOrganizationOverview, level: "check", note: "転職後、初回の更新許可申請の場合のみ" },
   ],
 };
