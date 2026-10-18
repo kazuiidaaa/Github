@@ -143,7 +143,7 @@
 ## 6. 取得：案内ページの原文の保存と照合（2026-10-18、#374 項目1）
 
 ### 6-1. 保存したもの
-- `acquisition_2026-10-18.txt`：入管庁「在留資格取得許可申請」の手続案内ページの原文（逐語、加工なし）。人がブラウザでコピーしたもの。URL: https://www.moj.go.jp/isa/applications/procedures/16-10.html（人が提示）（）。提出書類は各在留資格のページに委ねる。PDFなし。
+- `acquisition_2026-10-18.txt`：入管庁「在留資格取得許可申請」の手続案内ページの原文（逐語、加工なし）。人がブラウザでコピーしたもの。URL: https://www.moj.go.jp/isa/applications/procedures/16-10.html（人が提示）。提出書類は各在留資格のページに委ねる。PDFなし。
 - `highlyskilledprofessional_2026-10-18.txt`：入管庁「在留資格『高度専門職』（高度人材ポイント制）」ページの原文（逐語、加工なし）。人がブラウザでコピーしたもの。URL: https://www.moj.go.jp/isa/applications/status/designatedactivities02_00004.html （人が提示。`docs/official/README.md` が記録している出典ページと同じ）。節「在留資格取得許可申請（高度専門職１号）」が照合の対象。チェックシート類のPDFは保存していない。
 - 取得許可申請書（`acquisition-application-form_930004121.xlsx`）は保存済み。記載事項は未照合。
 
