@@ -120,77 +120,110 @@ export function procedureCommonRules(procedure: CommonProcedure): RequirementRul
   return rules;
 }
 
+// 技術・人文知識・国際業務（認定・変更・更新）。提出書類は、案内ページの本文と、チェックシート（PDF）5点（認定2・変更2・更新1）による。
+// 照合済み（2026-10-18。docs/official/reconciliation/gijinkoku-2026-10-18.md）。認定・変更の○・△は、PDFと全行一致した。
+// ページとチェックシートが食い違う書類は要確認（verify）とする: 専門士・高度専門士の書類のうち認定学科修了証明書（認定・変更。ページにあり、PDFにない）。
+// 区分は、○は必須、△と条件付きの行は要確認。更新の「転職後の初回」の枠（No.8〜13）は、要確認とする。
+const GIJIN_CHECKED_AT = "2026-10-18";
+const GIJIN_PAGE_SOURCE = { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html" };
+const GIJIN_STATUTORY_REPORT_NAME = "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）";
+const GIJIN_LANGUAGE_NAME = "業務上使用する言語について、CEFR・B2相当の言語能力を有することを証する資料";
+// ページの【お知らせ】注1（CEFR・B2相当の日本語能力とみなす場合）
+const GIJIN_LANGUAGE_DEEMED_NOTE = "日本語の場合は、JLPT・N2以上、BJTビジネス日本語能力テスト400点以上、日本留学試験（日本語）200点以上、JPT日本語能力試験525点以上、中長期在留者として20年以上の在留、本邦の大学卒業又は高等専門学校・専修学校の専門課程・専攻科の修了、我が国の義務教育修了と高等学校卒業のいずれかに該当すれば、B2相当の日本語能力を有するものとみなす";
+const GIJIN_VOCATIONAL_NAME = "専門士・高度専門士の称号を付与されたことを証明する文書（専攻科修了の場合は修了証明書）";
+const GIJIN_VOCATIONAL_NOTE = "専門学校を卒業した場合のみ。外国人留学生キャリア形成促進プログラムの認定学科修了者は認定学科修了証明書。認定学科修了証明書は、案内ページにあるが、チェックシート（PDF）にはないため要確認";
+const GIJIN_ONLINE_APPROVAL: RequirementRule = {
+  id: "online_approval_proof",
+  name: "在留申請オンラインシステムの利用申出の承認を証明する文書（承認のお知らせメール等）",
+  party: "organization",
+  categories: ["2"],
+  level: "check",
+  note: "カテゴリー2と同様の添付資料での申請を希望し、利用申出が承認された機関の場合のみ",
+};
+const GIJIN_CATEGORY1_PROOF: RequirementRule = {
+  id: "category1_proof",
+  name: "カテゴリー1に該当することを証明する文書（四季報の写し、上場を証明する文書の写し等）",
+  party: "organization",
+  categories: ["1"],
+  level: "required",
+  note: "公式案内に列挙された文書のうち、提出可能なものを提出する。提出可能な文書がなければカテゴリー4となる",
+};
+const GIJIN_STATUTORY_REPORT: RequirementRule = {
+  id: "statutory_report_total",
+  name: GIJIN_STATUTORY_REPORT_NAME,
+  party: "organization",
+  categories: ["2", "3"],
+  level: "required",
+  note: "カテゴリーを証明する文書として提出する",
+};
+const GIJIN_WITHHOLDING_EXEMPTION: RequirementRule = {
+  id: "withholding_exemption",
+  name: "源泉徴収の免除を受ける機関であることを明らかにする資料（外国法人の免除証明書等）",
+  party: "organization",
+  categories: ["4"],
+  level: "check",
+  note: "法定調書合計表を提出できない理由を明らかにする資料。源泉徴収の免除を受ける機関の場合のみ。この場合、下記の開設届出書等は別途確認すること",
+};
+const GIJIN_PAYROLL_NOTIFICATION: RequirementRule = {
+  id: "payroll_office_notification",
+  name: "給与支払事務所等の開設届出書の写し",
+  party: "organization",
+  categories: ["4"],
+  level: "required",
+  note: "法定調書合計表を提出できない理由を明らかにする資料（源泉徴収の免除を受ける機関を除く）",
+};
+const GIJIN_WITHHOLDING_RECEIPTS: RequirementRule = {
+  id: "withholding_tax_receipts",
+  name: "直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）",
+  party: "organization",
+  categories: ["4"],
+  level: "required",
+  note: "公式案内では、これ又は納期の特例の承認を示す資料のいずれか",
+};
+const GIJIN_WITHHOLDING_SPECIAL: RequirementRule = {
+  id: "withholding_special_approval",
+  name: "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
+  party: "organization",
+  categories: ["4"],
+  level: "required",
+  when: "withholdingSpecial",
+  note: "納期の特例の承認を受けている場合",
+};
+
+// 更新：チェックシートの No.8〜13 は、「カテゴリー3又は4の企業等に転職後の初回の更新許可申請の場合」の追加書類。カテゴリー3は、源泉徴収の資料（No.13）が不要。研究の更新と同じ扱い（要確認）にする。
+const GIJIN_FIRST_RENEWAL_NOTE = "転職後、初回の更新許可申請の場合のみ";
+const GIJIN_FIRST_RENEWAL_WITHHOLDING_NOTE = "転職後、初回の更新許可申請の場合のみ。カテゴリー3は源泉徴収の資料が不要";
+const gijinFirstRenewalWithholding: RequirementRule[] = [GIJIN_WITHHOLDING_EXEMPTION, GIJIN_PAYROLL_NOTIFICATION, GIJIN_WITHHOLDING_RECEIPTS, GIJIN_WITHHOLDING_SPECIAL].map((r) => ({
+  ...r,
+  level: "check" as const,
+  note:
+    r.id === "payroll_office_notification" || r.id === "withholding_tax_receipts"
+      ? GIJIN_FIRST_RENEWAL_WITHHOLDING_NOTE
+      : `${GIJIN_FIRST_RENEWAL_WITHHOLDING_NOTE}。${r.id === "withholding_exemption" ? "源泉徴収の免除を受ける機関の場合のみ。この場合は、下の給与支払事務所等の開設届出書等は不要" : r.note}`,
+}));
+
 export const GIJINKOKU_RENEWAL: RuleSet = {
   id: "gijinkoku_renewal",
   title: "技術・人文知識・国際業務 在留期間更新許可申請",
   procedureType: "renewal",
   residenceStatus: "技術・人文知識・国際業務",
-  checkedAt: "2026-10-02",
+  checkedAt: GIJIN_CHECKED_AT,
   sources: [
-    { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html" },
+    GIJIN_PAGE_SOURCE,
     { title: "提出書類のカテゴリー別一覧（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367009.pdf" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
+    GIJIN_CATEGORY1_PROOF,
+    GIJIN_STATUTORY_REPORT,
+    GIJIN_ONLINE_APPROVAL,
     {
-      id: "employment_contract",
-      name: "申請人の活動内容を明らかにする書類（雇用契約書・労働条件通知書の写し等）",
+      id: "dispatch_documents",
+      name: "派遣契約に基づいて就労する場合の資料（誓約書（派遣元用・派遣先用）、労働条件通知書、労働者派遣個別契約書、派遣元管理台帳、派遣先管理台帳、就業状況報告書）",
       party: "organization",
-      categories: ["3", "4"],
-      level: "required",
-    },
-    {
-      id: "resident_tax_certificates",
-      name: "住民税の課税（又は非課税）証明書及び納税証明書",
-      party: "applicant",
-      categories: ["3", "4"],
-      level: "required",
-      note: "直近1年分の総所得及び納税状況が記載されたもの",
-      verify: true,
-    },
-    {
-      id: "statutory_report_total",
-      name: "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（受付印のあるものの写し）",
-      party: "organization",
-      categories: ["2", "3"],
-      level: "required",
-      note: "カテゴリーを証明する文書として提出する",
-      verify: true,
-    },
-    {
-      id: "payroll_office_notification",
-      name: "給与支払事務所等の開設届出書の写し",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      verify: true,
-    },
-    {
-      id: "withholding_tax_receipts",
-      name: "直近3か月分の所得税徴収高計算書の写し",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      verify: true,
-    },
-    {
-      id: "withholding_special_approval",
-      name: "源泉所得税の納期の特例の承認に関する申請書の写し",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      when: "withholdingSpecial",
-      note: "納期の特例の承認を受けている場合",
-      verify: true,
-    },
-    {
-      id: "business_materials",
-      name: "勤務先の事業内容・経営状況を明らかにする資料（決算文書の写し等）",
-      party: "organization",
-      categories: ["4"],
+      categories: ALL,
       level: "check",
-      note: "提出の要否を、出入国在留管理局の案内で確認すること",
-      verify: true,
+      note: "派遣形態で就労する場合（申請人が被派遣者の場合）のみ。直近の在留期間中の資料も提出する",
     },
     {
       id: "representative_declaration",
@@ -199,39 +232,61 @@ export const GIJINKOKU_RENEWAL: RuleSet = {
       categories: ["3", "4"],
       level: "required",
       note: "2026年4月15日以降の申請で提出する",
-      verify: true,
+    },
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ["3", "4"],
+      level: "required",
+      note: "直近1年分の総所得及び納税状況が記載されたもの",
+    },
+    {
+      id: "employment_contract",
+      name: "活動内容等を明らかにするいずれかの資料（労働条件を明示する文書、役員報酬を定める定款の写し等）",
+      party: "organization",
+      categories: ["3", "4"],
+      level: "check",
+      note: `${GIJIN_FIRST_RENEWAL_NOTE}。労働契約の場合は労働条件通知書等。役員就任・外国法人の日本支店への転勤の場合は、公式案内の資料を提出する`,
+    },
+    { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: ["3", "4"], level: "check", note: GIJIN_FIRST_RENEWAL_NOTE },
+    {
+      id: "business_description",
+      name: "事業内容を明らかにする資料（会社案内等）",
+      party: "organization",
+      categories: ["3", "4"],
+      level: "check",
+      note: `${GIJIN_FIRST_RENEWAL_NOTE}。沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が記載されたもの、又はこれに準ずる文書`,
+    },
+    {
+      id: "financial_statements",
+      name: "直近年度の決算文書の写し",
+      party: "organization",
+      categories: ["3", "4"],
+      level: "check",
+      note: `${GIJIN_FIRST_RENEWAL_NOTE}。新規事業の場合は事業計画書`,
     },
     {
       id: "language_ability",
-      name: "言語能力（CEFR・B2相当）を示す資料",
+      name: GIJIN_LANGUAGE_NAME,
       party: "applicant",
       categories: ["3", "4"],
       level: "check",
-      note: "言語能力を用いた対人業務に従事する場合。更新では、以前から同様の業務に継続して従事している場合は不要（審査で求められる場合あり）",
-      verify: true,
+      note: `言語能力を用いた対人業務に従事する場合。業務内容の変更や転職等により、言語能力を用いた対人業務等に主に従事することとなった場合は、更新時に提出が必要。以前から同様の業務に継続して従事している場合は不要（審査で求められる場合あり）。${GIJIN_LANGUAGE_DEEMED_NOTE}`,
     },
-    {
-      id: "dispatch_documents",
-      name: "派遣契約に基づいて就労する場合の資料（誓約書、派遣個別契約書、管理台帳等）",
-      party: "organization",
-      categories: ALL,
-      level: "check",
-      note: "派遣形態で就労する場合のみ。公式案内で資料の範囲を確認すること",
-      verify: true,
-    },
+    ...gijinFirstRenewalWithholding,
   ],
 };
 
 // 在留資格認定証明書交付申請。カテゴリーは更新・変更と同じ所属機関の区分。
-// 根拠・差異は docs/requirements-research.md（認定編） を参照。調査に基づく提案であり、行政書士の最終確認を要する。
 export const GIJINKOKU_COE: RuleSet = {
   id: "gijinkoku_coe",
   title: "技術・人文知識・国際業務 在留資格認定証明書交付申請",
   procedureType: "coe",
   residenceStatus: "技術・人文知識・国際業務",
-  checkedAt: "2026-10-03",
+  checkedAt: GIJIN_CHECKED_AT,
   sources: [
-    { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html" },
+    GIJIN_PAGE_SOURCE,
     { title: "【認定】提出書類チェックシート（カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404131.pdf" },
     { title: "【認定】提出書類チェックシート（カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437254.pdf" },
   ],
@@ -247,20 +302,20 @@ export const GIJINKOKU_COE: RuleSet = {
     },
     {
       id: "category_proof",
-      name: "所属機関のカテゴリーを証明する文書",
+      name: "所属機関がいずれのカテゴリーに該当するかを証明する文書",
       party: "organization",
       categories: ["1", "2", "3"],
       level: "required",
-      note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。カテゴリー2は、オンライン利用申出の承認を受けている場合はその承認を示す文書。提出可能な書類がなければカテゴリー4となる",
-      verify: true,
+      note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる",
     },
+    GIJIN_ONLINE_APPROVAL,
     {
       id: "vocational_school_certificate",
-      name: "専門士・高度専門士の称号を付与されたことを証明する文書（専攻科修了の場合は修了証明）",
+      name: GIJIN_VOCATIONAL_NAME,
       party: "applicant",
       categories: ALL,
       level: "check",
-      note: "専門学校を卒業した場合のみ",
+      note: GIJIN_VOCATIONAL_NOTE,
       verify: true,
     },
     {
@@ -269,8 +324,7 @@ export const GIJINKOKU_COE: RuleSet = {
       party: "organization",
       categories: ALL,
       level: "check",
-      note: "申請人が被派遣者の場合のみ。公式案内で資料の範囲を確認すること",
-      verify: true,
+      note: "申請人が被派遣者の場合のみ",
     },
     {
       id: "activity_documents",
@@ -279,7 +333,6 @@ export const GIJINKOKU_COE: RuleSet = {
       categories: ["3", "4"],
       level: "required",
       note: "労働契約の場合は労働条件通知書等。役員就任・外国法人の日本支店への転勤の場合は、公式案内の資料を提出する",
-      verify: true,
     },
     {
       id: "career_documents",
@@ -288,9 +341,8 @@ export const GIJINKOKU_COE: RuleSet = {
       categories: ["3", "4"],
       level: "required",
       note: "履歴書と、学歴又は職歴を証明する文書。外国の文化に基盤を有する業務では、3年以上の実務経験を証明する文書など、業務内容により異なる",
-      verify: true,
     },
-    { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: ["3", "4"], level: "required", verify: true },
+    { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: ["3", "4"], level: "required" },
     {
       id: "business_description",
       name: "事業内容を明らかにする資料（会社案内等）",
@@ -298,7 +350,6 @@ export const GIJINKOKU_COE: RuleSet = {
       categories: ["3", "4"],
       level: "required",
       note: "沿革、役員、組織、事業内容（主要取引先と取引実績を含む）等が記載されたもの、又はこれに準ずる文書",
-      verify: true,
     },
     {
       id: "financial_statements",
@@ -307,7 +358,6 @@ export const GIJINKOKU_COE: RuleSet = {
       categories: ["3", "4"],
       level: "required",
       note: "新規事業の場合は事業計画書",
-      verify: true,
     },
     {
       id: "representative_declaration",
@@ -316,60 +366,23 @@ export const GIJINKOKU_COE: RuleSet = {
       categories: ["3", "4"],
       level: "required",
       note: "2026年4月15日以降の申請で提出する",
-      verify: true,
     },
     {
       id: "language_ability",
-      name: "言語能力（CEFR・B2相当）を示す資料",
+      name: GIJIN_LANGUAGE_NAME,
       party: "applicant",
       categories: ["3", "4"],
       level: "check",
-      note: "翻訳・通訳、接客等、言語能力を用いた対人業務に主に従事する場合。それ以外でも審査で求められる場合がある",
-      verify: true,
+      note: `翻訳・通訳、接客等、言語能力を用いた対人業務に主に従事する場合。それ以外でも審査で求められる場合がある。${GIJIN_LANGUAGE_DEEMED_NOTE}`,
     },
-    {
-      id: "withholding_exemption",
-      name: "源泉徴収の免除を受ける機関であることを明らかにする資料（外国法人の免除証明書等）",
-      party: "organization",
-      categories: ["4"],
-      level: "check",
-      note: "法定調書合計表を提出できない理由を明らかにする資料。源泉徴収の免除を受ける機関の場合のみ。この場合、下記の開設届出書等は別途確認すること",
-      verify: true,
-    },
-    {
-      id: "payroll_office_notification",
-      name: "給与支払事務所等の開設届出書の写し",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      note: "法定調書合計表を提出できない理由を明らかにする資料（源泉徴収の免除を受ける機関を除く）",
-      verify: true,
-    },
-    {
-      id: "withholding_tax_receipts",
-      name: "直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      note: "公式案内では、これ又は納期の特例の承認を示す資料のいずれか",
-      verify: true,
-    },
-    {
-      id: "withholding_special_approval",
-      name: "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      when: "withholdingSpecial",
-      note: "納期の特例の承認を受けている場合",
-      verify: true,
-    },
+    GIJIN_WITHHOLDING_EXEMPTION,
+    GIJIN_PAYROLL_NOTIFICATION,
+    GIJIN_WITHHOLDING_RECEIPTS,
+    GIJIN_WITHHOLDING_SPECIAL,
   ],
 };
 
-// 在留資格変更許可申請（技術・人文知識・国際業務への変更）。
-// 入管庁の提出書類チェックシート（変更・表1／表2）に基づく提案であり、行政書士の確認前の内容。
-// 判断待ちの事項は docs/requirements-research.md（変更編） に記録する。
+// 在留資格変更許可申請（技術・人文知識・国際業務への変更）。カテゴリー2は、「留学」からの変更の3区分（案内ページの区分の表）も含む。
 const C34: Category[] = ["3", "4"];
 
 export const GIJINKOKU_CHANGE: RuleSet = {
@@ -377,57 +390,32 @@ export const GIJINKOKU_CHANGE: RuleSet = {
   title: "技術・人文知識・国際業務 在留資格変更許可申請",
   procedureType: "change",
   residenceStatus: "技術・人文知識・国際業務",
-  checkedAt: "2026-10-03",
+  checkedAt: GIJIN_CHECKED_AT,
   sources: [
-    { title: "在留資格「技術・人文知識・国際業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/gijinkoku.html" },
+    GIJIN_PAGE_SOURCE,
     { title: "提出書類チェックシート（変更・カテゴリー共通・表1）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367001.pdf" },
     { title: "提出書類チェックシート（変更・カテゴリー3・4のみ・表2）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001437255.pdf" },
   ],
   rules: [
     ...procedureCommonRules("change"),
-    {
-      id: "category1_proof",
-      name: "カテゴリー1に該当することを証明する文書（四季報の写し、上場を証明する文書の写し等）",
-      party: "organization",
-      categories: ["1"],
-      level: "required",
-      note: "公式案内に列挙された文書のうち、提出可能なものを提出する。提出可能な文書がなければカテゴリー4となる",
-      verify: true,
-    },
-    {
-      id: "statutory_report_total",
-      name: "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（受付印のあるものの写し）",
-      party: "organization",
-      categories: ["2", "3"],
-      level: "required",
-      note: "カテゴリーを証明する文書として提出する",
-      verify: true,
-    },
-    {
-      id: "online_approval_proof",
-      name: "在留申請オンラインシステムの利用申出の承認を証明する文書（承認のお知らせメール等）",
-      party: "organization",
-      categories: ["2"],
-      level: "check",
-      note: "カテゴリー2と同様の添付資料での申請を希望し、利用申出が承認された機関の場合のみ",
-      verify: true,
-    },
+    GIJIN_CATEGORY1_PROOF,
+    GIJIN_STATUTORY_REPORT,
+    GIJIN_ONLINE_APPROVAL,
     {
       id: "omission_statement",
       name: "提出書類省略に関する説明書（「留学」から「技術・人文知識・国際業務」又は「研究」への変更）（参考様式）",
       party: "organization",
       categories: ["2"],
       level: "check",
-      note: "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合",
-      verify: true,
+      note: "「留学」からの変更で、カテゴリー2（大学・短大・大学院の卒業（予定）者等）として扱う場合。チェックシートでは、カテゴリーを証明する文書の選択肢の一つとして○。カテゴリー2として扱う「留学」からの変更は、a.本邦の大学院・大学・短大の卒業（予定）者、b.海外の優秀大学の卒業者（3つの世界ランキング中2つ以上で上位300位の外国の大学）、c.「留学」から就労資格に変更して就労し、その後当該所属機関において在留期間更新した者を現に受け入れている機関において就労する者",
     },
     {
       id: "vocational_school_certificate",
-      name: "専門士・高度専門士の称号を付与されたことを証明する文書（専攻科修了の場合は修了証明書）",
+      name: GIJIN_VOCATIONAL_NAME,
       party: "applicant",
       categories: ALL,
       level: "check",
-      note: "専門学校を卒業した場合のみ。外国人留学生キャリア形成促進プログラムの認定学科修了者は認定学科修了証明書",
+      note: GIJIN_VOCATIONAL_NOTE,
       verify: true,
     },
     {
@@ -437,7 +425,6 @@ export const GIJINKOKU_CHANGE: RuleSet = {
       categories: ALL,
       level: "check",
       note: "派遣契約に基づいて就労する場合（申請人が被派遣者の場合）のみ",
-      verify: true,
     },
     {
       id: "dispatch_contract_documents",
@@ -446,16 +433,14 @@ export const GIJINKOKU_CHANGE: RuleSet = {
       categories: ALL,
       level: "check",
       note: "派遣形態で就労する場合のみ。更新と異なり、管理台帳・就業状況報告書は変更の案内に記載がない",
-      verify: true,
     },
     {
       id: "activity_documents",
-      name: "申請人の活動の内容等を明らかにする書類（労働条件通知書・役員報酬を定める定款等）",
+      name: "申請人の活動の内容等を明らかにする資料（労働条件通知書・役員報酬を定める定款等）",
       party: "organization",
       categories: C34,
       level: "required",
       note: "労働契約を締結する場合は労働条件を明示する文書。役員就任・外国法人の日本支店への転勤等の場合は公式案内の文書",
-      verify: true,
     },
     {
       id: "career_documents",
@@ -464,32 +449,22 @@ export const GIJINKOKU_CHANGE: RuleSet = {
       categories: C34,
       level: "required",
       note: "履歴書と、卒業証明書・在職証明書等のいずれか。IT技術者は情報処理技術の資格証書、外国の文化に基づく業務は3年以上の実務経験の証明",
-      verify: true,
     },
-    {
-      id: "registry_certificate",
-      name: "登記事項証明書",
-      party: "organization",
-      categories: C34,
-      level: "required",
-      verify: true,
-    },
+    { id: "registry_certificate", name: "登記事項証明書", party: "organization", categories: C34, level: "required" },
     {
       id: "business_overview",
       name: "事業内容を明らかにする資料（沿革・役員・組織・事業内容が記載された案内書等）",
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "financial_statements",
-      name: "直近年度の決算文書の写し（新規事業の場合は事業計画書）",
+      name: "直近年度の決算文書の写し",
       party: "organization",
       categories: C34,
       level: "required",
-      note: "公式ページの本文にはカテゴリー3は「その他の資料は原則不要」との記載があり、チェックシートと食い違う。チェックシートに従いカテゴリー3も必要としている",
-      verify: true,
+      note: "新規事業の場合は事業計画書",
     },
     {
       id: "representative_declaration",
@@ -498,45 +473,19 @@ export const GIJINKOKU_CHANGE: RuleSet = {
       categories: C34,
       level: "required",
       note: "2026年4月15日以降の申請で提出する",
-      verify: true,
     },
     {
       id: "language_ability",
-      name: "言語能力（CEFR・B2相当）を示す資料",
+      name: GIJIN_LANGUAGE_NAME,
       party: "applicant",
       categories: C34,
       level: "check",
-      note: "主に言語能力を用いて対人業務等に従事する場合（翻訳・通訳、接客等）",
-      verify: true,
+      note: `主に言語能力を用いて対人業務等に従事する場合（翻訳・通訳、接客等）。${GIJIN_LANGUAGE_DEEMED_NOTE}`,
     },
-    {
-      id: "payroll_office_notification",
-      name: "給与支払事務所等の開設届出書の写し（法定調書合計表を提出できない理由の資料）",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      note: "源泉徴収の免除を受ける外国法人等の場合は、免除証明書その他の源泉徴収を要しないことを明らかにする資料",
-      verify: true,
-    },
-    {
-      id: "withholding_tax_receipts",
-      name: "直近3か月分の所得税徴収高計算書の写し（領収日付印のあるもの）",
-      party: "organization",
-      categories: ["4"],
-      level: "check",
-      note: "この書類、又は納期の特例の承認を受けていることを明らかにする資料のいずれか",
-      verify: true,
-    },
-    {
-      id: "withholding_special_approval",
-      name: "源泉所得税の納期の特例の承認を受けていることを明らかにする資料",
-      party: "organization",
-      categories: ["4"],
-      level: "required",
-      when: "withholdingSpecial",
-      note: "納期の特例の承認を受けている場合",
-      verify: true,
-    },
+    GIJIN_WITHHOLDING_EXEMPTION,
+    GIJIN_PAYROLL_NOTIFICATION,
+    GIJIN_WITHHOLDING_RECEIPTS,
+    GIJIN_WITHHOLDING_SPECIAL,
   ],
 };
 

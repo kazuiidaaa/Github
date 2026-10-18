@@ -78,7 +78,8 @@ describe("buildPdf", () => {
     }));
     const few = await pagesOf(await buildPdf(doc(record()), font));
     const many = await pagesOf(await buildPdf(doc(record({ customRequirements: custom })), font));
-    expect(few).toBeLessThanOrEqual(2);
+    // 追加書類なしでのページ数は、必要書類の注記の長さで変わる（技術・人文知識・国際業務の更新は、照合で注記が増えて3ページ）。ここでは、分割されることを確認する
+    expect(few).toBeLessThanOrEqual(3);
     expect(many).toBeGreaterThan(few);
   });
 

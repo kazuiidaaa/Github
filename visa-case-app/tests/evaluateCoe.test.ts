@@ -60,7 +60,7 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
   const MATRIX: { category: OrgCategory; required: string[]; check: string[] }[] = [
     { category: "", required: COMMON, check: BASE_CHECK },
     { category: "1", required: [...COMMON, "category_proof"], check: BASE_CHECK },
-    { category: "2", required: [...COMMON, "category_proof"], check: BASE_CHECK },
+    { category: "2", required: [...COMMON, "category_proof"], check: ["online_approval_proof", ...BASE_CHECK] },
     { category: "3", required: [...COMMON, "category_proof", ...CAT34], check: CAT_CHECK },
     { category: "4", required: [...COMMON, ...CAT34, "payroll_office_notification", "withholding_tax_receipts"], check: CAT4_CHECK },
   ];
@@ -81,12 +81,11 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
         expect(e.toCheck.map((i) => i.rule.id)).not.toContain("passport_copy");
       });
 
-      it(`${label}: 判定対象のうち、共通の3書類以外は要確認（verify）である`, () => {
+      // 照合済み（2026-10-18）。案内ページとチェックシートが一致した書類には verify を付けず、食い違う書類（認定学科修了証明書）にだけ付ける
+      it(`${label}: 判定対象のうち、verify を付けるのは、案内ページとチェックシートが食い違う書類のみである`, () => {
         const e = evaluate(make({}, row.category, special));
         const applicable = e.items.filter((i) => i.effective === "required" || i.effective === "check");
-        expect(applicable.filter((i) => i.rule.verify).map((i) => i.rule.id)).toEqual(
-          applicable.map((i) => i.rule.id).filter((id) => !COMMON.includes(id)),
-        );
+        expect(applicable.filter((i) => i.rule.verify).map((i) => i.rule.id)).toEqual(["vocational_school_certificate"]);
         expect(applicable.filter((i) => COMMON.includes(i.rule.id)).some((i) => i.rule.verify)).toBe(false);
       });
     }
@@ -100,9 +99,9 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
     }
   });
 
-  it("追加した規則は、出典・確認日を持ち、内容が未確認の項目は要確認とする", () => {
-    const set = RULE_SETS.find((r) => r.procedureType === "coe");
-    expect(set?.checkedAt).toBe("2026-10-03");
+  it("規則は、出典・確認日（照合済み 2026-10-18）を持つ", () => {
+    const set = RULE_SETS.find((r) => r.procedureType === "coe" && r.id === "gijinkoku_coe");
+    expect(set?.checkedAt).toBe("2026-10-18");
     expect(set?.sources.length).toBeGreaterThan(0);
     const setRuleIds = set!.rules.map((r) => r.id);
     expect(new Set(setRuleIds).size).toBe(setRuleIds.length);

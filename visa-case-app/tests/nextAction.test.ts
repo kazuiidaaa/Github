@@ -31,10 +31,10 @@ function make(over: Partial<CaseRecord> = {}): CaseRecord {
 const card = { id: "d1", documentType: "residence_card", fileName: "a.png", mimeType: "image/png" } as CaseRecord["documents"][number];
 const check = (status: CheckRecord["status"]): CheckRecord => ({ key: "k", type: "manual", name: "n", status, note: "" });
 const confirmed = { ...EMPTY_APPLICANT, confirmationStatus: "confirmed" as const };
-// 必要書類（カテゴリー1の共通書類）をすべて受領済みにした案件
+// 必要書類（カテゴリー1の共通書類とカテゴリー1の証明）をすべて受領済みにした案件
 function ready(over: Partial<CaseRecord> = {}): CaseRecord {
   const states: CaseRecord["requirementStates"] = {};
-  for (const id of ["application_form", "photo", "passport_card"]) states[id] = { status: "received" };
+  for (const id of ["application_form", "photo", "passport_card", "category1_proof"]) states[id] = { status: "received" };
   return make({ documents: [card], applicant: confirmed, requirementStates: states, ...over });
 }
 
