@@ -1221,6 +1221,8 @@ const HSP_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "parents_quest
 // 取得の写真の注記（年齢）。高度専門職の取得と技人国の取得（#396 R-3）で共有する
 const ACQUISITION_PHOTO_AGE_NOTE =
   "指定の規格を満たした写真を用意し、申請書に添付して提出する。規格を満たさない写真の場合は撮り直しになる。在留カードの交付の日において年齢が1歳に満たない方は、写真の提出は不要。令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは1歳以上の方について必要";
+// 取得の申請取次者の書類の注記（申請人本人以外が提出する場合）。高度専門職の取得（R-5）と、技人国・家族滞在の取得（#396 R-6・R-15）で共有する
+const ACQUISITION_AGENT_IDENTITY_NOTE = "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示";
 const HSP_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
   // R-1・R-2：事由を問わず写真1葉。年齢の注記は原文のとおり
   photo: {
@@ -1229,7 +1231,7 @@ const HSP_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
   },
   // R-5：申請人本人以外が提出する場合
   agent_identity_document: {
-    note: "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示",
+    note: ACQUISITION_AGENT_IDENTITY_NOTE,
   },
   // R-7：原文にない注記の例を外す
   cause_proof: { note: undefined },
@@ -1285,8 +1287,9 @@ export const HSP_ACQUISITION: RuleSet = {
 
 /**
  * 技術・人文知識・国際業務／家族滞在の在留資格取得許可申請（Issue #396。照合表は docs/official/reconciliation/acquisition-gijinkoku-kazokutaizai-2026-10-18.md）。
- * 人の判断「推奨のとおり」（2026-10-18）の R-2〜R-5・R-8・R-9・R-10・R-12・R-17 と、技人国のカテゴリー別の書類（R-1。#402）を反映した専用の規則集合。それ以外の R（家族滞在の写真・注記・名称など）は未反映で、
- * ACQUISITION_BY_CAUSE の規則をそのまま引き継ぐ。ACQUISITION_BY_CAUSE の文言は変えない（他の在留資格の取得は未照合）。HSP_ACQUISITION と同じく、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する。
+ * 両ページの取得の節（docs/official/gijinkoku_2026-10-18.txt・kazokutaizai_2026-10-18.txt）と、家族滞在の取得のチェックシート（人の転記）とに照合済み（2026-10-18）。
+ * 人の判断「推奨のとおり」（2026-10-18）の R-2〜R-18・R-20 と、技人国のカテゴリー別の書類（R-1。#402）を反映した専用の規則集合。R-19（家族滞在の扶養者の書類の区分）は人の判断待ちで、R-10 の形（要確認の2行）のまま。
+ * 上書きも削除もしない書類は、ACQUISITION_BY_CAUSE の規則をそのまま引き継ぐ。ACQUISITION_BY_CAUSE の文言は変えない（他の在留資格の取得は未照合）。HSP_ACQUISITION と同じく、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する。
  * `checkedAt` は新しい規則集合の作成日。
  */
 const ACQUISITION_PAGE_COMPARED_AT = "2026-10-18";
@@ -1301,17 +1304,21 @@ const ACQUISITION_PROCEDURE_GUIDE_SOURCE: RuleSource = {
 // 出生の乳児が取得する実務の扱いは原文に記載がなく、推測しない（注記に「行政書士が確認」）。
 // 技人国（R-5）：活動に応じた資料（activity_materials）も外す。取得の原文（docs/official/gijinkoku_2026-10-18.txt 346行からの「在留資格取得許可申請」の節）では、
 // 活動に応じた資料はカテゴリー別の書類群（R-1。下の gijinkokuAcquisitionCategoryRules）に当たり、別の1行としての記載は無い。
-// 申請取次者の書類（R-6）・旅券の理由書（R-7）は未反映のまま
-const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate", "activity_materials"];
+// 技人国（R-7）：旅券の理由書（passport_reason_statement）も外す。取得の原文（同 346〜434行）は、パスポートの「提示」（378行）のみで、理由書の記載が無い。
+// 高度専門職の取得（acquisition-2026-10-18.md の R-6）と同じく外す方を採った（照合表の推奨が、その扱いと同じとする）
+const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate", "activity_materials", "passport_reason_statement"];
 // R-4：ACQUISITION_BY_CAUSE の注記の例（日米地位協定による在留者など）は、原文（gijinkoku_2026-10-18.txt 374〜376行。「（２）（１）以外の者で在留資格の取得を必要とするもの：その事由を証する書類」）に無いため外し、R-2 の注記だけにする
 const GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE = "出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）";
 // R-3：写真は事由の別なく1葉（出生も含む）。注記は原文（gijinkoku_2026-10-18.txt 371〜373行）の年齢の注記（高度専門職の取得と同じ文言）。
 // 原文 373行の「中長期在留者とならない在留資格の取得では不要」は、技人国は中長期在留者となるため、人の判断（2026-10-18）で注記に書かない。
-// 名称の大きさは、人の判断（2026-10-18）で申請書のとおりにする。申請書（docs/official/acquisition-application-form_930004121.xlsx の写真欄の図形。xl/drawings/drawing1.xml）の表記は「40mm×30mm」
-const GIJINKOKU_ACQUISITION_PHOTO_NAME = "写真（40mm×30mm）";
+// 名称の大きさは、人の判断（2026-10-18）で申請書のとおりにする。申請書（docs/official/acquisition-application-form_930004121.xlsx の写真欄の図形。xl/drawings/drawing1.xml）の表記は「40mm×30mm」。
+// 家族滞在の取得（R-13）も同じ名称にする
+const ACQUISITION_FORM_PHOTO_NAME = "写真（40mm×30mm）";
 const GIJINKOKU_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
-  photo: { causes: ALL_CAUSES, name: GIJINKOKU_ACQUISITION_PHOTO_NAME, note: ACQUISITION_PHOTO_AGE_NOTE },
+  photo: { causes: ALL_CAUSES, name: ACQUISITION_FORM_PHOTO_NAME, note: ACQUISITION_PHOTO_AGE_NOTE },
   cause_proof: { causes: ["birth", "other"], note: GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE },
+  // R-6：原文（gijinkoku_2026-10-18.txt 434行）は「申請人本人以外の方が申請書類を提出する場合」で、例が「申請取次者証明書、戸籍謄本等」。名称は変えない
+  agent_identity_document: { note: ACQUISITION_AGENT_IDENTITY_NOTE },
 };
 
 // 技人国（R-1。Issue #402）：取得も、所属機関のカテゴリー（1〜4）で提出書類が異なる。判定の軸を、取得の事由と所属機関のカテゴリーの2つにする（alsoBasis）。
@@ -1382,7 +1389,7 @@ export const GIJINKOKU_ACQUISITION: RuleSet = {
   ],
 };
 
-// 家族滞在（R-8・R-9・R-10・R-12・R-17）。原文はカテゴリーによる区分が無く、事由は国籍離脱・出生・その他の3区分
+// 家族滞在（R-8〜R-15・R-17・R-18・R-20）。原文（kazokutaizai_2026-10-18.txt 152〜194行）はカテゴリーによる区分が無く、事由は国籍離脱・出生・その他の3区分
 const KAZOKU_RELATIONSHIP_NAME = "申請人と扶養者との身分関係を証する文書（戸籍謄本・婚姻届受理証明書・結婚証明書の写し・出生証明書の写しのいずれか、又はこれらに準ずる文書）";
 const KAZOKU_SUPPORTER_CARD_NAME = "扶養者の在留カード又は旅券の写し";
 const KAZOKU_INCOME_ACTIVE_NAME = "扶養者の職業及び収入を証する文書（(1)扶養者が収入を伴う事業を運営する活動又は報酬を受ける活動を行っている場合）";
@@ -1430,9 +1437,23 @@ const KAZOKU_NEW_RULES: RequirementRule[] = [
     verify: true,
   },
 ];
+// R-13・R-18：写真は事由の別なく1葉（出生も含む。原文 161行・チェックシート No.2 とも事由の別なし）。
+// 注記は、ページ（原文 161〜163行）の年齢の注記（技人国・高度専門職の取得と同じ文言）に、チェックシート（No.2）の規格を足す。
+// 原文 163行の「中長期在留者とならない在留資格の取得では不要」は、技人国（R-3）と同じく、人の判断（2026-10-18）で注記に書かない。
+// 名称は、技人国（R-3）と同じく申請書のとおり（チェックシートの「縦４cm×横３cm」ではなく「40mm×30mm」）
+const KAZOKU_PHOTO_NOTE = `${ACQUISITION_PHOTO_AGE_NOTE}。チェックシートでは、申請前6か月以内に正面から撮影された無帽・無背景で鮮明なものとし、写真の裏面に申請人の氏名を記載して、申請書の写真欄に貼付する`;
+// R-14：旅券の理由書（原文に記載なし。パスポートは「提示」のみ。原文 169行）と、活動に応じた資料（家族滞在では、身分関係・扶養者の書類〔R-8〜R-10〕がこれに当たる）を外す。
+// 旅券の理由書は、技人国（R-7）・高度専門職の取得（acquisition-2026-10-18.md の R-6）と同じ扱い
+const KAZOKU_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "activity_materials"];
 const KAZOKU_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
-  // R-17：チェックシートに合わせ、出生のみ要確認（△）
-  parents_questionnaire: { level: "check", note: KAZOKU_QUESTIONNAIRE_NOTE },
+  photo: { causes: ALL_CAUSES, name: ACQUISITION_FORM_PHOTO_NAME, note: KAZOKU_PHOTO_NOTE },
+  // R-15・R-20：原文（194行）は「申請人本人以外の方が申請書類を提出する場合」で、例が「申請取次者証明書、戸籍謄本等」。名称は変えない。チェックシートに行が無い点は注記に書かない
+  agent_identity_document: { note: ACQUISITION_AGENT_IDENTITY_NOTE },
+  // R-15：原文（167行）は「その事由を証する書類」のみ。原文に無い注記の例（日米地位協定）を外す
+  cause_proof: { note: undefined },
+  // R-17：チェックシートに合わせ、出生のみ要確認（△）。R-11：名称は原文（176行）・チェックシート（No.6）のとおり「質問書」（「両親の情報」は原文に無い）。
+  // R-11 の「全事由に載せる」は、R-17 の判断（出生のみ）を優先し、採らない
+  parents_questionnaire: { level: "check", name: "質問書", note: KAZOKU_QUESTIONNAIRE_NOTE },
   // R-12：全事由に載せ、任意（推奨）。名称は「住民票」
   household_residence_certificate: { causes: ALL_CAUSES, level: "optional", name: "住民票", note: KAZOKU_RESIDENCE_CERTIFICATE_NOTE },
 };
@@ -1455,6 +1476,7 @@ export const KAZOKUTAIZAI_ACQUISITION: RuleSet = {
   ],
   // 身分関係・扶養者の書類は、出生の書類（事由別の書類の次）の後ろに入れる
   rules: ACQUISITION_BY_CAUSE.rules.flatMap((r) => {
+    if (KAZOKU_ACQUISITION_REMOVED_IDS.includes(r.id)) return [];
     const rule = KAZOKU_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...KAZOKU_ACQUISITION_OVERRIDES[r.id] } : r;
     return r.id === "birth_certificate" ? [rule, ...KAZOKU_NEW_RULES] : [rule];
   }),
