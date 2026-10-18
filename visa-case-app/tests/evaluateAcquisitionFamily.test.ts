@@ -67,12 +67,17 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     expect(ids(e, "check")).toEqual([...COMMON_CHECK, "vocational_school_certificate", "dispatch_documents"]);
   });
 
-  it("R-3：写真は事由の別なく必須（出生・未選択も含む）。注記は原文のとおり（年齢、中長期在留者とならない在留資格の取得では不要）。名称は変えない", () => {
+  it("R-3：写真は事由の別なく必須（出生・未選択も含む）。注記は年齢のみ（中長期在留者の条件は書かない）。名称の大きさは申請書のとおり", () => {
     const photo = gij.rules.find((r) => r.id === "photo")!;
     expect(photo.causes).toEqual(["nationalityLoss", "birth", "other"]);
     expect(photo.level).toBe("required");
-    expect(photo.name).toBe(base.rules.find((r) => r.id === "photo")!.name);
-    for (const w of ["1歳に満たない方は、写真の提出は不要", "令和8年6月14日以降", "中長期在留者とならない在留資格の取得を希望する場合も、写真の提出は不要"]) expect(photo.note, w).toContain(w);
+    expect(photo.name).toBe("写真（40mm×30mm）");
+    for (const w of ["1歳に満たない方は、写真の提出は不要", "令和8年6月14日以降"]) expect(photo.note, w).toContain(w);
+    expect(photo.note).not.toContain("中長期在留者");
+    // 年齢の注記は、高度専門職の取得と同じ文言
+    expect(photo.note).toBe(RULE_SETS.find((r) => r.id === "hsp_acquisition")!.rules.find((r) => r.id === "photo")!.note);
+    // ACQUISITION_BY_CAUSE の名称は変えない
+    expect(base.rules.find((r) => r.id === "photo")!.name).toBe("写真（縦4cm×横3cm）");
     expect(photo.note).not.toContain("出生には写真の記載がない");
     for (const cause of ALL) expect(ids(gijEval(cause), "required"), cause).toContain("photo");
   });

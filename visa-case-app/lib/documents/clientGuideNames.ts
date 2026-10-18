@@ -11,6 +11,7 @@ type Translated = readonly [en: string, ko: string];
 
 export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
   "写真（縦4cm×横3cm）": ["Photo (4 cm tall x 3 cm wide)", "사진(세로 4cm×가로 3cm)"],
+  "写真（40mm×30mm）": ["Photo (40 mm x 30 mm)", "사진(40mm×30mm)"],
   "パスポート及び在留カード（提示）": ["Passport and Residence Card (to be presented)", "여권 및 재류카드(제시)"],
   "住民税の課税（又は非課税）証明書及び納税証明書": [
     "Resident tax assessment (or exemption) certificate and tax payment certificate",

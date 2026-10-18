@@ -1305,11 +1305,12 @@ const ACQUISITION_PROCEDURE_GUIDE_SOURCE: RuleSource = {
 const GIJINKOKU_ACQUISITION_REMOVED_IDS = ["birth_certificate", "parents_questionnaire", "household_residence_certificate", "activity_materials"];
 // R-4：ACQUISITION_BY_CAUSE の注記の例（日米地位協定による在留者など）は、原文（gijinkoku_2026-10-18.txt 374〜376行。「（２）（１）以外の者で在留資格の取得を必要とするもの：その事由を証する書類」）に無いため外し、R-2 の注記だけにする
 const GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE = "出生の場合も、この「その事由を証する書類」として扱う（出生の乳児が取得する場合の実務の扱いは、案内ページに記載がないため、行政書士が確認する）";
-// R-3：写真は事由の別なく1葉（出生も含む）。注記は原文（gijinkoku_2026-10-18.txt 371〜373行）のとおり、年齢の注記と「中長期在留者とならない在留資格の取得では不要」。
-// 名称の「縦4cm×横3cm」は、取得の節にサイズの記載が無いが、変えるかは人が判断する（照合表 R-3。高度専門職の取得と同じく、名称は変えない）
-const GIJINKOKU_ACQUISITION_PHOTO_NOTE = `${ACQUISITION_PHOTO_AGE_NOTE}。また、中長期在留者とならない在留資格の取得を希望する場合も、写真の提出は不要`;
+// R-3：写真は事由の別なく1葉（出生も含む）。注記は原文（gijinkoku_2026-10-18.txt 371〜373行）の年齢の注記（高度専門職の取得と同じ文言）。
+// 原文 373行の「中長期在留者とならない在留資格の取得では不要」は、技人国は中長期在留者となるため、人の判断（2026-10-18）で注記に書かない。
+// 名称の大きさは、人の判断（2026-10-18）で申請書のとおりにする。申請書（docs/official/acquisition-application-form_930004121.xlsx の写真欄の図形。xl/drawings/drawing1.xml）の表記は「40mm×30mm」
+const GIJINKOKU_ACQUISITION_PHOTO_NAME = "写真（40mm×30mm）";
 const GIJINKOKU_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
-  photo: { causes: ALL_CAUSES, note: GIJINKOKU_ACQUISITION_PHOTO_NOTE },
+  photo: { causes: ALL_CAUSES, name: GIJINKOKU_ACQUISITION_PHOTO_NAME, note: ACQUISITION_PHOTO_AGE_NOTE },
   cause_proof: { causes: ["birth", "other"], note: GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE },
 };
 

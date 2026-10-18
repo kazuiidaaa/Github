@@ -376,10 +376,6 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Birth is also treated as this \"document proving the reason\" (the practical handling when an infant acquires status by birth is not stated on the guidance page, so the administrative scrivener confirms it)",
     "출생의 경우에도 이 '사유를 증명하는 서류'로 취급한다(출생한 영아가 취득하는 경우의 실무 취급은 안내 페이지에 기재가 없으므로 행정서사가 확인한다)",
   ],
-  "指定の規格を満たした写真を用意し、申請書に添付して提出する。規格を満たさない写真の場合は撮り直しになる。在留カードの交付の日において年齢が1歳に満たない方は、写真の提出は不要。令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは1歳以上の方について必要。また、中長期在留者とならない在留資格の取得を希望する場合も、写真の提出は不要": [
-    "Prepare a photo that meets the specified standards and attach it to the application form. If a photo that does not meet the standards is used, you will be asked to retake it. A photo is not required for a person who is under 1 year of age on the date the residence card is issued. Until June 13, 2026 (Reiwa 8), persons under 16 were exempt, but for residence cards issued on or after June 14, 2026, a photo is required for persons aged 1 or older. A photo is also not required when applying to acquire a status of residence under which the person will not be a mid- to long-term resident",
-    "지정된 규격을 충족하는 사진을 준비하여 신청서에 첨부해 제출한다. 규격을 충족하지 않는 사진인 경우에는 다시 촬영하게 된다. 재류카드 교부일 기준으로 만 1세 미만인 사람은 사진 제출이 필요하지 않다. 2026년(레이와 8년) 6월 13일까지는 16세 미만인 사람이 불필요했으나, 2026년 6월 14일 이후에 교부되는 재류카드부터는 만 1세 이상인 사람에 대해 필요하다. 또한 중장기 재류자가 되지 않는 체류자격의 취득을 희망하는 경우에도 사진 제출이 필요하지 않다",
-  ],
   "次のいずれか。(1)戸籍謄本 1通 (2)婚姻届受理証明書 1通 (3)結婚証明書（写し）1通 (4)出生証明書（写し）1通 (5)(1)〜(4)に準ずる文書（適宜）": [
     "Any one of the following: (1) family register transcript (1 copy) (2) certificate of acceptance of marriage notification (1 copy) (3) marriage certificate (copy, 1 copy) (4) birth certificate (copy, 1 copy) (5) a document equivalent to (1) to (4) (as appropriate)",
     "다음 중 하나. (1) 호적등본 1통 (2) 혼인신고 수리증명서 1통 (3) 결혼증명서(사본) 1통 (4) 출생증명서(사본) 1통 (5) (1)~(4)에 준하는 문서(적절히)",
