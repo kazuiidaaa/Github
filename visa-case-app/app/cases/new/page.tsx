@@ -10,7 +10,7 @@ import { ChoiceGroup } from "@/components/ChoiceGroup";
 import { PROCEDURE_OPTIONS, StatusSelect, useStatusHints } from "@/components/StatusSelect";
 import { noRuleGuideText, procedureDescriptionText, targetStatusLegend } from "@/lib/i18n/caseNew";
 import { useT } from "@/lib/i18n/LanguageProvider";
-import { Button, Field, inputClass } from "@/components/ui";
+import { Button, Field, inputClass, ToneIcon } from "@/components/ui";
 import { hasAcceptedDateError } from "@/lib/acceptedDate";
 import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
@@ -20,6 +20,15 @@ import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, procedureNeedsTarget, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 import { CASE_MEMO_ZENKAKU, zenkakuHandlers } from "@/lib/zenkaku";
+import { firstErrorKey, focusField } from "@/lib/formFocus";
+
+/** 検証する欄（画面の上からの並び順）。送信時は、この順で最初の誤りの欄へフォーカスを移す */
+const ERROR_ORDER = ["procedureType", "caseName", "targetStatus", "acceptedDate", "employment", "groupName", "names"] as const;
+type ErrorKey = (typeof ERROR_ORDER)[number];
+const fieldId = (key: ErrorKey) => `new-case-${key}`;
+
+/** 文字のリンクも、押しやすさのため高さ 44px（人の決定。Issue #392） */
+const textLinkClass = "inline-flex min-h-[44px] items-center text-sm text-blue-700 hover:underline active:opacity-70";
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -33,7 +42,7 @@ export default function NewCasePage() {
   const [targetStatus, setTargetStatus] = useState("");
   const [memo, setMemo] = useState("");
   const [acceptedDate, setAcceptedDate] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<ErrorKey, string>>>({});
   // まとめて登録：雇用・会社情報を1回入力し、申請人（案件名）を複数人分入力する
   const [bulk, setBulk] = useState(false);
   const [employment, setEmployment] = useState<EmploymentInfo>({ ...EMPTY_EMPLOYMENT });
@@ -109,10 +118,15 @@ export default function NewCasePage() {
 
   const description = procedureDescriptionText(t, procedureType);
   const targetLegend = targetStatusLegend(t, procedureType);
+  // 要約には、いま画面に出ている欄の誤りだけを並べる（登録方法を切り替えて隠れた欄の誤りは出さない）
+  const shownKeys = ERROR_ORDER.filter((k) =>
+    k === "caseName" ? !bulk : k === "employment" || k === "groupName" || k === "names" ? bulk : k === "targetStatus" ? needsTarget : true,
+  );
+  const errorList = shownKeys.flatMap((k) => (errors[k] ? [[k, errors[k]] as const] : []));
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const next: Record<string, string> = {};
+    const next: Partial<Record<ErrorKey, string>> = {};
     const bulkNames = bulk ? buildBulkCaseNames(groupName, names) : [];
     if (bulk) {
       if (!groupName.trim()) next.groupName = t("caseNew.errGroupNameRequired");
@@ -128,7 +142,13 @@ export default function NewCasePage() {
     if (needsTarget && !targetStatus.trim()) next.targetStatus = t("caseNew.errTargetRequired", { label: targetLegend });
     if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = t("caseNew.errAcceptedDate");
     setErrors(next);
-    if (Object.keys(next).length > 0 || !procedureType) return;
+    const first = firstErrorKey(next, ERROR_ORDER);
+    if (first) {
+      // 誤りの表示（aria-invalid など）が画面に反映された後に、最初の誤りの欄へ移す
+      requestAnimationFrame(() => focusField(fieldId(first)));
+      return;
+    }
+    if (!procedureType) return;
 
     const create = (name: string) => {
       const now = new Date().toISOString();
@@ -178,8 +198,8 @@ export default function NewCasePage() {
   if (!canEdit) {
     return (
       <div className="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-sm">
-        <p className="mb-3">{t("caseNew.noPermission")}</p>
-        <Link href="/cases" className="text-blue-700 hover:underline">
+        <p className="mb-1">{t("caseNew.noPermission")}</p>
+        <Link href="/cases" className={textLinkClass}>
           {t("caseNew.backToList")}
         </Link>
       </div>
@@ -190,7 +210,7 @@ export default function NewCasePage() {
     <div className="max-w-2xl">
       <Link
         href="/cases"
-        className="text-sm text-blue-700 hover:underline"
+        className={textLinkClass}
         onClick={(e) => {
           if (dirty) {
             e.preventDefault();
@@ -200,9 +220,9 @@ export default function NewCasePage() {
       >
         {t("caseNew.backToList")}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold">{t("caseNew.title")}</h1>
+      <h1 className="mt-1 text-2xl font-semibold">{t("caseNew.title")}</h1>
       <p className="mb-6 text-sm text-slate-600">{t("caseNew.intro")}</p>
-      <div className="mb-4 flex flex-wrap gap-1 text-sm" role="group" aria-label={t("caseNew.modeAria")}>
+      <div className="mb-4 flex flex-wrap gap-2 text-sm" role="group" aria-label={t("caseNew.modeAria")}>
         {[
           { v: false, label: t("caseNew.modeSingle") },
           { v: true, label: t("caseNew.modeBulk") },
@@ -212,7 +232,7 @@ export default function NewCasePage() {
             type="button"
             aria-pressed={bulk === m.v}
             onClick={() => setBulk(m.v)}
-            className={`rounded-full border px-4 py-1.5 font-bold ${bulk === m.v ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white hover:bg-slate-50"}`}
+            className={`inline-flex min-h-[44px] items-center rounded-full border px-4 py-2 font-bold ${bulk === m.v ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white hover:bg-slate-50 active:bg-slate-100"}`}
           >
             {m.label}
           </button>
@@ -231,19 +251,41 @@ export default function NewCasePage() {
           </Button>
         </div>
       )}
-      <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
-        <ChoiceGroup
-          legend={t("caseNew.procedureLegend")}
-          required
-          options={PROCEDURE_OPTIONS}
-          value={procedureType}
-          onChange={(v) => setProcedureType(v as ProcedureType)}
-          error={errors.procedureType}
-          hint={description}
-        />
+      <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+        {/* 誤りの要約。送信のたびに読み上げ、フォーカスは最初の誤りの欄へ移す（設計書 4章「フォームの入力しやすさ」） */}
+        {errorList.length > 0 && (
+          <div role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+            <p className="flex items-center gap-1.5 font-bold">
+              <ToneIcon tone="red" />
+              {t("caseNew.errorSummary", { count: errorList.length })}
+            </p>
+            <ul className="mt-1 list-disc pl-5">
+              {errorList.map(([k, msg]) => (
+                <li key={k}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div id={fieldId("procedureType")}>
+          <ChoiceGroup
+            legend={t("caseNew.procedureLegend")}
+            required
+            options={PROCEDURE_OPTIONS}
+            value={procedureType}
+            onChange={(v) => setProcedureType(v as ProcedureType)}
+            error={errors.procedureType}
+            hint={description}
+          />
+        </div>
         {!bulk && (
           <Field label={t("caseNew.caseNameLabel")} required error={errors.caseName} hint={t("caseNew.caseNameHint")}>
-            <input className={inputClass} value={caseName} onChange={(e) => setCaseName(e.target.value)} />
+            <input
+              id={fieldId("caseName")}
+              className={inputClass}
+              value={caseName}
+              aria-invalid={errors.caseName ? true : undefined}
+              onChange={(e) => setCaseName(e.target.value)}
+            />
           </Field>
         )}
         {/* 手続種別を選ぶまで在留資格の欄は出さない。非表示の間も入力値は保持し、再表示で戻る（保存は表示中の欄のみ） */}
@@ -257,6 +299,7 @@ export default function NewCasePage() {
             {needsTarget && (
               <div className="anim-fade-in">
                 <StatusSelect
+                  id={fieldId("targetStatus")}
                   legend={targetLegend}
                   required
                   error={errors.targetStatus}
@@ -270,7 +313,9 @@ export default function NewCasePage() {
             )}
           </div>
         )}
-        <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
+        <div id={fieldId("acceptedDate")}>
+          <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
+        </div>
         {showNoRuleGuide && (
           <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
             {noRuleGuideText(t, statusForRules(procedureType, { currentStatus, targetStatus }))}
@@ -281,31 +326,38 @@ export default function NewCasePage() {
         </Field>
         {bulk && (
           <>
-            <div>
+            <div id={fieldId("employment")}>
               <h2 className="mb-1 text-sm font-semibold">{t("caseNew.employmentHeading")}</h2>
-              <p className="mb-3 text-xs text-slate-500">{t("caseNew.employmentNote")}</p>
+              <p className="mb-3 text-xs text-muted">{t("caseNew.employmentNote")}</p>
               <EmploymentFields
                 form={employment}
                 set={(k, v) => setEmployment((f) => ({ ...f, [k]: v }))}
                 ruleSet={procedureType ? ruleSetFor(procedureType, statusForRules(procedureType, { currentStatus, targetStatus })) : null}
               />
-              {errors.employment && <p className="mt-2 text-sm text-red-600">{errors.employment}</p>}
+              {/* 他の欄の誤りの表示（Field）と同じ大きさ・色にそろえる */}
+              {errors.employment && <p className="mt-2 text-xs font-bold text-red-700">{errors.employment}</p>}
             </div>
             <Field label={t("caseNew.groupNameLabel")} required error={errors.groupName} hint={t("caseNew.groupNameHint")}>
-              <input className={inputClass} value={groupName} onChange={(e) => setGroupName(e.target.value)} />
+              <input
+                id={fieldId("groupName")}
+                className={inputClass}
+                value={groupName}
+                aria-invalid={errors.groupName ? true : undefined}
+                onChange={(e) => setGroupName(e.target.value)}
+              />
             </Field>
             <Field label={t("caseNew.namesLabel")} error={errors.names} hint={t("caseNew.namesHint")}>
-              <div className="space-y-2">
+              <div id={fieldId("names")} className="space-y-2">
                 {names.map((n, i) => (
                   <div key={i} className="flex gap-2">
                     <input
-                      className={inputClass}
+                      className={`${inputClass} min-w-0`}
                       aria-label={t("caseNew.namesRowAria", { n: i + 1 })}
                       placeholder={t("caseNew.namesPlaceholder")}
                       value={n}
                       onChange={(e) => setNames((l) => l.map((x, j) => (j === i ? e.target.value : x)))}
                     />
-                    <Button type="button" variant="secondary" disabled={names.length <= 1} onClick={() => setNames((l) => l.filter((_, j) => j !== i))}>
+                    <Button type="button" variant="secondary" className="shrink-0" disabled={names.length <= 1} onClick={() => setNames((l) => l.filter((_, j) => j !== i))}>
                       {t("caseNew.namesDelete")}
                     </Button>
                   </div>
@@ -317,7 +369,7 @@ export default function NewCasePage() {
             </Field>
           </>
         )}
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-wrap justify-end gap-3">
           <Button type="button" variant="secondary" onClick={() => (dirty ? setLeaveOpen(true) : router.push("/cases"))}>
             {t("caseNew.cancel")}
           </Button>

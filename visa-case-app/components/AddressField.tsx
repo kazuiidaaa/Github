@@ -141,7 +141,7 @@ export function AddressField({
             {t("input.addressField_search")}
           </Button>
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-muted">
           {t("input.addressField_zipHelp")}
         </p>
         <p id={noticeId} role="status" className="mt-1 min-h-6">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { Badge, ToneIcon, TONE_STYLES, type Tone } from "@/components/ui";
+import { Badge, inputClass, ToneIcon, TONE_STYLES, type Tone } from "@/components/ui";
 import { useT } from "@/lib/i18n/LanguageProvider";
 
 export type ChoiceOption = {
@@ -249,9 +249,9 @@ export function ChoiceGroup({
             onChange={(e) => setQuery(e.target.value)}
             aria-label={t("input.choiceGroup_filterAria", { legend })}
             placeholder={t("input.choiceGroup_filterPlaceholder")}
-            className="min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/40"
+            className={inputClass}
           />
-          <p role="status" className="mt-1 text-xs text-slate-500">
+          <p role="status" className="mt-1 text-xs text-muted">
             {query ? t("input.choiceGroup_foundCount", { count: visible.length }) : t("input.choiceGroup_totalCount", { count: options.length })}
           </p>
         </div>
@@ -311,7 +311,7 @@ export function ChoiceGroup({
         </p>
       )}
       {hint && !error && (
-        <p id={hintId} className="mt-1 text-xs text-slate-500">
+        <p id={hintId} className="mt-1 text-xs text-muted">
           {hint}
         </p>
       )}
