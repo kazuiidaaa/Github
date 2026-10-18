@@ -38,7 +38,7 @@ export function PasswordField({
         type="button"
         aria-pressed={shown}
         onClick={() => setShown(!shown)}
-        className="mt-1 rounded-full px-2 py-1 text-xs font-bold text-accent underline underline-offset-2"
+        className="mt-1 inline-flex min-h-[44px] items-center rounded-full px-3 text-sm font-bold text-accent underline underline-offset-2"
       >
         {shown ? t("input.passwordField_hide") : t("input.passwordField_show")}
       </button>

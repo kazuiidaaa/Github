@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
         <p role="alert" className="text-slate-700">
           {t("auth.resetLinkInvalid")}
         </p>
-        <Link href="/login" className="inline-block rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-text">
+        <Link href="/login" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 text-sm font-bold text-accent-text">
           {t("auth.toLoginScreen")}
         </Link>
       </div>
@@ -64,11 +64,11 @@ export default function ResetPasswordPage() {
         <PasswordField label={t("auth.newPasswordConfirm")} value={confirm} onChange={setConfirm} autoComplete="new-password" />
       </fieldset>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger-text">
           {tr(error)}
         </p>
       )}
-      <Button type="submit" disabled={busy} className="w-full">
+      <Button type="submit" disabled={busy} className="min-h-[44px] w-full">
         {busy ? t("auth.newPasswordSubmitting") : t("auth.newPasswordSubmit")}
       </Button>
     </form>

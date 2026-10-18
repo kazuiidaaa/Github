@@ -62,14 +62,14 @@ export default function LoginPage() {
     return (
       <form onSubmit={submitReset} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-center text-xl font-semibold">{t("auth.resetTitle")}</h1>
-        <p className="text-xs text-slate-500">{t("auth.resetIntro")}</p>
+        <p className="text-sm text-slate-600">{t("auth.resetIntro")}</p>
         <fieldset disabled={busy} className="space-y-5">
           <Field label={t("auth.email")}>
             <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
         </fieldset>
         {error && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-danger-text">
             {tr(error)}
           </p>
         )}
@@ -78,10 +78,10 @@ export default function LoginPage() {
             {t("auth.resetSent")}
           </p>
         )}
-        <Button type="submit" disabled={busy} className="w-full">
+        <Button type="submit" disabled={busy} className="min-h-[44px] w-full">
           {busy ? t("auth.resetSending") : t("auth.resetSubmit")}
         </Button>
-        <button type="button" onClick={() => switchMode("login")} className="block w-full text-center text-sm font-bold text-accent underline underline-offset-2">
+        <button type="button" onClick={() => switchMode("login")} className="block min-h-[44px] w-full text-center text-sm font-bold text-accent underline underline-offset-2">
           {t("auth.backToLogin")}
         </button>
       </form>
@@ -91,7 +91,7 @@ export default function LoginPage() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
       <h1 className="text-center text-xl font-semibold">{t("auth.loginTitle")}</h1>
-      <p className="text-xs text-slate-500">{t("auth.loginIntro")}</p>
+      <p className="text-sm text-slate-600">{t("auth.loginIntro")}</p>
       <fieldset disabled={busy} className="space-y-5">
         <Field label={t("auth.email")}>
           <input type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -99,21 +99,21 @@ export default function LoginPage() {
         <PasswordField label={t("auth.password")} value={password} onChange={setPassword} autoComplete="current-password" />
       </fieldset>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger-text">
           {tr(error)}
         </p>
       )}
-      <Button type="submit" disabled={busy} className="w-full">
+      <Button type="submit" disabled={busy} className="min-h-[44px] w-full">
         {busy ? t("auth.loggingIn") : t("auth.login")}
       </Button>
-      <button type="button" disabled={busy} onClick={() => switchMode("reset")} className="block w-full text-center text-sm font-bold text-accent underline underline-offset-2">
+      <button type="button" disabled={busy} onClick={() => switchMode("reset")} className="block min-h-[44px] w-full text-center text-sm font-bold text-accent underline underline-offset-2">
         {t("auth.forgotPassword")}
       </button>
       <div className="border-t border-slate-200 pt-4">
         <Button
           type="button"
           variant="secondary"
-          className="w-full"
+          className="min-h-[44px] w-full"
           onClick={() => {
             startDemo();
             router.push("/");
@@ -121,7 +121,7 @@ export default function LoginPage() {
         >
           {t("auth.tryDemo")}
         </Button>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-sm text-slate-600">
           {t("auth.demoNote")}
         </p>
       </div>
