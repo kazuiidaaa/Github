@@ -24,8 +24,14 @@ import { unresolvedCount } from "@/lib/checks/definitions";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { errorText, precheckRowsText, scopeWarningsText, useDocumentLabels } from "@/lib/i18n/documentsView";
+import { scrollBehavior } from "@/lib/motion";
 import { evaluate } from "@/lib/requirements/evaluate";
 import { useCan, useCase, useStoreLoaded } from "@/lib/store";
+
+/** 文字のリンクも、押しやすさのため高さ 44px（人の決定。Issue #392。新規登録・案件詳細と同じ） */
+const textLinkClass = "inline-flex min-h-[44px] items-center text-sm text-blue-700 hover:underline active:opacity-70";
+/** チェックボックスの行は、行全体を押せる高さ 44px にする */
+const checkRowClass = "flex min-h-[44px] items-center gap-2";
 
 export default function DocumentsPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,10 +52,10 @@ export default function DocumentsPage() {
   const [archiving, setArchiving] = useState<GeneratedDocument | null>(null);
   const historyRef = useRef<HTMLElement>(null);
 
-  // 生成直後に、追加・更新された版を強調して生成履歴へスクロールする。数秒後に強調を外す。
+  // 生成直後に、追加・更新された版を強調して生成履歴へスクロールする（動きを減らす設定では即時）。数秒後に強調を外す。
   useEffect(() => {
     if (newIds.length === 0) return;
-    historyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    historyRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
     const timer = setTimeout(() => setNewIds([]), 6000);
     return () => clearTimeout(timer);
   }, [newIds]);
@@ -58,8 +64,8 @@ export default function DocumentsPage() {
   if (!record) {
     return (
       <div>
-        <p className="mb-4">{t("documents.notFound")}</p>
-        <Link href="/cases" className="text-blue-700 hover:underline">
+        <p className="mb-1">{t("documents.notFound")}</p>
+        <Link href="/cases" className={textLinkClass}>
           {t("documents.backToCases")}
         </Link>
       </div>
@@ -118,25 +124,28 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <Link href={`/cases/${record.id}`} className="text-sm text-blue-700 hover:underline">
-        {t("documents.backToCase")}
-      </Link>
-      <h1 className="text-2xl font-semibold">{t("documents.title", { name: record.caseName })}</h1>
+      <div>
+        <Link href={`/cases/${record.id}`} className={textLinkClass}>
+          {t("documents.backToCase")}
+        </Link>
+        <h1 className="mt-1 text-2xl font-semibold break-words">{t("documents.title", { name: record.caseName })}</h1>
+      </div>
 
       <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
         {t("documents.intro")}
       </p>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
         <h2 className="mb-3 font-semibold">{t("documents.dataStatus")}</h2>
-        <dl className="grid grid-cols-[9rem_1fr] items-center gap-y-3">
+        {/* 狭い幅では、項目名の下に状態を置く（項目名の列で本文の幅を削らない） */}
+        <dl className="grid grid-cols-1 gap-y-1 md:grid-cols-[9rem_1fr] md:items-center md:gap-y-3">
           {rows.map((r) => (
             <Fragment key={r.key}>
-              <dt className="text-slate-500">{r.label}</dt>
-              <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <dt className="text-muted">{r.label}</dt>
+              <dd className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 md:mb-0">
                 <Badge tone={r.tone === "done" ? "green" : r.tone === "warn" ? "yellow" : "gray"}>{r.status}</Badge>
                 {r.detail && <span>{r.detail}</span>}
-                <Link href={`/cases/${record.id}?tab=${r.tab}`} className="text-blue-700 hover:underline">
+                <Link href={`/cases/${record.id}?tab=${r.tab}`} className={textLinkClass}>
                   {r.unresolved ? t("documents.resolve") : t("documents.open")}
                 </Link>
               </dd>
@@ -145,11 +154,11 @@ export default function DocumentsPage() {
         </dl>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <h2 className="mb-3 font-semibold">{t("documents.outputTitle")}</h2>
-        <div className="space-y-2 text-sm">
+        <div className="text-sm">
           {INTERNAL_DOCUMENT_TYPES.map((type) => (
-            <label key={type} className="flex items-center gap-2">
+            <label key={type} className={`${checkRowClass} flex-wrap`}>
               <input
                 type="checkbox"
                 disabled={isOfficialForm(type) && needsLogin}
@@ -157,11 +166,11 @@ export default function DocumentsPage() {
                 onChange={(e) => setSelected((s) => (e.target.checked ? [...s, type] : s.filter((x) => x !== type)))}
               />
               {docLabels.documentType(type)}
-              {isOfficialForm(type) && <span className="text-xs text-slate-500">{t("documents.excelSuffix")}</span>}
+              {isOfficialForm(type) && <span className="text-xs text-muted">{t("documents.excelSuffix")}</span>}
               {isOfficialForm(type) && needsLogin && <span className="text-xs text-amber-900">{t("documents.officialLoginRequired")}</span>}
             </label>
           ))}
-          <label className="flex items-center gap-2 text-slate-400">
+          <label className={`${checkRowClass} text-slate-400`}>
             <input type="checkbox" disabled />
             {t("documents.comingSoon", { label: docLabels.documentType("reason_statement") })}
           </label>
@@ -171,7 +180,7 @@ export default function DocumentsPage() {
             <p>
               {t("documents.guideNote")}
             </p>
-            <label className="flex items-center gap-2">
+            <label className={checkRowClass}>
               <input type="checkbox" checked={includeReceived} onChange={(e) => setIncludeReceived(e.target.checked)} />
               {t("documents.includeReceived")}
             </label>
@@ -188,7 +197,7 @@ export default function DocumentsPage() {
           </div>
         )}
         <UnresolvedNote count={precheckNotes.length} />
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button onClick={() => void generate()} disabled={busy || selected.length === 0 || !canEdit}>
             {busy ? t("documents.generating") : t("documents.generate")}
           </Button>
@@ -201,42 +210,42 @@ export default function DocumentsPage() {
             {failure}
           </span>
         </div>
-        <p className="mt-3 text-xs text-slate-500">{t("documents.versionNote")}</p>
+        <p className="mt-3 text-xs text-muted">{t("documents.versionNote")}</p>
       </section>
 
       <section ref={historyRef} className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-3">
-          <h2 className="font-semibold">{t("documents.history")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 border-b border-slate-100 px-4 py-2 sm:px-6">
+          <h2 className="py-1 font-semibold">{t("documents.history")}</h2>
           {archived.length > 0 && (
-            <label className="flex items-center gap-2 text-sm text-slate-600">
+            <label className={`${checkRowClass} text-sm text-slate-600`}>
               <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
               {t("documents.showArchived", { count: archived.length })}
             </label>
           )}
         </div>
         {error && (
-          <p role="alert" className="px-6 py-3 text-sm text-red-700">
+          <p role="alert" className="px-4 py-3 text-sm text-red-700 sm:px-6">
             {t("documents.errorWithReload", { error: errorText(t, error) })}
           </p>
         )}
-        {loaded && documents.length === 0 && <p className="px-6 py-6 text-sm text-slate-500">{t("documents.noDocs")}</p>}
+        {loaded && documents.length === 0 && <p className="px-4 py-6 text-sm text-muted sm:px-6">{t("documents.noDocs")}</p>}
         {loaded && documents.length > 0 && visible.length === 0 && (
-          <p className="px-6 py-6 text-sm text-slate-500">{t("documents.noVisible")}</p>
+          <p className="px-4 py-6 text-sm text-muted sm:px-6">{t("documents.noVisible")}</p>
         )}
         {visible.map((d) => (
           <div
             key={d.id}
-            className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-6 py-3 text-sm transition-colors last:border-b-0 ${
+            className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-4 py-3 text-sm transition-colors last:border-b-0 sm:px-6 ${
               newIds.includes(d.id) ? "bg-yellow-50" : ""
             }`}
           >
-            <span>
+            <span className="min-w-0">
               {newIds.includes(d.id) && <span className="sr-only">{t("documents.newSr")}</span>}
-              <Link href={`/cases/${record.id}/documents/${d.id}`} className="text-blue-700 hover:underline">
+              <Link href={`/cases/${record.id}/documents/${d.id}`} className={textLinkClass}>
                 {t("documents.versionName", { label: docLabels.documentType(d.documentType), version: d.version })}
               </Link>
               {d.outputFormat !== "html" && (
-                <span className="ml-2 text-xs text-slate-500">{t("documents.formatSuffix", { format: docLabels.outputFormat(d.outputFormat) })}</span>
+                <span className="ml-2 text-xs text-muted">{t("documents.formatSuffix", { format: docLabels.outputFormat(d.outputFormat) })}</span>
               )}
             </span>
             <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -244,7 +253,7 @@ export default function DocumentsPage() {
               <Badge tone={d.status === "draft" ? "yellow" : d.status === "archived" ? "gray" : "green"}>
                 {docLabels.status(d.status)}
               </Badge>
-              <span className="text-slate-500">{formatDateTime(d.createdAt)}</span>
+              <span className="text-muted">{formatDateTime(d.createdAt)}</span>
               {canEdit && d.status !== "archived" && (
                 <Button variant="secondary" onClick={() => setArchiving(d)}>
                   {t("documents.archiveBtn")}
