@@ -81,9 +81,9 @@ export function HspPointSection({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
       <h2 className="font-semibold">{t("casePoints.title")}</h2>
-      <p className="mb-4 mt-1 text-xs text-slate-500">
+      <p className="mb-4 mt-1 text-xs text-muted">
         {t("casePoints.intro")}
       </p>
       {resolution.kind === "needs_choice" || !resolution.fromGrade ? (
@@ -113,13 +113,14 @@ export function HspPointSection({
                   {heading && (
                     <div className="mt-4 text-xs font-semibold text-slate-600">
                       {heading}
-                      {SECTION_HINTS[heading] && <p className="mt-0.5 font-normal text-slate-500">{t(SECTION_HINTS[heading])}</p>}
+                      {SECTION_HINTS[heading] && <p className="mt-0.5 font-normal text-muted">{t(SECTION_HINTS[heading])}</p>}
                     </div>
                   )}
-                  <label className="flex items-start gap-2 py-0.5 text-sm">
-                    <input type="checkbox" className="mt-1" checked={form.hspPointChecks.includes(id)} onChange={(e) => toggle(id, e.target.checked)} />
-                    <span className="flex-1">{r.label}</span>
-                    <span className="shrink-0 text-xs text-slate-500">
+                  {/* 行全体を押せる高さ 44px にする。狭い幅では、点数・証明資料を項目名の下に回す（Issue #392 PR-8） */}
+                  <label className="grid min-h-[44px] cursor-pointer grid-cols-[auto_1fr] items-start gap-x-3 rounded-xl px-1 py-2 text-sm active:bg-slate-100 md:grid-cols-[auto_1fr_auto] md:py-1">
+                    <input type="checkbox" className="mt-0.5 size-5 shrink-0" checked={form.hspPointChecks.includes(id)} onChange={(e) => toggle(id, e.target.checked)} />
+                    <span>{r.label}</span>
+                    <span className="col-start-2 mt-0.5 text-xs text-muted md:col-start-auto md:mt-0 md:text-right">
                       {r.points === null ? t("casePoints.pointsUnknown") : t("casePoints.pointsValue", { points: r.points })}
                       {r.evidence && `　${r.evidence}`}
                     </span>
@@ -135,7 +136,7 @@ export function HspPointSection({
                 <strong>{t("casePoints.estimatePoints", { total: estimate.total })}</strong>
                 {t("casePoints.estimatePass", { pass: HSP_PASS_POINTS, result: estimate.reachesPass ? t("casePoints.reached") : t("casePoints.notReached") })}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{t("casePoints.estimateNote")}</p>
+              <p className="mt-1 text-xs text-muted">{t("casePoints.estimateNote")}</p>
               {estimate.notes.map((n) => (
                 <p key={n} className="mt-1 text-xs text-amber-900">
                   {n}

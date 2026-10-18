@@ -118,10 +118,10 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
             {t("caseChecks.resolvedCount", { done: record.checks.length - unresolved, total: record.checks.length })}
           </span>
         </p>
-        <label className="flex items-center gap-2">
+        <label className="flex w-full flex-wrap items-center gap-2 md:w-auto">
           <span className="text-slate-600">{t("caseChecks.plannedDate")}</span>
           <DateField
-            className={`${inputClass} w-40`}
+            className={`${inputClass} md:w-40`}
             value={planned}
             onChange={setPlanned}
             onBlur={(kind) => {
@@ -140,7 +140,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         if (items.length === 0 && type !== "manual") return null;
         return (
           <section key={type} className="rounded-2xl border border-slate-200 bg-white">
-            <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">{labels.checkType(type)}</h2>
+            <h2 className="border-b border-slate-100 px-4 py-3 font-semibold md:px-6">{labels.checkType(type)}</h2>
             <ul className="divide-y divide-slate-100">
               {items.map((k) => (
                 <CheckRow
@@ -157,15 +157,16 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
               ))}
             </ul>
             {type === "manual" && (
-              <div className="flex gap-2 px-6 py-3">
+              <div className="flex gap-2 px-4 py-3 md:px-6">
                 <input
                   className={inputClass}
                   placeholder={t("caseChecks.addPlaceholder")}
+                  aria-label={t("caseChecks.addPlaceholder")}
                   value={newName}
                   maxLength={100}
                   onChange={(e) => setNewName(e.target.value)}
                 />
-                <Button variant="secondary" onClick={addManual} disabled={!newName.trim()}>
+                <Button variant="secondary" className="shrink-0" onClick={addManual} disabled={!newName.trim()}>
                   {t("caseChecks.add")}
                 </Button>
               </div>
@@ -174,9 +175,12 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         );
       })}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-2 font-semibold">{t("caseChecks.memoTitle")}</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
+        <h2 className="mb-2 font-semibold">
+          <label htmlFor="check-memo">{t("caseChecks.memoTitle")}</label>
+        </h2>
         <textarea
+          id="check-memo"
           className={inputClass}
           rows={4}
           value={memo}
@@ -230,21 +234,21 @@ function CheckRow({
   const ref = referenceFor(record, check.key, t);
   const flushNote = useAutoSave(note, check.note, (v) => onPatch(check.key, { note: v }));
   return (
-    <li className="grid gap-2 px-6 py-3 text-sm md:grid-cols-[1fr_22rem]">
+    <li className="grid gap-2 px-4 py-4 text-sm md:grid-cols-[1fr_22rem] md:px-6 md:py-3">
       <div>
-        <p>{name}</p>
+        <p className="font-bold md:font-normal">{name}</p>
         {ref.text && (
-          <p className={`mt-1 text-xs ${ref.tone === "warn" ? "text-amber-800" : "text-slate-500"}`}>{t("caseChecks.reference", { text: ref.text })}</p>
+          <p className={`mt-1 text-xs ${ref.tone === "warn" ? "text-warning-text" : "text-muted"}`}>{t("caseChecks.reference", { text: ref.text })}</p>
         )}
         <input
-          className="mt-2 w-full rounded-xl border border-line-strong px-2 py-1 text-xs"
+          className={`${inputClass} mt-2`}
           placeholder={t("caseChecks.notePlaceholder")}
           aria-label={t("caseChecks.noteAria", { name })}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           onBlur={flushNote}
         />
-        {check.checkedAt && <p className="mt-1 text-xs text-slate-400">{t("caseChecks.lastChecked", { at: formatDateTime(check.checkedAt) })}</p>}
+        {check.checkedAt && <p className="mt-1 text-xs text-muted">{t("caseChecks.lastChecked", { at: formatDateTime(check.checkedAt) })}</p>}
       </div>
       <div className="flex flex-wrap items-start gap-2">
         <ChoiceGroup
@@ -255,7 +259,7 @@ function CheckRow({
           onChange={(v) => onPatch(check.key, { status: v as CheckStatus })}
         />
         {check.type === "manual" && (
-          <button onClick={onRemove} className="text-xs text-red-700 hover:underline">
+          <button type="button" onClick={onRemove} className="inline-flex min-h-[44px] items-center px-1 text-sm text-danger-text underline active:opacity-70">
             {t("caseChecks.remove")}
           </button>
         )}

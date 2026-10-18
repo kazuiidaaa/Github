@@ -4,7 +4,7 @@ import { DateField } from "@/components/DateField";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ChoiceGroup, type ChoiceOption } from "@/components/ChoiceGroup";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, inputClass } from "@/components/ui";
 import { CustomRequirementForm, type CustomRequirementInput } from "@/components/CustomRequirementForm";
 import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime, todayString } from "@/lib/format";
@@ -39,16 +39,25 @@ const PARTY_KEY = { applicant: "caseRequirements.partyApplicant", organization: 
 // 狭い画面幅（md 未満）では、表の行をカード状に縦積みして表示する。
 // 同じ要素を表示用に2重に描画すると、入力欄の状態（理由の自動保存）が二重になるため、
 // 1つの表を CSS だけで切り替える。md 以上は従来の表形式のまま。
+// カードでは、書類名を見出しとして太字にし、「提出者」「判定」は2列に並べて縦の長さを抑える（Issue #392 PR-8）。
 const TABLE_CLASS = "block w-full text-left text-sm md:table";
 const THEAD_CLASS = "hidden bg-slate-50 text-slate-600 md:table-header-group";
 const TBODY_CLASS = "block md:table-row-group";
-const TR_CLASS = "block border-t border-slate-100 px-4 py-3 align-top first:border-t-0 md:table-row md:p-0 md:first:border-t";
-const TD_CLASS = "block py-1.5 md:table-cell md:px-4 md:py-3";
+const TR_CLASS =
+  "grid grid-cols-2 gap-x-4 border-t border-slate-100 px-4 py-4 first:border-t-0 md:table-row md:p-0 md:align-top md:first:border-t";
+const TD_CLASS = "col-span-2 block py-1.5 md:table-cell md:px-4 md:py-3";
+/** カードで2列に並べる、短い値のセル（提出者・判定・必須か任意か） */
+const TD_HALF_CLASS = "block py-1.5 md:table-cell md:whitespace-nowrap md:px-4 md:py-3";
+/** カードの見出しになる、書類名のセル */
+const NAME_CLASS = "font-bold md:font-normal";
 
 /** 狭い画面幅でのみ表示する、項目名のラベル */
 function CellLabel({ children }: { children: string }) {
-  return <span className="mb-1 block text-xs text-slate-500 md:hidden">{children}</span>;
+  return <span className="mb-1 block text-xs text-muted md:hidden">{children}</span>;
 }
+
+/** 文中のリンク型ボタン。押しやすさのため高さ 44px（Issue #392） */
+const linkButtonClass = "inline-flex min-h-[44px] items-center text-blue-700 underline active:opacity-70";
 
 function StatusSelect({ label, value, onChange }: { label: string; value: RequirementStatus; onChange: (v: RequirementStatus) => void }) {
   const t = useT();
@@ -57,19 +66,18 @@ function StatusSelect({ label, value, onChange }: { label: string; value: Requir
   return <ChoiceGroup legend={t("caseRequirements.statusAria", { label })} hideLegend options={options} value={value} onChange={(v) => onChange(v as RequirementStatus)} />;
 }
 
-const selectClass = "rounded-xl border border-line-strong bg-white px-2 py-1 text-xs";
-
 function DueInput({ label, value, overdue, onChange }: { label: string; value?: string; overdue: boolean; onChange: (v: string) => void }) {
   const t = useT();
   return (
     <div>
+      {/* 入力欄は共通の inputClass（16px・高さ 44px）。期限切れの色は、inputClass の枠・背景より優先する（!） */}
       <DateField
         aria-label={t("caseRequirements.dueAria", { label })}
-        className={`${selectClass} w-32 ${overdue ? "border-red-400 bg-red-50" : ""}`}
+        className={`${inputClass} md:w-40 ${overdue ? "border-danger! bg-danger-soft!" : ""}`}
         value={value ?? ""}
         onChange={onChange}
       />
-      {overdue && <p className="mt-1 text-xs font-medium text-red-700">{t("caseRequirements.overdue")}</p>}
+      {overdue && <p className="mt-1 text-xs font-bold text-danger-text">{t("caseRequirements.overdue")}</p>}
     </div>
   );
 }
@@ -162,7 +170,7 @@ export function RequirementsPanel({
             <ul className="mt-1 list-inside list-disc">
               {ev.ruleSet.sources.map((s) => (
                 <li key={s.url}>
-                  <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+                  <a href={s.url} target="_blank" rel="noreferrer" className={linkButtonClass}>
                     {ruleText(lang, s.title)}
                   </a>
                 </li>
@@ -183,7 +191,7 @@ export function RequirementsPanel({
       {notices.category && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(notices.category)}
-          <button onClick={onGoEmployment} className="ml-2 underline">
+          <button type="button" onClick={onGoEmployment} className="ml-2 inline-flex min-h-[44px] items-center underline active:opacity-70">
             {t("caseRequirements.needsCategoryAction")}
           </button>
         </p>
@@ -215,14 +223,18 @@ export function RequirementsPanel({
               {progress.missing.map((i) => (
                 <li key={i.key}>
                   {nameOf(i)}
-                  {i.dueDate && <span className="ml-1 text-xs text-slate-500">{t("caseRequirements.dueSuffix", { date: i.dueDate })}</span>}
+                  {i.dueDate && <span className="ml-1 text-xs text-muted">{t("caseRequirements.dueSuffix", { date: i.dueDate })}</span>}
                 </li>
               ))}
             </ul>
-            <button onClick={() => void copyMissing()} className="mt-2 rounded-full border border-line-strong px-3 py-1 font-bold hover:bg-slate-50">
-              {t("caseRequirements.copyMissing")}
-            </button>
-            {copied && <span className="ml-2 text-green-700">{t("caseRequirements.copied")}</span>}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button variant="secondary" onClick={() => void copyMissing()}>
+                {t("caseRequirements.copyMissing")}
+              </Button>
+              <span role="status" className="text-success">
+                {copied ? t("caseRequirements.copied") : ""}
+              </span>
+            </div>
           </div>
         )}
       </section>
@@ -267,7 +279,7 @@ export function RequirementsPanel({
         </div>
         {adding && <CustomRequirementForm onSubmit={addCustom} onCancel={() => setAdding(false)} />}
         {record.customRequirements.length === 0 && !adding && (
-          <p className="text-sm text-slate-500">{t("caseRequirements.customEmpty")}</p>
+          <p className="text-sm text-muted">{t("caseRequirements.customEmpty")}</p>
         )}
         {record.customRequirements.length > 0 && (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
@@ -293,14 +305,14 @@ export function RequirementsPanel({
                   ) : (
                     <tr key={r.id} className={TR_CLASS}>
                       <td className={TD_CLASS}>
-                        <p>{r.name}</p>
-                        {r.note && <p className="mt-1 text-xs text-slate-500">{r.note}</p>}
+                        <p className={NAME_CLASS}>{r.name}</p>
+                        {r.note && <p className="mt-1 text-xs text-muted">{r.note}</p>}
                       </td>
-                      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+                      <td className={TD_HALF_CLASS}>
                         <CellLabel>{t("caseRequirements.colParty")}</CellLabel>
                         {t(PARTY_KEY[r.party])}
                       </td>
-                      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+                      <td className={TD_HALF_CLASS}>
                         <CellLabel>{t("caseRequirements.colRequired")}</CellLabel>
                         {r.isRequired ? t("caseRequirements.isRequired") : t("caseRequirements.isOptional")}
                       </td>
@@ -319,12 +331,14 @@ export function RequirementsPanel({
                       </td>
                       <td className={`${TD_CLASS} md:whitespace-nowrap`}>
                         <CellLabel>{t("caseRequirements.colActions")}</CellLabel>
-                        <button onClick={() => setEditingId(r.id)} className="mr-3 text-blue-700 underline">
-                          {t("caseRequirements.edit")}
-                        </button>
-                        <button onClick={() => setRemoving(r)} className="text-red-700 underline">
-                          {t("caseRequirements.delete")}
-                        </button>
+                        <div className="flex flex-wrap gap-x-4 md:flex-nowrap">
+                          <button type="button" onClick={() => setEditingId(r.id)} className={linkButtonClass}>
+                            {t("caseRequirements.edit")}
+                          </button>
+                          <button type="button" onClick={() => setRemoving(r)} className="inline-flex min-h-[44px] items-center text-danger-text underline active:opacity-70">
+                            {t("caseRequirements.delete")}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ),
@@ -373,8 +387,8 @@ function Row({
   return (
     <tr className={TR_CLASS}>
       <td className={TD_CLASS}>
-        <p className={item.effective === "not_required" ? "text-slate-400" : ""}>{ruleName}</p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className={`${NAME_CLASS} ${item.effective === "not_required" ? "text-muted" : ""}`}>{ruleName}</p>
+        <p className="mt-1 text-xs text-muted">
           {rule.note
             ? t("caseRequirements.reasonWithNote", {
                 reason: reasonText(t, item.reasonCode, (n) => requirementNote(lang, n)),
@@ -386,27 +400,27 @@ function Row({
         {rule.id === "photo" && (
           <div className="mt-2 text-xs">
             {photo ? (
-              <p className="text-green-700">
+              <p className="break-all text-success">
                 {t("caseRequirements.photoRegistered", { file: photo.fileName, at: formatDateTime(photo.uploadedAt) })}
               </p>
             ) : (
-              <p className="text-slate-500">{t("caseRequirements.photoNotRegistered")}</p>
+              <p className="text-muted">{t("caseRequirements.photoNotRegistered")}</p>
             )}
-            <button type="button" onClick={onGoDocuments} className="mt-1 text-blue-700 underline">
+            <button type="button" onClick={onGoDocuments} className={linkButtonClass}>
               {t("caseRequirements.photoGoDocuments")}
             </button>
           </div>
         )}
       </td>
-      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+      <td className={TD_HALF_CLASS}>
         <CellLabel>{t("caseRequirements.colParty")}</CellLabel>
         {t(PARTY_KEY[rule.party])}
       </td>
-      <td className={`${TD_CLASS} md:whitespace-nowrap`}>
+      <td className={TD_HALF_CLASS}>
         <CellLabel>{t("caseRequirements.colResult")}</CellLabel>
         <Badge tone={RESULT_TONE[item.result]}>{t(RESULT_KEY[item.result])}</Badge>
         {state.override && (
-          <p className="mt-1 text-xs text-slate-500">{t("caseRequirements.overrideNote", { result: t(RESULT_KEY[item.effective]) })}</p>
+          <p className="mt-1 text-xs text-muted">{t("caseRequirements.overrideNote", { result: t(RESULT_KEY[item.effective]) })}</p>
         )}
       </td>
       <td className={TD_CLASS}>
@@ -439,8 +453,9 @@ function Row({
         />
         {state.override && (
           <input
-            className="mt-2 w-full rounded-xl border border-line-strong px-2 py-1 text-xs"
+            className={`${inputClass} mt-2`}
             placeholder={t("caseRequirements.reasonPlaceholder")}
+            aria-label={t("caseRequirements.reasonPlaceholder")}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onBlur={flushNote}
