@@ -640,6 +640,17 @@ const KEIEI_ACTIVITY_NAME = "申請人の活動の内容等を明らかにする
 const KEIEI_UNAVAILABLE_REASON_NAME = "前年分の職員の給与所得の源泉徴収票等の法定調書合計表を提出できない理由を明らかにする資料";
 const KEIEI_DECLARATION_NAME = "所属機関の代表者に関する申告書（参考様式）";
 
+// 改正概要（令和7年10月16日施行。docs/official/businessmanager-revision_2026-10-18.txt）による注記（照合表 11章の R-1〜R-8、人の判断で追加。#374）。注記の文言は、この原文に基づく。
+const KEIEI_NOTE_STAFF = "常勤職員の対象は、日本人、特別永住者、法別表第二の在留資格（永住者・日本人の配偶者等・永住者の配偶者等・定住者）で在留する外国人。法別表第一の在留資格の外国人は対象外（日本語能力を立証する者としては含まれる）。複数名いる場合は、少なくとも1名が基準を満たすことを確認できる資料でよい";
+const KEIEI_NOTE_BALANCE_SHEET = "最初の決算期が到来していない場合も、設立時又は設立後の任意の時点の貸借対照表を作成して提出する";
+const KEIEI_NOTE_FINANCIAL = "個人事業主は、直近年度の決算文書に加え、必要に応じて事業経費などに関する領収書等を提出する";
+const KEIEI_NOTE_JAPANESE = "申請人又は常勤職員のいずれかが、B2相当以上の日本語能力を有することが必要。日本人・特別永住者以外は、日本語能力試験（JLPT）N2以上、BJTビジネス日本語能力テスト400点以上、中長期在留者として20年以上の在留、本邦の大学等高等教育機関の卒業（高等専門学校・専門学校を含む。恒常的に外国語による授業を行う課程・通信課程を除く）、本邦の義務教育修了と高等学校卒業（中学校から編入した場合は該当しない）のいずれかに該当することを確認する。試験は合格証・成績証明書、その他は日本語能力を有する者の身分及び経歴を証する資料（住民票、卒業証明書等）。申請書（所属機関作成用1）3（11）の「内容」欄に具体的に記入する";
+const KEIEI_NOTE_CAREER = "経営管理又は申請に係る事業の業務に必要な技術・知識に係る分野の博士・修士・専門職の学位（外国で授与された相当する学位を含む）、又は事業の経営・管理の3年以上の経験が必要。特定活動の起業準備活動の期間も経験に含む";
+const KEIEI_NOTE_BUSINESS_PLAN = "事業計画書を評価する専門家は、日本の中小企業診断士・公認会計士・税理士の資格を持つ者（施行後に対象者が変わる場合は入管庁のホームページで告知される）。申請人の会社の役員・従業員は評価者として認められない（外部顧問は差し支えない）";
+const KEIEI_NOTE_LICENSES = "在留許可を受けてからでないと取得できないなど、取得できないことに正当な理由が認められる場合は、取得できない具体的理由を説明した文書（様式自由）を提出する。取得状況は次回の在留期間更新許可申請時に確認される";
+const KEIEI_NOTE_OFFICE = "自宅を事業所と兼ねることは、原則として認められない";
+const KEIEI_NOTE_DUES_NHI = "社会保険への加入義務のない個人事業主でも、各職員の国民健康保険の加入状況は不要";
+
 export const KEIEI_KANRI_RENEWAL: RuleSet = {
   id: "keiei_kanri_renewal",
   title: "経営・管理 在留期間更新許可申請",
@@ -695,6 +706,7 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_LICENSES,
     },
     {
       id: "withholding_exemption_documents",
@@ -710,6 +722,7 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_STAFF,
     },
     {
       id: "japanese_ability",
@@ -717,6 +730,7 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_JAPANESE,
     },
     {
       id: "activity_summary_document",
@@ -739,7 +753,7 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      note: "申請に当たっての説明書（参考様式）と、公租公課の履行を証する資料のうち該当する全て。所属機関が法人の場合は、労働保険・社会保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・法人税・消費税及び地方消費税の納税証明書、法人住民税・法人事業税の納税証明書。所属機関が個人の場合は、労働保険・社会保険・国民健康保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・申告所得税及び復興特別所得税・消費税及び地方消費税・相続税・贈与税の納税証明書、個人住民税・個人事業税の納税証明書。社会保険への加入義務のない個人事業主は、社会保険の強制適用事業所に該当しないことを説明する資料",
+      note: "申請に当たっての説明書（参考様式）と、公租公課の履行を証する資料のうち該当する全て。所属機関が法人の場合は、労働保険・社会保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・法人税・消費税及び地方消費税の納税証明書、法人住民税・法人事業税の納税証明書。所属機関が個人の場合は、労働保険・社会保険・国民健康保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・申告所得税及び復興特別所得税・消費税及び地方消費税・相続税・贈与税の納税証明書、個人住民税・個人事業税の納税証明書。社会保険への加入義務のない個人事業主は、社会保険の強制適用事業所に該当しないことを説明する資料。" + KEIEI_NOTE_DUES_NHI,
     },
     {
       id: "office_facility_documents",
@@ -791,6 +805,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_BUSINESS_PLAN,
     },
     {
       id: "business_description",
@@ -805,6 +820,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_FINANCIAL,
     },
     {
       id: "representative_declaration",
@@ -820,6 +836,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_LICENSES,
     },
     {
       id: "statutory_report_unavailable_reason",
@@ -835,6 +852,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_OFFICE,
     },
     {
       id: "business_scale_documents",
@@ -842,7 +860,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      note: "事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要",
+      note: `${KEIEI_NOTE_STAFF}。${KEIEI_NOTE_BALANCE_SHEET}。事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要`,
     },
     {
       id: "japanese_ability",
@@ -850,6 +868,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_JAPANESE,
     },
     {
       id: "career_documents",
@@ -857,6 +876,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_CAREER,
     },
     {
       id: "office_commission_documents",
@@ -900,6 +920,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_BUSINESS_PLAN,
     },
     {
       id: "business_description",
@@ -914,6 +935,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_FINANCIAL,
     },
     {
       id: "business_licenses",
@@ -921,6 +943,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_LICENSES,
     },
     {
       id: "office_facility_documents",
@@ -928,6 +951,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_OFFICE,
     },
     {
       id: "business_scale_documents",
@@ -935,7 +959,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      note: "事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要",
+      note: `${KEIEI_NOTE_STAFF}。事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要`,
     },
     {
       id: "japanese_ability",
@@ -943,6 +967,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_JAPANESE,
     },
     {
       id: "career_documents",
@@ -950,6 +975,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
+      note: KEIEI_NOTE_CAREER,
     },
     {
       id: "representative_declaration",
