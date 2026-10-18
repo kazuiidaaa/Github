@@ -655,37 +655,50 @@ export const ACQUISITION_BY_CAUSE: RuleSet = {
 };
 
 // 在留資格「経営・管理」。事業の形態（新規／既存）は入力項目にせず、所属機関のカテゴリー（1〜4）のみで判定する。
-// 認定証明書交付申請は、提供された提出書類一覧（カテゴリー3・4）に基づく。
-// 更新・変更は同種の一覧が未提供のため、公開情報から作成した暫定の内容で、すべて verify: true とする。一覧の提供後に差し替える。
+// 提出書類は案内ページの本文と、チェックシート（PDF）5点（認定2・変更2・更新1）による。照合済み（2026-10-18。docs/official/reconciliation/keiei-kanri-2026-10-18.md）。
+// ページとチェックシートが食い違う書類は要確認とする: 更新のチェックシートだけにある JETRO の項目（category_proof）、案内ページだけにある本邦事業所の設置の委託（認定）、更新の案内ページ・チェックシートにない事務所用施設の資料（更新）。
 const KEIEI_KANRI = "経営・管理";
-const KEIEI_KANRI_SOURCE = { title: "在留資格「経営・管理」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/business-manager.html" };
+const KEIEI_KANRI_SOURCE = { title: "在留資格「経営・管理」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/businessmanager.html" };
+const KEIEI_KANRI_CHECKED_AT = "2026-10-18";
+
+const KEIEI_CATEGORY_PROOF_NAME = "所属機関がいずれのカテゴリーに該当するかを証明する文書";
+const KEIEI_STATUTORY_REPORT_NAME = "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）";
+const KEIEI_ACTIVITY_NAME = "申請人の活動の内容等を明らかにする資料（役員就任、日本法人への転勤・他団体の役員就任、管理者としての雇用のいずれか）";
+const KEIEI_UNAVAILABLE_REASON_NAME = "前年分の職員の給与所得の源泉徴収票等の法定調書合計表を提出できない理由を明らかにする資料";
+const KEIEI_DECLARATION_NAME = "所属機関の代表者に関する申告書（参考様式）";
 
 export const KEIEI_KANRI_RENEWAL: RuleSet = {
   id: "keiei_kanri_renewal",
   title: "経営・管理 在留期間更新許可申請",
   procedureType: "renewal",
   residenceStatus: KEIEI_KANRI,
-  checkedAt: "2026-10-05",
+  checkedAt: KEIEI_KANRI_CHECKED_AT,
   sources: [KEIEI_KANRI_SOURCE],
   rules: [
     ...procedureCommonRules("renewal"),
     {
+      id: "category_proof",
+      name: KEIEI_CATEGORY_PROOF_NAME,
+      party: "organization",
+      categories: ["1"],
+      level: "required",
+      note: "カテゴリー1：四季報の写し等のうち、提出可能な書類。日本貿易振興機構（JETRO）により対日投資支援企業として認定された企業であることを証明する文書は、更新のチェックシートのみに記載（案内ページには記載なし）。提出可能な書類がなければカテゴリー4となる",
+      verify: true,
+    },
+    {
       id: "statutory_report_total",
-      name: "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（受付印のあるものの写し）",
+      name: KEIEI_STATUTORY_REPORT_NAME,
       party: "organization",
       categories: ["2", "3"],
       level: "required",
       note: "カテゴリーを証明する文書として提出する",
-      verify: true,
     },
     {
       id: "financial_statements",
-      name: "直近年度の決算文書の写し",
+      name: "直近の年度の決算文書の写し",
       party: "organization",
       categories: C34,
       level: "required",
-      note: "更新の一覧が未提供のため、公開情報に基づく暫定の内容",
-      verify: true,
     },
     {
       id: "registry_certificate",
@@ -693,15 +706,51 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
+      note: "事業を法人において行う場合のみ",
     },
     {
-      id: "office_facility_documents",
-      name: "事業所用施設の存在を明らかにする資料（賃貸借契約書の写し等）",
+      id: "representative_declaration",
+      name: KEIEI_DECLARATION_NAME,
+      party: "organization",
+      categories: C34,
+      level: "check",
+      note: "申請人が事業の管理に従事する場合のみ",
+    },
+    {
+      id: "business_licenses",
+      name: "事業を営むために必要な許認可の取得等をしていることを証する資料",
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
+    },
+    {
+      id: "withholding_exemption_documents",
+      name: "外国法人の源泉徴収に対する免除証明書その他の源泉徴収を要しないことを明らかにする資料",
+      party: "organization",
+      categories: ["4"],
+      level: "required",
+      note: "カテゴリー4のみ",
+    },
+    {
+      id: "full_time_staff_documents",
+      name: "常勤の職員が一人以上であることを明らかにする当該職員に係る賃金支払に関する文書及び住民票その他の資料",
+      party: "organization",
+      categories: C34,
+      level: "required",
+    },
+    {
+      id: "japanese_ability",
+      name: "日本語能力を明らかにする資料",
+      party: "applicant",
+      categories: C34,
+      level: "required",
+    },
+    {
+      id: "activity_summary_document",
+      name: "直近の在留期間における事業の経営又は管理に関する活動内容を具体的に説明する文書［任意の様式］（前回の在留申請時から変更がある場合はその理由の説明を含む）",
+      party: "applicant",
+      categories: C34,
+      level: "required",
     },
     {
       id: "resident_tax_certificates",
@@ -710,15 +759,22 @@ export const KEIEI_KANRI_RENEWAL: RuleSet = {
       categories: C34,
       level: "required",
       note: "直近1年分の総所得及び納税状況が記載されたもの",
-      verify: true,
     },
     {
-      id: "representative_declaration",
-      name: "所属機関の代表者による申告書（参考様式）",
+      id: "public_dues_documents",
+      name: "所属機関における公租公課の履行状況を明らかにする資料",
+      party: "organization",
+      categories: C34,
+      level: "required",
+      note: "申請に当たっての説明書（参考様式）と、公租公課の履行を証する資料のうち該当する全て。所属機関が法人の場合は、労働保険・社会保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・法人税・消費税及び地方消費税の納税証明書、法人住民税・法人事業税の納税証明書。所属機関が個人の場合は、労働保険・社会保険・国民健康保険の加入状況及び料金の納付状況を証する文書、源泉所得税及び復興特別所得税・申告所得税及び復興特別所得税・消費税及び地方消費税・相続税・贈与税の納税証明書、個人住民税・個人事業税の納税証明書。社会保険への加入義務のない個人事業主は、社会保険の強制適用事業所に該当しないことを説明する資料",
+    },
+    {
+      id: "office_facility_documents",
+      name: "事務所用施設の存在を明らかにする資料（賃貸借契約書の写し等）",
       party: "organization",
       categories: C34,
       level: "check",
-      note: "申請人が事業の管理に従事する場合のみ",
+      note: "更新の案内ページ・チェックシートには記載なし",
       verify: true,
     },
   ],
@@ -729,7 +785,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
   title: "経営・管理 在留資格認定証明書交付申請",
   procedureType: "coe",
   residenceStatus: KEIEI_KANRI,
-  checkedAt: "2026-10-05",
+  checkedAt: KEIEI_KANRI_CHECKED_AT,
   sources: [KEIEI_KANRI_SOURCE],
   rules: [
     ...procedureCommonRules("coe"),
@@ -743,23 +799,22 @@ export const KEIEI_KANRI_COE: RuleSet = {
     },
     {
       id: "category_proof",
-      name: "所属機関のカテゴリーを証明する文書",
+      name: KEIEI_CATEGORY_PROOF_NAME,
       party: "organization",
-      categories: ["1", "2"],
+      categories: ["1", "2", "3"],
       level: "required",
-      note: "カテゴリー1：四季報の写し等／カテゴリー2：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる",
-      verify: true,
+      note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる",
     },
     {
       id: "activity_documents",
-      name: "申請人の活動内容を明らかにする資料（役員就任、日本法人への転勤・他団体の役員就任、管理者としての雇用のいずれか）",
+      name: KEIEI_ACTIVITY_NAME,
       party: "organization",
       categories: C34,
       level: "required",
     },
     {
       id: "business_plan",
-      name: "専門的知識を有する者による事業計画書の写し",
+      name: "経営・管理に関する専門的な知識を有する者による評価を受けた事業計画書の写し",
       party: "organization",
       categories: C34,
       level: "required",
@@ -780,12 +835,11 @@ export const KEIEI_KANRI_COE: RuleSet = {
     },
     {
       id: "representative_declaration",
-      name: "所属機関の代表者による申告書（参考様式）",
+      name: KEIEI_DECLARATION_NAME,
       party: "organization",
       categories: C34,
       level: "check",
-      note: "申請人が事業の管理に従事する場合のみ（提供された一覧で△）",
-      verify: true,
+      note: "申請人が事業の管理に従事する場合のみ（チェックシートで△）",
     },
     {
       id: "business_licenses",
@@ -796,7 +850,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
     },
     {
       id: "statutory_report_unavailable_reason",
-      name: "前年分の職員の源泉徴収票等の法定調書合計表を提出できない理由を明らかにする資料",
+      name: KEIEI_UNAVAILABLE_REASON_NAME,
       party: "organization",
       categories: ["4"],
       level: "required",
@@ -804,7 +858,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
     },
     {
       id: "office_facility_documents",
-      name: "事業所用施設の存在を明らかにする資料（不動産登記簿謄本、賃貸借契約書等）",
+      name: "事務所用施設の存在を明らかにする資料（不動産登記簿謄本、賃貸借契約書等）",
       party: "organization",
       categories: C34,
       level: "required",
@@ -815,7 +869,7 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      note: "事業内容を明らかにする資料として登記事項証明書を提出済みの場合は不要",
+      note: "事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要",
     },
     {
       id: "japanese_ability",
@@ -830,6 +884,15 @@ export const KEIEI_KANRI_COE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
+    },
+    {
+      id: "office_commission_documents",
+      name: "本邦事業所の設置について委託されていることが分かるもの（当該委託に係る契約書等）",
+      party: "organization",
+      categories: ALL,
+      level: "check",
+      note: "案内ページに記載あり（提示）、チェックシートには記載なし。本邦に新たに事業所を設置する場合で、事業所の経営者又は管理者が不在の間の事業所設置業務全般を任されている方が申請書類を提出するときのみ",
+      verify: true,
     },
   ],
 };
@@ -839,35 +902,31 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
   title: "経営・管理 在留資格変更許可申請",
   procedureType: "change",
   residenceStatus: KEIEI_KANRI,
-  checkedAt: "2026-10-05",
+  checkedAt: KEIEI_KANRI_CHECKED_AT,
   sources: [KEIEI_KANRI_SOURCE],
   rules: [
     ...procedureCommonRules("change"),
     {
       id: "category_proof",
-      name: "所属機関のカテゴリーを証明する文書",
+      name: KEIEI_CATEGORY_PROOF_NAME,
       party: "organization",
-      categories: ["1", "2"],
+      categories: ["1", "2", "3"],
       level: "required",
-      note: "カテゴリー1：四季報の写し等／カテゴリー2：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる",
-      verify: true,
+      note: "カテゴリー1：四季報の写し等／カテゴリー2・3：前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）。提出可能な書類がなければカテゴリー4となる",
     },
     {
       id: "activity_documents",
-      name: "申請人の活動内容を明らかにする資料（役員就任、日本法人への転勤・他団体の役員就任、管理者としての雇用のいずれか）",
+      name: KEIEI_ACTIVITY_NAME,
       party: "organization",
       categories: C34,
       level: "required",
-      note: "変更の一覧が未提供のため、認定証明書交付申請の一覧に準じた暫定の内容",
-      verify: true,
     },
     {
       id: "business_plan",
-      name: "専門的知識を有する者による事業計画書の写し",
+      name: "経営・管理に関する専門的な知識を有する者による評価を受けた事業計画書の写し",
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "business_description",
@@ -875,7 +934,6 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "financial_statements",
@@ -883,7 +941,6 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "business_licenses",
@@ -891,15 +948,13 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "office_facility_documents",
-      name: "事業所用施設の存在を明らかにする資料（不動産登記簿謄本、賃貸借契約書等）",
+      name: "事務所用施設の存在を明らかにする資料（不動産登記簿謄本、賃貸借契約書等）",
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "business_scale_documents",
@@ -907,7 +962,7 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "organization",
       categories: C34,
       level: "required",
-      verify: true,
+      note: "事業内容を明らかにする資料（1）として登記事項証明書を提出済みの場合は不要",
     },
     {
       id: "japanese_ability",
@@ -915,7 +970,6 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "career_documents",
@@ -923,24 +977,21 @@ export const KEIEI_KANRI_CHANGE: RuleSet = {
       party: "applicant",
       categories: C34,
       level: "required",
-      verify: true,
     },
     {
       id: "representative_declaration",
-      name: "所属機関の代表者による申告書（参考様式）",
+      name: KEIEI_DECLARATION_NAME,
       party: "organization",
       categories: C34,
       level: "check",
       note: "申請人が事業の管理に従事する場合のみ",
-      verify: true,
     },
     {
       id: "statutory_report_unavailable_reason",
-      name: "前年分の職員の源泉徴収票等の法定調書合計表を提出できない理由を明らかにする資料",
+      name: KEIEI_UNAVAILABLE_REASON_NAME,
       party: "organization",
       categories: ["4"],
       level: "required",
-      verify: true,
     },
   ],
 };

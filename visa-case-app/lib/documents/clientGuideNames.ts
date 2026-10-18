@@ -162,21 +162,17 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "원천징수 면제를 받는 기관임을 밝히는 자료(외국 법인의 면제증명서 등)",
   ],
   "旅券（パスポート）の写し": ["Copy of the passport", "여권 사본"],
-  "事業所用施設の存在を明らかにする資料（賃貸借契約書の写し等）": [
-    "Materials showing the existence of the business premises (e.g., a copy of the lease agreement)",
-    "사업소용 시설의 존재를 밝히는 자료(임대차계약서 사본 등)",
+  "事務所用施設の存在を明らかにする資料（賃貸借契約書の写し等）": [
+    "Materials showing the existence of the office facilities (e.g., a copy of the lease agreement)",
+    "사무소용 시설의 존재를 밝히는 자료(임대차계약서 사본 등)",
   ],
-  "所属機関の代表者による申告書（参考様式）": [
-    "Declaration by the representative of the affiliated organization (reference form)",
-    "소속 기관 대표자에 의한 신고서(참고 양식)",
+  "申請人の活動の内容等を明らかにする資料（役員就任、日本法人への転勤・他団体の役員就任、管理者としての雇用のいずれか）": [
+    "Materials showing the applicant's activities, etc. (one of: appointment as an officer, transfer to a Japanese corporation or appointment as an officer of another organization, or employment as a manager)",
+    "신청인의 활동 내용 등을 밝히는 자료(임원 취임, 일본 법인으로의 전근·다른 단체의 임원 취임, 관리자로서의 고용 중 하나)",
   ],
-  "申請人の活動内容を明らかにする資料（役員就任、日本法人への転勤・他団体の役員就任、管理者としての雇用のいずれか）": [
-    "Materials showing the applicant's activities (one of: appointment as an officer, transfer to a Japanese corporation or appointment as an officer of another organization, or employment as a manager)",
-    "신청인의 활동 내용을 밝히는 자료(임원 취임, 일본 법인으로의 전근·다른 단체의 임원 취임, 관리자로서의 고용 중 하나)",
-  ],
-  "専門的知識を有する者による事業計画書の写し": [
-    "Copy of the business plan prepared by a person with expert knowledge",
-    "전문 지식을 가진 자가 작성한 사업계획서 사본",
+  "経営・管理に関する専門的な知識を有する者による評価を受けた事業計画書の写し": [
+    "Copy of the business plan evaluated by a person with expert knowledge of business management",
+    "경영·관리에 관한 전문 지식을 가진 자의 평가를 받은 사업계획서 사본",
   ],
   "事業内容を明らかにする資料（登記事項証明書、事業内容の詳細資料等）": [
     "Materials showing the business (certificate of registered matters, detailed materials on the business, etc.)",
@@ -186,13 +182,45 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Copy of the financial statements of the most recent fiscal year",
     "최근 사업연도 결산 서류 사본",
   ],
+  "所属機関がいずれのカテゴリーに該当するかを証明する文書": [
+    "Document proving which category the affiliated organization falls under",
+    "소속 기관이 어느 카테고리에 해당하는지를 증명하는 문서",
+  ],
+  "前年分の職員の給与所得の源泉徴収票等の法定調書合計表（写し）": [
+    "Copy of the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year",
+    "전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표(사본)",
+  ],
+  "外国法人の源泉徴収に対する免除証明書その他の源泉徴収を要しないことを明らかにする資料": [
+    "Exemption certificate from withholding for a foreign corporation or other material showing that withholding is not required",
+    "외국 법인의 원천징수에 대한 면제증명서 그 밖에 원천징수가 필요 없음을 밝히는 자료",
+  ],
+  "常勤の職員が一人以上であることを明らかにする当該職員に係る賃金支払に関する文書及び住民票その他の資料": [
+    "Documents on wage payments to the full-time employee(s), the resident record and other materials showing that there is at least one full-time employee",
+    "상근 직원이 1명 이상임을 밝히는 해당 직원에 대한 임금 지급 관련 문서 및 주민표 그 밖의 자료",
+  ],
+  "直近の在留期間における事業の経営又は管理に関する活動内容を具体的に説明する文書［任意の様式］（前回の在留申請時から変更がある場合はその理由の説明を含む）": [
+    "Document specifically explaining the business management activities during the most recent period of stay [any format] (including an explanation of the reasons if there are changes since the previous application)",
+    "최근 체류기간 중의 사업 경영 또는 관리에 관한 활동 내용을 구체적으로 설명하는 문서[임의 양식](지난 체류 신청 때와 달라진 점이 있는 경우 그 이유의 설명 포함)",
+  ],
+  "所属機関における公租公課の履行状況を明らかにする資料": [
+    "Materials showing the status of payment of public taxes and charges by the affiliated organization",
+    "소속 기관의 공조공과 이행 상황을 밝히는 자료",
+  ],
+  "本邦事業所の設置について委託されていることが分かるもの（当該委託に係る契約書等）": [
+    "Document showing that the establishment of the business office in Japan has been entrusted (e.g., the contract for the entrustment)",
+    "본방 사업소의 설치를 위탁받았음을 알 수 있는 것(해당 위탁에 관한 계약서 등)",
+  ],
+  "事業を営むために必要な許認可の取得等をしていることを証する資料": [
+    "Materials proving that the permits and licenses required to operate the business have been obtained",
+    "사업을 영위하기 위해 필요한 허가·인가 등을 취득하고 있음을 증명하는 자료",
+  ],
   "事業を営むために必要な許認可の取得等を証する資料": [
     "Materials proving that the permits and licenses required to operate the business have been obtained",
     "사업을 영위하기 위해 필요한 허가·인가 등의 취득을 증명하는 자료",
   ],
-  "事業所用施設の存在を明らかにする資料（不動産登記簿謄本、賃貸借契約書等）": [
-    "Materials showing the existence of the business premises (certified copy of the real estate registry, lease agreement, etc.)",
-    "사업소용 시설의 존재를 밝히는 자료(부동산 등기부등본, 임대차계약서 등)",
+  "事務所用施設の存在を明らかにする資料（不動産登記簿謄本、賃貸借契約書等）": [
+    "Materials showing the existence of the office facilities (certified copy of the real estate registry, lease agreement, etc.)",
+    "사무소용 시설의 존재를 밝히는 자료(부동산 등기부등본, 임대차계약서 등)",
   ],
   "事業規模を明らかにする資料（常勤職員の賃金支払・住民票、貸借対照表、登記事項証明書等）": [
     "Materials showing the scale of the business (wage payments to and resident records of full-time employees, balance sheet, certificate of registered matters, etc.)",
@@ -203,9 +231,9 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Materials showing background (education or work history)",
     "경력을 밝히는 자료(학력 또는 직무 경력)",
   ],
-  "前年分の職員の源泉徴収票等の法定調書合計表を提出できない理由を明らかにする資料": [
-    "Material explaining why the summary table of statutory reports, such as the withholding tax slips for employees of the previous year, cannot be submitted",
-    "전년도 직원 원천징수영수증 등의 법정조서합계표를 제출할 수 없는 이유를 밝히는 자료",
+  "前年分の職員の給与所得の源泉徴収票等の法定調書合計表を提出できない理由を明らかにする資料": [
+    "Material explaining why the summary table of statutory reports, such as the withholding tax slips for employees' salaries of the previous year, cannot be submitted",
+    "전년도 직원 급여소득 원천징수영수증 등의 법정조서합계표를 제출할 수 없는 이유를 밝히는 자료",
   ],
   "ポイント計算表（高度専門職 第1号イ・ロ・ハのうち、活動の区分に応じたもの）": [
     "Points calculation table (Highly Skilled Professional, No. 1 (a), (b), or (c), whichever matches the type of activity)",
