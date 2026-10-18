@@ -40,3 +40,5 @@
 - 更新申請書の様式の使い分け(高度専門職1号):変更と同じ対応です(上記)。2号に更新はありません(在留期限が無期限のため)。出典:上記の入管庁ページ(2026-10-07確認)。
 
 - 特定活動の案内ページの原文の控え(designatedactivities07/08/11_2026-10-18.txt)と、画面の必要書類との照合表(`reconciliation/tokutei-katsudo-2026-10-18.md`)。取得日は2026-10-18。人がブラウザでページの文字をコピーしたもの。3ページとも、提出書類のチェックシートのPDFは無い(Issue #333 手順B)。
+
+- 研究の案内ページの原文の控え(`researcher_2026-10-18.txt`)と、チェックシート3点(`researcher-coe-checksheet-cat34_001460239.pdf`:認定・カテゴリー3・4のみ、`researcher-change-checksheet-cat34_001460240.pdf`:変更・カテゴリー3・4のみ、`researcher-renewal-checksheet_001460241.pdf`:更新・カテゴリー共通。いずれも令和8年4月15日以降)、画面の必要書類との照合表(`reconciliation/kenkyu-2026-10-18.md`)。取得日は2026-10-18。ページは人がブラウザでコピーしたもの、PDFは人が提供したもの。出典:https://www.moj.go.jp/isa/applications/status/researcher.html 。認定・変更の「カテゴリー共通」のPDFは未入手(Issue #333 手順A)。
