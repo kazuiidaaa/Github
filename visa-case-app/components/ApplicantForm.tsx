@@ -9,6 +9,7 @@ import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { DateField } from "@/components/DateField";
 import { fillCurrentStatus, initialResidenceStatus, validateApplicant, validateDraft, type ApplicantField } from "@/lib/applicant";
 import { applicantFieldId } from "@/lib/applicantFields";
+import { firstErrorKey, focusField } from "@/lib/formFocus";
 import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n/LanguageProvider";
@@ -103,9 +104,16 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
     );
   }
 
-  function persistDraft(f: Applicant, showErrors: boolean): boolean {
+  /** 検証の誤りを表示し、画面の並び順で最初の誤りの欄へフォーカスを移す（設計書 4章「フォームの入力しやすさ」） */
+  function showErrors(next: Partial<Record<ApplicantField, string>>) {
+    setErrors(next);
+    const first = firstErrorKey(next, Object.keys(FIELD_LABEL_KEYS) as ApplicantField[]);
+    if (first) requestAnimationFrame(() => focusField(applicantFieldId(first)));
+  }
+
+  function persistDraft(f: Applicant, withErrors: boolean): boolean {
     const next = validateDraft(f, t);
-    if (showErrors) setErrors(next);
+    if (withErrors) showErrors(next);
     if (Object.keys(next).length > 0) return false;
     updateCase(record.id, (c) => ({
       ...c,
@@ -127,7 +135,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
 
   async function confirm() {
     const next = validateApplicant(form, t);
-    setErrors(next);
+    showErrors(next);
     if (Object.keys(next).length > 0) {
       setMessage("");
       return;
@@ -174,7 +182,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           <h2 className="font-semibold">{t("casePage.applicantInfo")}</h2>
           <Badge tone={confirmed ? "green" : "yellow"}>{confirmed ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}</Badge>
         </div>
-        <p className="mb-5 text-xs text-slate-500">
+        <p className="mb-5 text-xs text-muted">
           {t("caseApplicant.intro")}
         </p>
         {errorFields.length > 0 && (
@@ -226,7 +234,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
                   {message}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-muted">
                 {t("caseApplicant.requiredNote")}
               </p>
             </>
