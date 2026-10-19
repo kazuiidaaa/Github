@@ -127,6 +127,6 @@ export const display = defineMessages({
     statusBeforeEntry: "(입국 전)",
     statusByBirth: "(출생 등)",
     statusNotEntered: "미입력",
-    statusArrow: "에서",
+    statusArrow: "에서 다음으로",
   },
 });

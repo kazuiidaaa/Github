@@ -9,6 +9,7 @@ import { AcceptedDateField } from "@/components/AcceptedDateField";
 import { ChoiceGroup } from "@/components/ChoiceGroup";
 import { PROCEDURE_OPTIONS, StatusSelect, useStatusHints } from "@/components/StatusSelect";
 import { noRuleGuideText, procedureDescriptionText, targetStatusLegend } from "@/lib/i18n/caseNew";
+import { StatusTransition } from "@/components/StatusTransition";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { Button, Field, inputClass, ToneIcon } from "@/components/ui";
 import { hasAcceptedDateError } from "@/lib/acceptedDate";
@@ -311,6 +312,10 @@ export default function NewCasePage() {
                 />
               </div>
             )}
+            {/* 入力中の手続と在留資格の確認（共通部品。Issue #433） */}
+            <p className="min-w-0 rounded-xl bg-slate-100 p-3 text-sm">
+              <StatusTransition procedureType={procedureType} current={currentStatus} target={needsTarget ? targetStatus : undefined} />
+            </p>
           </div>
         )}
         <div id={fieldId("acceptedDate")}>
