@@ -17,7 +17,7 @@ import {
 } from "./changeMapping";
 import { CHANGE_SPEC } from "../officialForms";
 import { fillWorkbook } from "./fillWorkbook";
-import { hspChangeWarnings } from "./hspChangeCommon";
+import { formMWarnings, hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
@@ -31,7 +31,8 @@ export const CHANGE_TEMPLATE_PATH = officialPath("change-application-form_930004
 export const CHANGE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
   I: officialPath("change-application-form-I.xlsx"),
   L: officialPath("change-application-form-L.xlsx"),
-  M: officialPath("change-application-form-M.xlsx"),
+  // 経営・管理のページの新しい様式（令和7年10月16日以降。#397 R-13）。座標は旧様式 M と同じ
+  M: officialPath("businessmanager-change-application-form_001448692.xlsx"),
   N: CHANGE_TEMPLATE_PATH,
   U: officialPath("change-application-form-U.xlsx"),
 };
@@ -51,15 +52,14 @@ export async function fillChangeExcel(
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: ChangeCtx = { a, e, f, targetStatus };
   const resolution = resolveChangeForm(targetStatus, f.hspActivity ?? "");
-  // 高度専門職ではない「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = formCodeOfStatus(targetStatus) ?? "N";
+  // 高度専門職ではない「経営・管理」は様式 M（認定と同じ。#397 R-14）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
+  // 「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
+  const notApplicable: CoeFormCode = isKeieiKanri(targetStatus) ? "M" : formCodeOfStatus(targetStatus) ?? "N";
   const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
-  // 高度専門職ではない「経営・管理」への変更は、第2表以降（様式Nの表）を使えないため、第1表だけを差し込む（Issue #191）
-  const firstOnly = plan.firstOnly || (resolution.kind === "not_applicable" && isKeieiKanri(targetStatus));
   const table2 = plan.form === "N" || plan.firstOnly ? null : HSP_CHANGE_TABLE2[plan.form];
   const first = sheetKey(SHEET_CHANGE_APPLICANT_1);
   // 様式 I・L・M・U は、第1表だけ様式 N の座標と同じ。第2表以降は、様式ごとの対応表（hspChangeTable2.ts）を使う
-  const firstSheetOnly = firstOnly || table2 !== null;
+  const firstSheetOnly = plan.firstOnly || table2 !== null;
   const inRange = (sheet: string) => !firstSheetOnly || sheetKey(sheet) === first;
   const buffer = await fillWorkbook(
     CHANGE_TEMPLATE_PATHS[plan.form],
@@ -67,26 +67,23 @@ export async function fillChangeExcel(
     [...CHANGE_FILL_ITEMS.filter((it) => inRange(it.sheet)), ...(table2 ? table2.fill : [])],
     [...CHANGE_PICK_ITEMS.filter((p) => inRange(p.sheet)), ...(table2 ? table2.pick : [])],
   );
-  return { buffer, warnings: buildWarnings(ctx, resolution, table2) };
+  return { buffer, warnings: buildWarnings(ctx, resolution, table2, plan.form) };
 }
 
 const isKeieiKanri = (targetStatus: string) => targetStatus.trim() === CHANGE_TARGET_STATUS_KEIEI_KANRI;
 
-function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, table2: Table2Mapping | null): string[] {
+function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, table2: Table2Mapping | null, form: CoeFormCode): string[] {
   const w: string[] = [];
   const hsp = isAdvancedProfessional(c.targetStatus);
   const maxWork = table2 && table2.fill.length > 0 ? table2.maxWork : MAX_WORK_HISTORY;
   if (hsp) w.push(...hspChangeWarnings({ resolution, procedure: "change", firstSheet: SHEET_CHANGE_APPLICANT_1, status: c.targetStatus, table2 }));
   else if (table2) w.push(`${table2.name}の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${table2.manual}。`);
+  w.push(...formMWarnings(c, table2 !== null && form === "M"));
   if (c.a.confirmationStatus !== "confirmed") {
     w.push("申請人情報が確定していません。すべての項目を、原本と照合してから使用してください。");
   }
   if (!c.targetStatus.trim()) {
     w.push("案件情報の「変更後の在留資格」が未入力のため、項目13「希望する在留資格」は空欄です。");
-  } else if (isKeieiKanri(c.targetStatus)) {
-    w.push(
-      `変更後の在留資格が「${CHANGE_TARGET_STATUS_KEIEI_KANRI}」のため、第1表（申請人用（変更）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。`,
-    );
   } else if (!isStatusInFormScope(c.targetStatus, c.f.tokuteiKatsudoType)) {
     // 画面の事前表示（officialFormScopeWarnings）と同じ判定・同じ文面
     w.push(CHANGE_SPEC.outOfScopeWarning);

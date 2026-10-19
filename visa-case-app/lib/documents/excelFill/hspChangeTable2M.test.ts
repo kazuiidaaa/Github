@@ -12,7 +12,11 @@ import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 // 変更と更新は座標が同一のため、同じ対応表を、両方の雛形に対して検証する。
 
 const official = (file: string) => path.join(process.cwd(), "docs", "official", file);
-const TEMPLATES = { 変更: official("change-application-form-M.xlsx"), 更新: official("renewal-application-form-M.xlsx") };
+// 差し込みに使う新しい様式（経営・管理のページ。#397 R-13）で座標を確かめる
+const TEMPLATES = {
+  変更: official("businessmanager-change-application-form_001448692.xlsx"),
+  更新: official("businessmanager-renewal-application-form_001448694.xlsx"),
+};
 const table = HSP_CHANGE_TABLE2.M; // 本番の経路（change.ts・renewal.ts）と同じ対応表を試験する
 
 const applicant: Applicant = { ...EMPTY_APPLICANT, legalName: "TARO YAMADA", residenceCardNumber: "AB12345678CD", confirmationStatus: "confirmed" };

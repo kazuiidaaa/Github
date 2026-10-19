@@ -1,6 +1,7 @@
 import { ADVANCED_PROFESSIONAL_GRADE_2 } from "../../types";
 import type { CoeFormCode, FormResolution } from "../../hspForm";
 import { describeHspForm } from "../../hspFormGuide";
+import { jaT } from "../../i18n/jaT";
 import type { Table2Mapping } from "./table2Common";
 
 /** 2号の変更は、様式が活動だけで決まる。活動が変わるときは、変更後の在留資格の案内ページの様式が正になる */
@@ -33,4 +34,13 @@ export function hspChangeWarnings(opts: {
   }
   if (procedure === "change" && status.trim() === ADVANCED_PROFESSIONAL_GRADE_2) w.push(GRADE2_CHANGE_NOTE);
   return w;
+}
+
+/**
+ * 様式 M（経営・管理）の全表を差し込んだときの警告（認定・変更・更新で共通）。
+ * 様式 M の3（10）は「常勤従業員数」だが、案件情報の「従業員数」をそのまま差し込むため、常勤の人数かの確認を促す（#397 R-16）。
+ * @param formMTables 様式 M の第2表以降を差し込んだか
+ */
+export function formMWarnings(c: { e: { employeeCount: string } }, formMTables: boolean): string[] {
+  return formMTables && c.e.employeeCount.trim() ? [jaT("documents.fillWarn_formMFullTimeEmployees")] : [];
 }
