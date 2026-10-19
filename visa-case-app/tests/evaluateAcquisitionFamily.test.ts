@@ -4,7 +4,7 @@ import { evaluate, hasRuleSetFor, shouldShowNoRuleGuide } from "../lib/requireme
 import { RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
-// Issue #396：照合表 acquisition-gijinkoku-kazokutaizai-2026-10-18.md の、人の判断「推奨のとおり」（2026-10-18）の R-2〜R-18・R-20。R-19 は人の判断（2026-10-18）で必須
+// Issue #396：照合表 acquisition-gijinkoku-kazokutaizai-2026-10-18.md の、人の判断「推奨のとおり」（2026-10-18）の R-2〜R-18・R-20。R-19 は人の判断（2026-10-18）で必須の1行（案A）
 type Cause = FormDetails["acquisitionCause"];
 
 function make(cause: Cause, over: Partial<CaseRecord> = {}): CaseRecord {
@@ -43,8 +43,8 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
   const kazokuEval = (cause: Cause, over: Partial<CaseRecord> = {}) => evaluate(make(cause, { targetStatus: "家族滞在", ...over }));
   const BIRTH_THREE = ["birth_certificate", "parents_questionnaire", "household_residence_certificate"];
   const FAMILY_REQUIRED = ["family_relationship_proof", "supporter_card_or_passport_copy"];
-  // R-10 の2行。R-19 の人の判断（2026-10-18）で必須
-  const FAMILY_INCOME = ["supporter_income_active", "supporter_income_other"];
+  // R-10 で足した書類。R-19 の人の判断（2026-10-18）で、必須の1行にまとめた（案A）
+  const FAMILY_INCOME = ["supporter_income_proof"];
   // 旅券の理由書は、技人国（R-7）・家族滞在（R-14）とも外した
   const COMMON_CHECK = ["agent_identity_document"];
   const AGENT_NOTE = "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示";
@@ -146,7 +146,7 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     expect(kazoku.rules.find((r) => r.id === "supporter_card_or_passport_copy")?.name).toBe("扶養者の在留カード又は旅券の写し");
   });
 
-  it("R-10・R-19：扶養者の職業及び収入を証する文書は(1)(2)の2行で足し、2行とも必須（R-19 の人の判断）。注記に分岐を書く", () => {
+  it("R-10・R-19：扶養者の職業及び収入を証する文書は、必須の1行（R-19 の人の判断、案A）。注記に(1)(2)の分岐を書く", () => {
     for (const cause of ALL) {
       const e = kazokuEval(cause);
       for (const id of FAMILY_INCOME) {
@@ -154,14 +154,14 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
         expect(ids(e, "check"), `${cause}:${id}`).not.toContain(id);
       }
     }
-    const a = kazoku.rules.find((r) => r.id === "supporter_income_active")!;
-    const b = kazoku.rules.find((r) => r.id === "supporter_income_other")!;
-    expect(a.note).toContain("(1)(2)のどちらか");
-    expect(a.note).toContain("在職証明書又は営業許可書の写し");
-    expect(a.note).toContain("いずれか一方でよい");
-    expect(b.note).toContain("(1)(2)のどちらか");
-    expect(b.note).toContain("預金残高証明書");
-    expect(b.note).toContain("奨学金給付");
+    const r = kazoku.rules.find((x) => x.id === "supporter_income_proof")!;
+    expect(r.name).toBe("扶養者の職業及び収入を証する文書");
+    expect(r.note).toContain("(1)(2)のどちらか");
+    expect(r.note).toContain("(1)扶養者が収入を伴う事業を運営する活動又は報酬を受ける活動を行っている場合：在職証明書又は営業許可書の写し");
+    expect(r.note).toContain("いずれか一方でよい");
+    expect(r.note).toContain("(2)(1)以外の活動を行っている場合：扶養者名義の預金残高証明書");
+    expect(r.note).toContain("奨学金給付");
+    expect(r.note!.indexOf("(1)扶養者")).toBeLessThan(r.note!.indexOf("(2)(1)以外"));
   });
 
   it("R-12：住民票は全事由で任意（不足にも要確認にも数えない）。名称は「住民票」。注記に原文の2点（個人番号は省略、住居地の届出）", () => {
@@ -244,9 +244,10 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
     expect(agent.level).toBe("check");
   });
 
-  it("R-19：人の判断（2026-10-18）で、扶養者の職業及び収入の書類は必須。行は R-10 の2行のまま。注記にチェックシート No.8 を書く", () => {
-    const income = kazoku.rules.filter((r) => FAMILY_INCOME.includes(r.id));
+  it("R-19：人の判断（2026-10-18）で、扶養者の職業及び収入の書類は必須の1行（案A）。R-10 の2行は無い。注記にチェックシート No.8 を書く", () => {
+    const income = kazoku.rules.filter((r) => r.name.startsWith("扶養者の職業及び収入を証する文書"));
     expect(income.map((r) => r.id)).toEqual(FAMILY_INCOME);
+    for (const id of ["supporter_income_active", "supporter_income_other"]) expect(kazoku.rules.some((r) => r.id === id), id).toBe(false);
     for (const r of income) {
       expect(r.level, r.id).toBe("required");
       expect(r.note, r.id).toContain("チェックシート No.8 は○");

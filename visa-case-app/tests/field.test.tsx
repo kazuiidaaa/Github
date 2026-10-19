@@ -81,14 +81,39 @@ describe("Field", () => {
     expect(m).not.toContain("aria-invalid");
   });
 
-  it("DateField など独自の部品には触らない（自分で結び付ける）", () => {
+  it("DateField は、Field の説明の文を aria-describedby で結び付ける（呼び出し側の値も残す）", () => {
     const m = renderToStaticMarkup(
       <Field label="生年月日" required hint="説明">
-        <DateField id="dob" value="" onChange={() => {}} />
+        <DateField id="dob" value="" onChange={() => {}} aria-describedby="note" />
       </Field>,
     );
-    expect(m).not.toContain("dob-hint\"");
+    expect(m).toContain('id="dob-hint"');
+    expect(m).toContain('aria-describedby="note dob-hint"');
     expect(m).toContain("説明");
+    expect(m).not.toContain("aria-invalid");
+  });
+
+  it("DateField は、説明の文と自分の誤りの文の両方を結び付ける", () => {
+    const m = renderToStaticMarkup(
+      <Field label="生年月日" hint="説明">
+        <DateField id="dob" value="" onChange={() => {}} error="日付が正しくありません" />
+      </Field>,
+    );
+    const describedBy = m.match(/aria-describedby="([^"]+)"/)?.[1].split(" ") ?? [];
+    expect(describedBy[0]).toBe("dob-hint");
+    expect(describedBy).toHaveLength(2);
+    expect(m).toContain(`id="${describedBy[1]}"`);
+    expect(m).toContain('aria-invalid="true"');
+  });
+
+  it("印の無い独自の部品には触らない", () => {
+    const Custom = (p: { id?: string; "aria-describedby"?: string }) => <input id={p.id} aria-describedby={p["aria-describedby"]} />;
+    const m = renderToStaticMarkup(
+      <Field label="名前" hint="説明">
+        <Custom id="c" />
+      </Field>,
+    );
+    expect(m).not.toContain("aria-describedby");
   });
 
   it("mergeDescribedBy は空を除き、重複をまとめる", () => {

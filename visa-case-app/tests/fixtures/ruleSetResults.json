@@ -223,12 +223,11 @@
       "birth_certificate",
       "family_relationship_proof",
       "supporter_card_or_passport_copy",
-      "supporter_income_active",
-      "supporter_income_other",
+      "supporter_income_proof",
       "parents_questionnaire",
       "household_residence_certificate"
     ],
-    "digest": "564454769b1ebb584146bd460e919b4ba5b58fe6acb299780cbfe58e739d4d3a"
+    "digest": "aca00f72eecd2033bdaa4ab90590eccf4c04fb66e004933aa74963b745852018"
   },
   "acquisition_by_cause": {
     "ruleIds": [

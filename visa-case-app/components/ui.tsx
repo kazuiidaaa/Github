@@ -22,6 +22,12 @@ export function Button({
 
 type FieldControlProps = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean | "true" | "false" };
 
+/**
+ * Field が説明・誤りの文の id を aria-describedby で渡してよい、独自の部品の印（DateField など）。
+ * 印のある部品は、受け取った aria-describedby を入力欄に付け、自分の誤りの文の id と合わせる（mergeDescribedBy）。
+ */
+export type FieldLinkableComponent = { acceptsFieldDescribedBy?: true };
+
 /** 説明・誤りの id を、既存の aria-describedby の後ろにつなげる（重複は除く） */
 export function mergeDescribedBy(...ids: (string | undefined)[]): string | undefined {
   const list = ids.flatMap((v) => (v ? v.split(/\s+/) : [])).filter(Boolean);
@@ -36,7 +42,8 @@ const LINKABLE_CONTROLS = ["input", "select", "textarea"];
  * - 必須は、色や「*」だけに頼らず「必須」の文字で示す（人の決定。Issue #392）。
  * - 子が input・select・textarea の1要素なら、説明・誤りの文を aria-describedby で結び付け、誤りがあれば aria-invalid を付ける。
  *   子が自分の id・aria-describedby を持つ場合は、それを残して後ろに加える（上書きしない）。
- *   DateField など独自の部品は、自分で結び付けるため、ここでは触らない。
+ *   DateField など印（acceptsFieldDescribedBy）のある独自の部品には、説明・誤りの文の id を aria-describedby で渡す。
+ *   誤りの判定と aria-invalid は、部品が自分で行う。印の無い独自の部品には触らない。
  */
 export function Field({
   label,
@@ -58,7 +65,11 @@ export function Field({
     isValidElement<FieldControlProps>(only) && typeof only.type === "string" && LINKABLE_CONTROLS.includes(only.type)
       ? (only as ReactElement<FieldControlProps>)
       : null;
-  const base = control?.props.id ?? `field-${autoId.replace(/[^A-Za-z0-9_-]/g, "")}`;
+  const linkable =
+    !control && isValidElement<FieldControlProps>(only) && typeof only.type === "function" && (only.type as FieldLinkableComponent).acceptsFieldDescribedBy
+      ? (only as ReactElement<FieldControlProps>)
+      : null;
+  const base = (control ?? linkable)?.props.id ?? `field-${autoId.replace(/[^A-Za-z0-9_-]/g, "")}`;
   const hintId = `${base}-hint`;
   const errorId = `${base}-error`;
   const showHint = Boolean(hint) && !error;
@@ -67,7 +78,11 @@ export function Field({
         "aria-describedby": mergeDescribedBy(control.props["aria-describedby"], showHint ? hintId : undefined, error ? errorId : undefined),
         "aria-invalid": error ? true : control.props["aria-invalid"],
       })
-    : children;
+    : linkable
+      ? cloneElement(linkable, {
+          "aria-describedby": mergeDescribedBy(linkable.props["aria-describedby"], showHint ? hintId : undefined, error ? errorId : undefined),
+        })
+      : children;
   return (
     <label className="block">
       <span className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold">

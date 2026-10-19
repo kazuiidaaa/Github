@@ -76,6 +76,15 @@ export const LEGACY_REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = 
     "Material explaining why the summary table of statutory reports, such as the withholding tax slips for employees of the previous year, cannot be submitted",
     "전년도 직원 원천징수영수증 등의 법정조서합계표를 제출할 수 없는 이유를 밝히는 자료",
   ],
+  // 家族滞在の取得の、扶養者の職業及び収入の書類（#396）。R-10 の2行を、R-19 の人の判断（2026-10-18。案A）で1行にまとめた
+  "扶養者の職業及び収入を証する文書（(1)扶養者が収入を伴う事業を運営する活動又は報酬を受ける活動を行っている場合）": [
+    "Document proving the supporter's occupation and income ((1) if the supporter runs a business generating income or engages in an activity for which remuneration is received)",
+    "부양자의 직업 및 수입을 증명하는 문서((1) 부양자가 수입을 수반하는 사업을 운영하는 활동 또는 보수를 받는 활동을 하고 있는 경우)",
+  ],
+  "扶養者の職業及び収入を証する文書（(2)(1)以外の活動を行っている場合）": [
+    "Document proving the supporter's occupation and income ((2) if the supporter engages in an activity other than those in (1))",
+    "부양자의 직업 및 수입을 증명하는 문서((2) (1) 이외의 활동을 하고 있는 경우)",
+  ],
 };
 
 /** 古い名称の訳。なければ undefined */
