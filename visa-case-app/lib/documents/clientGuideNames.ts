@@ -265,14 +265,7 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "신청인과 부양자의 신분 관계를 증명하는 문서(호적등본·혼인신고 수리증명서·결혼증명서 사본·출생증명서 사본 중 하나, 또는 이에 준하는 문서)",
   ],
   "扶養者の在留カード又は旅券の写し": ["Copy of the supporter's residence card or passport", "부양자의 재류카드 또는 여권 사본"],
-  "扶養者の職業及び収入を証する文書（(1)扶養者が収入を伴う事業を運営する活動又は報酬を受ける活動を行っている場合）": [
-    "Document proving the supporter's occupation and income ((1) if the supporter runs a business generating income or engages in an activity for which remuneration is received)",
-    "부양자의 직업 및 수입을 증명하는 문서((1) 부양자가 수입을 수반하는 사업을 운영하는 활동 또는 보수를 받는 활동을 하고 있는 경우)",
-  ],
-  "扶養者の職業及び収入を証する文書（(2)(1)以外の活動を行っている場合）": [
-    "Document proving the supporter's occupation and income ((2) if the supporter engages in an activity other than those in (1))",
-    "부양자의 직업 및 수입을 증명하는 문서((2) (1) 이외의 활동을 하고 있는 경우)",
-  ],
+  "扶養者の職業及び収入を証する文書": ["Document proving the supporter's occupation and income", "부양자의 직업 및 수입을 증명하는 문서"],
   "日本での活動内容に応じた資料": [
     "Materials according to the activities in Japan",
     "일본에서의 활동 내용에 따른 자료",

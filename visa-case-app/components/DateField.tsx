@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { inputClass } from "@/components/ui";
+import { inputClass, mergeDescribedBy, type FieldLinkableComponent } from "@/components/ui";
 import { dateValueToText, normalizeDateText, parseDateText } from "@/lib/dateInput";
 import { useT } from "@/lib/i18n/LanguageProvider";
 
@@ -18,6 +18,8 @@ export function useDateInvalidMessage(): string {
  *   YYYY-MM-DD の形のまま渡すため、呼び出し側の検証（isValidDate）で弾ける。
  * - 欄の下に出す誤りの案内は、この部品が出す。呼び出し側の検証の文言を出したいときは error に渡す（優先して表示）。
  * ラベルは、Field で包むか、aria-label で付ける。
+ * - Field で包むと、Field の説明の文（hint）が aria-describedby で入力欄に結び付く（Issue #392）。
+ *   呼び出し側の aria-describedby も残し、誤りの文の id は後ろに加える。
  */
 export function DateField({
   value,
@@ -29,6 +31,7 @@ export function DateField({
   required,
   onBlur,
   "aria-label": ariaLabel,
+  "aria-describedby": describedBy,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -42,6 +45,8 @@ export function DateField({
   /** 入力欄から外れたとき。入力が途中（incomplete）のときは、保存を控える判断に使う */
   onBlur?: (kind: "empty" | "incomplete" | "complete") => void;
   "aria-label"?: string;
+  /** 説明の文などの id。Field が hint の id を渡す */
+  "aria-describedby"?: string;
 }) {
   const t = useT();
   const errorId = useId();
@@ -88,7 +93,7 @@ export function DateField({
         required={required}
         aria-label={ariaLabel}
         aria-invalid={message ? true : undefined}
-        aria-describedby={message ? errorId : undefined}
+        aria-describedby={mergeDescribedBy(describedBy, message ? errorId : undefined)}
         onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
       />
@@ -105,3 +110,6 @@ export function DateField({
     </>
   );
 }
+
+// Field に、説明の文の id を渡してよいことを示す
+(DateField as FieldLinkableComponent).acceptsFieldDescribedBy = true;
