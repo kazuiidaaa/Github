@@ -53,7 +53,7 @@
 
 | 項目 | 原文・記録 | コード（`rules.ts`） | 判定 |
 | --- | --- | --- | --- |
-| `ACQUISITION_BY_CAUSE.sources` | 取得の控えの2行目に URL（`.../status/intracompanytransferee.html`） | 申請書様式（xlsx）のURLのみ | 企業内転勤の取得の根拠となる出典が無い → R-8 |
+| `ACQUISITION_BY_CAUSE.sources` | 取得の控えの2行目に URL（`.../status/intracompanytransfee.html`） | 申請書様式（xlsx）のURLのみ | 企業内転勤の取得の根拠となる出典が無い → R-8 |
 | `KIGYONAI_PAGE_SOURCE.url` | 取得の控えは `intracompanytransferee.html`、認定・変更・更新の控え（1行目）とコードは `intracompanytransfee.html` | `.../status/intracompanytransfee.html` | **URL の綴りが控えの間で違う（記録のみ。どちらが正しいかは確かめていない）→ R-8** |
 | 企業内転勤の見出しコメント | 取得の節を、取得の控えで確認した | 「取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う」 | 原文と突き合わせたことが記録に無い → R-8 |
 | `ACQUISITION_BY_CAUSE.checkedAt` | — | 2026-10-04 | README 2-2 の方針で、変えない |
