@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { formCodeOfStatus, isAdvancedProfessional, isFormNTokuteiCase, resolveRenewalForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { isAdvancedProfessional, isFormNTokuteiCase, renewalFormPlan, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   JOB_DESCRIPTION_LINES,
@@ -18,7 +18,7 @@ import { fillWorkbook } from "./fillWorkbook";
 import { formMWarnings, hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
-import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
+import type { Table2Mapping } from "./table2Common";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
 
@@ -48,12 +48,11 @@ export async function fillRenewalExcel(
   currentStatus = "",
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f };
-  const { resolution, status } = resolveRenewal(currentStatus, a.residenceStatus, f.hspActivity ?? "");
-  // 高度専門職ではない「経営・管理」は様式 M（認定と同じ。#397 R-14）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
+  // 様式の選択は lib/hspForm.ts の renewalFormPlan（生成書類の「対象の公式様式」欄と同じ判定）。
+  // 高度専門職ではない「経営・管理」は様式 M（#397 R-14）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
   // 「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const keieiKanri = resolution.kind === "not_applicable" && (isKeieiKanri(currentStatus) || isKeieiKanri(a.residenceStatus));
-  const notApplicable: CoeFormCode = keieiKanri ? "M" : formCodeOfStatus(status) ?? "N";
-  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
+  const plan = renewalFormPlan(currentStatus, a.residenceStatus, f.hspActivity ?? "");
+  const { resolution, status } = plan;
   const table2 = plan.form === "N" || plan.firstOnly ? null : HSP_CHANGE_TABLE2[plan.form];
   const first = sheetKey(SHEET_APPLICANT_1);
   // 様式 I・L・M・U は、第1表だけ様式 N の座標と同じ。第2表以降は、様式ごとの対応表（hspChangeTable2.ts）を使う
@@ -67,24 +66,6 @@ export async function fillRenewalExcel(
   );
   return { buffer, warnings: buildWarnings(ctx, { resolution, status, table2, form: plan.form }) };
 }
-
-/**
- * 更新の様式を、現在の在留資格（案件情報）から決める。現在の在留資格が空、または号が未選択のとき、申請人情報の在留資格が号つきなら、そちらで補う。
- */
-function resolveRenewal(currentStatus: string, residenceStatus: string, activity: string) {
-  let status = currentStatus.trim() ? currentStatus : residenceStatus;
-  let resolution = resolveRenewalForm(status, activity);
-  if (resolution.kind === "grade_missing" && isAdvancedProfessional(residenceStatus)) {
-    const alt = resolveRenewalForm(residenceStatus, activity);
-    if (alt.kind !== "grade_missing") {
-      status = residenceStatus;
-      resolution = alt;
-    }
-  }
-  return { resolution, status };
-}
-
-const isKeieiKanri = (status: string) => status.trim() === "経営・管理";
 
 function buildWarnings(
   c: FillCtx,

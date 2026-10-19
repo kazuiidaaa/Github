@@ -2,7 +2,7 @@ import { INS_COLS_C, WORK_LEFT, WORK_RIGHT, cols, row, type Table2Spec } from ".
 
 /**
  * 変更・更新（高度専門職）の様式 M（経営・管理）の、第2表以降の座標（Issue #212）。変更と更新で座標が同一のため、1組を共有する。
- * 座標は、公式の雛形（docs/official/{change,renewal}-application-form-M.xlsx）の「ロック解除セル」から特定した。
+ * 座標は、公式の雛形（旧様式 {change,renewal}-application-form-M.xlsx。#419 で削除）の「ロック解除セル」から特定した。
  * 差し込みには、経営・管理のページの新しい様式（businessmanager-{change,renewal}-application-form_*.xlsx。#397 R-13）を使う。座標は旧様式と同じ。
  * 様式が改正されたら、座標を再特定し、hspChangeTable2M.test.ts も更新する。
  */

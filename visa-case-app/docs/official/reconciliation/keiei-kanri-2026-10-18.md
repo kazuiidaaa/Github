@@ -270,7 +270,7 @@ PDFの○・△の位置は、PDFの文字の座標から、カテゴリーの�
   - 変更 `../businessmanager-change-application-form_001448692.xlsx`
   - 更新 `../businessmanager-renewal-application-form_001448694.xlsx`
 - 比べた相手:
-  - 既存の様式 M（高度専門職1号ハと共用。差し込み元テンプレート）: `coe-application-form-M_930004034.xlsx`・`change-application-form-M.xlsx`・`renewal-application-form-M.xlsx`
+  - 既存の様式 M（高度専門職1号ハと共用。差し込み元テンプレート）: `coe-application-form-M_930004034.xlsx`・`change-application-form-M.xlsx`・`renewal-application-form-M.xlsx`（照合時点。R-13 で新しい様式に差し替えた後、Issue #419 で削除した）
   - 様式 N の第1表（変更 `change-application-form_930004065.xlsx`・更新 `renewal-application-form_930004095.xlsx`）
   - 自動入力の座標と案内: `lib/documents/excelFill/coeTable2.ts`（認定の様式 M）、`hspChangeTable2M.ts`（変更・更新の様式 M）、`coe.ts`・`change.ts`・`renewal.ts`（様式の選び方と warnings）、画面の入力欄 `components/EmploymentForm.tsx`・`lib/i18n/messages/employment.ts`
 - 方法: ExcelJS で、全シートのセルの文字・結合セル・ロック解除セル（入力できるセル）・入力規則・印刷範囲を書き出して比べた。図形（写真欄）も比べた。

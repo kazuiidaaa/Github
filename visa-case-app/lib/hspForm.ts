@@ -203,6 +203,66 @@ export function resolveRenewalForm(status: string, activity: string): FormResolu
   return resolveHspForm(HSP_CHANGE_FORM_TABLE, status, activity, { grade2NoRenewal: true });
 }
 
+/**
+ * 差し込む範囲を決める（手続に依存しない）。様式を特定できた高度専門職は、その様式の全表。
+ * 高度専門職ではない（not_applicable）は、手続ごとに決めた様式の全表。
+ * それ以外（号・活動が未確定、表にない、2号の更新）は、他の様式の表を流用せず、第1表のみ。
+ */
+export function planFill<C>(
+  r: FormResolution<C>,
+  forms: { notApplicable: C; unresolved: C },
+): { form: C; firstOnly: boolean } {
+  if (r.kind === "resolved") return { form: r.form, firstOnly: false };
+  if (r.kind !== "not_applicable") return { form: forms.unresolved, firstOnly: true };
+  return { form: forms.notApplicable, firstOnly: false };
+}
+
+/** 差し込みに使う様式と範囲。差し込み（lib/documents/excelFill/）と、生成書類の「対象の公式様式」欄（lib/documents/officialForms.ts）の両方が使う */
+export interface FormPlan<R = FormResolution<CoeFormCode>> {
+  form: CoeFormCode;
+  /** 第1表だけを差し込む（様式を特定できない高度専門職・2号の更新） */
+  firstOnly: boolean;
+  resolution: R;
+}
+
+const isKeieiKanriStatus = (status: string) => status.trim() === KEIEI_KANRI_STATUS;
+
+/** 高度専門職ではない在留資格の様式。「経営・管理」は様式 M（#397 R-14）、一覧（FORM_STATUSES）の在留資格はその様式、ほかは様式 N */
+function notApplicableForm(status: string): CoeFormCode {
+  return isKeieiKanriStatus(status) ? "M" : formCodeOfStatus(status) ?? "N";
+}
+
+/** 認定（COE）の様式。targetStatus は案件の「希望する在留資格」 */
+export function coeFormPlan(targetStatus: string, activity: string): FormPlan<CoeFormResolution> {
+  const resolution = resolveCoeForm(targetStatus, activity);
+  return { ...planFill<CoeFormCode>(resolution, { notApplicable: notApplicableForm(targetStatus), unresolved: "N" }), resolution };
+}
+
+/** 変更の様式。targetStatus は案件の「変更後の在留資格」 */
+export function changeFormPlan(targetStatus: string, activity: string): FormPlan<CoeFormResolution> {
+  const resolution = resolveChangeForm(targetStatus, activity);
+  return { ...planFill<CoeFormCode>(resolution, { notApplicable: notApplicableForm(targetStatus), unresolved: "N" }), resolution };
+}
+
+/**
+ * 更新の様式。現在の在留資格（案件情報）から決める。現在の在留資格が空、または号が未選択のとき、申請人情報の在留資格が号つきなら、そちらで補う。
+ * status は、様式の判定に使った在留資格。
+ */
+export function renewalFormPlan(currentStatus: string, residenceStatus: string, activity: string): FormPlan & { status: string } {
+  let status = currentStatus.trim() ? currentStatus : residenceStatus;
+  let resolution = resolveRenewalForm(status, activity);
+  if (resolution.kind === "grade_missing" && isAdvancedProfessional(residenceStatus)) {
+    const alt = resolveRenewalForm(residenceStatus, activity);
+    if (alt.kind !== "grade_missing") {
+      status = residenceStatus;
+      resolution = alt;
+    }
+  }
+  // 経営・管理は、現在の在留資格か申請人情報の在留資格のどちらかなら様式 M。それ以外は、判定に使った在留資格の様式
+  const notApplicable = isKeieiKanriStatus(currentStatus) || isKeieiKanriStatus(residenceStatus) ? "M" : notApplicableForm(status);
+  return { ...planFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" }), resolution, status };
+}
+
 /** 画面に表示する案内文。resolved 以外は、利用者が次に何をするかを示す */
 export function describeCoeForm(r: CoeFormResolution, t: T = jaT): string {
   switch (r.kind) {

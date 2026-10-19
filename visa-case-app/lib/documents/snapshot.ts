@@ -3,7 +3,7 @@ import { progressOf } from "../requirements/progress";
 import { sortChecks } from "../checks/definitions";
 import { buildClientGuide } from "./clientGuide";
 import { buildTranscription } from "./formMapping";
-import { HSP_POINT_FORM, officialFormInputOf, officialFormSpecFor } from "./officialForms";
+import { HSP_POINT_FORM, officialFormFor, officialFormInputOf } from "./officialForms";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type CaseRecord } from "../types";
 import {
   DOCUMENT_TYPE_LABELS,
@@ -134,7 +134,7 @@ export function buildContent(
       return {
         ...base,
         officialForm: {
-          form: { ...officialFormSpecFor(c.procedureType).form },
+          form: officialFormFor(c.procedureType, c),
           applicantConfirmed: c.applicant.confirmationStatus === "confirmed",
           warnings: [...officialFormWarnings],
           input: officialFormInputOf(c),

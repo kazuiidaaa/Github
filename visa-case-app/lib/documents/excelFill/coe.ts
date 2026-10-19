@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { describeCoeForm, formCodeOfStatus, isFormNTokuteiCase, resolveCoeForm, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
+import { coeFormPlan, describeCoeForm, isFormNTokuteiCase, type CoeFormCode, type CoeFormResolution } from "../../hspForm";
 import { ADVANCED_PROFESSIONAL_STATUS, type Applicant, type EmploymentInfo } from "../../types";
 import {
   COE_DIGIT_CHECKS,
@@ -17,9 +17,7 @@ import { fillWorkbook } from "./fillWorkbook";
 import { formMWarnings } from "./hspChangeCommon";
 import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
-import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
-
-const KEIEI_KANRI = "経営・管理";
+import type { Table2Mapping } from "./table2Common";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
 
@@ -37,17 +35,6 @@ export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
 };
 
 /**
- * 差し込む範囲を決める。第2表以降（申請人用2以降・所属機関用）は、様式 N（coeMapping.ts）と、
- * I・L・M・U（coeTable2.ts）の対応表がある。様式を特定できない高度専門職では、第1表だけを差し込む
- * （他の様式の表を流用しない）。高度専門職ではない「経営・管理」は様式 M（Issue #191）、「法律・会計業務」「医療」は様式 U を使う（Issue #301・#302）。
- */
-function planFill(r: CoeFormResolution, targetStatus: string): { form: CoeFormCode; firstOnly: boolean } {
-  // 高度専門職ではない「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = targetStatus.trim() === KEIEI_KANRI ? "M" : formCodeOfStatus(targetStatus) ?? "N";
-  return planHspFill(r, { notApplicable, unresolved: "N" });
-}
-
-/**
  * 案件情報を、公式の在留資格認定証明書交付申請書（Excel）の対応欄へ差し込み、ワークブックをバッファで返す。
  * 入力のない項目は、テンプレートの元の状態（空欄）のまま変更しない。
  * 入国目的（項目11）は様式のチェック欄だが、案件の「希望する在留資格」（targetStatus）が様式の選択肢と
@@ -61,8 +48,11 @@ export async function fillCoeExcel(
   targetStatus = "",
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f, targetStatus };
-  const resolution = resolveCoeForm(targetStatus, f.hspActivity ?? "");
-  const plan = planFill(resolution, targetStatus);
+  // 様式の選択は lib/hspForm.ts の coeFormPlan（生成書類の「対象の公式様式」欄と同じ判定）。様式を特定できない高度専門職は、様式 N の第1表だけ
+  // （他の様式の表を流用しない）。高度専門職ではない「経営・管理」は様式 M（Issue #191）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
+  // 「法律・会計業務」「医療」は様式 U（Issue #301・#302）
+  const plan = coeFormPlan(targetStatus, f.hspActivity ?? "");
+  const { resolution } = plan;
   const first = sheetKey(COE_SHEET_APPLICANT_1);
   const table2 = plan.form === "N" ? null : COE_TABLE2[plan.form];
   const firstOnly = <T extends { sheet: string }>(xs: T[]) => (table2 || plan.firstOnly ? xs.filter((x) => sheetKey(x.sheet) === first) : xs);

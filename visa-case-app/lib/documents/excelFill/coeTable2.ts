@@ -8,7 +8,7 @@ export type { Table2Mapping };
  * 第1表（申請人用（認定）・同（裏））は全様式で共通のため、coeMapping.ts の対応表を使う。
  * 様式ごとに、セルの位置も項番も異なるため、様式 N（coeMapping.ts）の表は流用しない。
  * 案件情報に項目がない欄は差し込まず、様式ごとの manual に書き、coe.ts の warnings で案内する（推測で埋めない）。
- * 座標は、公式の雛形（docs/official/coe-application-form-{I,L,M,U}_*.xlsx）の「ロック解除セル」から特定した。
+ * 座標は、公式の雛形（docs/official/coe-application-form-{I,L,M,U}_*.xlsx。M は旧様式で、#419 で削除。差し込みは新しい様式 businessmanager-coe-application-form_001448690.xlsx で、座標は同じ）の「ロック解除セル」から特定した。
  * 様式 M の差し込みには、経営・管理のページの新しい様式（businessmanager-coe-application-form_001448690.xlsx。#397 R-13）を使う。座標は旧様式と同じ。
  * 様式が改正されたら、座標を再特定し、coeTable2.test.ts も更新する。
  */
