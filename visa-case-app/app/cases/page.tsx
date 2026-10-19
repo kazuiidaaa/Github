@@ -24,11 +24,12 @@ import {
   type SortColumn,
 } from "@/lib/caseMetrics";
 import { useT } from "@/lib/i18n/LanguageProvider";
-import { sortDirKey, targetStatusKeys } from "@/lib/i18n/caseList";
+import { sortDirKey } from "@/lib/i18n/caseList";
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
-import { getTargetStatusDisplay, PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
+import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
+import { currentStatusOf, StatusTransition } from "@/components/StatusTransition";
 import type { CaseMetrics } from "@/lib/caseMetrics";
 
 function readFilter(p: URLSearchParams): CaseFilter {
@@ -111,50 +112,20 @@ function activeCard(f: CaseFilter): CardKey | null {
 
 const procedureLabel = (c: CaseRecord) => PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
 
-/** 一覧の「在留資格」表示。確認済みでない申請人情報の値（または案件側の値）には「未確認」を付ける。 */
+/**
+ * 一覧の「在留資格」表示。手続に合わせて「今 → 申請後」の形で示す（共通部品 StatusTransition。Issue #433）。
+ * 現在の在留資格の値があり、申請人情報が確認済みでないときは「未確認」を付ける。
+ */
 function ResidenceStatusCell({ record: c }: { record: CaseRecord }) {
   const t = useT();
-  const value = c.applicant.residenceStatus || c.currentStatus;
-  if (!value) return <>-</>;
+  const current = currentStatusOf(c);
   return (
-    <span className="inline-flex flex-wrap items-center gap-1">
-      {value}
-      {c.applicant.confirmationStatus !== "confirmed" && <Badge tone="gray">{t("caseList.unconfirmedBadge")}</Badge>}
-    </span>
-  );
-}
-
-/** 変更後（希望）の在留資格の値。未入力は「未入力」と表示する。 */
-function TargetStatusValue({ value }: { value: string | null }) {
-  const t = useT();
-  return <>{value ?? <span className="text-slate-400">{t("caseList.notEntered")}</span>}</>;
-}
-
-/** 表（md 以上）：在留資格セルの2行目。表示対象外の手続種別では何も出さない。 */
-function TargetStatusLine({ record: c }: { record: CaseRecord }) {
-  const t = useT();
-  const target = getTargetStatusDisplay(c.procedureType, c.targetStatus);
-  if (!target) return null;
-  return (
-    <p className="mt-1 text-xs text-slate-600">
-      <span className="text-slate-500">{t(targetStatusKeys(c.procedureType).table)}</span>
-      <TargetStatusValue value={target.value} />
-    </p>
-  );
-}
-
-/** カード（md 未満）：dl の1項目。表示対象外の手続種別では何も出さない。 */
-function TargetStatusItem({ record: c }: { record: CaseRecord }) {
-  const t = useT();
-  const target = getTargetStatusDisplay(c.procedureType, c.targetStatus);
-  if (!target) return null;
-  return (
-    <>
-      <dt className="text-slate-500">{t(targetStatusKeys(c.procedureType).card)}</dt>
-      <dd>
-        <TargetStatusValue value={target.value} />
-      </dd>
-    </>
+    <StatusTransition
+      procedureType={c.procedureType}
+      current={current}
+      target={c.targetStatus}
+      trailing={current && c.applicant.confirmationStatus !== "confirmed" ? <Badge tone="gray">{t("caseList.unconfirmedBadge")}</Badge> : undefined}
+    />
   );
 }
 
@@ -319,7 +290,6 @@ function CasesView() {
                 <td className="px-4 py-3">{procedureLabel(c)}</td>
                 <td className="px-4 py-3">
                   <ResidenceStatusCell record={c} />
-                  <TargetStatusLine record={c} />
                 </td>
                 <td className="px-4 py-3">
                   <ExpiryBadge date={c.applicant.residenceExpiryDate} />
@@ -364,8 +334,7 @@ function CasesView() {
               <dt className="text-slate-500">{t("caseList.colProcedure")}</dt>
               <dd>{procedureLabel(c)}</dd>
               <dt className="text-slate-500">{t("caseList.colStatus")}</dt>
-              <dd><ResidenceStatusCell record={c} /></dd>
-              <TargetStatusItem record={c} />
+              <dd className="min-w-0"><ResidenceStatusCell record={c} /></dd>
               <dt className="text-slate-500">{t("caseList.colExpiry")}</dt>
               <dd>
                 <ExpiryBadge date={c.applicant.residenceExpiryDate} />
