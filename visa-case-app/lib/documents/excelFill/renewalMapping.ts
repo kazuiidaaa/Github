@@ -61,6 +61,9 @@ export const sheetKey = (name: string) => name.normalize("NFKC").replace(/\s/g, 
 
 export const digitsOf = (v: string) => v.normalize("NFKC").replace(/\D/g, "");
 
+/** 資本金の値。様式の欄の右に「円」が印刷されているため、末尾の「円」（前後の空白を含む）を除く（#397 R-15） */
+export const capitalValue = (v: string) => v.replace(/[\s\u3000]*円[\s\u3000]*$/, "").trim();
+
 const date = (v: string) => (v ? formatDate(v) : "");
 
 /** YYYY-MM-DD（または YYYY-MM）の、年・月・日の部分。先頭のゼロは除く */
@@ -209,7 +212,7 @@ export const RENEWAL_FILL_ITEMS: FillItem[] = [
   item("3", "（5）業種（番号）", O1, "AD36", (c) => only(/^\d{1,3}$/, c.e.industry)),
   item("3", "（6）所在地", O1, "H43", (c) => c.e.companyAddress),
   item("3", "（6）電話番号", O1, "AB43", (c) => c.f.orgPhone),
-  item("3", "（7）資本金", O1, "H46", (c) => c.e.capital),
+  item("3", "（7）資本金", O1, "H46", (c) => capitalValue(c.e.capital)),
   item("3", "（8）年間売上高", O1, "AC46", (c) => c.f.annualSales),
   item("3", "（9）従業員数", O1, "K49", (c) => c.e.employeeCount),
   item("3", "（9）外国人職員数", O1, "N51", (c) => c.f.foreignStaffCount),

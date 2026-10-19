@@ -116,6 +116,8 @@ export const documents = defineMessages({
     err_inputInvalid: "入力の形式が正しくありません。",
     err_storageFull: "このブラウザの保存容量が不足しています。",
     err_loadFailed: "生成文書の読み込みに失敗しました：{reason}",
+    // 公式様式（Excel）への差し込みの警告。書類の出力に使うため、差し込み側は日本語（jaT）で作る
+    fillWarn_formMFullTimeEmployees: "様式 M の所属機関用1（10）は「常勤従業員数」です。差し込んだ「従業員数」が、常勤の人数か確認してください。",
   },
   en: {
     notFound: "Case not found.",
@@ -228,6 +230,7 @@ export const documents = defineMessages({
     err_inputInvalid: "The input format is not valid.",
     err_storageFull: "This browser has run out of storage space.",
     err_loadFailed: "Failed to load generated documents: {reason}",
+    fillWarn_formMFullTimeEmployees: "Item (10) on the organization sheet 1 of Form M is the number of full-time employees. Check that the filled \"number of employees\" counts full-time staff only.",
   },
   ko: {
     notFound: "사건을 찾을 수 없습니다.",
@@ -338,5 +341,6 @@ export const documents = defineMessages({
     err_inputInvalid: "입력 형식이 올바르지 않습니다.",
     err_storageFull: "이 브라우저의 저장 용량이 부족합니다.",
     err_loadFailed: "생성 문서를 불러오지 못했습니다: {reason}",
+    fillWarn_formMFullTimeEmployees: "양식 M의 소속기관용 1 (10)은 「상근 종업원 수」입니다. 입력한 「종업원 수」가 상근 인원인지 확인해 주십시오.",
   },
 });

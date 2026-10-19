@@ -1,5 +1,5 @@
 import type { FormResolution } from "../../hspForm";
-import { digitsOf, jobDescriptionLines, type FillCtx, type FillItem, type PickItem } from "./renewalMapping";
+import { capitalValue, digitsOf, jobDescriptionLines, type FillCtx, type FillItem, type PickItem } from "./renewalMapping";
 
 /**
  * 第2表以降（申請人用2以降・所属機関用）の対応表を作る共通部品。認定（coeTable2.ts）と、変更・更新（hspChangeTable2.ts）で共有する。
@@ -51,7 +51,7 @@ export const FIELD_DEFS = {
   orgAddress: ["所属機関 所在地", (c: FillCtx) => c.e.companyAddress],
   orgPhone: ["所属機関 電話番号", (c: FillCtx) => c.f.orgPhone],
   industry: ["業種（主たる業種の番号）", (c: FillCtx) => only(/^\d{1,3}$/, c.e.industry)],
-  capital: ["資本金", (c: FillCtx) => c.e.capital],
+  capital: ["資本金", (c: FillCtx) => capitalValue(c.e.capital)],
   annualSales: ["年間売上高（直近年度）", (c: FillCtx) => c.f.annualSales],
   employees: ["従業員数", (c: FillCtx) => c.e.employeeCount],
   foreignStaff: ["うち外国人職員数", (c: FillCtx) => c.f.foreignStaffCount],

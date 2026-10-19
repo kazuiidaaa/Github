@@ -9,6 +9,7 @@ export type { Table2Mapping };
  * 様式ごとに、セルの位置も項番も異なるため、様式 N（coeMapping.ts）の表は流用しない。
  * 案件情報に項目がない欄は差し込まず、様式ごとの manual に書き、coe.ts の warnings で案内する（推測で埋めない）。
  * 座標は、公式の雛形（docs/official/coe-application-form-{I,L,M,U}_*.xlsx）の「ロック解除セル」から特定した。
+ * 様式 M の差し込みには、経営・管理のページの新しい様式（businessmanager-coe-application-form_001448690.xlsx。#397 R-13）を使う。座標は旧様式と同じ。
  * 様式が改正されたら、座標を再特定し、coeTable2.test.ts も更新する。
  */
 
@@ -30,7 +31,7 @@ const SPECS: Record<Exclude<CoeFormCode, "N">, Table2Spec> = {
     ins: { sheet: "所属機関用１M", cells: row(INS_COLS_C, 23) },
     work: { sheet: "申請人用２", rows: [47, 49, 51, 53], left: WORK_LEFT, right: WORK_RIGHT },
     monthlyBox: ["所属機関用１M", "O84"],
-    manual: "所属機関用1の「契約の形態」「財産の総額」「申請人の投資額」「法人税納付額」「常勤従業員のうち日本人等の数」「日本語能力を有する者の有無」「就労予定期間」「事業所の面積・保有の形態」",
+    manual: "所属機関用1の「契約の形態」「財産の総額」「申請人の投資額」「法人税納付額」「常勤従業員のうち日本人等の数」「日本語能力を有する者の有無（『有』の場合は『内容』欄に、誰が・どの方法（試験名・級・点数など）で該当するかを書く）」「就労予定期間」「事業所の面積・保有の形態」",
   },
   L: {
     name: "様式 L（企業内転勤）",

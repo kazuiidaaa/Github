@@ -2,6 +2,7 @@ import { formatDate } from "../../format";
 import { FORM_U_STATUSES, isFormNTokuteiCase } from "../../hspForm";
 import type { FormDetails } from "../../formDetails";
 import {
+  capitalValue,
   digitsOf,
   jobDescriptionLines,
   type DigitCheck,
@@ -180,7 +181,7 @@ export const COE_FILL_ITEMS: FillItem[] = [
   item("3", "（5）業種（主たる業種の番号）", O1, "AG27", (c) => only(/^\d{1,3}$/, c.e.industry)),
   item("3", "（6）所在地", O1, "F32", (c) => c.e.companyAddress),
   item("3", "（6）電話番号", O1, "Z32", (c) => c.f.orgPhone),
-  item("3", "（7）資本金", O1, "F35", (c) => c.e.capital),
+  item("3", "（7）資本金", O1, "F35", (c) => capitalValue(c.e.capital)),
   item("3", "（8）年間売上高", O1, "AA35", (c) => c.f.annualSales),
   item("3", "（9）従業員数", O1, "I38", (c) => c.e.employeeCount),
   item("3", "（9）うち外国人職員数", O1, "N41", (c) => c.f.foreignStaffCount),

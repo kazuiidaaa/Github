@@ -124,10 +124,13 @@ describe("変更（高度専門職）", () => {
     }
   });
 
-  it("号なしの「経営・管理」は、従来どおり第1表のみ。高度専門職（1号ハ）＋経営・管理は様式 M", async () => {
+  it("号なしの「経営・管理」も、高度専門職（1号ハ）＋経営・管理も、様式 M（新しい様式）の全表（#397 R-13・R-14）", async () => {
     const plain = await fillChangeExcel(applicant, employment, details(), "経営・管理");
-    expect(cell(await open(plain.buffer), CS2, "E8")).toBe("");
-    expect(plain.warnings.join("\n")).toContain("第1表（申請人用（変更）１）のみ");
+    const plainWb = await open(plain.buffer);
+    expect(tail(CHANGE_TEMPLATE_PATHS.M)).toBe("businessmanager-change-application-form_001448692.xlsx");
+    expect(cell(plainWb, "申請人用２Ｍ", "E7")).toBe("テスト株式会社");
+    expect(plain.warnings.join("\n")).not.toContain("第1表（申請人用（変更）１）のみ");
+    expect(plain.warnings.join("\n")).toContain("様式 M");
     const hsp = await fillChangeExcel(applicant, employment, details("経営・管理"), "高度専門職（1号ハ）");
     const expected = new ExcelJS.Workbook();
     await expected.xlsx.readFile(CHANGE_TEMPLATE_PATHS.M);
@@ -207,10 +210,11 @@ describe("更新（高度専門職）", () => {
     expect(warnings.join("\n")).toContain("2号に更新はありません");
   });
 
-  it("号なしの「経営・管理」は、従来どおり第1表のみ。高度専門職（1号ハ）＋経営・管理は様式 M", async () => {
+  it("号なしの「経営・管理」も、高度専門職（1号ハ）＋経営・管理も、様式 M（新しい様式）の全表（#397 R-13・R-14）", async () => {
     const plain = await fillRenewalExcel(applicant, employment, details(), "経営・管理");
-    expect(cell(await open(plain.buffer), RS2, "E9")).toBe("");
-    expect(plain.warnings.join("\n")).toContain("第1表（申請人用（更新）１）のみ");
+    expect(tail(RENEWAL_TEMPLATE_PATHS.M)).toBe("businessmanager-renewal-application-form_001448694.xlsx");
+    expect(cell(await open(plain.buffer), "申請人用２Ｍ", "E7")).toBe("テスト株式会社");
+    expect(plain.warnings.join("\n")).not.toContain("第1表（申請人用（更新）１）のみ");
     const hsp = await fillRenewalExcel(applicant, employment, details("経営・管理"), "高度専門職（1号ハ）");
     const expected = new ExcelJS.Workbook();
     await expected.xlsx.readFile(RENEWAL_TEMPLATE_PATHS.M);

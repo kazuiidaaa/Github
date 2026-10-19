@@ -122,9 +122,10 @@ describe("生成（fillOfficialExcel）の注意が、事前表示と一致す�
       expect(hits).toEqual(expected);
     });
   }
-  it("経営・管理の更新は、第1表のみの案内だけが出る（二重にならない）", async () => {
+  it("経営・管理の更新は、様式 M の全表を差し込み、手入力の欄の案内が1件だけ出る（#397 R-14）", async () => {
     const { warnings } = await run("renewal", KEIEI);
-    expect(warnings.filter((x) => x.includes("第1表（申請人用（更新）１）のみ"))).toHaveLength(1);
+    expect(warnings.filter((x) => x.includes("第1表（申請人用（更新）１）のみ"))).toHaveLength(0);
+    expect(warnings.filter((x) => x.includes("様式 M（経営・管理）の次の欄"))).toHaveLength(1);
     expect(warnings.some((x) => x.includes("対象外の可能性"))).toBe(false);
   });
   it("その他は、更新の様式で作り、対象外の注意を先頭に付ける", async () => {

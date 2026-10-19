@@ -3,6 +3,7 @@ import { INS_COLS_C, WORK_LEFT, WORK_RIGHT, cols, row, type Table2Spec } from ".
 /**
  * 変更・更新（高度専門職）の様式 M（経営・管理）の、第2表以降の座標（Issue #212）。変更と更新で座標が同一のため、1組を共有する。
  * 座標は、公式の雛形（docs/official/{change,renewal}-application-form-M.xlsx）の「ロック解除セル」から特定した。
+ * 差し込みには、経営・管理のページの新しい様式（businessmanager-{change,renewal}-application-form_*.xlsx。#397 R-13）を使う。座標は旧様式と同じ。
  * 様式が改正されたら、座標を再特定し、hspChangeTable2M.test.ts も更新する。
  */
 export const HSP_CHANGE_SPEC_M: Table2Spec = {
@@ -23,5 +24,5 @@ export const HSP_CHANGE_SPEC_M: Table2Spec = {
   work: { sheet: "申請人用２Ｍ", rows: [50, 52, 54, 56], left: WORK_LEFT, right: WORK_RIGHT },
   monthlyBox: ["所属機関用１Ｍ", "O89"],
   manual:
-    "所属機関用1の「契約の形態（2）」「財産の総額・申請人の投資額（7）」「法人税納付額（9）」「常勤従業員のうち日本人等の数（10）」「日本語能力を有する者の有無（11）」「就労予定期間（6）」「事業所の面積・保有の形態（9）」",
+    "所属機関用1の「契約の形態（2）」「財産の総額・申請人の投資額（7）」「法人税納付額（9）」「常勤従業員のうち日本人等の数（10）」「日本語能力を有する者の有無（11）（『有』の場合は『内容』欄に、誰が・どの方法（試験名・級・点数など）で該当するかを書く）」「就労予定期間（6）」「事業所の面積・保有の形態（9）」",
 };

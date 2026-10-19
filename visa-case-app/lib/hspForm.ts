@@ -35,7 +35,7 @@ export const FORM_STATUSES: Readonly<Record<"I" | "L" | "N" | "U", readonly stri
 /** 様式Nの見出しの在留資格。この文字を含む値（例：括弧つき）も様式Nとして扱う（部分一致は、この在留資格だけ） */
 const FORM_N_BASE_STATUS = FORM_STATUSES.N[0];
 
-/** 第1表のみ差し込む「経営・管理」。認定は様式M、変更・更新は様式Nの第1表だけを使う（Issue #191） */
+/** 高度専門職ではない「経営・管理」。認定・変更・更新とも様式 M の全表を使う（Issue #191・#397 R-14） */
 export const KEIEI_KANRI_STATUS = "経営・管理";
 
 /**
@@ -70,7 +70,7 @@ export function isFormNTokuteiCase(status: string, tokuteiKatsudoType: string | 
 }
 
 /**
- * 在留資格が、公式様式（認定・変更・更新）で扱える範囲か。一覧の在留資格（FORM_STATUSES）、高度専門職、経営・管理（第1表のみ）なら true。
+ * 在留資格が、公式様式（認定・変更・更新）で扱える範囲か。一覧の在留資格（FORM_STATUSES）、高度専門職、経営・管理（様式 M）なら true。
  * 特定活動は、案件の特定活動の種別（tokuteiKatsudoType）が様式Nを使う種別のときだけ true（FORM_N_TOKUTEI_TYPES）。
  * 種別を渡さない・未選択・ほかの種別の特定活動、研究などは、一覧に足すまでは false（対象外の可能性を警告する）。
  */

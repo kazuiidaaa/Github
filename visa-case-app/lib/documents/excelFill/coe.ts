@@ -14,6 +14,7 @@ import {
 } from "./coeMapping";
 import { COE_TABLE2 } from "./coeTable2";
 import { fillWorkbook } from "./fillWorkbook";
+import { formMWarnings } from "./hspChangeCommon";
 import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
 import { JOB_DESCRIPTION_LINES, digitsOf, sheetKey, type FillCtx } from "./renewalMapping";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
@@ -29,7 +30,8 @@ export const COE_TEMPLATE_PATH = officialPath("coe-application-form_930004030.xl
 export const COE_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
   I: officialPath("coe-application-form-I_930004028.xlsx"),
   L: officialPath("coe-application-form-L_930004032.xlsx"),
-  M: officialPath("coe-application-form-M_930004034.xlsx"),
+  // 経営・管理のページの新しい様式（令和7年10月16日以降。#397 R-13）。座標は旧様式 M と同じ
+  M: officialPath("businessmanager-coe-application-form_001448690.xlsx"),
   N: COE_TEMPLATE_PATH,
   U: officialPath("coe-application-form-U_930004059.xlsx"),
 };
@@ -67,7 +69,8 @@ export async function fillCoeExcel(
   const fillItems = [...firstOnly(COE_FILL_ITEMS), ...(table2 && !plan.firstOnly ? table2.fill : [])];
   const pickItems = [...firstOnly(COE_PICK_ITEMS), ...(table2 && !plan.firstOnly ? table2.pick : [])];
   const buffer = await fillWorkbook(COE_TEMPLATE_PATHS[plan.form], ctx, fillItems, pickItems);
-  return { buffer, warnings: buildWarnings(ctx, resolution, plan.form === "N" || plan.firstOnly ? null : COE_TABLE2[plan.form]) };
+  const usedTable2 = plan.form === "N" || plan.firstOnly ? null : COE_TABLE2[plan.form];
+  return { buffer, warnings: [...buildWarnings(ctx, resolution, usedTable2), ...formMWarnings(ctx, usedTable2 !== null && plan.form === "M")] };
 }
 
 function buildWarnings(c: FillCtx, resolution: CoeFormResolution, table2: Table2Mapping | null): string[] {

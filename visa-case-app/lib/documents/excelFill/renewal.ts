@@ -15,7 +15,7 @@ import {
   type FillCtx,
 } from "./renewalMapping";
 import { fillWorkbook } from "./fillWorkbook";
-import { hspChangeWarnings } from "./hspChangeCommon";
+import { formMWarnings, hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
 import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
@@ -29,7 +29,8 @@ export const RENEWAL_TEMPLATE_PATH = officialPath("renewal-application-form_9300
 export const RENEWAL_TEMPLATE_PATHS: Record<CoeFormCode, string> = {
   I: officialPath("renewal-application-form-I.xlsx"),
   L: officialPath("renewal-application-form-L.xlsx"),
-  M: officialPath("renewal-application-form-M.xlsx"),
+  // 経営・管理のページの新しい様式（令和7年10月16日以降。#397 R-13）。座標は旧様式 M と同じ
+  M: officialPath("businessmanager-renewal-application-form_001448694.xlsx"),
   N: RENEWAL_TEMPLATE_PATH,
   U: officialPath("renewal-application-form-U.xlsx"),
 };
@@ -48,15 +49,15 @@ export async function fillRenewalExcel(
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: FillCtx = { a, e, f };
   const { resolution, status } = resolveRenewal(currentStatus, a.residenceStatus, f.hspActivity ?? "");
-  // 高度専門職ではない「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = formCodeOfStatus(status) ?? "N";
-  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
-  // 高度専門職ではない「経営・管理」の更新は、第2表以降（様式Nの表）を使えないため、第1表（申請人用（更新）１）だけを差し込む（Issue #191）
+  // 高度専門職ではない「経営・管理」は様式 M（認定と同じ。#397 R-14）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
+  // 「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
   const keieiKanri = resolution.kind === "not_applicable" && (isKeieiKanri(currentStatus) || isKeieiKanri(a.residenceStatus));
+  const notApplicable: CoeFormCode = keieiKanri ? "M" : formCodeOfStatus(status) ?? "N";
+  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
   const table2 = plan.form === "N" || plan.firstOnly ? null : HSP_CHANGE_TABLE2[plan.form];
   const first = sheetKey(SHEET_APPLICANT_1);
   // 様式 I・L・M・U は、第1表だけ様式 N の座標と同じ。第2表以降は、様式ごとの対応表（hspChangeTable2.ts）を使う
-  const firstSheetOnly = plan.firstOnly || keieiKanri || table2 !== null;
+  const firstSheetOnly = plan.firstOnly || table2 !== null;
   const inRange = (sheet: string) => !firstSheetOnly || sheetKey(sheet) === first;
   const buffer = await fillWorkbook(
     RENEWAL_TEMPLATE_PATHS[plan.form],
@@ -64,7 +65,7 @@ export async function fillRenewalExcel(
     [...RENEWAL_FILL_ITEMS.filter((it) => inRange(it.sheet)), ...(table2 ? table2.fill : [])],
     [...RENEWAL_PICK_ITEMS.filter((p) => inRange(p.sheet)), ...(table2 ? table2.pick : [])],
   );
-  return { buffer, warnings: buildWarnings(ctx, { resolution, status, keieiKanri, table2 }) };
+  return { buffer, warnings: buildWarnings(ctx, { resolution, status, table2, form: plan.form }) };
 }
 
 /**
@@ -87,7 +88,7 @@ const isKeieiKanri = (status: string) => status.trim() === "経営・管理";
 
 function buildWarnings(
   c: FillCtx,
-  o: { resolution: FormResolution<CoeFormCode>; status: string; keieiKanri: boolean; table2: Table2Mapping | null },
+  o: { resolution: FormResolution<CoeFormCode>; status: string; table2: Table2Mapping | null; form: CoeFormCode },
 ): string[] {
   const w: string[] = [];
   const maxWork = o.table2 && o.table2.fill.length > 0 ? o.table2.maxWork : MAX_WORK_HISTORY;
@@ -97,9 +98,7 @@ function buildWarnings(
   if (!isAdvancedProfessional(o.status) && o.table2) {
     w.push(`${o.table2.name}の次の欄は、案件情報に項目がないため差し込んでいません。様式上で記入してください：${o.table2.manual}。`);
   }
-  if (o.keieiKanri) {
-    w.push("在留資格が「経営・管理」のため、第1表（申請人用（更新）１）のみ差し込んでいます。第2表以降（申請人用２・所属機関用１）は、入管庁の「経営・管理」の様式で記入してください。");
-  }
+  w.push(...formMWarnings(c, o.table2 !== null && o.form === "M"));
   if (c.a.confirmationStatus !== "confirmed") {
     w.push("申請人情報が確定していません。すべての項目を、原本と照合してから使用してください。");
   }

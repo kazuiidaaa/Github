@@ -107,12 +107,17 @@ describe("renewalMapping の座標（テンプレートとの整合）", () => {
 });
 
 describe("fillRenewalExcel", () => {
-  it("経営・管理の更新は、第1表だけ差し込み、第2表以降は空欄のまま警告する（Issue #191）", async () => {
-    const { buffer, warnings } = await fillRenewalExcel(applicant, employment, details, "経営・管理");
+  it("経営・管理の更新は、様式 M（新しい様式）の全表を差し込む（#397 R-13・R-14）", async () => {
+    const { buffer, warnings } = await fillRenewalExcel(applicant, { ...employment, capital: "10,000,000 円" }, details, "経営・管理");
     const wb = await open(buffer);
     expect(text(wb, SHEET_APPLICANT_1, "G18")).toBe("TARO YAMADA");
-    expect(text(wb, SHEET_APPLICANT_2, "E9")).toBe(""); // 申請人用２N（様式Nの表）は差し込まない
-    expect(warnings.join("\n")).toContain("第1表（申請人用（更新）１）のみ");
+    expect(text(wb, "申請人用２Ｍ", "E7")).toBe("テスト株式会社");
+    expect(text(wb, "所属機関用１Ｍ", "Q43")).toBe("10,000,000"); // 末尾の「円」は除く（R-15）
+    expect(text(wb, "所属機関用１Ｍ", "K52")).toBe("50");
+    const w = warnings.join("\n");
+    expect(w).not.toContain("第1表（申請人用（更新）１）のみ");
+    expect(w).toContain("常勤の人数か確認してください"); // R-16
+    expect(w).toContain("『内容』欄"); // R-12
   });
 
   it("代表的な入力値が、意図したセルに入る", async () => {
