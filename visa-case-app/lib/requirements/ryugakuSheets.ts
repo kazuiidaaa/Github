@@ -13,14 +13,15 @@ export type RyugakuProcedure = "coe" | "change" | "renewal" | "acquisition";
 type SheetProcedure = "coe" | "change" | "renewal";
 
 /**
- * 手元に提出書類一覧表（PDF）がある入学先の種類（手続ごと）。入管庁のページは、どの手続でも9区分すべての一覧表を掲載しているが、
- * 資料（ユーザーがページから取得したPDF）が無い組み合わせがある。それらは書類を出さず、「一覧表は未取得」の要確認の1行を出す（ryugakuSheetRules）
+ * 手元に提出書類一覧表（PDF）がある入学先の種類（手続ごと）。入管庁のページは、どの手続でも9区分すべての一覧表を掲載している。
+ * 現在は9区分×3手続（認定・変更・取得・更新。変更と取得は同じ一覧）の27枚がそろっている。資料が無い組み合わせができたときは、
+ * ここから外すと、書類を出さず「一覧表は未取得」の要確認の1行を出す（ryugakuSheetRules。仕組みは残してある）
  */
 export const RYUGAKU_SHEET_TYPES: Record<RyugakuProcedure, SchoolType[]> = {
-  coe: ["univ-approved", "univ-nonapproved", "vocational-class1", "vocational-class2"],
-  change: ["univ-approved", "japanese-nonapproved", "japanese-class1", "japanese-class2", "highschool-below"],
-  renewal: ["univ-approved", "japanese-nonapproved", "japanese-class1", "japanese-class2", "highschool-below"],
-  acquisition: ["univ-approved", "japanese-nonapproved", "japanese-class1", "japanese-class2", "highschool-below"],
+  coe: [...SCHOOL_TYPES],
+  change: [...SCHOOL_TYPES],
+  renewal: [...SCHOOL_TYPES],
+  acquisition: [...SCHOOL_TYPES],
 };
 
 /** 書類の名前（シートの書き方のまま。表ごとに言い回しが違うものは、行で name を上書きする） */
@@ -88,6 +89,8 @@ const N_BETSU_JP = "別表掲載国・地域の出身国籍である申請人が
 const N_VOC = "専修学校又は各種学校に入学する場合は「各種確認書」の提出は不要";
 const N_JA_UNIV = "日本語別科において専ら日本語教育を受ける者について、上記２の「各種確認書」で試験を選択した場合、試験の証明書を併せて提出（面接欄にも記載する場合を除く。）";
 const N_JA_UNIV_NONAPP = `${N_JA_UNIV}。日本語別科において専ら日本語教育を受ける者以外の者について、高等教育機関（大学等）を卒業し、その卒業証書等を提出する場合は不要`;
+// 変更・取得の表は「外国の高等教育機関（大学等）」、認定の表は「高等教育機関（大学等）」と書く（PDFの文言のまま）
+const N_JA_UNIV_NONAPP_CHANGE = `${N_JA_UNIV}。日本語別科において専ら日本語教育を受ける者以外の者について、外国の高等教育機関（大学等）を卒業し、その卒業証書等を提出する場合は不要`;
 const N_JA_JP = "上記２の「各種確認書」で試験を選択した場合、試験の証明書を併せて提出（面接欄にも記載する場合を除く。）";
 const N_RESEARCH = "大学等において、専ら聴講によらない研究生として受け入れられる場合";
 const N_COURSE = "大学等において、聴講生、科目等履修生、専ら聴講による研究生として受け入れられることが申請時に決定している場合";
@@ -109,6 +112,9 @@ const N_SUPPORT_HS = "18歳未満の申請人が高校に入学し、単身で�
 const N_RENEW_JP_CHECK = "同じ日本語教育機関で更新する場合は「各種確認書」の提出は不要";
 const N_RENEW_UNIV_CHECK = "同じ大学等で更新する場合は「各種確認書」の提出は不要（当該大学等で専ら日本語教育を受けていた場合を除く。）";
 const N_RENEW_HS_CHECK = "高校に在籍している（入学する）場合又は同じ教育機関で更新する場合は「各種確認書」の提出は不要";
+const N_VOC_LAST = "所属機関が大学・専修学校専門課程（専ら日本語教育を受ける者を除く。）以外の場合";
+const N_RENEW_VOC_CHECK = "専修学校若しくは各種学校に入学する場合又は同じ教育機関で更新する場合（当該教育機関で専ら日本語教育を受けていた場合を除く。）は「各種確認書」の提出は不要";
+const N_RENEW_VOC_JA = "同じ教育機関で更新する場合は不要（当該校で専ら日本語教育を受けていた場合を除く。）";
 const N_GUIDED = "直近の在留期間更新許可申請時において、資格外活動許可に係る指導を受けている場合";
 const N_GUIDED_BETSU = "別表掲載国・地域は、直近の在留期間更新許可申請時において、資格外活動許可に係る指導を受けている場合";
 const N_SUPPORT_RENEW = "18歳未満の申請人が単身で生活する場合（入寮等する場合を除く。）であって、直近の在留諸申請時から変更が生じている場合";
@@ -174,6 +180,77 @@ const COE: Sheets = {
     r("support", "cc", N_SUPPORT),
     r("denial", "cc", N_DENIAL),
   ],
+  "vocational-nonapproved": [
+    r("checklist", "c", N_VOC),
+    r("passport", "o"),
+    r("lastSchool", "c", N_VOC_LAST),
+    r("jaAbility", "o"),
+    r("expense", "o"),
+    r("relation", "o"),
+    r("deposit", "o"),
+    r("funds", "o"),
+    r("payerJob", "o"),
+    r("payerIncome", "o"),
+    r("scholarship", "c", N_SCHOLAR),
+    r("support", "c", N_SUPPORT),
+    r("denial", "c", N_DENIAL),
+  ],
+  "japanese-nonapproved": [
+    r("checklist", "c", N_BETSU_JP),
+    r("passport", "o"),
+    r("lastSchool", "o"),
+    r("jaAbility", "c", N_JA_JP),
+    r("expense", "o"),
+    r("relation", "o"),
+    r("deposit", "o"),
+    r("funds", "o"),
+    r("payerJob", "o"),
+    r("payerIncome", "o"),
+    r("scholarship", "c", N_SCHOLAR),
+    r("support", "c", N_SUPPORT),
+    r("denial", "c", N_DENIAL),
+  ],
+  "japanese-class1": [
+    r("checklist", "c", N_BETSU_JP),
+    r("passport", "o"),
+    r("jaAbility", "c", N_JA_JP),
+    r("support", "c", N_SUPPORT),
+    r("denial", "c", N_DENIAL),
+  ],
+  "japanese-class2": [
+    r("checklist", "co", N_BETSU_JP),
+    r("passport", "oo"),
+    r("jaAbility", "cc", N_JA_JP),
+    r("expense", "-o"),
+    r("relation", "-o"),
+    r("deposit", "-o"),
+    r("funds", "-o"),
+    r("scholarship", "-c", N_SCHOLAR),
+    r("support", "cc", N_SUPPORT),
+    r("denial", "cc", N_DENIAL),
+  ],
+  "highschool-below": [
+    r("checklist", "c", "高校に入学する場合は「各種確認書」の提出は不要"),
+    r("passport", "o"),
+    r("koseki", "o"),
+    r("lastSchool", "c", N_HS),
+    r("jaHistory", "c", N_HS_JA),
+    r("exchange", "c", N_EXCHANGE),
+    r("expense", "o"),
+    r("relation", "o"),
+    r("deposit", "c", N_HS_NO_EXCHANGE),
+    r("funds", "c", N_HS_NO_EXCHANGE),
+    r("payerJob", "c", N_HS_NO_EXCHANGE),
+    r("payerIncome", "c", N_HS_NO_EXCHANGE),
+    r("guardianReason", "c", N_JUNIOR),
+    r("guardianRelation", "c", N_JUNIOR),
+    r("lodging", "c", N_JUNIOR),
+    r("lifeAdvisor", "c", N_JUNIOR),
+    r("specialStudent", "c", N_SPECIAL),
+    r("parentConsent", "c", N_CONSENT),
+    r("support", "c", N_SUPPORT_HS),
+    r("denial", "c", N_DENIAL),
+  ],
 };
 
 const CHANGE: Sheets = {
@@ -184,6 +261,55 @@ const CHANGE: Sheets = {
     r("research", "c", N_RESEARCH),
     r("course", "c", N_COURSE),
     r("nightUniv", "c", N_NIGHT),
+    r("support", "c", N_SUPPORT),
+    r("denial", "c", N_DENIAL),
+  ],
+  "univ-nonapproved": [
+    r("checklist", "c", N_BETSU_UNIV),
+    r("activity", "o", N_ACTIVITY),
+    r("jaAbility", "c", N_JA_UNIV_NONAPP_CHANGE),
+    r("research", "c", N_RESEARCH),
+    r("course", "c", N_COURSE),
+    r("nightUniv", "c", N_NIGHT),
+    r("expense", "o"),
+    r("relation", "o"),
+    r("deposit", "o"),
+    r("funds", "o"),
+    r("payerJob", "o"),
+    r("payerIncome", "o"),
+    r("scholarship", "c", N_SCHOLAR),
+    r("support", "c", N_SUPPORT),
+    r("denial", "c", N_DENIAL),
+  ],
+  "vocational-class1": [
+    r("checklist", "c", N_VOC),
+    r("activity", "o", N_ACTIVITY),
+    r("jaAbility", "o"),
+    r("support", "c", N_SUPPORT),
+    r("denial", "c", N_DENIAL),
+  ],
+  "vocational-class2": [
+    r("checklist", "cc", N_VOC),
+    r("activity", "oo", N_ACTIVITY),
+    r("jaAbility", "oo"),
+    r("expense", "-o"),
+    r("deposit", "-o"),
+    r("scholarship", "-c", N_SCHOLAR),
+    r("support", "cc", N_SUPPORT),
+    r("denial", "cc", N_DENIAL),
+  ],
+  "vocational-nonapproved": [
+    r("checklist", "c", N_VOC),
+    r("activity", "o", N_ACTIVITY),
+    r("lastSchool", "c", N_VOC_LAST),
+    r("jaAbility", "o"),
+    r("expense", "o"),
+    r("relation", "o"),
+    r("deposit", "o"),
+    r("funds", "o"),
+    r("payerJob", "o"),
+    r("payerIncome", "o"),
+    r("scholarship", "c", N_SCHOLAR),
     r("support", "c", N_SUPPORT),
     r("denial", "c", N_DENIAL),
   ],
@@ -262,6 +388,25 @@ const RENEWAL_JP_TWO_COLUMNS: Row[] = [
   r("scholarship", "cc", N_SCHOLAR_RENEW),
 ];
 
+const RENEWAL_VOC_NAME_ATT = "出席証明書（発行可能な場合）、成績証明書及び卒業証明書（直近の在留諸申請時以降に在籍した全ての教育機関に係る証明書）";
+/** 専修学校等（クラスⅡ・通知を受けていない）の更新。別表掲載国・地域／同左以外の2列。本国での収入・送金証明書・携行者の列の要否だけが2表で違う */
+const renewalVocTwoColumns = (guided: "cc" | "co"): Row[] => [
+  r("checklist", "cc", N_RENEW_VOC_CHECK),
+  r("enrollment", "oo", undefined, RENEWAL_JP_NAME_ENROLL),
+  r("attendance", "oo", undefined, RENEWAL_VOC_NAME_ATT),
+  r("jaAbility", "cc", N_RENEW_VOC_JA),
+  r("living", "co", N_GUIDED_BETSU),
+  r("support", "cc", N_SUPPORT_RENEW),
+  r("selfTax", "cc", withGroup(G_SELF, N_SELF_WORK_BETSU)),
+  r("selfPayslip", "cc", withGroup(G_SELF, N_SELF_WORK_BETSU)),
+  r("homeIncome", guided, withGroup(G_SELF, guided === "co" ? N_GUIDED_BETSU : N_GUIDED)),
+  r("remit", guided, withGroup(G_OTHER, guided === "co" ? N_GUIDED_BETSU : N_GUIDED)),
+  r("carrier", guided, withGroup(G_OTHER, guided === "co" ? N_GUIDED_BETSU : N_GUIDED)),
+  r("payerRelation", "cc", withGroup(G_OTHER, N_CHANGED)),
+  r("payerIncomeProof", "cc", withGroup(G_OTHER, N_PAYER_BETSU)),
+  r("scholarship", "cc", N_SCHOLAR_RENEW_UNIV),
+];
+
 const RENEWAL: Sheets = {
   "univ-approved": [
     r("checklist", "c", N_RENEW_UNIV_CHECK),
@@ -281,6 +426,42 @@ const RENEWAL: Sheets = {
     r("payerIncomeProof", "c", withGroup(G_OTHER, N_PAYER_GUIDED_UNIV)),
     r("scholarship", "c", N_SCHOLAR_RENEW_UNIV),
   ],
+  "univ-nonapproved": [
+    r("checklist", "cc", N_RENEW_UNIV_CHECK),
+    r("attendance", "oo", undefined, "出席証明書(発行可能な場合)、成績証明書及び卒業証明書（直近の在留諸申請時以降に在籍した全ての教育機関に係る証明書）"),
+    r("research", "cc", N_RESEARCH),
+    r("course", "cc", N_COURSE),
+    r("nightUniv", "cc", N_NIGHT),
+    r("enrollment", "oo", undefined, "在学証明書（入学前に申請する場合は入学許可書）"),
+    r("living", "co", N_GUIDED_BETSU),
+    r("support", "cc", N_SUPPORT_RENEW),
+    r("selfTax", "cc", withGroup(G_SELF, N_SELF_WORK_BETSU)),
+    r("selfPayslip", "cc", withGroup(G_SELF, N_SELF_WORK_BETSU)),
+    r("homeIncome", "co", withGroup(G_SELF, N_GUIDED_BETSU)),
+    r("remit", "co", withGroup(G_OTHER, N_GUIDED_BETSU)),
+    r("carrier", "co", withGroup(G_OTHER, N_GUIDED_BETSU)),
+    r("payerRelation", "cc", withGroup(G_OTHER, N_CHANGED)),
+    r("payerIncomeProof", "cc", withGroup(G_OTHER, N_PAYER_BETSU)),
+    r("scholarship", "cc", N_SCHOLAR_RENEW_UNIV),
+  ],
+  "vocational-class1": [
+    r("checklist", "c", N_RENEW_VOC_CHECK),
+    r("enrollment", "o", undefined, RENEWAL_JP_NAME_ENROLL),
+    r("attendance", "o", undefined, RENEWAL_VOC_NAME_ATT),
+    r("jaAbility", "c", N_RENEW_VOC_JA),
+    r("living", "c", N_GUIDED),
+    r("support", "c", N_SUPPORT_RENEW),
+    r("selfTax", "c", withGroup(G_SELF, N_SELF_WORK_GUIDED_UNIV)),
+    r("selfPayslip", "c", withGroup(G_SELF, N_SELF_WORK_GUIDED_UNIV)),
+    r("homeIncome", "c", withGroup(G_SELF, N_GUIDED)),
+    r("remit", "c", withGroup(G_OTHER, N_GUIDED)),
+    r("carrier", "c", withGroup(G_OTHER, N_GUIDED)),
+    r("payerRelation", "c", withGroup(G_OTHER, N_CHANGED)),
+    r("payerIncomeProof", "c", withGroup(G_OTHER, N_PAYER_GUIDED)),
+    r("scholarship", "c", N_SCHOLAR_RENEW_UNIV),
+  ],
+  "vocational-class2": renewalVocTwoColumns("cc"),
+  "vocational-nonapproved": renewalVocTwoColumns("co"),
   "japanese-nonapproved": RENEWAL_JP_TWO_COLUMNS,
   "japanese-class1": [
     r("checklist", "c", N_RENEW_JP_CHECK),
@@ -369,8 +550,9 @@ export function ryugakuSheetRules(procedure: RyugakuProcedure): RequirementRule[
       ...(g.verify ? { verify: true } : {}),
     };
   });
+  // 手元に一覧表が無い入学先の種類（現在はなし）。この行を再び使うときは、lib/i18n/ruleTexts.ts に、名前と注記の訳を足す（以前の訳は履歴の ryugaku_sheet_not_obtained の行）。
   // 手元に一覧表が無い入学先の種類。ページには掲載があるため「掲載なし」とはせず、未取得として要確認の1行を出す
-  rules.unshift({
+  if (missing.length > 0) rules.unshift({
     id: "ryugaku_sheet_not_obtained",
     name: "入学先の種類に応じた提出書類一覧表に掲げる資料（この入学先の一覧表は未取得）",
     party: "applicant",

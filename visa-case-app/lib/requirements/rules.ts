@@ -3767,7 +3767,7 @@ export const GINOU_JISSHU_ACQUISITION: RuleSet = {
 };
 
 // 留学。入管庁の提出書類一覧表（チェックシート）による（docs/official/reconciliation/ryugaku-procedures-2026-10-24.md）。
-// 取得の規則は、変更・取得用の一覧表（5点）に合わせて直した（RY-1：案内ページの要確認1行と各種確認書の1行を、一覧表の書類に置き換える）。
+// 取得の規則は、変更・取得用の一覧表（9点）に合わせて直した（RY-1：案内ページの要確認1行と各種確認書の1行を、一覧表の書類に置き換える）。
 // 判定の軸は、入学先の種類（schoolType。ページが掲載する9区分）と取得の事由（alsoBasis）。手元に一覧表がある区分は書類を出し、無い区分は「一覧表は未取得」の要確認の1行を出す。入学先が未選択の間は、全ての入学先に共通の書類だけを出す。
 // 取得は、案内ページの「１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用」により、活動資料を外す。
 const RYUGAKU_COMPARED_AT = "2026-10-24";
@@ -3775,10 +3775,10 @@ const RYUGAKU_CHECKED_AT = "2026-10-24";
 const RYUGAKU_PAGE_URL = `${ACQUISITION_STATUS_PAGE_BASE}student.html`;
 type RyugakuProcedure = "coe" | "change" | "renewal" | "acquisition";
 const RYUGAKU_SHEET_LABELS: Record<RyugakuProcedure, string> = {
-  coe: "在留資格認定証明書交付申請用（大学等・専修学校等）",
-  change: "在留資格変更許可申請用（大学等・日本語教育機関・高等学校等）",
-  renewal: "在留期間更新許可申請用（大学等・日本語教育機関・高等学校等）",
-  acquisition: "在留資格取得許可申請用＝変更・取得用（大学等・日本語教育機関・高等学校等）",
+  coe: "在留資格認定証明書交付申請用（入学先の9区分すべて）",
+  change: "在留資格変更許可申請用＝変更・取得用（入学先の9区分すべて）",
+  renewal: "在留期間更新許可申請用（入学先の9区分すべて）",
+  acquisition: "在留資格取得許可申請用＝変更・取得用（入学先の9区分すべて）",
 };
 const ryugakuSheetSource = (procedure: RyugakuProcedure): RuleSource => ({
   title: `「留学」の提出書類一覧表（${RYUGAKU_SHEET_LABELS[procedure]}。入学先の種類・適正校の区分ごとのPDF。PDFのURLは番号がなく、取得できていない。未確認）（出入国在留管理庁）`,
