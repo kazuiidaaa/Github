@@ -974,5 +974,46 @@
       "cause_proof"
     ],
     "digest": "90997c2dcad2dbc0842132b807cc82f936ea6466710aaad0216c18b7c4570dec"
+  },
+  "eijusha_haigusha_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "marriage_continuation_proof",
+      "stay_cost_documents",
+      "identity_guarantee",
+      "household_residence_certificate"
+    ],
+    "digest": "286e9a8562e8fc89ba1fb1816520a71fddc7cbbaff23a268428e7e60f8ba5498"
+  },
+  "eijusha_haigusha_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "marriage_certificate",
+      "stay_cost_documents",
+      "identity_guarantee",
+      "household_residence_certificate",
+      "questionnaire",
+      "marital_exchange_materials"
+    ],
+    "digest": "ae38f8de9c090d5cce52a489289036fb14efb1e9047e113d8a7d21a8b6412e2e"
+  },
+  "eijusha_haigusha_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "marriage_certificate",
+      "stay_cost_documents",
+      "identity_guarantee",
+      "household_residence_certificate",
+      "questionnaire",
+      "marital_exchange_materials"
+    ],
+    "digest": "a3561239fa7cb60266232f600e5c6763e66185aefb6cbe20a6758660edc17c18"
   }
 }

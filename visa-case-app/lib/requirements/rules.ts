@@ -4137,6 +4137,76 @@ export const EIJUSHA_HAIGUSHA_ACQUISITION: RuleSet = {
   ],
 };
 
+// ===== 永住者の配偶者等の在留資格認定証明書交付申請・在留資格変更許可申請・在留期間更新許可申請（Issue #420） =====
+// 照合表は docs/official/reconciliation/coe-change-renewal-eijushahaigusha-2026-10-24.md（照合日 2026-10-24）。
+// 提出書類は、入管庁の「提出書類一覧」（チェックシート。docs/official/eijushahaigusha-{coe|change|renewal}-checksheet_*.pdf の3点）のとおり。シートにない書類は足さない。
+// シートは身分（配偶者・子）で分かれず1枚ずつ。判定の軸は無いので、従来の共通の書類と同じ流儀（categories: ALL）で全区分に適用する。取得（EIJUSHA_HAIGUSHA_ACQUISITION）の規則は書き換えない。
+// 同じ書類は取得と同じ id・書類名にして訳を共有する。注記は、シートに書かれたことだけを書く（取得の注記にある案内ページ由来の事項は、これらのシートに無いため写さない）。
+// 取得との差分：認定は返信用封筒が加わり、国籍・出生・事由を証する書類が無い／変更は後者だけ無い／更新は結婚証明書・質問書・夫婦間の交流が無く、婚姻の継続を証明する文書が加わる。
+const EIJUSHA_PROCEDURE_COMPARED_AT = "2026-10-24";
+type EijushaProcedure = CommonProcedure;
+const EIJUSHA_STAY_COST_NOTE =
+  "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）を提出する。" +
+  "入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)その他の資料などを提出する：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよい）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／これらに準ずるもの";
+const eijushaDoc = (rule: Omit<RequirementRule, "party" | "categories">): RequirementRule => ({ ...rule, party: "applicant", categories: ALL });
+// シートの並び。申請書・写真・旅券等は procedureCommonRules。返信用封筒は認定の3番目、結婚証明書（更新は婚姻継続の文書）が続く
+const EIJUSHA_RETURN_ENVELOPE = eijushaDoc({ id: "return_envelope", name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）", level: "required" });
+const EIJUSHA_MARRIAGE_CERTIFICATE = eijushaDoc({ id: "marriage_certificate", name: "配偶者（永住者）及び申請人の国籍国（外国）の機関から発行された結婚証明書", level: "required" });
+const EIJUSHA_MARRIAGE_CONTINUATION = eijushaDoc({
+  id: "marriage_continuation_proof",
+  name: "申請人に係る婚姻が継続していることを証明する文書",
+  level: "required",
+  note: "シートに、文書の具体例の記載は無い。提出する文書は、行政書士が確認する",
+  verify: true,
+});
+const EIJUSHA_STAY_COST = eijushaDoc({ id: "stay_cost_documents", name: "日本での滞在費用を証明する資料", level: "required", note: EIJUSHA_STAY_COST_NOTE });
+const EIJUSHA_GUARANTEE = eijushaDoc({ id: "identity_guarantee", name: "配偶者（永住者）の身元保証書", level: "required" });
+const EIJUSHA_RESIDENCE = eijushaDoc({ id: "household_residence_certificate", name: "配偶者（永住者）の世帯全員の記載のある住民票", level: "required" });
+const EIJUSHA_QUESTIONNAIRE = eijushaDoc({ id: "questionnaire", name: "質問書", level: "required", note: "様式の記載内容は未確認", verify: true });
+const EIJUSHA_EXCHANGE = eijushaDoc({
+  id: "marital_exchange_materials",
+  name: "夫婦間の交流が確認できる資料",
+  level: "required",
+  note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可）2〜3葉。その他、提出できるもの（SNS記録・通話記録）",
+});
+const EIJUSHA_PROCEDURE_DOCS: Record<EijushaProcedure, RequirementRule[]> = {
+  coe: [EIJUSHA_RETURN_ENVELOPE, EIJUSHA_MARRIAGE_CERTIFICATE, EIJUSHA_STAY_COST, EIJUSHA_GUARANTEE, EIJUSHA_RESIDENCE, EIJUSHA_QUESTIONNAIRE, EIJUSHA_EXCHANGE],
+  change: [EIJUSHA_MARRIAGE_CERTIFICATE, EIJUSHA_STAY_COST, EIJUSHA_GUARANTEE, EIJUSHA_RESIDENCE, EIJUSHA_QUESTIONNAIRE, EIJUSHA_EXCHANGE],
+  renewal: [EIJUSHA_MARRIAGE_CONTINUATION, EIJUSHA_STAY_COST, EIJUSHA_GUARANTEE, EIJUSHA_RESIDENCE],
+};
+const EIJUSHA_PROCEDURE_SHEET_LABELS: Record<EijushaProcedure, string> = {
+  coe: "在留資格認定証明書交付申請用",
+  change: "在留資格変更許可申請用",
+  renewal: "在留期間更新許可申請用",
+};
+const EIJUSHA_PROCEDURE_SHEET_IDS: Record<EijushaProcedure, string> = { coe: "001426553", change: "001426554", renewal: "001426555" };
+const EIJUSHA_PROCEDURE_TITLES: Record<EijushaProcedure, string> = {
+  coe: "永住者の配偶者等 在留資格認定証明書交付申請",
+  change: "永住者の配偶者等 在留資格変更許可申請",
+  renewal: "永住者の配偶者等 在留期間更新許可申請",
+};
+// URL は既存の書式に合わせて番号から組み立てた（未確認）
+const eijushaProcedureSet = (procedure: EijushaProcedure): RuleSet => ({
+  id: `eijusha_haigusha_${procedure}`,
+  title: EIJUSHA_PROCEDURE_TITLES[procedure],
+  procedureType: procedure,
+  residenceStatus: "永住者の配偶者等",
+  checkedAt: EIJUSHA_PROCEDURE_COMPARED_AT,
+  sources: [
+    {
+      title: `「永住者の配偶者等」に係る提出書類一覧（${EIJUSHA_PROCEDURE_SHEET_LABELS[procedure]}。URL は番号から組み立てた。未確認）（出入国在留管理庁）`,
+      url: `https://www.moj.go.jp/isa/content/${EIJUSHA_PROCEDURE_SHEET_IDS[procedure]}.pdf`,
+      kind: "pdf",
+      comparedAt: EIJUSHA_PROCEDURE_COMPARED_AT,
+    },
+  ],
+  rules: [...procedureCommonRules(procedure), ...EIJUSHA_PROCEDURE_DOCS[procedure]],
+});
+export const EIJUSHA_HAIGUSHA_RENEWAL: RuleSet = eijushaProcedureSet("renewal");
+export const EIJUSHA_HAIGUSHA_CHANGE: RuleSet = eijushaProcedureSet("change");
+export const EIJUSHA_HAIGUSHA_COE: RuleSet = eijushaProcedureSet("coe");
+// ===== ここまで（永住者の配偶者等の認定・変更・更新） =====
+
 // 定住者（TJ-1〜TJ-32。原文 teijusha*-acquisition_2026-10-24.txt の12ページ。種類1〜5）。判定は取得の事由と「定住者の区分」（alsoBasis: teijushaType。TJ-1・TJ-3 案A）。
 // 区分が未選択の間は、全区分に共通の書類（申請書・写真・旅券・申請取次者・身元保証書）だけを出す。
 // 配偶者の仕事（会社勤め・自営業・無職）を選ぶ欄は足さず、収入の書類を必須の1行にまとめて仕事ごとの違いを注記に書く（TJ-2・TJ-15）。
@@ -4630,6 +4700,10 @@ export const RULE_SETS: RuleSet[] = [
   KIGYONAI_RENEWAL,
   KIGYONAI_CHANGE,
   KIGYONAI_COE,
+  // 永住者の配偶者等（Issue #420。チェックシートによる）
+  EIJUSHA_HAIGUSHA_RENEWAL,
+  EIJUSHA_HAIGUSHA_CHANGE,
+  EIJUSHA_HAIGUSHA_COE,
   // 特定活動（特定研究等活動。Issue #299）
   TOKUTEI_KENKYU_RENEWAL,
   TOKUTEI_KENKYU_CHANGE,

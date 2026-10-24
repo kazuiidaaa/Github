@@ -1651,6 +1651,32 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "養子縁組に係る家庭裁判所の許可書謄本": ["Transcript of the family court's permission for the adoption", "입양에 관한 가정법원의 허가서 등본"],
   "1通。日本において養子縁組を成立させた場合のみ": ["1 copy. Only if the adoption was established in Japan", "1통. 일본에서 입양을 성립시킨 경우에만"],
   "申請人と養子縁組が成立していることを証明する本国（外国）の機関から発行された証明書": ["Certificate issued by the authority of the home country (abroad) proving that the adoption of the applicant has been established", "신청인과의 입양이 성립했음을 증명하는 본국(외국) 기관에서 발급한 증명서"],
+  // 永住者の配偶者等の認定・変更・更新（チェックシートによる。仮訳）
+  "様式の記載内容は未確認": ["The contents of the form have not been verified", "양식의 기재 내용은 미확인"],
+  "申請人に係る婚姻が継続していることを証明する文書": ["Document proving that the applicant's marriage is continuing", "신청인의 혼인이 계속되고 있음을 증명하는 문서"],
+  "シートに、文書の具体例の記載は無い。提出する文書は、行政書士が確認する": [
+    "The sheet gives no concrete example of the document. The administrative scrivener confirms which document to submit",
+    "시트에는 문서의 구체적인 예가 기재되어 있지 않다. 제출할 문서는 행정서사가 확인한다",
+  ],
+  "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)その他の資料などを提出する：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよい）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／これらに準ずるもの": [
+    "Submit (1) a residence tax (taxable or non-taxable) certificate and a tax payment certificate (stating total income and tax payment status for one year) for the most recent year of the person bearing the applicant's cost of staying. If (1) cannot prove the cost of staying, for example because the applicant has only recently entered Japan or has moved, submit materials such as (2) others: a copy of a bank passbook (a copy of a web passbook screen showing the transaction history is also acceptable) / a certificate of planned employment or a notice of informal job offer (issued by a Japanese company) / documents equivalent to these",
+    "(1) 신청인의 체재 비용을 지불하는 사람의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세 증명서(1년간의 총소득 및 납세 상황이 기재된 것)를 제출한다. 입국 후 얼마 안 된 경우나 이사 등으로 (1)의 자료로는 체재 비용을 증명할 수 없는 경우에는 (2) 그 밖의 자료 등을 제출한다: 예금 통장 사본(웹 통장 화면의 사본 등(거래 내역을 알 수 있는 것)도 가능)／고용 예정 증명서 또는 채용 내정 통지서(일본 회사 발행)／이에 준하는 것",
+  ],
+  "永住者の配偶者等 在留資格認定証明書交付申請": ["Permanent Resident's Spouse etc.: Application for Certificate of Eligibility", "영주자의 배우자 등 사증발급인정서 교부 신청"],
+  "永住者の配偶者等 在留資格変更許可申請": ["Permanent Resident's Spouse etc.: Application for Change of Status of Residence", "영주자의 배우자 등 체류자격 변경 허가 신청"],
+  "永住者の配偶者等 在留期間更新許可申請": ["Permanent Resident's Spouse etc.: Application for Extension of the Period of Stay", "영주자의 배우자 등 체류기간 연장 허가 신청"],
+  "「永住者の配偶者等」に係る提出書類一覧（在留資格認定証明書交付申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Permanent Resident's Spouse etc.\" (certificate of eligibility application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「영주자의 배우자 등」에 관한 제출 서류 일람(사증발급인정서 교부 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「永住者の配偶者等」に係る提出書類一覧（在留資格変更許可申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Permanent Resident's Spouse etc.\" (change of status of residence application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「영주자의 배우자 등」에 관한 제출 서류 일람(체류자격 변경 허가 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「永住者の配偶者等」に係る提出書類一覧（在留期間更新許可申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Permanent Resident's Spouse etc.\" (extension of the period of stay application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「영주자의 배우자 등」에 관한 제출 서류 일람(체류기간 연장 허가 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
