@@ -229,6 +229,23 @@
     ],
     "digest": "aca00f72eecd2033bdaa4ab90590eccf4c04fb66e004933aa74963b745852018"
   },
+  "kaigo_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "care_worker_registration",
+      "working_conditions_document",
+      "dispatch_documents",
+      "organization_overview",
+      "representative_declaration",
+      "skill_transfer_declaration"
+    ],
+    "digest": "b636fbf082ebeff0f1c8d77e7b004adc9d69ced2e4f891752bb02d4396f53f0e"
+  },
   "acquisition_by_cause": {
     "ruleIds": [
       "application_form",

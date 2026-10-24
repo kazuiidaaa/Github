@@ -142,3 +142,13 @@ export function selectionNotices(ev: {
   if (ev.needsCause) return { category: "caseRequirements.needsCategoryAndCause", cause: false };
   return { category: "caseRequirements.needsCategoryAxes", cause: false };
 }
+
+/**
+ * 医療の申請人の区分が未選択のときに出す案内の文。出さないときは null。
+ * 区分を alsoBasis に持つ規則集合（医療の取得。acquisition-iryou-2026-10-19.md の R-1）では、未選択の間は区分に共通の書類だけを出すため、その旨の文にする。
+ * basis が区分の規則集合（医療の認定・変更・更新）は、従来の文（区分で分かれる書類を要確認で出す）のまま。
+ */
+export function applicantTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsApplicantType: boolean }): MessageKey | null {
+  if (!ev.ruleSet || !ev.needsApplicantType) return null;
+  return ev.ruleSet.alsoBasis?.includes("applicantType") ? "caseRequirements.needsApplicantTypeAxes" : "caseRequirements.needsApplicantType";
+}

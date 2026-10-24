@@ -1243,6 +1243,20 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "If mainly engaged in interpersonal work that uses language ability, such as translation, interpreting, and customer service. It may be requested during examination even in other cases. For Japanese, the applicant is deemed to have Japanese ability equivalent to CEFR B2 if any of the following applies: JLPT N2 or higher, BJT Business Japanese Proficiency Test 400 points or more, Examination for Japanese University Admission for International Students (Japanese) 200 points or more, JPT Japanese Proficiency Test 525 points or more, residence in Japan as a mid- to long-term resident for 20 years or more, graduation from a Japanese university or completion of the specialized course or advanced course of a Japanese college of technology or specialized training college, or completion of compulsory education in Japan and graduation from high school",
     "번역·통역, 접객 등 언어 능력을 사용하는 대인 업무에 주로 종사하는 경우. 그 외의 경우에도 심사에서 요구될 수 있다. 일본어의 경우 JLPT N2 이상, BJT 비즈니스 일본어 능력 테스트 400점 이상, 일본유학시험(일본어) 200점 이상, JPT 일본어 능력시험 525점 이상, 중장기 재류자로서 20년 이상 재류, 일본 대학 졸업 또는 고등전문학교·전수학교 전문과정·전공과 수료, 일본 의무교육 수료 및 고등학교 졸업 중 어느 하나에 해당하면 CEFR B2 상당의 일본어 능력을 갖춘 것으로 본다",
   ],
+
+  // 医療・技能・介護の在留資格取得許可申請（Issue #420。照合表 acquisition-iryou・ginou-chouri・gino-sonota・kaigo-2026-10-19.md）
+  "医療 在留資格取得許可申請（一部のみ整備）": [
+    "Medical Services: application for permission for acquisition of status of residence (only partly covered)",
+    "의료 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "技能 在留資格取得許可申請（一部のみ整備）": [
+    "Skilled Labor: application for permission for acquisition of status of residence (only partly covered)",
+    "기능 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "介護 在留資格取得許可申請（一部のみ整備）": [
+    "Nursing Care: application for permission for acquisition of status of residence (only partly covered)",
+    "개호 체류자격 취득 허가 신청(일부만 정비)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

@@ -194,6 +194,10 @@ describe("医療の申請人の区分の入力欄（Issue #310）", () => {
     expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "coe", targetStatus: "医療" })} />)).toContain(field);
     expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "医療" })} />)).toContain(field);
   });
+  it("取得でも、希望する在留資格が医療なら表示する（区分を alsoBasis に持つ IRYO_ACQUISITION。Issue #420）", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "acquisition", targetStatus: "医療" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "acquisition", targetStatus: "技能" })} />)).not.toContain(field);
+  });
   it("医療以外の在留資格では表示しない", () => {
     expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "技術・人文知識・国際業務" })} />)).not.toContain(field);
     expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "技能" })} />)).not.toContain(field);

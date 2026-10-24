@@ -1479,7 +1479,7 @@ export const KAZOKUTAIZAI_ACQUISITION: RuleSet = {
 };
 
 // 在留資格「介護」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #297）。
-// 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は、2026-10-18 に照合済み（照合表は docs/official/reconciliation/kaigo-2026-10-18.md、Issue #333）。申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は案内ページの本文による。チェックシート（PDF）3点（認定・変更・更新）の○・△は、2026-10-18 に照合済み（照合表は docs/official/reconciliation/kaigo-2026-10-18.md、Issue #333）。申請書は様式N（認定・変更・更新とも）。取得は、介護の取得の規則集合（KAIGO_ACQUISITION。照合表は acquisition-kaigo-2026-10-19.md）が扱う。
 // 更新の「派遣先での活動内容の資料」は、チェックシートで△、案内ページに記載なし（要確認で足した。#312 の規則に基づく人の判断）。技能移転に係る申告書は、更新の案内ページ・チェックシートにない。
 const KAIGO = "介護";
 const KAIGO_SOURCE: RuleSource = { title: "在留資格「介護」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/nursingcare.html", kind: "page", comparedAt: "2026-10-18" };
@@ -1750,7 +1750,7 @@ export const PROFESSOR_RENEWAL: RuleSet = {
 // 在留資格「医療」。入管庁の案内ページ・チェックシートの「カテゴリー1・2」は、所属機関のカテゴリー（1〜4）ではなく、申請人の区分
 // （カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外の者）。
 // 提出書類は、案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/iryo-2026-10-18.md、Issue #333）。ページとチェックシートが食い違う書類は「要確認」にしている。この区分は formDetails.medicalApplicantType に持ち、basis: "applicantType" で判定する（Issue #310。
-// 所属機関のカテゴリーには依存しないため、categories は ALL のまま）。区分が未選択の間は、区分で要否が分かれる書類を要確認（check）で表示する（Issue #302 と同じ）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 所属機関のカテゴリーには依存しないため、categories は ALL のまま）。区分が未選択の間は、区分で要否が分かれる書類を要確認（check）で表示する（Issue #302 と同じ）。申請書は様式U（認定・変更・更新とも）。取得は、医療の取得の規則集合（IRYO_ACQUISITION。照合表は acquisition-iryou-2026-10-19.md）が扱う。
 const IRYO = "医療";
 const IRYO_SOURCE: RuleSource = { title: "在留資格「医療」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/medicalservices.html", kind: "page", comparedAt: "2026-10-18" };
 const IRYO_CHECKED_AT = "2026-10-07";
@@ -2348,7 +2348,7 @@ export const HODO_RENEWAL: RuleSet = {
 // 案内ページは「調理師」と「調理師以外」の2ページに分かれ、書類の違いは職歴を証明する文書のみ（職種別）。案件情報に職種の入力欄がないため、職歴の証明は職種ごとに要確認（check）とし、注記に職種を示す。
 // 職種の入力欄は、Issue #298 に提案として書く。提出書類は案内ページの本文による。チェックシート（認定・変更のカテゴリー3・4と、更新。変更のカテゴリー共通2点を含む）の○・△の位置は、案内ページと一致することを確認した（2026-10-18。照合表は docs/official/reconciliation/gino-change-2026-10-18.md。認定・更新は照合済み）。
 // 研究の定義との共用: online_approval_proof・dispatch_documents・business_description・representative_declaration は研究の定義をそのまま使う（研究側を直すと技能も変わるため、tests/evaluateGino.test.ts で内容を固定している）。category_proof（受付印の注記を除く）と financial_statements（必須・注記のみ）は、技能のPDF・ページに合わせて上書きしている。源泉徴収の資料（withholding_*）は、納期の特例の名称を含め研究と同じ（G-1）。
-// 申請書は様式N（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式N（認定・変更・更新とも）。取得は、技能の取得の規則集合（GINO_ACQUISITION。照合表は acquisition-ginou-chouri-2026-10-19.md・acquisition-gino-sonota-2026-10-19.md）が扱う。
 const GINO = "技能";
 const GINO_CHECKED_AT = "2026-10-12";
 const GINO_SOURCES: RuleSource[] = [
@@ -2538,6 +2538,104 @@ export const GINO_RENEWAL: RuleSet = {
       level: "check" as const,
       note: r.note ? `${GINO_FIRST_RENEWAL_NOTE}。${r.note}` : GINO_FIRST_RENEWAL_NOTE,
     })),
+  ],
+};
+
+/**
+ * 医療・技能・介護の在留資格取得許可申請（Issue #420。照合表は docs/official/reconciliation/ の
+ * acquisition-iryou-2026-10-19.md〔#425〕・acquisition-ginou-chouri-2026-10-19.md と acquisition-gino-sonota-2026-10-19.md〔#430〕・acquisition-kaigo-2026-10-19.md〔#428〕）。
+ * 人の判断「推奨のとおり」（2026-10-19）の全ての R を反映した専用の規則集合。技人国の取得（GIJINKOKU_ACQUISITION）と同じく、在留資格を問わない ACQUISITION_BY_CAUSE より先に照合する。
+ * ACQUISITION_BY_CAUSE の文言・checkedAt・出典は変えない（README 2-2章）。`checkedAt` は新しい規則集合の作成日。
+ */
+const ACQUISITION_SET2_COMPARED_AT = "2026-10-19";
+// 事由別の書類（3つの照合表で共通）。技人国の取得と同じ扱いにする：
+// 出生の3書類を外し、出生は「その事由を証する書類」で扱う（医療 R-4・技能 R-2・介護 R-2）。注記は GIJINKOKU_ACQUISITION_CAUSE_PROOF_NOTE で、日米地位協定の例は外す（医療 R-6・技能 R-4・介護 R-4）。
+// 写真は「写真（40mm×30mm）」を全事由の必須にし、注記は年齢の注記のみ（中長期在留者の注記は書かない。医療 R-5・技能 R-3・介護 R-3）。
+// 活動に応じた資料は外す（各資格の書類群がこれに当たる。医療 R-7・技能 R-5・介護 R-5）。申請取次者の書類の注記は原文のとおり（医療 R-8・技能 R-6・介護 R-6）。
+// 旅券の理由書は原文に無いため外す（医療 R-9・技能 R-7・介護 R-7）
+const acquisitionSet2CauseRules: RequirementRule[] = ACQUISITION_BY_CAUSE.rules
+  .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id))
+  .map((r) => (GIJINKOKU_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...GIJINKOKU_ACQUISITION_OVERRIDES[r.id] } : r));
+
+// 医療（R-1〜R-10）。取得でも、申請人の区分（カテゴリー1＝医師・歯科医師、カテゴリー2＝医師・歯科医師以外）で提出書類が異なる（medicalservices_2026-10-18.txt 131〜133行）。
+// 判定の軸を、取得の事由と申請人の区分の2つにする（R-1。alsoBasis）。区分が未選択の間は、区分に共通の書類だけを出す（技人国の取得のカテゴリーと同じ挙動）。
+// 資格の文書（R-2）・勤務する機関の概要（R-3。両区分の要確認。iryo-2026-10-18.md の M-1 と同じ）は、取得の節（147〜161行）が変更の節と一字一句同じため、認定・変更と共有の定義をそのまま使う。
+// 所属機関のカテゴリー（1〜4）は使わない（alsoBasis に category は付けない）。出典の医療のページは IRYO_SOURCE を書き換えず、取得の節の照合日を入れた写しを置く（R-10）
+export const IRYO_ACQUISITION: RuleSet = {
+  id: "iryo_acquisition",
+  title: "医療 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: IRYO,
+  basis: "acquisitionCause",
+  alsoBasis: ["applicantType"],
+  checkedAt: ACQUISITION_SET2_COMPARED_AT,
+  sources: [{ ...IRYO_SOURCE, comparedAt: ACQUISITION_SET2_COMPARED_AT }, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [...acquisitionSet2CauseRules, iryoDoctorLicense, iryoOtherLicense, iryoFacilityOverview],
+};
+
+// 技能（調理師 R-1〜R-9・調理師以外 R-1〜R-8。同じ規則集合のため、両方の判断をそろえて反映した）。取得でも、所属機関のカテゴリー（1〜4）で提出書類が異なる（R-1。alsoBasis）。
+// カテゴリー別の書類は、取得の節と同じ文言の変更の節の規則（GINO_CHANGE から procedureCommonRules を除いたもの）を、割り当て・区分・注記を変えずに写す。返信用封筒は写さない。
+// 取得のチェックシートは無く、取得の原文のコピーには表の列の位置が無いため、列の位置（カテゴリーの割り当て）が変更と同じことは「変更の節と同文」を根拠とし、未確認とする。
+// 職歴を証明する文書は、職種の入力欄が無いため、変更と同じく職種ごとの6行を要確認で写す（調理師 R-8。調理師の2行は調理師以外のページに無いが、在留資格が1つのため残す）。
+// 出典（調理師 R-9・調理師以外 R-8）：調理師・調理師以外のページは、取得の節の照合日を入れる。総合のページ（skilledlabor.html）は原文を保存していないため日付を入れない
+export const GINO_ACQUISITION: RuleSet = {
+  id: "gino_acquisition",
+  title: "技能 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: GINO,
+  excludeStatuses: GINO_EXCLUDE,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  checkedAt: ACQUISITION_SET2_COMPARED_AT,
+  sources: [
+    ...GINO_SOURCES.map((x) => (x.url.endsWith("skilledlabor.html") ? x : { ...x, comparedAt: ACQUISITION_SET2_COMPARED_AT })),
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  rules: [
+    ...acquisitionSet2CauseRules,
+    ginoCategoryProof,
+    kenkyuOnlineApproval,
+    ginoWorkContent,
+    ginoResume,
+    kenkyuDispatch,
+    ...ginoCareerRules,
+    ginoActivityDocuments,
+    kenkyuBusinessMaterials,
+    ginoFinancialStatements,
+    kenkyuRepresentativeDeclaration,
+    ...ginoWithholdingRules,
+  ],
+};
+
+// 介護（R-1〜R-8）。カテゴリーによる区分は無く、判定は取得の事由だけ（alsoBasis は付けない）。
+// 介護の書類群（R-1）は、取得の節（nursingcare_2026-10-18.txt 138〜147行）が変更の節と同じ文言・並びのため、KAIGO_CHANGE の6書類を同じ名称・区分・注記で、
+// categories の代わりに causes: ALL_CAUSES（全事由）にして載せる。「特定技能（介護）」と区別するため、認定・変更・更新と同じ除外を付ける。
+// 出典は KAIGO_SOURCE を書き換えず、取得の節の照合日を入れた写しを置く（R-8）
+const kaigoAcquisitionRule = (r: RequirementRule): RequirementRule => {
+  const rule: RequirementRule = { ...r, causes: ALL_CAUSES };
+  delete rule.categories;
+  return rule;
+};
+export const KAIGO_ACQUISITION: RuleSet = {
+  id: "kaigo_acquisition",
+  title: "介護 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: KAIGO,
+  excludeStatuses: ["特定技能"],
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET2_COMPARED_AT,
+  sources: [{ ...KAIGO_SOURCE, comparedAt: ACQUISITION_SET2_COMPARED_AT }, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    ...acquisitionSet2CauseRules,
+    ...[
+      kaigoRegistration,
+      kaigoWorkingConditions,
+      kaigoDispatch,
+      kaigoOrganizationOverview,
+      kaigoRepresentativeDeclaration,
+      kaigoSkillTransferDeclaration,
+    ].map(kaigoAcquisitionRule),
   ],
 };
 
@@ -3139,6 +3237,10 @@ export const RULE_SETS: RuleSet[] = [
   // 技人国・家族滞在の取得（Issue #396）も、ACQUISITION_BY_CAUSE より先に照合する
   GIJINKOKU_ACQUISITION,
   KAZOKUTAIZAI_ACQUISITION,
+  // 医療・技能・介護の取得（Issue #420）も、ACQUISITION_BY_CAUSE より先に照合する
+  IRYO_ACQUISITION,
+  GINO_ACQUISITION,
+  KAIGO_ACQUISITION,
   ACQUISITION_BY_CAUSE,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
