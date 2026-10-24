@@ -1,4 +1,4 @@
-import { APPLICANT_IDENTITIES, MEDICAL_APPLICANT_TYPES, TEIJUSHA_TYPES, type FormDetails } from "../formDetails";
+import { APPLICANT_IDENTITIES, EIJUU_TYPES, MEDICAL_APPLICANT_TYPES, TEIJUSHA_TYPES, type FormDetails } from "../formDetails";
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
@@ -11,6 +11,7 @@ import {
   type AcquisitionCause,
   type ApplicantIdentity,
   type Category,
+  type EijuuType,
   type MedicalApplicantType,
   type RequirementRule,
   type RuleAxis,
@@ -50,6 +51,8 @@ export interface Evaluation {
   needsIdentity: boolean;
   /** 在留資格「定住者」の区分が未選択のため、区分に共通の書類だけを表示している（alsoBasis に teijushaType を持つ規則集合のみ） */
   needsTeijushaType: boolean;
+  /** 永住許可申請の提出書類一覧表の区分が未選択のため、区分に共通の書類だけを表示している（basis が eijuuType の規則集合のみ） */
+  needsEijuuType: boolean;
   items: EvaluatedItem[];
   /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
@@ -237,6 +240,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     needsApplicantType: false,
     needsIdentity: false,
     needsTeijushaType: false,
+    needsEijuuType: false,
     items: [],
     missing: [],
     toCheck: [],
@@ -256,7 +260,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   }
 
   // 判定の軸を複数持つ規則集合（Issue #402）。alsoBasis を持たない規則集合は、下の従来の分岐で判定する（結果を変えない）
-  if (ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) {
+  if ((ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) || ruleSet.basis === "eijuuType") {
     return { ...evaluateByAxes(c, ruleSet), needsSubtype };
   }
 
@@ -364,6 +368,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
   const type: MedicalApplicantType | "" = c.formDetails.medicalApplicantType;
   const identity: ApplicantIdentity | "" = c.formDetails.applicantIdentity;
   const teijushaType: TeijushaType | "" = c.formDetails.teijushaType;
+  const eijuuType: EijuuType | "" = c.formDetails.eijuuType;
 
   const needsCategory = has("category") && category === "";
   const categoryOutOfRange = has("category") && entered !== "" && category === "";
@@ -371,6 +376,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
   const needsApplicantType = has("applicantType") && type === "";
   const needsIdentity = has("identity") && identity === "";
   const needsTeijushaType = has("teijushaType") && teijushaType === "";
+  const needsEijuuType = has("eijuuType") && eijuuType === "";
 
   const items: EvaluatedItem[] = [];
   for (const rule of ruleSet.rules) {
@@ -379,12 +385,14 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
     const types = rule.applicantTypes ?? MEDICAL_APPLICANT_TYPES;
     const identities = rule.identities ?? APPLICANT_IDENTITIES;
     const teijushaTypes = rule.teijushaTypes ?? TEIJUSHA_TYPES;
+    const eijuuTypes = rule.eijuuTypes ?? EIJUU_TYPES;
     // 未選択の軸では、全ての値に共通の規則だけを出す
     if (needsCategory && !range.every((k) => categories.includes(k))) continue;
     if (needsCause && !ALL_CAUSES.every((k) => causes.includes(k))) continue;
     if (needsApplicantType && !MEDICAL_APPLICANT_TYPES.every((k) => types.includes(k))) continue;
     if (needsIdentity && !APPLICANT_IDENTITIES.every((k) => identities.includes(k))) continue;
     if (needsTeijushaType && !TEIJUSHA_TYPES.every((k) => teijushaTypes.includes(k))) continue;
+    if (needsEijuuType && !EIJUU_TYPES.every((k) => eijuuTypes.includes(k))) continue;
 
     // 軸の並びで、最初に一致しない軸の「原則不要」の理由
     let notRequired: ReasonCode | undefined;
@@ -394,6 +402,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
       else if (axis === "applicantType" && type !== "" && !types.includes(type)) notRequired = { kind: "applicantTypeNotRequired", type };
       else if (axis === "identity" && identity !== "" && !identities.includes(identity)) notRequired = { kind: "identityNotRequired", identity };
       else if (axis === "teijushaType" && teijushaType !== "" && !teijushaTypes.includes(teijushaType)) notRequired = { kind: "teijushaTypeNotRequired", type: teijushaType };
+      else if (axis === "eijuuType" && eijuuType !== "" && !eijuuTypes.includes(eijuuType)) notRequired = { kind: "eijuuTypeNotRequired", type: eijuuType };
       if (notRequired) break;
     }
 
@@ -416,12 +425,13 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
         ...(has("applicantType") && type !== "" ? { type } : {}),
         ...(has("identity") && identity !== "" ? { identity } : {}),
         ...(has("teijushaType") && teijushaType !== "" ? { teijushaType } : {}),
+        ...(has("eijuuType") && eijuuType !== "" ? { eijuuType } : {}),
       };
     }
     const state = c.requirementStates[rule.id] ?? NO_STATE;
     pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
   }
-  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType };
+  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType, needsEijuuType };
 }
 
 function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
@@ -435,6 +445,7 @@ function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange:
     needsApplicantType: false,
     needsIdentity: false,
     needsTeijushaType: false,
+    needsEijuuType: false,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
     toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),

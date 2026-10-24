@@ -59,6 +59,14 @@ export const TEIJUSHA_TYPES = [
 ] as const;
 export type TeijushaType = (typeof TEIJUSHA_TYPES)[number];
 
+/**
+ * 永住許可申請（手続種別 permanent）の、提出書類一覧表の区分（入管庁の案内ページ「永住許可申請１」の4つのチェックシート）。
+ * 現在の在留資格が「日本人の配偶者等」か「永住者の配偶者等」のときだけ使う。
+ * nihonjinSpouse＝日本人の配偶者／nihonjinChild＝日本人の実子（特別養子縁組を含む）／eijushaSpouse＝永住者又は特別永住者の配偶者／eijushaChild＝永住者又は特別永住者の実子
+ */
+export const EIJUU_TYPES = ["nihonjinSpouse", "nihonjinChild", "eijushaSpouse", "eijushaChild"] as const;
+export type EijuuType = (typeof EIJUU_TYPES)[number];
+
 export interface FormDetails {
   // 申請人等作成用1
   /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
@@ -124,6 +132,8 @@ export interface FormDetails {
   applicantIdentity: "" | ApplicantIdentity;
   /** 在留資格「定住者」の区分。"" は未選択（この項目がない既存の案件も ""） */
   teijushaType: "" | TeijushaType;
+  /** 永住許可申請の提出書類一覧表の区分。"" は未選択（この項目がない既存の案件も ""） */
+  eijuuType: "" | EijuuType;
   // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
@@ -232,6 +242,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   medicalApplicantType: "",
   applicantIdentity: "",
   teijushaType: "",
+  eijuuType: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
@@ -286,6 +297,7 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     medicalApplicantType: (MEDICAL_APPLICANT_TYPES as readonly unknown[]).includes(r.medicalApplicantType) ? (r.medicalApplicantType as MedicalApplicantType) : "",
     applicantIdentity: (APPLICANT_IDENTITIES as readonly unknown[]).includes(r.applicantIdentity) ? (r.applicantIdentity as ApplicantIdentity) : "",
     teijushaType: (TEIJUSHA_TYPES as readonly unknown[]).includes(r.teijushaType) ? (r.teijushaType as TeijushaType) : "",
+    eijuuType: (EIJUU_TYPES as readonly unknown[]).includes(r.eijuuType) ? (r.eijuuType as EijuuType) : "",
   };
 }
 
