@@ -23,6 +23,12 @@ export const PROCEDURE_TYPES = [
     description:
       "出生や日本国籍の離脱・喪失などにより、上陸の手続を経ずに在留資格を取得する案件です。",
   },
+  {
+    value: "permanent",
+    label: "永住許可申請",
+    description:
+      "在留資格を有する外国人が、永住者の在留資格への変更（又は出生等による取得）を希望する場合の申請の案件です。",
+  },
   { value: "other", label: "その他", description: "上記以外の案件です。" },
 ] as const;
 

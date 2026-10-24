@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { evaluate } from "@/lib/requirements/evaluate";
 import { RULE_SETS, categoryRangeOf, type RuleSet } from "@/lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "@/lib/types";
-import { APPLICANT_IDENTITIES, EMPTY_FORM_DETAILS, type FormDetails } from "@/lib/formDetails";
+import { APPLICANT_IDENTITIES, EMPTY_FORM_DETAILS, TEIJUSHA_TYPES, type FormDetails } from "@/lib/formDetails";
 
 /**
  * 回帰テスト（Issue #402）：判定の軸を複数にする仕組み（RuleSet.alsoBasis）を足しても、
@@ -40,6 +40,8 @@ function inputsOf(rs: RuleSet) {
   for (const medicalApplicantType of ["", "doctor", "other"] as const) inputs.push({ formDetails: { medicalApplicantType } });
   // 日本人の配偶者等の認定・変更・更新（basis: identity。Issue #420）だけ、申請人の身分（未選択・2身分）も加える。ほかの規則集合の入力は変えない
   if (rs.basis === "identity") for (const applicantIdentity of ["", ...APPLICANT_IDENTITIES] as const) inputs.push({ formDetails: { applicantIdentity } });
+  // 定住者の認定・変更・更新（basis: teijushaType。Issue #420）だけ、定住者の区分（未選択・8区分）も加える。ほかの規則集合の入力は変えない
+  if (rs.basis === "teijushaType") for (const teijushaType of ["", ...TEIJUSHA_TYPES] as const) inputs.push({ formDetails: { teijushaType } });
   return inputs.map((input) => makeCase(rs, input));
 }
 
@@ -49,7 +51,15 @@ function resultsOf(rs: RuleSet) {
     const e = evaluate(c, [rs]);
     return {
       ruleSet: e.ruleSet?.id ?? null,
-      flags: [e.needsCategory, e.categoryOutOfRange, e.needsCause, e.needsSubtype, e.needsApplicantType, ...(rs.basis === "identity" ? [e.needsIdentity] : [])],
+      flags: [
+        e.needsCategory,
+        e.categoryOutOfRange,
+        e.needsCause,
+        e.needsSubtype,
+        e.needsApplicantType,
+        ...(rs.basis === "identity" ? [e.needsIdentity] : []),
+        ...(rs.basis === "teijushaType" ? [e.needsTeijushaType] : []),
+      ],
       items: e.items.map((i) => [i.rule.id, i.result, i.effective, i.reason, JSON.stringify(i.reasonCode)]),
     };
   });
@@ -87,8 +97,9 @@ describe("既存の規則集合の結果（alsoBasis を持たないもの）は
     });
   }
 
-  it("alsoBasis を持たずに、期待値へ後から足した規則集合は、日本人の配偶者等の認定・変更・更新だけ（basis: identity。Issue #420。身分ごとの結果も固定する）", () => {
+  it("alsoBasis を持たずに、期待値へ後から足した規則集合は、日本人の配偶者等の認定・変更・更新（basis: identity）と、定住者の認定・変更（basis: teijushaType）だけ（Issue #420。身分・区分ごとの結果も固定する）。定住者の更新は日系3世の更新の回数の軸（alsoBasis: renewalTimes）を足したため外れた", () => {
     expect(legacy.filter((rs) => rs.basis === "identity").map((rs) => rs.id)).toEqual(["nihonjin_haigusha_coe", "nihonjin_haigusha_change", "nihonjin_haigusha_renewal"]);
+    expect(legacy.filter((rs) => rs.basis === "teijushaType").map((rs) => rs.id)).toEqual(["teijusha_coe", "teijusha_change"]);
   });
 
   it("alsoBasis を持つ規則集合は、技人国・経営・管理・研究・企業内転勤・医療・技能・定住者・教授・教育・報道・日本人の配偶者等の取得だけ（技人国以外は Issue #420）", () => {
@@ -100,6 +111,7 @@ describe("既存の規則集合の結果（alsoBasis を持たないもの）は
       "iryo_acquisition",
       "gino_acquisition",
       "teijusha_acquisition",
+      "teijusha_renewal",
       "professor_acquisition",
       "education_acquisition",
       "hodo_acquisition",
