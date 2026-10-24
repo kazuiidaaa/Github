@@ -85,7 +85,14 @@ describe("既存の規則集合の結果（alsoBasis を持たないもの）は
     });
   }
 
-  it("alsoBasis を持つ規則集合は、技人国・医療・技能の取得だけ（医療・技能は Issue #420）", () => {
-    expect(RULE_SETS.filter((rs) => rs.alsoBasis).map((rs) => rs.id)).toEqual(["gijinkoku_acquisition", "iryo_acquisition", "gino_acquisition"]);
+  it("alsoBasis を持つ規則集合は、技人国・経営・管理・研究・企業内転勤・医療・技能の取得だけ（技人国以外は Issue #420）", () => {
+    expect(RULE_SETS.filter((rs) => rs.alsoBasis).map((rs) => rs.id)).toEqual([
+      "gijinkoku_acquisition",
+      "keiei_kanri_acquisition",
+      "kenkyu_acquisition",
+      "kigyonai_acquisition",
+      "iryo_acquisition",
+      "gino_acquisition",
+    ]);
   });
 });

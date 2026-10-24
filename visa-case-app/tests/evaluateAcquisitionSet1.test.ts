@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FORM_DETAILS, type FormDetails } from "../lib/formDetails";
 import { evaluate } from "../lib/requirements/evaluate";
-import { RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
+import { procedureCommonRules, RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type OrgCategory } from "../lib/types";
 
 // Issue #420：照合表 acquisition-keiei-kanri-2026-10-19.md（#423）・acquisition-kenkyu-2026-10-19.md（#426）・acquisition-kigyounai-tenkin-2026-10-19.md（#427）の、
 // 人の判断「推奨のとおり」（2026-10-19）
 type Cause = FormDetails["acquisitionCause"];
+// 変更の手続共通の書類（申請書・写真・パスポート及び在留カード）は、取得では写さず ACQUISITION_BY_CAUSE の共通の書類を使う
+// （acquisition-kigyounai-tenkin-2026-10-19.md「変更の書類のうち、写真・申請書・…は procedureCommonRules("change") から来る。取得では写さず」）
+const CHANGE_COMMON_IDS = procedureCommonRules("change").map((r) => r.id);
 
 function make(targetStatus: string, cause: Cause, category: OrgCategory = ""): CaseRecord {
   return {
@@ -137,7 +140,7 @@ describe("evaluate: 経営・管理／研究／企業内転勤の在留資格取
     const change = find("kenkyu_change");
     expect(set.rules.some((r) => r.id === "omission_statement")).toBe(false);
     expect(set.rules.some((r) => r.id === "return_envelope")).toBe(false);
-    const changeCatIds = change.rules.filter((r) => r.categories && r.id !== "omission_statement").map((r) => r.id);
+    const changeCatIds = change.rules.filter((r) => r.categories && !CHANGE_COMMON_IDS.includes(r.id) && r.id !== "omission_statement").map((r) => r.id);
     expect(set.rules.filter((r) => r.categories).map((r) => r.id)).toEqual(changeCatIds);
     for (const id of changeCatIds) {
       const a = set.rules.find((r) => r.id === id)!;
@@ -163,7 +166,7 @@ describe("evaluate: 経営・管理／研究／企業内転勤の在留資格取
   it("企業内転勤 R-1：変更のカテゴリー別の書類を、名称・注記・割り当て・区分のまま写す", () => {
     const set = find("kigyonai_acquisition");
     const change = find("kigyonai_change");
-    const changeCat = change.rules.filter((r) => r.categories);
+    const changeCat = change.rules.filter((r) => r.categories && !CHANGE_COMMON_IDS.includes(r.id));
     expect(set.rules.filter((r) => r.categories)).toEqual(changeCat);
     const e3 = ids(evaluate(make("企業内転勤", "nationalityLoss", "3")), "required");
     for (const id of ["category_proof", "activity_documents", "workplace_relation_documents", "registry_certificate", "financial_statements"]) expect(e3, id).toContain(id);
@@ -171,6 +174,7 @@ describe("evaluate: 経営・管理／研究／企業内転勤の在留資格取
   });
 
   it("他の在留資格の取得は、従来どおり ACQUISITION_BY_CAUSE", () => {
-    for (const status of ["", "留学", "介護", "永住者"]) expect(evaluate(make(status, "birth")).ruleSet?.id, status).toBe("acquisition_by_cause");
+    // 介護の取得は、専用の規則集合（kaigo_acquisition。Issue #420・#428）が扱うため含めない
+    for (const status of ["", "留学", "永住者"]) expect(evaluate(make(status, "birth")).ruleSet?.id, status).toBe("acquisition_by_cause");
   });
 });

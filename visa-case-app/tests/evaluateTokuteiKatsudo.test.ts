@@ -120,15 +120,18 @@ describe("特定活動の種別：規則集合の選択", () => {
 });
 
 describe("既存の規則集合への影響がない", () => {
-  it("RULE_SETS の種別つきの規則集合は、特定研究等活動（tokuteiKenkyu）・本邦大学卒業者（daigakuSotsugyo）・特定情報処理活動（tokuteiJoho）の認定・変更・更新だけ", () => {
+  it("RULE_SETS の種別つきの規則集合は、特定研究等活動（tokuteiKenkyu）・本邦大学卒業者（daigakuSotsugyo）・特定情報処理活動（tokuteiJoho）の認定・変更・更新・取得だけ（取得は Issue #420）", () => {
     const typed = RULE_SETS.filter((r) => r.subtype !== undefined);
     expect(typed.map((r) => `${r.subtype}:${r.procedureType}:${r.residenceStatus}`).sort()).toEqual([
+      "daigakuSotsugyo:acquisition:特定活動",
       "daigakuSotsugyo:change:特定活動",
       "daigakuSotsugyo:coe:特定活動",
       "daigakuSotsugyo:renewal:特定活動",
+      "tokuteiJoho:acquisition:特定活動",
       "tokuteiJoho:change:特定活動",
       "tokuteiJoho:coe:特定活動",
       "tokuteiJoho:renewal:特定活動",
+      "tokuteiKenkyu:acquisition:特定活動",
       "tokuteiKenkyu:change:特定活動",
       "tokuteiKenkyu:coe:特定活動",
       "tokuteiKenkyu:renewal:特定活動",

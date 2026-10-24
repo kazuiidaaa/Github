@@ -27,7 +27,9 @@ describe("本邦大学等卒業者の規則集合", () => {
   const sets = [DAIGAKU_SOTSUGYO_COE, DAIGAKU_SOTSUGYO_CHANGE, DAIGAKU_SOTSUGYO_RENEWAL];
 
   it("認定・変更・更新の3件が、RULE_SETS にある（特定情報処理活動の直前）", () => {
-    expect(RULE_SETS.slice(-6, -3)).toEqual([DAIGAKU_SOTSUGYO_RENEWAL, DAIGAKU_SOTSUGYO_CHANGE, DAIGAKU_SOTSUGYO_COE]);
+    // 末尾には、特定活動（07・08・11）の取得の3件（Issue #420）が続く
+    const joho = RULE_SETS.findIndex((r) => r.id === "tokutei_joho_renewal");
+    expect(RULE_SETS.slice(joho - 3, joho)).toEqual([DAIGAKU_SOTSUGYO_RENEWAL, DAIGAKU_SOTSUGYO_CHANGE, DAIGAKU_SOTSUGYO_COE]);
     expect(sets.map((s) => s.procedureType)).toEqual(["coe", "change", "renewal"]);
   });
 
@@ -94,21 +96,23 @@ describe("本邦大学等卒業者の規則集合", () => {
 describe("案件作成画面の「未整備」案内：特定活動は1件にまとめ、対応済みの種別だけを示す", () => {
   it("同じ手続・在留資格の組み合わせは1件にまとまり、特定活動は手続ごとに1回だけ出る", () => {
     const entries = supportedEntries().filter((e) => e.status === "特定活動");
-    expect(entries.map((e) => e.procedureLabel)).toHaveLength(3);
+    // 認定・変更・更新・取得（取得は Issue #420）の4手続
+    expect(entries.map((e) => e.procedureLabel)).toHaveLength(4);
     for (const e of entries) expect(e.subtypes).toEqual(["tokuteiKenkyu", "daigakuSotsugyo", "tokuteiJoho"]);
   });
 
   it("日本語：「特定活動（特定研究等活動・本邦大学等卒業者・特定情報処理活動）」で示し、未対応の種別（その他）は出さない", () => {
     const msg = notApplicableMessage();
     expect(msg).toContain("「特定活動（特定研究等活動・本邦大学等卒業者・特定情報処理活動）」の「在留資格認定証明書交付申請」");
-    expect(msg.match(/「特定活動/g)).toHaveLength(3);
+    expect(msg).toContain("「特定活動（特定研究等活動・本邦大学等卒業者・特定情報処理活動）」の「在留資格取得許可申請」");
+    expect(msg.match(/「特定活動/g)).toHaveLength(4);
     expect(msg).not.toContain("その他");
   });
 
   it("英語・韓国語でも、特定活動は手続ごとに1回で、対応済みの種別だけを括弧内に示す", () => {
     for (const lang of ["en", "ko"] as const) {
       const msg = noRuleMessage(tFor(lang));
-      expect(msg.match(/特定活動/g), lang).toHaveLength(3);
+      expect(msg.match(/特定活動/g), lang).toHaveLength(4);
       expect(msg, lang).not.toContain("{");
     }
     expect(noRuleMessage(tFor("en"))).toContain("特定活動 (Designated research activities, Graduates of Japanese universities, etc., Designated information processing activities)");
