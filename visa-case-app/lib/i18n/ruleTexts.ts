@@ -1358,9 +1358,41 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Designated Activities (designated information processing activities): application for permission for acquisition of status of residence (only partly covered)",
     "특정활동(특정정보처리활동) 체류자격 취득 허가 신청(일부만 정비)",
   ],
-  "入管庁『在留資格から探す』の各ページ（URL 未記録）": [
-    "Pages of the Immigration Services Agency of Japan's \"Search by status of residence\" (URL not recorded)",
-    "출입국재류관리청 '체류자격으로 찾기'의 각 페이지(URL 미기록)",
+  "在留資格「芸術」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Artist\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '예술' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「宗教」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Religious Activities\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '종교' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「公用」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Official Business\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '공용' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「技能実習」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Technical Intern Training\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '기능실습' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「留学」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Student\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '유학' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「文化活動」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Cultural Activities\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '문화활동' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「日本人の配偶者等」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Spouse or Child of Japanese National\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '일본인 배우자 등' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「永住者の配偶者等」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Spouse or Child of Permanent Resident\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '영주자의 배우자 등' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「定住者」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Long-Term Resident\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '정주자' 체류자격 취득 허가 신청(출입국재류관리청)",
   ],
   "在留資格「法律・会計業務」在留資格取得許可申請（出入国在留管理庁）": [
     "Status of residence \"Legal/Accounting Services\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",

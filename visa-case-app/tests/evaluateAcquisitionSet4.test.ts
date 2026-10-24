@@ -23,10 +23,11 @@ const set = (id: string) => RULE_SETS.find((r) => r.id === id)!;
 const AGENT_NOTE = "申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示";
 
 const CASES = [
-  { id: "koyo_acquisition", status: "公用", hasPhoto: false, specific: ["koyo_diplomatic_note"], order: ["application_form", "passport_presentation", "koyo_diplomatic_note", "agent_identity_document", "nationality_proof", "cause_proof"] },
+  { id: "koyo_acquisition", status: "公用", page: "official.html", hasPhoto: false, specific: ["koyo_diplomatic_note"], order: ["application_form", "passport_presentation", "koyo_diplomatic_note", "agent_identity_document", "nationality_proof", "cause_proof"] },
   {
     id: "ginou_jisshu_acquisition",
     status: "技能実習",
+    page: "technicalinterntraining.html",
     hasPhoto: true,
     specific: ["ginou_jisshu_plan_certificate", "resident_tax_certificates"],
     order: ["application_form", "photo", "passport_presentation", "ginou_jisshu_plan_certificate", "resident_tax_certificates", "agent_identity_document", "nationality_proof", "cause_proof"],
@@ -34,6 +35,7 @@ const CASES = [
   {
     id: "ryugaku_acquisition",
     status: "留学",
+    page: "student.html",
     hasPhoto: true,
     specific: ["ryugaku_document_list", "ryugaku_confirmation_form"],
     order: ["application_form", "photo", "passport_presentation", "ryugaku_document_list", "ryugaku_confirmation_form", "agent_identity_document", "nationality_proof", "cause_proof"],
@@ -86,8 +88,8 @@ describe("evaluate: 公用・技能実習・留学の在留資格取得許可申
       }
     });
 
-    it(`${c.id}：出典は URL 未記録の一覧（2026-10-24）・手続案内・申請書様式（日付なし）。URLは重複しない`, () => {
-      expect(rs.sources[0]).toMatchObject({ title: "入管庁『在留資格から探す』の各ページ（URL 未記録）", kind: "page", comparedAt: "2026-10-24" });
+    it(`${c.id}：出典はページの URL（人が確認。2026-10-24）・手続案内・申請書様式（日付なし）。URLは重複しない`, () => {
+      expect(rs.sources[0]).toMatchObject({ title: `在留資格「${c.status}」在留資格取得許可申請（出入国在留管理庁）`, url: `https://www.moj.go.jp/isa/applications/status/${c.page}`, kind: "page", comparedAt: "2026-10-24" });
       expect(rs.sources.find((s) => s.url.endsWith("procedures/16-10.html"))).toMatchObject({ kind: "page" });
       expect(rs.sources.find((s) => s.url.endsWith("930004121.xlsx"))?.comparedAt).toBeUndefined();
       expect(ruleSetComparedAt(rs)).toBe("2026-10-24");

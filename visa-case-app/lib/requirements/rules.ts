@@ -3384,13 +3384,15 @@ function changeRuleOf(set: RuleSet, id: string): RequirementRule {
   return rule;
 }
 
-// 芸術・宗教のページの URL は未記録（照合表 R-10。推測で書かない）。出典の名称に「URL 未記録」と書き、リンク先は「在留資格から探す」の一覧とする
-const ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE: RuleSource = {
-  title: "入管庁『在留資格から探す』の各ページ（URL 未記録）",
-  url: "https://www.moj.go.jp/isa/applications/status/index.html",
+// 取得の規則集合の出典（各ページ）。URL は人が確認した（2026-10-24。ページの内容は取得して確かめていない。moj.go.jp は 403）。
+// 資格ごとに別の URL のため、芸術・宗教から文化活動・定住者まで、共通の定数ではなく資格ごとの出典を作る（他の規則集合には影響しない）。
+const acquisitionStatusPageSource = (status: string, url: string, comparedAt: string): RuleSource => ({
+  title: `在留資格「${status}」在留資格取得許可申請（出入国在留管理庁）`,
+  url,
   kind: "page",
-  comparedAt: ACQUISITION_SET3_COMPARED_AT,
-};
+  comparedAt,
+});
+const ACQUISITION_STATUS_PAGE_BASE = "https://www.moj.go.jp/isa/applications/status/";
 
 // 芸術（#421。原文 geijutsu_2026-10-18.txt 135〜164行）
 const GEIJUTSU_ACQUISITION_PASSPORT_NOTE = "提示のみで、提出書類としてコピーを付ける書類ではない。案内ページの原文は「パスポート及び在留カード 提示」";
@@ -3401,7 +3403,7 @@ export const GEIJUTSU_ACQUISITION: RuleSet = {
   residenceStatus: "芸術",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET3_CHECKED_AT,
-  sources: [ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: [acquisitionStatusPageSource("芸術", `${ACQUISITION_STATUS_PAGE_BASE}artist.html`, ACQUISITION_SET3_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
   rules: [
     // R-6：名称・区分は変えず、注記に原文の「パスポート及び在留カード 提示」を書く
     ...acquisitionSet3BaseRules({ passport_presentation: { note: GEIJUTSU_ACQUISITION_PASSPORT_NOTE } }),
@@ -3437,7 +3439,7 @@ export const SHUKYO_ACQUISITION: RuleSet = {
   residenceStatus: "宗教",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET3_CHECKED_AT,
-  sources: [ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: [acquisitionStatusPageSource("宗教", `${ACQUISITION_STATUS_PAGE_BASE}religiousactivities.html`, ACQUISITION_SET3_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
   rules: [
     ...acquisitionSet3BaseRules(),
     // R-1・R-2：必須。「適宜」は数量の指定のため注記に書く
@@ -3678,12 +3680,12 @@ export const HODO_ACQUISITION: RuleSet = {
 // ===== 在留資格取得許可申請（公用・技能実習・留学。Issue #420） =====
 // 照合表は docs/official/reconciliation/acquisition-koyo-2026-10-24.md・acquisition-ginoujisshu-2026-10-24.md・acquisition-ryugaku-2026-10-24.md（いずれも照合日 2026-10-24）。
 // 人の判断（2026-10-24）：各照合表の推奨のとおり、全件を反映した。認定・変更・更新の規則集合は無く、取得だけを先に作る（芸術 R-10 と同じ）。
-// 共通の扱いは技人国の取得（#396）と同じ（acquisitionSet3BaseRules）。ページの URL は未記録のため、出典は URL 未記録の一覧・手続案内・申請書様式とする（推測で書かない）。
+// 共通の扱いは技人国の取得（#396）と同じ（acquisitionSet3BaseRules）。ページの URL は控えには無いが、人が確認した（2026-10-24）。出典は、各ページの URL・手続案内・申請書様式とする。
 // ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。
 const ACQUISITION_SET4_COMPARED_AT = "2026-10-24";
 const ACQUISITION_SET4_CHECKED_AT = "2026-10-24";
-const ACQUISITION_SET4_SOURCES: RuleSource[] = [
-  { ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, comparedAt: ACQUISITION_SET4_COMPARED_AT },
+const acquisitionSet4Sources = (status: string, page: string): RuleSource[] => [
+  acquisitionStatusPageSource(status, `${ACQUISITION_STATUS_PAGE_BASE}${page}`, ACQUISITION_SET4_COMPARED_AT),
   ACQUISITION_PROCEDURE_GUIDE_SOURCE,
   ...ACQUISITION_BY_CAUSE.sources,
 ];
@@ -3708,7 +3710,7 @@ export const KOYO_ACQUISITION: RuleSet = {
   residenceStatus: "公用",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET4_CHECKED_AT,
-  sources: ACQUISITION_SET4_SOURCES,
+  sources: acquisitionSet4Sources("公用", "official.html"),
   // 原文の並び（申請書・事由別の書類・旅券の提示・口上書等・申請取次者の書類）に合わせ、旅券の提示の後ろに入れる
   rules: acquisitionSet3BaseRules({}, ["photo"]).flatMap((r) => (r.id === "passport_presentation" ? [r, ...KOYO_ACQUISITION_RULES] : [r])),
 };
@@ -3743,7 +3745,7 @@ export const GINOU_JISSHU_ACQUISITION: RuleSet = {
   residenceStatus: "技能実習",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET4_CHECKED_AT,
-  sources: ACQUISITION_SET4_SOURCES,
+  sources: acquisitionSet4Sources("技能実習", "technicalinterntraining.html"),
   // 固有の書類は、旅券の提示の後ろに入れる
   rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...GINOU_JISSHU_ACQUISITION_RULES] : [r])),
 };
@@ -3779,7 +3781,7 @@ export const RYUGAKU_ACQUISITION: RuleSet = {
   residenceStatus: "留学",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET4_CHECKED_AT,
-  sources: ACQUISITION_SET4_SOURCES,
+  sources: acquisitionSet4Sources("留学", "student.html"),
   // 固有の書類は、旅券の提示の後ろに入れる
   rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...RYUGAKU_ACQUISITION_RULES] : [r])),
 };
@@ -3788,8 +3790,7 @@ export const RYUGAKU_ACQUISITION: RuleSet = {
 // ===== 在留資格取得許可申請（文化活動・日本人の配偶者等。Issue #420） =====
 // 照合表は docs/official/reconciliation/acquisition-bunkakatsudo-2026-10-24.md・acquisition-nihonjinhaigusha-2026-10-24.md（いずれも 2026-10-24）。
 // 人の判断「推奨のとおり」（2026-10-24）の R 項目（BK-1〜BK-12・NH-1〜NH-20）をすべて反映した。取得だけを先に作る（認定・変更・更新は未整備）。
-// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。ページの URL は控えに無く、推測して書かない（「URL 未記録」の出典）。
-const ACQUISITION_SET4_PAGES_SOURCE: RuleSource = { ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, comparedAt: ACQUISITION_SET4_COMPARED_AT };
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。ページの URL は控えには無いが、人が確認した（2026-10-24）。
 
 // 文化活動（BK-1〜BK-12。原文 bunkakatsudo1-acquisition_2026-10-24.txt 12〜47行・bunkakatsudo2-acquisition_2026-10-24.txt 11〜50行）。
 // 共通の扱いは技人国の取得（#396）と同じ（BK-2 出生の3書類を外し事由の証明に含める・BK-3 写真・BK-4 注記の例を外す・BK-9 活動に応じた資料を外す・BK-10 申請取次者の注記・BK-11 旅券の理由書を外す）。
@@ -3804,7 +3805,7 @@ export const BUNKA_KATSUDO_ACQUISITION: RuleSet = {
   residenceStatus: "文化活動",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET4_COMPARED_AT,
-  sources: [ACQUISITION_SET4_PAGES_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: acquisitionSet4Sources("文化活動", "culturalactivities.html"),
   rules: [
     ...acquisitionSet3BaseRules(),
     // BK-5：必須。(1)(2)とも出す
@@ -4009,7 +4010,7 @@ export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
   basis: "acquisitionCause",
   alsoBasis: ["identity"],
   checkedAt: ACQUISITION_SET4_COMPARED_AT,
-  sources: [ACQUISITION_SET4_PAGES_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: acquisitionSet4Sources("日本人の配偶者等", "spouseorchildofjapanese.html"),
   rules: nihonjinHaigushaRules,
 };
 // ===== ここまで（取得：文化活動・日本人の配偶者等） =====
@@ -4019,9 +4020,8 @@ export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
 // 人の判断（2026-10-24）：各照合表の「判断」欄の推奨のとおり（全件）。取得のチェックシート（PDF）は、永住者の配偶者等は照合済み（001426557。差分なし）、定住者も照合済み（12ページ分。差分なし）。案内ページの本文で作った。
 // 永住者の配偶者等・定住者には、認定・変更・更新の規則集合が無い（取得だけを先に作る）。共通の扱いは技人国の取得（#396）と同じ：
 // 旅券の理由書・活動に応じた資料を外し、写真は「写真（40mm×30mm）」を全事由の必須（注記は年齢の注記のみ）、申請取次者の書類の注記は原文のとおり。
-// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。出典のページの URL は控えに無いため推測せず、「URL 未記録」の出典（2026-10-24 の版）を置く。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。出典のページの URL は控えには無いが、人が確認した（2026-10-24）。各ページの URL の出典（2026-10-24 の版）を置く。
 const EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT = "2026-10-24";
-const EIJUSHA_TEIJUSHA_UNRECORDED_SOURCE: RuleSource = { ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, comparedAt: EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT };
 
 // 永住者の配偶者等（EH-1〜EH-14。原文 eijushahaigusha-acquisition_2026-10-24.txt の取得の節 11〜55行）。判定は取得の事由だけ（alsoBasis なし）。
 // 該当範囲は「永住者等の配偶者」と「本邦で出生した永住者等の子」。取得の節の書類は配偶者向けだけで事由の別が無いため（EH-1 案A）、
@@ -4042,7 +4042,7 @@ export const EIJUSHA_HAIGUSHA_ACQUISITION: RuleSet = {
   residenceStatus: "永住者の配偶者等",
   basis: "acquisitionCause",
   checkedAt: EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT,
-  sources: [EIJUSHA_TEIJUSHA_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: [acquisitionStatusPageSource("永住者の配偶者等", `${ACQUISITION_STATUS_PAGE_BASE}spouseorchildofpermanentresident.html`, EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
   rules: [
     ...ACQUISITION_BY_CAUSE.rules
       .filter((r) => !EIJUSHA_HAIGUSHA_ACQUISITION_REMOVED_IDS.includes(r.id))
@@ -4188,7 +4188,7 @@ export const TEIJUSHA_ACQUISITION: RuleSet = {
   basis: "acquisitionCause",
   alsoBasis: ["teijushaType"],
   checkedAt: EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT,
-  sources: [EIJUSHA_TEIJUSHA_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: [acquisitionStatusPageSource("定住者", `${ACQUISITION_STATUS_PAGE_BASE}longtermresident.html`, EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
   rules: [
     ...teijushaCauseRules,
     // TJ-23：全区分の必須。身元保証人は区分による

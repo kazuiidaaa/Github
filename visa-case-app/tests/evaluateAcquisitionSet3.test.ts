@@ -122,13 +122,16 @@ describe("芸術（#421）", () => {
     expect(p.level).toBe("required");
     expect(p.note).toContain("「パスポート及び在留カード 提示」");
   });
-  it("R-10：出典は「在留資格から探す」の各ページ（URL 未記録）", () => {
-    expect(rs.sources[0].title).toBe("入管庁『在留資格から探す』の各ページ（URL 未記録）");
+  it("R-10：出典は芸術のページ（人が確認した URL。2026-10-24）", () => {
+    expect(rs.sources[0]).toMatchObject({ title: "在留資格「芸術」在留資格取得許可申請（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/artist.html", kind: "page" });
   });
 });
 
 describe("宗教（#422）", () => {
   const rs = set("shukyo_acquisition");
+  it("R-10：出典は宗教のページ（人が確認した URL。2026-10-24）", () => {
+    expect(rs.sources[0]).toMatchObject({ title: "在留資格「宗教」在留資格取得許可申請（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/religiousactivities.html", kind: "page" });
+  });
   it("R-1・R-2：派遣状等と機関の概要は必須。注記に「適宜」", () => {
     for (const id of ["shukyo_dispatch_letter", "shukyo_organization_overview"]) {
       const r = rs.rules.find((x) => x.id === id)!;

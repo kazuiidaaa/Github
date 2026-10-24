@@ -50,9 +50,9 @@ describe("永住者の配偶者等の取得（acquisition-eijushahaigusha-2026-1
     for (const status of ["永住者", "特別永住者"]) expect(evaluate(make(status, "other")).ruleSet?.id, status).toBe("acquisition_by_cause");
   });
 
-  it("EH-14：出典は「URL 未記録」のページ（2026-10-24）・手続案内・申請書様式。checkedAt は作成日", () => {
+  it("EH-14：出典は人が確認したページ（2026-10-24）・手続案内・申請書様式。checkedAt は作成日", () => {
     expect(eh.sources[0]).toMatchObject({ kind: "page", comparedAt: "2026-10-24" });
-    expect(eh.sources[0].title).toContain("URL 未記録");
+    expect(eh.sources[0]).toMatchObject({ title: "在留資格「永住者の配偶者等」在留資格取得許可申請（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/spouseorchildofpermanentresident.html" });
     expect(eh.sources.find((s) => s.url.endsWith("procedures/16-10.html"))).toMatchObject({ kind: "page" });
     expect(eh.sources.find((s) => s.url.endsWith("930004121.xlsx"))).toMatchObject({ kind: "form" });
     expect(ruleSetComparedAt(eh)).toBe("2026-10-24");
@@ -122,12 +122,12 @@ describe("永住者の配偶者等の取得（acquisition-eijushahaigusha-2026-1
 });
 
 describe("定住者の取得（acquisition-teijusha-2026-10-24.md TJ-1〜TJ-32）", () => {
-  it("TJ-32：teijusha_acquisition が引かれ、取得の事由と定住者の区分で判定する。出典は「URL 未記録」（2026-10-24）", () => {
+  it("TJ-32：teijusha_acquisition が引かれ、取得の事由と定住者の区分で判定する。出典は人が確認したページ（2026-10-24）", () => {
     expect(evaluate(make("定住者", "other")).ruleSet?.id).toBe("teijusha_acquisition");
     expect(tj.basis).toBe("acquisitionCause");
     expect(tj.alsoBasis).toEqual(["teijushaType"]);
     expect(tj.title).toBe("定住者 在留資格取得許可申請（一部のみ整備）");
-    expect(tj.sources[0]).toMatchObject({ kind: "page", comparedAt: "2026-10-24" });
+    expect(tj.sources[0]).toMatchObject({ kind: "page", comparedAt: "2026-10-24", title: "在留資格「定住者」在留資格取得許可申請（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/longtermresident.html" });
     expect(ruleSetComparedAt(tj)).toBe("2026-10-24");
     expect(tj.checkedAt).toBe("2026-10-24");
   });
