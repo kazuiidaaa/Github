@@ -268,7 +268,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   }
 
   // 判定の軸を複数持つ規則集合（Issue #402）。alsoBasis を持たない規則集合は、下の従来の分岐で判定する（結果を変えない）
-  // 日本人の配偶者等の認定・変更・更新は基準が申請人の身分だけ（basis: identity）、定住者の認定・変更・更新は定住者の区分だけ（basis: teijushaType）、永住許可申請は永住の区分だけ（basis: eijuuType）。同じ仕組みで判定する
+  // 日本人の配偶者等の認定・変更・更新は基準が申請人の身分だけ（basis: identity）、定住者の認定・変更・更新は定住者の区分だけ（basis: teijushaType）、永住許可申請は永住の区分だけ（basis: eijuuType）、留学は入学先の種類だけ（basis: schoolType）。同じ仕組みで判定する
   if ((ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) || ruleSet.basis === "identity" || ruleSet.basis === "teijushaType" || ruleSet.basis === "eijuuType" || ruleSet.basis === "schoolType") {
     return { ...evaluateByAxes(c, ruleSet), needsSubtype };
   }
