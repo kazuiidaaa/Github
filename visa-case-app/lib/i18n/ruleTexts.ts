@@ -1,5 +1,14 @@
 import { translatedRequirementName } from "@/lib/documents/clientGuideNames";
 import type { Lang } from "@/lib/documents/lang";
+import {
+  TEIJUSHA_INCOME_TARGETS,
+  TEIJUSHA_RESIDENCE_PERSONS,
+  teijushaIncomeNote,
+  teijushaResidenceName,
+  teijushaTaxName,
+  type TeijushaIncomeTarget,
+  type TeijushaResidencePerson,
+} from "@/lib/requirements/teijushaProcedureTexts";
 
 /**
  * 必要書類の規則（lib/requirements/rules.ts）の、画面に出る文言の訳表。
@@ -12,7 +21,64 @@ import type { Lang } from "@/lib/documents/lang";
  */
 type Translated = readonly [en: string, ko: string];
 
+/**
+ * 定住者の認定・変更・更新（Issue #420）の、対象者だけが違う書類（住民票・住民税の証明書・職業収入）の訳。
+ * 日本語の文言は lib/requirements/teijushaProcedureTexts.ts が対象者の id から組み立てるため、訳も同じ id から組み立てる。訳文は行政書士の確認前の下書き。
+ */
+const TEIJUSHA_INCOME_TARGET_TEXTS: Record<TeijushaIncomeTarget, { en: [who: string, unemployed: string]; ko: [who: string, unemployed: string] }> = {
+  nikkei2: { en: ["the second-generation Nikkei person", "the second-generation Nikkei person"], ko: ["일계 2세 본인", "일계 2세 본인"] },
+  nikkei2OrApplicant: {
+    en: ["the second-generation Nikkei person or the applicant (whoever earns more)", "the second-generation Nikkei person and the applicant"],
+    ko: ["일계 2세 본인 또는 신청인(소득이 많은 쪽)", "일계 2세 본인 및 신청인"],
+  },
+  nikkei3: { en: ["the third-generation Nikkei person", "the third-generation Nikkei person"], ko: ["일계 3세 본인", "일계 3세 본인"] },
+  nikkei3OrApplicant: {
+    en: ["the third-generation Nikkei person or the applicant (whoever earns more)", "the third-generation Nikkei person and the applicant"],
+    ko: ["일계 3세 본인 또는 신청인(소득이 많은 쪽)", "일계 3세 본인 및 신청인"],
+  },
+  applicantOrSpouse: {
+    en: ["the applicant or the spouse (whoever earns more)", "the applicant and the spouse"],
+    ko: ["신청인 또는 배우자(소득이 많은 쪽)", "신청인 및 배우자"],
+  },
+  supporter: { en: ["the supporter", "the supporter"], ko: ["부양자", "부양자"] },
+  japaneseOrSpouse: {
+    en: ["the Japanese national or the spouse of the Japanese national (whoever earns more)", "the Japanese national and the spouse of the Japanese national"],
+    ko: ["일본인 또는 일본인의 배우자(소득이 많은 쪽)", "일본인 및 일본인의 배우자"],
+  },
+  permanentOrSpouse: {
+    en: ["the Permanent Resident or the spouse of the Permanent Resident (whoever earns more)", "the Permanent Resident and the spouse of the Permanent Resident"],
+    ko: ["영주자 또는 영주자의 배우자(소득이 많은 쪽)", "영주자 및 영주자의 배우자"],
+  },
+  japanese: { en: ["the Japanese national", "the Japanese national"], ko: ["일본인", "일본인"] },
+};
+const TEIJUSHA_RESIDENCE_PERSON_TEXTS: Record<TeijushaResidencePerson, [en: string, ko: string]> = {
+  applicant: ["the applicant", "신청인"],
+  nikkei2: ["the second-generation Nikkei person", "일계 2세 본인"],
+  nikkei3: ["the third-generation Nikkei person", "일계 3세 본인"],
+  japanese: ["the Japanese national", "일본인"],
+  permanentOrSpouse: ["the Permanent Resident or the spouse of the Permanent Resident", "영주자 또는 영주자의 배우자"],
+  supporter: ["the supporter", "부양자"],
+};
+const TEIJUSHA_PROCEDURE_GENERATED: Record<string, Translated> = {};
+for (const target of Object.keys(TEIJUSHA_INCOME_TARGETS) as TeijushaIncomeTarget[]) {
+  const { en, ko } = TEIJUSHA_INCOME_TARGET_TEXTS[target];
+  TEIJUSHA_PROCEDURE_GENERATED[teijushaTaxName(target)] = [
+    `Residence tax assessment (or non-assessment) certificate and tax payment certificate of ${en[0]} for the most recent year`,
+    `${ko[0]}의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세증명서`,
+  ];
+  const readAs = target === "applicantOrSpouse";
+  TEIJUSHA_PROCEDURE_GENERATED[teijushaIncomeNote(target)] = [
+    `Any of the following (depending on the occupation of ${en[0]}). Employed by a company: employment certificate of ${en[0]} / self-employed, etc.: copy of the final tax return and copy of the business license (if any) of ${en[0]} / unemployed (${en[1]}): copy of a bank passbook (a copy of a web passbook screen showing the transaction history is also acceptable)${readAs ? '. If the applicant is supported by a parent, etc., read "the applicant or the spouse" as "the supporter"' : ""}`,
+    `다음 중 하나(${ko[0]}의 직업에 따른다). 회사에 근무: ${ko[0]}의 재직증명서 / 자영업 등: ${ko[0]}의 확정신고서 사본·영업허가서 사본(있는 경우) / 무직(${ko[1]}): 예금통장 사본(거래 내역을 알 수 있는 웹 통장 화면 사본 등도 가능)${readAs ? ". 신청인이 부모 등의 부양을 받고 있는 경우에는 '신청인 또는 배우자'를 '부양자'로 바꿔 읽는다" : ""}`,
+  ];
+}
+for (const person of Object.keys(TEIJUSHA_RESIDENCE_PERSONS) as TeijushaResidencePerson[]) {
+  const [en, ko] = TEIJUSHA_RESIDENCE_PERSON_TEXTS[person];
+  TEIJUSHA_PROCEDURE_GENERATED[teijushaResidenceName(person)] = [`Certificate of residence (juminhyo) of ${en} listing all household members`, `${ko}의 세대 전원이 기재된 주민표`];
+}
+
 export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
+  ...TEIJUSHA_PROCEDURE_GENERATED,
   // 書類名（clientGuideNames.ts にないもの）
   "在留期間更新許可申請書": ["Application for permission for extension of the period of stay", "체류기간 연장 허가 신청서"],
   "在留資格変更許可申請書": ["Application for permission for change of status of residence", "체류자격 변경 허가 신청서"],
@@ -1786,6 +1852,141 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "直近の在留諸申請時以降、新たに奨学金の給付を受ける場合（詳細は奨学金の給付に関する証明書一覧のとおり）": ["If the applicant newly receives a scholarship after the most recent residence application (see the list of certificates concerning scholarship payments for details)", "가장 최근의 재류 신청 시 이후에 새로 장학금을 급부받는 경우(자세한 것은 장학금 급부에 관한 증명서 일람 참조)"],
   "18歳未満の申請人が単身で生活する場合（入寮等する場合を除く。）であって、直近の在留諸申請時から変更が生じている場合": ["If an applicant under 18 lives alone (excluding entering a dormitory etc.) and there has been a change since the most recent residence application", "18세 미만의 신청인이 단신으로 생활하는 경우(입사 등을 하는 경우는 제외)로서, 가장 최근의 재류 신청 시부터 변경이 생긴 경우"],
   "18歳未満の申請人が高校に入学し、単身で生活する場合（入寮等する場合を除く。）であって、直近の在留諸申請時から変更が生じている場合": ["If an applicant under 18 enters a high school and lives alone (excluding entering a dormitory etc.) and there has been a change since the most recent residence application", "18세 미만의 신청인이 고등학교에 입학하여 단신으로 생활하는 경우(입사 등을 하는 경우는 제외)로서, 가장 최근의 재류 신청 시부터 변경이 생긴 경우"],
+  // 定住者の認定・変更・更新（Issue #420。照合表 coe-change-renewal-teijusha-2026-10-24.md）。住民票・住民税の証明書・職業収入の訳は、上の TEIJUSHA_PROCEDURE_GENERATED が作る。訳文は行政書士の確認前の下書き
+  "定住者 在留資格認定証明書交付申請": ["Long-Term Resident - Application for certificate of eligibility", "정주자 사증발급인정서 교부 신청"],
+  "定住者 在留資格変更許可申請": ["Long-Term Resident - Application for permission for change of status of residence", "정주자 체류자격 변경 허가 신청"],
+  "定住者 在留期間更新許可申請": ["Long-Term Resident - Application for permission for extension of the period of stay", "정주자 체류기간 연장 허가 신청"],
+  "「定住者」に係る提出書類一覧（在留資格認定証明書交付申請用。区分ごとに別のPDFで、日系3世の方の分を掲載）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (for application for certificate of eligibility; a separate PDF for each category, the one for third-generation Nikkei is listed) (Immigration Services Agency of Japan)",
+    "'정주자'에 관한 제출서류 일람(사증발급인정서 교부 신청용. 구분별로 별도의 PDF이며 일계 3세용을 게재)(출입국재류관리청)",
+  ],
+  "「定住者」に係る提出書類一覧（在留資格変更許可申請用。区分ごとに別のPDFで、日系3世の方の分を掲載）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (for application for change of status of residence; a separate PDF for each category, the one for third-generation Nikkei is listed) (Immigration Services Agency of Japan)",
+    "'정주자'에 관한 제출서류 일람(체류자격 변경 허가 신청용. 구분별로 별도의 PDF이며 일계 3세용을 게재)(출입국재류관리청)",
+  ],
+  "「定住者」に係る提出書類一覧（在留期間更新許可申請用。区分ごとに別のPDFで、日系2世の方の配偶者の分を掲載）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (for application for extension of the period of stay; a separate PDF for each category, the one for the spouse of a second-generation Nikkei is listed) (Immigration Services Agency of Japan)",
+    "'정주자'에 관한 제출서류 일람(체류기간 연장 허가 신청용. 구분별로 별도의 PDF이며 일계 2세의 배우자용을 게재)(출입국재류관리청)",
+  ],
+  "「定住者」（日系3世の方）に係る提出書類一覧（在留期間更新許可申請用・初めて更新許可申請を行う場合）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (third-generation Nikkei) (for application for extension of the period of stay; first extension application) (Immigration Services Agency of Japan)",
+    "'정주자'(일계 3세)에 관한 제출서류 일람(체류기간 연장 허가 신청용·처음 연장 허가 신청을 하는 경우)(출입국재류관리청)",
+  ],
+  "「定住者」（日系3世の方）に係る提出書類一覧（在留期間更新許可申請用・2回目以降の更新許可申請を行う場合）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (third-generation Nikkei) (for application for extension of the period of stay; second or later extension application) (Immigration Services Agency of Japan)",
+    "'정주자'(일계 3세)에 관한 제출서류 일람(체류기간 연장 허가 신청용·두 번째 이후의 연장 허가 신청을 하는 경우)(출입국재류관리청)",
+  ],
+  "本邦における同居者の住民票（世帯全員の記載があるもの）": ["Certificate of residence (juminhyo) of a cohabitant in Japan listing all household members", "일본 내 동거인의 세대 전원이 기재된 주민표"],
+  "本邦に居住する方と同居する場合のみ提出する": ["Submit only if the applicant lives with a person residing in Japan", "일본에 거주하는 사람과 동거하는 경우에만 제출한다"],
+  "日本の役所に届出している場合のみ提出する": ["Submit only if notification has been made to a Japanese municipal office", "일본의 관공서에 신고한 경우에만 제출한다"],
+  "1年間の総所得及び納税状況が記載されたもの": ["One showing the total income and tax payment status for the year", "1년간의 총소득 및 납세 상황이 기재된 것"],
+  "次のいずれか。(1)申請人が自ら証明する場合：預貯金残高証明書（申請人名義のもの。変更用のシートでは「預貯金通帳残高証明書」と記載）及び雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／(2)申請人に代わって滞在費用支弁者が日本にいる場合：滞在費用支弁者の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）": [
+    "One of the following. (1) If the applicant proves it personally: a bank balance certificate (in the applicant's name; the checksheet for change of status calls it a \"bank passbook balance certificate\") and a certificate of planned employment or a notice of informal job offer (issued by a Japanese company) / (2) If a person bearing the stay costs on behalf of the applicant is in Japan: the residence tax assessment (or non-assessment) certificate and the tax payment certificate of that person for the most recent year (showing the total income for the year and the tax payment status)",
+    "다음 중 하나. (1)신청인이 스스로 증명하는 경우: 예금잔고증명서(신청인 명의의 것. 변경용 체크시트에는 '예금통장 잔고증명서'로 기재) 및 고용예정증명서 또는 채용내정통지서(일본 회사 발급) / (2)신청인을 대신하여 체류비용 지불자가 일본에 있는 경우: 체류비용 지불자의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세증명서(1년간의 총소득 및 납세 상황이 기재된 것)",
+  ],
+  "申請人が「定住者」の方の扶養を受ける日系人の場合のみ": ["Only if the applicant is a Nikkei person supported by a Long-Term Resident", "신청인이 '정주자'의 부양을 받는 일계인인 경우에만"],
+  "申請人が「定住者」の方の扶養を受ける日系人の場合で、一度も入管当局へ提出したことがない方のみ": [
+    "Only if the applicant is a Nikkei person supported by a Long-Term Resident and has never submitted it to the immigration authorities",
+    "신청인이 '정주자'의 부양을 받는 일계인이며 한 번도 출입국 당국에 제출한 적이 없는 경우에만",
+  ],
+  "一度も入管当局へ提出したことがない方のみ": ["Only if the applicant has never submitted it to the immigration authorities", "한 번도 출입국 당국에 제출한 적이 없는 경우에만"],
+  "例：祖父母及び父母の旅券、死亡証明書、運転免許証等": ["e.g. passports, death certificates, driver's licenses of the grandparents and parents", "예: 조부모 및 부모의 여권, 사망증명서, 운전면허증 등"],
+  "例：祖父母及び父母の旅券、死亡証明書、運転免許証等。申請人が「定住者」の方の扶養を受ける日系人の場合のみ": [
+    "e.g. passports, death certificates, driver's licenses of the grandparents and parents. Only if the applicant is a Nikkei person supported by a Long-Term Resident",
+    "예: 조부모 및 부모의 여권, 사망증명서, 운전면허증 등. 신청인이 '정주자'의 부양을 받는 일계인인 경우에만",
+  ],
+  "例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等": ["e.g. ID card, driver's license, military service certificate, voter registration booklet", "예: 신분증명서(ID카드), 운전면허증, 병역증명서, 선거인 수첩 등"],
+  "例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等。申請人が「定住者」の方の扶養を受ける日系人の場合のみ": [
+    "e.g. ID card, driver's license, military service certificate, voter registration booklet. Only if the applicant is a Nikkei person supported by a Long-Term Resident",
+    "예: 신분증명서(ID카드), 운전면허증, 병역증명서, 선거인 수첩 등. 신청인이 '정주자'의 부양을 받는 일계인인 경우에만",
+  ],
+  "認知に係る証明書がある方のみ提出する": ["Submit only if there is a certificate of acknowledgment of paternity", "인지에 관한 증명서가 있는 경우에만 제출한다"],
+  "一定の日本語能力があることを証明する文書": ["Document proving a certain level of Japanese language ability", "일정한 일본어 능력이 있음을 증명하는 문서"],
+  "在留期間「5年」を希望する場合に提出が必要（未成年者を除く）。例：日本語能力試験N2に合格したことを証明する文書": [
+    "Required if a period of stay of \"5 years\" is requested (except for minors). e.g. a document proving passing of the Japanese-Language Proficiency Test N2",
+    "체류기간 '5년'을 희망하는 경우에 제출이 필요(미성년자 제외). 예: 일본어능력시험 N2에 합격했음을 증명하는 문서",
+  ],
+  "適宜の様式": ["Any format", "임의 양식"],
+  "養子縁組届出受理証明書": ["Certificate of acceptance of adoption notification", "입양신고 수리증명서"],
+  "日本人の方の戸籍謄本に養子縁組事実の記載がない場合のみ提出する": [
+    "Submit only if the adoption is not recorded in the family register transcript of the Japanese national",
+    "일본인의 호적등본에 입양 사실의 기재가 없는 경우에만 제출한다",
+  ],
+  "申請人の養子縁組届出受理証明書": ["Certificate of acceptance of adoption notification of the applicant", "신청인의 입양신고 수리증명서"],
+  "日本において養子縁組を成立させた場合のみ提出する": ["Submit only if the adoption was established in Japan", "일본에서 입양을 성립시킨 경우에만 제출한다"],
+  "お二方の婚姻が継続していることを証明する資料": ["Materials proving that the marriage of the two continues", "두 분의 혼인이 계속되고 있음을 증명하는 자료"],
+  // 永住許可申請（Issue #420。照合表 eijuu-2026-10-24.md）。仮訳
+  "日本人の配偶者等 永住許可申請（一部のみ整備）": ["Spouse etc. of Japanese National - Application for permission for permanent residence (partially covered)", "일본인의 배우자 등 영주 허가 신청(일부만 정비)"],
+  "入管庁『手続の種類から探す』永住許可申請・永住許可申請１（URL 未記録）": ["Immigration Services Agency 'Search by type of procedure': Permanent residence application / Permanent residence application 1 (URL not recorded)", "출입국재류관리청 '절차 종류로 찾기': 영주 허가 신청·영주 허가 신청 1(URL 미기록)"],
+  "永住許可申請に係る提出書類一覧表（日本人の配偶者の方）": ["List of documents to submit for the permanent residence application (spouse of a Japanese national)", "영주 허가 신청 제출서류 일람표(일본인의 배우자)"],
+  "永住許可申請に係る提出書類一覧表（日本人の実子（特別養子縁組含む。）の方）": ["List of documents to submit for the permanent residence application (biological child of a Japanese national, including special adopted child)", "영주 허가 신청 제출서류 일람표(일본인의 친자(특별양자 포함))"],
+  "永住許可申請書": ["Application for permission for permanent residence", "영주 허가 신청서"],
+  "出入国在留管理庁のホームページからダウンロードできる。必要な事項が全て記載されていることを確認する": ["Can be downloaded from the website of the Immigration Services Agency. Confirm that all required items are filled in", "출입국재류관리청 홈페이지에서 다운로드할 수 있다. 필요한 사항이 모두 기재되어 있는지 확인한다"],
+  "申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。写真の裏面に申請人の氏名を記載して、永住許可申請書の写真欄に貼付して提出する。1歳に満たない方は、写真の提出は不要（令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは、1歳以上の方について写真の提出が必要）": ["A clear photo taken from the front within 6 months before the application, without a hat and with a plain background. Write the applicant's name on the back and attach it to the photo column of the application. Not required for those under 1 year old (until June 13, 2026 it was not required for those under 16, but for residence cards issued on or after June 14, 2026, a photo is required for those aged 1 or older)", "신청 전 6개월 이내에 정면에서 촬영한, 모자와 배경이 없는 선명한 것. 사진 뒷면에 신청인의 성명을 기재하여 영주 허가 신청서의 사진란에 붙여 제출한다. 만 1세 미만인 사람은 사진 제출이 불필요하다(2026년 6월 13일까지는 16세 미만이 불필요했으나, 2026년 6월 14일 이후에 교부되는 재류카드부터는 만 1세 이상인 사람에 대해 사진 제출이 필요)"],
+  "配偶者の戸籍謄本（全部事項証明書）": ["Family register transcript (full certificate) of the spouse", "배우자의 호적등본(전부사항증명서)"],
+  "日本で発行される証明書は、発行日から3か月以内のもの": ["Certificates issued in Japan must have been issued within 3 months", "일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "申請人の国籍国の機関から発行された婚姻証明書": ["Marriage certificate issued by an authority of the applicant's country of nationality", "신청인의 국적국 기관에서 발급한 혼인증명서"],
+  "外国語で作成されている場合は、訳文（日本語）を添付する": ["If written in a foreign language, attach a Japanese translation", "외국어로 작성된 경우에는 번역문(일본어)을 첨부한다"],
+  "日本人親の戸籍謄本（全部事項証明書）": ["Family register transcript (full certificate) of the Japanese parent", "일본인 부모의 호적등본(전부사항증명서)"],
+  "申請人を含む家族全員（世帯）の住民票": ["Certificate of residence of the whole household including the applicant", "신청인을 포함한 가족 전원(세대)의 주민표"],
+  "個人番号（マイナンバー）は省略し、他の事項については省略のないもの。日本で発行される証明書は、発行日から3か月以内のもの": ["Omit the individual number (My Number), but do not omit other items. Certificates issued in Japan must have been issued within 3 months", "개인번호(마이넘버)는 생략하고 다른 사항은 생략이 없는 것. 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "申請人又は申請人を扶養する方の職業を証明するいずれかの資料": ["Any one of the materials proving the occupation of the applicant or the person supporting the applicant", "신청인 또는 신청인을 부양하는 사람의 직업을 증명하는 자료 중 하나"],
+  "申請人及び配偶者の分。(1)会社等に勤務している場合：在職証明書／(2)自営業等である場合：確定申告書控えの写し、営業許可書の写し（ある場合）。自営業等の方は、自ら職業等について立証する必要がある（登記事項証明書等）／(3)その他の場合：職業に係る説明書（書式自由）及びその立証資料。申請人及び配偶者の方お二方とも無職の場合も、その旨を説明書（書式自由）に記載して提出する": ["For the applicant and the spouse. (1) If employed by a company etc.: certificate of employment / (2) If self-employed etc.: a copy of the final tax return and a copy of the business license (if any). Self-employed persons must prove their occupation themselves (certificate of registered matters, etc.) / (3) Otherwise: a statement on the occupation (any format) and materials proving it. Even if both the applicant and the spouse are unemployed, state so in the statement (any format) and submit it", "신청인 및 배우자의 서류. (1) 회사 등에 근무하는 경우: 재직증명서 / (2) 자영업 등인 경우: 확정신고서 사본, 영업허가서 사본(있는 경우). 자영업 등의 경우 스스로 직업 등을 입증해야 한다(등기사항증명서 등) / (3) 그 밖의 경우: 직업에 관한 설명서(자유 서식) 및 그 입증 자료. 신청인 및 배우자 두 분 모두 무직인 경우에도 그 취지를 설명서(자유 서식)에 기재하여 제출한다"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。(1)会社等に勤務している場合：在職証明書／(2)自営業等である場合：確定申告書控えの写し、営業許可書の写し（ある場合）。自営業等の方は、自ら職業等について立証する必要がある（登記事項証明書等）／(3)その他の場合：職業に係る説明書（書式自由）及びその立証資料。申請人及び配偶者の方お二方とも無職の場合も、その旨を説明書（書式自由）に記載して提出する": ["For the applicant and the person supporting the applicant (a member of the same household). (1) If employed by a company etc.: certificate of employment / (2) If self-employed etc.: a copy of the final tax return and a copy of the business license (if any). Self-employed persons must prove their occupation themselves (certificate of registered matters, etc.) / (3) Otherwise: a statement on the occupation (any format) and materials proving it. Even if both the applicant and the spouse are unemployed, state so in the statement (any format) and submit it", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. (1) 회사 등에 근무하는 경우: 재직증명서 / (2) 자영업 등인 경우: 확정신고서 사본, 영업허가서 사본(있는 경우). 자영업 등의 경우 스스로 직업 등을 입증해야 한다(등기사항증명서 등) / (3) 그 밖의 경우: 직업에 관한 설명서(자유 서식) 및 그 입증 자료. 신청인 및 배우자 두 분 모두 무직인 경우에도 그 취지를 설명서(자유 서식)에 기재하여 제출한다"],
+  "直近3年分の住民税の課税（又は非課税）証明書（1年間の総所得及び納税状況が記載されたもの）": ["Resident tax assessment (or non-assessment) certificate for the most recent 3 year(s) (stating the total income and tax payment status for one year)", "최근 3년분의 주민세 과세(또는 비과세) 증명서(1년간의 총소득 및 납세 상황이 기재된 것)"],
+  "申請人及び配偶者の分。お住まいの市区町村から発行される。1年間の総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。市区町村において直近3年分の証明書が発行されない場合は、発行される最長期間分を提出する。入国後間もない場合や転居等により市区町村から発行されない場合は、最寄りの地方出入国在留管理官署に問い合わせる。未納・遅延納付がないことを確認する。日本で発行される証明書は、発行日から3か月以内のもの": ["For the applicant and the spouse. Issued by the municipality where you live. If a certificate states both the total income and the tax payment status (whether taxes have been paid) for one year, either one is sufficient. If the municipality does not issue certificates for the most recent 3 years, submit those for the longest period issued. If the municipality does not issue them because of a recent entry, a move, etc., ask the nearest regional immigration services office. Confirm that there are no unpaid or late payments. Certificates issued in Japan must have been issued within 3 months", "신청인 및 배우자의 서류. 거주지 시구정촌에서 발급한다. 1년간의 총소득 및 납세 상황(세금을 납부했는지 여부)이 모두 기재된 증명서라면 어느 한쪽이어도 된다. 시구정촌에서 최근 3년분의 증명서가 발급되지 않는 경우에는 발급되는 최장 기간분을 제출한다. 입국 후 얼마 되지 않았거나 이사 등으로 시구정촌에서 발급되지 않는 경우에는 가까운 지방출입국재류관리관서에 문의한다. 미납·지연 납부가 없는지 확인한다. 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "直近1年分の住民税の課税（又は非課税）証明書（1年間の総所得及び納税状況が記載されたもの）": ["Resident tax assessment (or non-assessment) certificate for the most recent 1 year(s) (stating the total income and tax payment status for one year)", "최근 1년분의 주민세 과세(또는 비과세) 증명서(1년간의 총소득 및 납세 상황이 기재된 것)"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。お住まいの市区町村から発行される。1年間の総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。入国から1年後に永住許可申請を行う場合など、この証明書が提出できない場合は、これに代えて、給与所得の源泉徴収票（写し）又は給与明細書（写し）等の資料を提出する。未納・遅延納付がないことを確認する。日本で発行される証明書は、発行日から3か月以内のもの": ["For the applicant and the person supporting the applicant (a member of the same household). Issued by the municipality where you live. If a certificate states both the total income and the tax payment status (whether taxes have been paid) for one year, either one is sufficient. If this certificate cannot be submitted, for example when applying one year after entry, submit instead materials such as a copy of the withholding slip for salary income or a copy of the pay statement. Confirm that there are no unpaid or late payments. Certificates issued in Japan must have been issued within 3 months", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 거주지 시구정촌에서 발급한다. 1년간의 총소득 및 납세 상황(세금을 납부했는지 여부)이 모두 기재된 증명서라면 어느 한쪽이어도 된다. 입국 1년 후에 영주 허가 신청을 하는 경우 등 이 증명서를 제출할 수 없는 경우에는 이를 대신하여 급여소득 원천징수표(사본) 또는 급여명세서(사본) 등의 자료를 제출한다. 미납·지연 납부가 없는지 확인한다. 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "直近3年分の住民税の納税証明書（1年間の総所得及び納税状況が記載されたもの）": ["Resident tax payment certificate for the most recent 3 year(s) (stating the total income and tax payment status for one year)", "최근 3년분의 주민세 납세증명서(1년간의 총소득 및 납세 상황이 기재된 것)"],
+  "申請人及び配偶者の分。課税（又は非課税）証明書に総所得及び納税状況の両方が記載されている場合は、いずれか一方でよい（課税証明書の行の留意事項）。日本で発行される証明書は、発行日から3か月以内のもの": ["For the applicant and the spouse. If the assessment (or non-assessment) certificate states both the total income and the tax payment status, either one is sufficient (note for the assessment certificate item). Certificates issued in Japan must have been issued within 3 months", "신청인 및 배우자의 서류. 과세(또는 비과세) 증명서에 총소득 및 납세 상황이 모두 기재되어 있는 경우에는 어느 한쪽이어도 된다(과세증명서 항목의 유의사항). 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "直近1年分の住民税の納税証明書（1年間の総所得及び納税状況が記載されたもの）": ["Resident tax payment certificate for the most recent 1 year(s) (stating the total income and tax payment status for one year)", "최근 1년분의 주민세 납세증명서(1년간의 총소득 및 납세 상황이 기재된 것)"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。課税（又は非課税）証明書に総所得及び納税状況の両方が記載されている場合は、いずれか一方でよい（課税証明書の行の留意事項）。日本で発行される証明書は、発行日から3か月以内のもの": ["For the applicant and the person supporting the applicant (a member of the same household). If the assessment (or non-assessment) certificate states both the total income and the tax payment status, either one is sufficient (note for the assessment certificate item). Certificates issued in Japan must have been issued within 3 months", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 과세(또는 비과세) 증명서에 총소득 및 납세 상황이 모두 기재되어 있는 경우에는 어느 한쪽이어도 된다(과세증명서 항목의 유의사항). 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "直近3年間において住民税を適正な時期に納めていることを証明する資料（通帳の写し、領収証書等）": ["Materials proving that resident tax was paid at the proper time during the most recent 3 year(s) (copy of a passbook, receipts, etc.)", "최근 3년간 주민세를 적정한 시기에 납부했음을 증명하는 자료(통장 사본, 영수증서 등)"],
+  "申請人及び配偶者の分。直近3年間において住民税が特別徴収（給与から天引き）されていない期間がある方は、当該期間分について提出する。直近3年間の全ての期間で特別徴収されている方は不要（課税証明書・納税証明書のみ提出する）。Web通帳の画面の写し等（取引履歴が分かるもの）でもよい。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する": ["For the applicant and the spouse. Submit for the periods in the most recent 3 year(s) in which resident tax was not withheld at source (deducted from salary). Not required if it was withheld at source for the whole period (submit only the assessment and payment certificates). A copy of a web passbook screen (showing the transaction history) is also acceptable. If submission is difficult, submit a statement of reasons (any format, with the author and date of preparation). Confirm that there are no unpaid or late payments", "신청인 및 배우자의 서류. 최근 3년간 주민세가 특별징수(급여에서 공제)되지 않은 기간이 있는 사람은 해당 기간분을 제출한다. 최근 3년간의 전체 기간에 특별징수된 사람은 불필요하다(과세증명서·납세증명서만 제출). 웹 통장 화면 사본 등(거래 내역을 알 수 있는 것)도 된다. 제출이 어려운 경우에는 그 이유를 기재한 이유서(임의 양식에 작성자와 작성 연월일을 기재한 것)를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近1年間において住民税を適正な時期に納めていることを証明する資料（通帳の写し、領収証書等）": ["Materials proving that resident tax was paid at the proper time during the most recent 1 year(s) (copy of a passbook, receipts, etc.)", "최근 1년간 주민세를 적정한 시기에 납부했음을 증명하는 자료(통장 사본, 영수증서 등)"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。直近1年間において住民税が特別徴収（給与から天引き）されていない期間がある方は、当該期間分について提出する。直近1年間の全ての期間で特別徴収されている方は不要（課税証明書・納税証明書のみ提出する）。Web通帳の画面の写し等（取引履歴が分かるもの）でもよい。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する": ["For the applicant and the person supporting the applicant (a member of the same household). Submit for the periods in the most recent 1 year(s) in which resident tax was not withheld at source (deducted from salary). Not required if it was withheld at source for the whole period (submit only the assessment and payment certificates). A copy of a web passbook screen (showing the transaction history) is also acceptable. If submission is difficult, submit a statement of reasons (any format, with the author and date of preparation). Confirm that there are no unpaid or late payments", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 최근 1년간 주민세가 특별징수(급여에서 공제)되지 않은 기간이 있는 사람은 해당 기간분을 제출한다. 최근 1년간의 전체 기간에 특별징수된 사람은 불필요하다(과세증명서·납세증명서만 제출). 웹 통장 화면 사본 등(거래 내역을 알 수 있는 것)도 된다. 제출이 어려운 경우에는 그 이유를 기재한 이유서(임의 양식에 작성자와 작성 연월일을 기재한 것)를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "源泉所得税及び復興特別所得税、申告所得税及び復興特別所得税、消費税及び地方消費税、相続税、贈与税に係る納税証明書（その３）": ["Tax payment certificates (No. 3) for withholding income tax and special reconstruction income tax, income tax on declared income and special reconstruction income tax, consumption tax and local consumption tax, inheritance tax and gift tax", "원천소득세 및 부흥특별소득세, 신고소득세 및 부흥특별소득세, 소비세 및 지방소비세, 상속세, 증여세에 관한 납세증명서(그 3)"],
+  "申請人及び配偶者の分。住所地を管轄する税務署から発行される。納税証明書（その３）は、証明日現在で未納がないことを証明するもので、対象期間の指定は不要。5税目全てに係る納税証明書を提出する。未納がないことを確認する。日本で発行される証明書は、発行日から3か月以内のもの": ["For the applicant and the spouse. Issued by the tax office having jurisdiction over the place of residence. The tax payment certificate (No. 3) certifies that there are no unpaid taxes as of the date of certification, so no target period needs to be specified. Submit certificates for all 5 taxes. Confirm that there are no unpaid taxes. Certificates issued in Japan must have been issued within 3 months", "신청인 및 배우자의 서류. 주소지를 관할하는 세무서에서 발급한다. 납세증명서(그 3)는 증명일 현재 미납이 없음을 증명하는 것으로 대상 기간의 지정은 불필요하다. 5개 세목 모두에 대한 납세증명서를 제출한다. 미납이 없는지 확인한다. 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。住所地を管轄する税務署から発行される。納税証明書（その３）は、証明日現在で未納がないことを証明するもので、対象期間の指定は不要。5税目全てに係る納税証明書を提出する。未納がないことを確認する。日本で発行される証明書は、発行日から3か月以内のもの": ["For the applicant and the person supporting the applicant (a member of the same household). Issued by the tax office having jurisdiction over the place of residence. The tax payment certificate (No. 3) certifies that there are no unpaid taxes as of the date of certification, so no target period needs to be specified. Submit certificates for all 5 taxes. Confirm that there are no unpaid taxes. Certificates issued in Japan must have been issued within 3 months", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 주소지를 관할하는 세무서에서 발급한다. 납세증명서(그 3)는 증명일 현재 미납이 없음을 증명하는 것으로 대상 기간의 지정은 불필요하다. 5개 세목 모두에 대한 납세증명서를 제출한다. 미납이 없는지 확인한다. 일본에서 발급된 증명서는 발급일로부터 3개월 이내의 것"],
+  "年金事務所発行の「被保険者記録照会回答票」、「被保険者記録照会（納付Ⅰ）」及び「被保険者記録照会（納付Ⅱ）」": ["'Insured person record inquiry response form', 'Insured person record inquiry (payment I)' and 'Insured person record inquiry (payment II)' issued by the Pension Office", "연금사무소 발행 '피보험자 기록 조회 회답표', '피보험자 기록 조회(납부 I)' 및 '피보험자 기록 조회(납부 II)'"],
+  "申請人及び配偶者の分。最寄りの年金事務所の窓口又は電話に問い合わせる。このほか、ア「ねんきん定期便」（全期間の年金記録情報が表示されているもの）、イ ねんきんネットの「各月の年金記録」の印刷画面、ウ 国民年金保険料領収証書（写し）を提出することも可能（基礎年金番号部分は黒塗りする）。イの提出で、申請時の直近2年間に国民年金の被保険者であった期間がある方は、「国民年金の年金記録（各月の納付状況）」の印刷画面も併せて提出する。「ねんきん定期便」は、35・45・59歳の誕生月に封書で送付されたものが使える（毎年送付されるハガキ形式のものは不可）。直近2年間に国民年金に加入していた期間がある方は、当該期間分の領収証書（写し）を全て提出する。直近2年間の全ての期間で国民年金に加入し、直近2年間（24月分）の領収証書（写し）を提出できる場合は、年金事務所発行の資料は提出不要。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する": ["For the applicant and the spouse. Inquire at the counter or by phone of the nearest Pension Office. In addition, the following may also be submitted: (a) the 'Nenkin Teikibin' (showing the pension record for the entire period), (b) a printout of the 'monthly pension record' on Nenkin Net, (c) copies of National Pension premium receipts (black out the basic pension number). When submitting (b), if the applicant was insured under the National Pension during the most recent 2 year(s) before the application, also submit the printout of the 'National Pension record (monthly payment status)'. The 'Nenkin Teikibin' sent in a sealed envelope in the months of birth at ages 35, 45 and 59 can be used (the annual postcard-type one cannot). If the applicant was enrolled in the National Pension during the most recent 2 year(s), submit all receipts (copies) for that period. If enrolled in the National Pension for the entire most recent 2 year(s) and able to submit receipts (copies) for the most recent 2 year(s) (24 months), the materials issued by the Pension Office are not required. If submission is difficult, submit a statement of reasons (any format, with the author and date of preparation). Confirm that there are no unpaid or late payments", "신청인 및 배우자의 서류. 가까운 연금사무소 창구 또는 전화로 문의한다. 이 밖에 (a) '넨킨 정기편'(전 기간의 연금 기록 정보가 표시된 것), (b) 넨킨넷의 '각 월의 연금 기록' 인쇄 화면, (c) 국민연금보험료 영수증서(사본)를 제출할 수도 있다(기초연금번호 부분은 검게 칠한다). (b)를 제출할 때 신청 시점 최근 2년간 국민연금 피보험자였던 기간이 있는 사람은 '국민연금 연금 기록(각 월의 납부 상황)' 인쇄 화면도 함께 제출한다. '넨킨 정기편'은 35·45·59세의 생일 달에 봉투로 송부된 것을 사용할 수 있다(매년 송부되는 엽서 형식은 불가). 최근 2년간 국민연금에 가입했던 기간이 있는 사람은 해당 기간분의 영수증서(사본)를 모두 제출한다. 최근 2년간 전 기간 국민연금에 가입했고 최근 2년간(24개월분)의 영수증서(사본)를 제출할 수 있는 경우에는 연금사무소 발행 자료는 제출 불필요하다. 제출이 어려운 경우에는 그 이유를 기재한 이유서(임의 양식에 작성자와 작성 연월일을 기재한 것)를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。最寄りの年金事務所の窓口又は電話に問い合わせる。このほか、ア「ねんきん定期便」（全期間の年金記録情報が表示されているもの）、イ ねんきんネットの「各月の年金記録」の印刷画面、ウ 国民年金保険料領収証書（写し）を提出することも可能（基礎年金番号部分は黒塗りする）。イの提出で、申請時の直近1年間に国民年金の被保険者であった期間がある方は、「国民年金の年金記録（各月の納付状況）」の印刷画面も併せて提出する。「ねんきん定期便」は、35・45・59歳の誕生月に封書で送付されたものが使える（毎年送付されるハガキ形式のものは不可）。直近1年間に国民年金に加入していた期間がある方は、当該期間分の領収証書（写し）を全て提出する。直近1年間の全ての期間で国民年金に加入し、直近1年間（12月分）の領収証書（写し）を提出できる場合は、年金事務所発行の資料は提出不要。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する": ["For the applicant and the person supporting the applicant (a member of the same household). Inquire at the counter or by phone of the nearest Pension Office. In addition, the following may also be submitted: (a) the 'Nenkin Teikibin' (showing the pension record for the entire period), (b) a printout of the 'monthly pension record' on Nenkin Net, (c) copies of National Pension premium receipts (black out the basic pension number). When submitting (b), if the applicant was insured under the National Pension during the most recent 1 year(s) before the application, also submit the printout of the 'National Pension record (monthly payment status)'. The 'Nenkin Teikibin' sent in a sealed envelope in the months of birth at ages 35, 45 and 59 can be used (the annual postcard-type one cannot). If the applicant was enrolled in the National Pension during the most recent 1 year(s), submit all receipts (copies) for that period. If enrolled in the National Pension for the entire most recent 1 year(s) and able to submit receipts (copies) for the most recent 1 year(s) (12 months), the materials issued by the Pension Office are not required. If submission is difficult, submit a statement of reasons (any format, with the author and date of preparation). Confirm that there are no unpaid or late payments", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 가까운 연금사무소 창구 또는 전화로 문의한다. 이 밖에 (a) '넨킨 정기편'(전 기간의 연금 기록 정보가 표시된 것), (b) 넨킨넷의 '각 월의 연금 기록' 인쇄 화면, (c) 국민연금보험료 영수증서(사본)를 제출할 수도 있다(기초연금번호 부분은 검게 칠한다). (b)를 제출할 때 신청 시점 최근 1년간 국민연금 피보험자였던 기간이 있는 사람은 '국민연금 연금 기록(각 월의 납부 상황)' 인쇄 화면도 함께 제출한다. '넨킨 정기편'은 35·45·59세의 생일 달에 봉투로 송부된 것을 사용할 수 있다(매년 송부되는 엽서 형식은 불가). 최근 1년간 국민연금에 가입했던 기간이 있는 사람은 해당 기간분의 영수증서(사본)를 모두 제출한다. 최근 1년간 전 기간 국민연금에 가입했고 최근 1년간(12개월분)의 영수증서(사본)를 제출할 수 있는 경우에는 연금사무소 발행 자료는 제출 불필요하다. 제출이 어려운 경우에는 그 이유를 기재한 이유서(임의 양식에 작성자와 작성 연월일을 기재한 것)를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "世帯全員分の健康保険被保険者証（写し）": ["Health insurance cards (copies) for all household members", "세대 전원분의 건강보험 피보험자증(사본)"],
+  "申請人及び配偶者の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、健康保険に加入している方は提出する。直近2年間の全ての期間において引き続き健康保険に加入している方は、国民健康保険に関する3つの資料（被保険者証・納付証明書・領収証書）は不要": ["For the applicant and the spouse. Submit with the insurer number and the insured person's symbol and number blacked out. Submit if currently enrolled in health insurance. Not required to submit the 3 materials on National Health Insurance (insurance card, payment certificate, receipts) if continuously enrolled in health insurance for the entire most recent 2 year(s)", "신청인 및 배우자의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 현재 건강보험에 가입한 사람은 제출한다. 최근 2년간 전 기간 계속 건강보험에 가입한 사람은 국민건강보험에 관한 3가지 자료(피보험자증·납부증명서·영수증서)는 불필요하다"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、健康保険に加入している方は提出する。直近1年間の全ての期間において引き続き健康保険に加入している方は、国民健康保険に関する3つの資料（被保険者証・納付証明書・領収証書）は不要": ["For the applicant and the person supporting the applicant (a member of the same household). Submit with the insurer number and the insured person's symbol and number blacked out. Submit if currently enrolled in health insurance. Not required to submit the 3 materials on National Health Insurance (insurance card, payment certificate, receipts) if continuously enrolled in health insurance for the entire most recent 1 year(s)", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 현재 건강보험에 가입한 사람은 제출한다. 최근 1년간 전 기간 계속 건강보험에 가입한 사람은 국민건강보험에 관한 3가지 자료(피보험자증·납부증명서·영수증서)는 불필요하다"],
+  "世帯全員分の国民健康保険被保険者証（写し）": ["National Health Insurance cards (copies) for all household members", "세대 전원분의 국민건강보험 피보험자증(사본)"],
+  "申請人及び配偶者の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、国民健康保険に加入している方は提出する": ["For the applicant and the spouse. Submit with the insurer number and the insured person's symbol and number blacked out. Submit if currently enrolled in National Health Insurance", "신청인 및 배우자의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 현재 국민건강보험에 가입한 사람은 제출한다"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、国民健康保険に加入している方は提出する": ["For the applicant and the person supporting the applicant (a member of the same household). Submit with the insurer number and the insured person's symbol and number blacked out. Submit if currently enrolled in National Health Insurance", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 현재 국민건강보험에 가입한 사람은 제출한다"],
+  "直近2年間の国民健康保険料（税）納付証明書": ["National Health Insurance premium (tax) payment certificate for the most recent 2 year(s)", "최근 2년간의 국민건강보험료(세) 납부증명서"],
+  "申請人及び配偶者の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近2年間において国民健康保険に加入していた期間がある方は提出する。未納・遅延納付がないことを確認する": ["For the applicant and the spouse. Submit with the insurer number and the insured person's symbol and number blacked out. Submit if enrolled in National Health Insurance at any time during the most recent 2 year(s). Confirm that there are no unpaid or late payments", "신청인 및 배우자의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 최근 2년간 국민건강보험에 가입했던 기간이 있는 사람은 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近1年間の国民健康保険料（税）納付証明書": ["National Health Insurance premium (tax) payment certificate for the most recent 1 year(s)", "최근 1년간의 국민건강보험료(세) 납부증명서"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近1年間において国民健康保険に加入していた期間がある方は提出する。未納・遅延納付がないことを確認する": ["For the applicant and the person supporting the applicant (a member of the same household). Submit with the insurer number and the insured person's symbol and number blacked out. Submit if enrolled in National Health Insurance at any time during the most recent 1 year(s). Confirm that there are no unpaid or late payments", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 최근 1년간 국민건강보험에 가입했던 기간이 있는 사람은 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近2年間の国民健康保険料（税）領収証書（写し）": ["National Health Insurance premium (tax) receipts (copies) for the most recent 2 year(s)", "최근 2년간의 국민건강보험료(세) 영수증서(사본)"],
+  "申請人及び配偶者の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近2年間において国民健康保険に加入していた期間がある方は、当該期間分の領収書（写し）を全て提出する。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する": ["For the applicant and the spouse. Submit with the insurer number and the insured person's symbol and number blacked out. If enrolled in National Health Insurance at any time during the most recent 2 year(s), submit all receipts (copies) for that period. If submission is difficult, submit a statement of reasons (any format, with the author and date of preparation). Confirm that there are no unpaid or late payments", "신청인 및 배우자의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 최근 2년간 국민건강보험에 가입했던 기간이 있는 사람은 해당 기간분의 영수증(사본)을 모두 제출한다. 제출이 어려운 경우에는 그 이유를 기재한 이유서(임의 양식에 작성자와 작성 연월일을 기재한 것)를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近1年間の国民健康保険料（税）領収証書（写し）": ["National Health Insurance premium (tax) receipts (copies) for the most recent 1 year(s)", "최근 1년간의 국민건강보험료(세) 영수증서(사본)"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近1年間において国民健康保険に加入していた期間がある方は、当該期間分の領収書（写し）を全て提出する。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する": ["For the applicant and the person supporting the applicant (a member of the same household). Submit with the insurer number and the insured person's symbol and number blacked out. If enrolled in National Health Insurance at any time during the most recent 1 year(s), submit all receipts (copies) for that period. If submission is difficult, submit a statement of reasons (any format, with the author and date of preparation). Confirm that there are no unpaid or late payments", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 보험자 번호 및 피보험자 등 기호·번호를 검게 칠한 것을 제출한다. 최근 1년간 국민건강보험에 가입했던 기간이 있는 사람은 해당 기간분의 영수증(사본)을 모두 제출한다. 제출이 어려운 경우에는 그 이유를 기재한 이유서(임의 양식에 작성자와 작성 연월일을 기재한 것)를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近2年間の健康保険・厚生年金保険料領収証書（写し）": ["Health insurance and employees' pension insurance premium receipts (copies) for the most recent 2 year(s)", "최근 2년간의 건강보험·후생연금보험료 영수증서(사본)"],
+  "申請人及び配偶者の分。申請時の直近2年間において社会保険適用事業所の事業主である期間がある方は、この資料か、次の行の社会保険料納入証明書等のいずれかを提出する。未納・遅延納付がないことを確認する": ["For the applicant and the spouse. If the applicant was the business owner of an establishment covered by social insurance at any time during the most recent 2 year(s) before the application, submit either this material or the social insurance premium payment certificate etc. in the next item. Confirm that there are no unpaid or late payments", "신청인 및 배우자의 서류. 신청 시점 최근 2년간 사회보험 적용 사업소의 사업주였던 기간이 있는 사람은 이 자료 또는 다음 항목의 사회보험료 납입증명서 등 중 하나를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近1年間の健康保険・厚生年金保険料領収証書（写し）": ["Health insurance and employees' pension insurance premium receipts (copies) for the most recent 1 year(s)", "최근 1년간의 건강보험·후생연금보험료 영수증서(사본)"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。申請時の直近1年間において社会保険適用事業所の事業主である期間がある方は、この資料か、次の行の社会保険料納入証明書等のいずれかを提出する。未納・遅延納付がないことを確認する": ["For the applicant and the person supporting the applicant (a member of the same household). If the applicant was the business owner of an establishment covered by social insurance at any time during the most recent 1 year(s) before the application, submit either this material or the social insurance premium payment certificate etc. in the next item. Confirm that there are no unpaid or late payments", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 신청 시점 최근 1년간 사회보험 적용 사업소의 사업주였던 기간이 있는 사람은 이 자료 또는 다음 항목의 사회보험료 납입증명서 등 중 하나를 제출한다. 미납·지연 납부가 없는지 확인한다"],
+  "直近2年間の社会保険料納入証明書又は社会保険料納入確認（申請）書（いずれも未納の有無を証明・確認する場合）": ["Social insurance premium payment certificate or social insurance premium payment confirmation (application) form for the most recent 2 year(s) (in either case, for certifying/confirming the presence or absence of unpaid premiums)", "최근 2년간의 사회보험료 납입증명서 또는 사회보험료 납입확인(신청)서(어느 쪽이든 미납 여부를 증명·확인하는 경우)"],
+  "申請人及び配偶者の分。申請時の直近2年間において社会保険適用事業所の事業主である期間がある方は、前の行の領収証書（写し）か、この資料のいずれかを提出する": ["For the applicant and the spouse. If the applicant was the business owner of an establishment covered by social insurance at any time during the most recent 2 year(s) before the application, submit either the receipts (copies) in the previous item or this material", "신청인 및 배우자의 서류. 신청 시점 최근 2년간 사회보험 적용 사업소의 사업주였던 기간이 있는 사람은 앞 항목의 영수증서(사본) 또는 이 자료 중 하나를 제출한다"],
+  "直近1年間の社会保険料納入証明書又は社会保険料納入確認（申請）書（いずれも未納の有無を証明・確認する場合）": ["Social insurance premium payment certificate or social insurance premium payment confirmation (application) form for the most recent 1 year(s) (in either case, for certifying/confirming the presence or absence of unpaid premiums)", "최근 1년간의 사회보험료 납입증명서 또는 사회보험료 납입확인(신청)서(어느 쪽이든 미납 여부를 증명·확인하는 경우)"],
+  "申請人及び申請人を扶養する方（同一世帯の方）の分。申請時の直近1年間において社会保険適用事業所の事業主である期間がある方は、前の行の領収証書（写し）か、この資料のいずれかを提出する": ["For the applicant and the person supporting the applicant (a member of the same household). If the applicant was the business owner of an establishment covered by social insurance at any time during the most recent 1 year(s) before the application, submit either the receipts (copies) in the previous item or this material", "신청인 및 신청인을 부양하는 사람(동일 세대 구성원)의 서류. 신청 시점 최근 1년간 사회보험 적용 사업소의 사업주였던 기간이 있는 사람은 앞 항목의 영수증서(사본) 또는 이 자료 중 하나를 제출한다"],
+  "親族一覧表": ["List of relatives", "친족 일람표"],
+  "案内ページでは、申請人が「日本人の配偶者等」又は「永住者の配偶者等」（実子又は特別養子を除く。）の在留資格である場合に提出する": ["According to the guidance page, submit if the applicant holds the status of Spouse or Child of Japanese National or Spouse or Child of Permanent Resident (excluding biological and special adopted children)", "안내 페이지에 따르면 신청인이 '일본인의 배우자 등' 또는 '영주자의 배우자 등'(친자 또는 특별양자 제외)의 체류자격인 경우에 제출한다"],
+  "身元保証人には、通常、日本に居住する日本人、永住者又は特別永住者の方になっていただく": ["The guarantor is usually a Japanese national, Permanent Resident or Special Permanent Resident living in Japan", "신원보증인은 통상 일본에 거주하는 일본인, 영주자 또는 특별영주자가 된다"],
+  "身元保証書に係る資料": ["Materials related to the letter of guarantee", "신원보증서 관련 자료"],
+  "身元保証人の身分事項を明らかにする書類（運転免許証、在留カードの写し等）": ["Documents clarifying the guarantor's personal status (a copy of a driver's license, residence card, etc.)", "신원보증인의 신분 사항을 밝히는 서류(운전면허증, 재류카드 사본 등)"],
+  "了解書": ["Written acknowledgment", "양해서"],
+  "出入国在留管理庁のホームページからダウンロードできる": ["Can be downloaded from the website of the Immigration Services Agency", "출입국재류관리청 홈페이지에서 다운로드할 수 있다"],
+  "永住者の配偶者等 永住許可申請（一部のみ整備）": ["Spouse etc. of Permanent Resident - Application for permission for permanent residence (partially covered)", "영주자의 배우자 등 영주 허가 신청(일부만 정비)"],
+  "永住許可申請に係る提出書類一覧表（永住者又は特別永住者の配偶者の方）": ["List of documents to submit for the permanent residence application (spouse of a Permanent Resident or Special Permanent Resident)", "영주 허가 신청 제출서류 일람표(영주자 또는 특별영주자의 배우자)"],
+  "永住許可申請に係る提出書類一覧表（永住者又は特別永住者の実子の方）": ["List of documents to submit for the permanent residence application (biological child of a Permanent Resident or Special Permanent Resident)", "영주 허가 신청 제출서류 일람표(영주자 또는 특별영주자의 친자)"],
+  "婚姻関係を証明する資料（次のいずれか）": ["Materials proving the marital relationship (any of the following)", "혼인 관계를 증명하는 자료(다음 중 하나)"],
+  "a.配偶者との婚姻証明書／b.上記aに準ずる文書（申請人と配偶者の方の身分関係を証するもの）。外国語で作成されている場合は、訳文（日本語）を添付する": ["a. Marriage certificate with the spouse / b. A document equivalent to a. (proving the relationship between the applicant and the spouse). If written in a foreign language, attach a Japanese translation", "a. 배우자와의 혼인증명서 / b. 위 a에 준하는 문서(신청인과 배우자의 신분 관계를 증명하는 것). 외국어로 작성된 경우에는 번역문(일본어)을 첨부한다"],
+  "親子関係を証明する資料（次のいずれか）": ["Materials proving the parent-child relationship (any of the following)", "친자 관계를 증명하는 자료(다음 중 하나)"],
+  "a.出生証明書／b.上記aに準ずる文書（申請人と永住者又は特別永住者との身分関係を証するもの）。外国語で作成されている場合は、訳文（日本語）を添付する": ["a. Birth certificate / b. A document equivalent to a. (proving the relationship between the applicant and the Permanent Resident or Special Permanent Resident). If written in a foreign language, attach a Japanese translation", "a. 출생증명서 / b. 위 a에 준하는 문서(신청인과 영주자 또는 특별영주자의 신분 관계를 증명하는 것). 외국어로 작성된 경우에는 번역문(일본어)을 첨부한다"],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

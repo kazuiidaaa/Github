@@ -13,6 +13,7 @@ import {
   APPLICANT_IDENTITIES,
   MEDICAL_APPLICANT_TYPES,
   SCHOOL_TYPES,
+  RENEWAL_TIMES,
   TEIJUSHA_TYPES,
   TOKUTEI_KATSUDO_TYPES,
   type FormDetails,
@@ -20,6 +21,7 @@ import {
   type WorkEntry,
 } from "@/lib/formDetails";
 import { isTokuteiKatsudo, ruleSetFor, statusForRules } from "@/lib/requirements/evaluate";
+import { eijuuTypesOf } from "@/lib/requirements/rules";
 import { HspPointSection } from "@/components/HspPointSection";
 import { formLabelText } from "@/lib/i18n/formLabels";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
@@ -96,8 +98,12 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const showMedicalType = medicalRuleSet?.basis === "applicantType" || (medicalRuleSet?.alsoBasis?.includes("applicantType") ?? false);
   // 日本人の配偶者等の申請人の身分は、手続に使う在留資格が日本人の配偶者等のときだけ尋ねる（規則集合が身分の軸を持つとき）
   const showIdentity = medicalRuleSet?.basis === "identity" || (medicalRuleSet?.alsoBasis?.includes("identity") ?? false);
-  // 定住者の区分は、定住者の取得の規則集合（alsoBasis に teijushaType を持つ）が引かれるときだけ尋ねる
-  const showTeijushaType = medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false;
+  // 定住者の区分は、定住者の規則集合（取得は alsoBasis、認定・変更・更新は basis に teijushaType を持つ）が引かれるときだけ尋ねる
+  const showTeijushaType = medicalRuleSet?.basis === "teijushaType" || (medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false);
+  // 永住許可申請の提出書類一覧表の区分は、永住許可申請の規則集合（basis が eijuuType）が引かれるときだけ尋ねる。選べるのは、その規則集合が扱う区分のみ
+  const eijuuOptions = medicalRuleSet?.basis === "eijuuType" ? eijuuTypesOf(medicalRuleSet) : [];
+  // 更新の回数（初めて／2回目以降）は、規則集合が回数の軸を持つ（定住者の更新）うえ、定住者の区分が日系3世のときだけ尋ねる
+  const showRenewalTimesRuleSet = medicalRuleSet?.alsoBasis?.includes("renewalTimes") ?? false;
   // 留学の入学先の種類は、規則集合が入学先の軸を持つとき（留学の認定・変更・更新・取得）だけ尋ねる。9区分から選ぶ
   const showSchoolType = medicalRuleSet?.basis === "schoolType" || (medicalRuleSet?.alsoBasis?.includes("schoolType") ?? false);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
@@ -176,7 +182,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "medicalApplicantType"
       | "applicantIdentity"
       | "teijushaType"
-      | "schoolType",
+      | "schoolType"
+      | "eijuuType"
+      | "renewalTimes",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -283,6 +291,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {showIdentity && select("applicantIdentity", APPLICANT_IDENTITIES.map((v) => [v, t(`caseRequirements.identity_${v}`)]), t("caseRequirements.identityLabel"))}
         {showTeijushaType && select("teijushaType", TEIJUSHA_TYPES.map((v) => [v, t(`caseRequirements.teijushaType_${v}`)]), t("caseRequirements.teijushaTypeLabel"))}
         {showSchoolType && select("schoolType", SCHOOL_TYPES.map((v) => [v, t(SCHOOL_TYPE_KEYS[v])]), t("caseRequirements.schoolTypeLabel"))}
+        {showRenewalTimesRuleSet && form.teijushaType === "nikkei3" && select("renewalTimes", RENEWAL_TIMES.map((v) => [v, t(`caseRequirements.renewalTimes_${v}`)]), t("caseRequirements.renewalTimesLabel"))}
+        {eijuuOptions.length > 0 && select("eijuuType", eijuuOptions.map((v) => [v, t(`caseRequirements.eijuuType_${v}`)]), t("caseRequirements.eijuuTypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (
