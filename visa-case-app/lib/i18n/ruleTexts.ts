@@ -1243,6 +1243,40 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "If mainly engaged in interpersonal work that uses language ability, such as translation, interpreting, and customer service. It may be requested during examination even in other cases. For Japanese, the applicant is deemed to have Japanese ability equivalent to CEFR B2 if any of the following applies: JLPT N2 or higher, BJT Business Japanese Proficiency Test 400 points or more, Examination for Japanese University Admission for International Students (Japanese) 200 points or more, JPT Japanese Proficiency Test 525 points or more, residence in Japan as a mid- to long-term resident for 20 years or more, graduation from a Japanese university or completion of the specialized course or advanced course of a Japanese college of technology or specialized training college, or completion of compulsory education in Japan and graduation from high school",
     "번역·통역, 접객 등 언어 능력을 사용하는 대인 업무에 주로 종사하는 경우. 그 외의 경우에도 심사에서 요구될 수 있다. 일본어의 경우 JLPT N2 이상, BJT 비즈니스 일본어 능력 테스트 400점 이상, 일본유학시험(일본어) 200점 이상, JPT 일본어 능력시험 525점 이상, 중장기 재류자로서 20년 이상 재류, 일본 대학 졸업 또는 고등전문학교·전수학교 전문과정·전공과 수료, 일본 의무교육 수료 및 고등학교 졸업 중 어느 하나에 해당하면 CEFR B2 상당의 일본어 능력을 갖춘 것으로 본다",
   ],
+
+  // 経営・管理／研究／企業内転勤の在留資格取得許可申請（Issue #420。#423・#426・#427）
+  "経営・管理 在留資格取得許可申請（一部のみ整備）": [
+    "Business Manager: application for permission for acquisition of status of residence (only partly covered)",
+    "경영·관리 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "研究 在留資格取得許可申請（一部のみ整備）": [
+    "Researcher: application for permission for acquisition of status of residence (only partly covered)",
+    "연구 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "企業内転勤 在留資格取得許可申請（一部のみ整備）": [
+    "Intra-company Transferee: application for permission for acquisition of status of residence (only partly covered)",
+    "기업 내 전근 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "在留資格「経営・管理」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Business Manager\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '경영·관리' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「研究」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Researcher\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '연구' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「企業内転勤」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Intra-company Transferee\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '기업 내 전근' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "基準省令ただし書きの適用を受ける者（転勤）の場合のみ。過去1年間の業務内容・地位・報酬を明示した転勤直前の機関の文書と、支店の登記事項証明書又は出資・資本関係を明らかにする資料": [
+    "Only for a person to whom the proviso of the Ministerial Ordinance on Criteria applies (transfer). A document from the organization immediately before the transfer stating duties, position and remuneration over the past year, and a certificate of registered matters of the branch or material showing the investment/capital relationship",
+    "기준성령 단서의 적용을 받는 사람(전근)의 경우에만. 지난 1년간의 업무 내용·지위·보수를 명시한 전근 직전 기관의 문서와, 지점의 등기사항증명서 또는 출자·자본 관계를 밝히는 자료",
+  ],
+  "新規事業の場合は事業計画書。取得の案内ページの読み方は、カテゴリー4は必要（カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」）。取得のチェックシートは無い。認定・変更のチェックシートでは行全体（カテゴリー3・4）に転勤の条件が付くため要確認": [
+    "For a new business, a business plan. Read according to the acquisition guidance page, it is required for Category 4 (only Category 3 is \"limited to engaging in research work after a transfer\"). There is no checklist for acquisition. In the certificate of eligibility and change checklists, the transfer condition applies to the whole row (Categories 3 and 4), so confirmation is required",
+    "신규 사업의 경우 사업계획서. 취득 안내 페이지에 따르면 카테고리 4는 필요(카테고리 3만 '전근하여 연구 업무에 종사하는 경우에 한함'). 취득 체크시트는 없다. 인정·변경 체크시트에서는 행 전체(카테고리 3·4)에 전근 조건이 붙으므로 확인 필요",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

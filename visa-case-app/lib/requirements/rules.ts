@@ -1862,7 +1862,7 @@ export const IRYO_RENEWAL: RuleSet = {
 // 提出書類は案内ページの本文と、チェックシート（PDF）による。カテゴリー1・2は「その他の資料は原則不要」、3は4のうち源泉徴収に関する資料が不要。
 // チェックシートの○・△の位置は、認定・変更・更新の5つのPDF（カテゴリー共通と、令和8年4月15日以降のカテゴリー3・4）すべてと照合済み（2026-10-18。照合表は docs/official/reconciliation/kenkyu-2026-10-18.md、Issue #333）。
 // ページとチェックシートが食い違う書類は「要確認」にし、ページにない書類は足さない（Issue #312 の規則）。食い違いの判断（K-1〜K-9）は、照合表の「食い違い一覧」に記録している。
-// 申請書は様式N（認定・変更・更新とも）。「転勤」は様式Lで、出力は別 Issue で扱う（ここでは書類のみ「要確認」で案内）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式N（認定・変更・更新とも）。「転勤」は様式Lで、出力は別 Issue で扱う（ここでは書類のみ「要確認」で案内）。取得は KENKYU_ACQUISITION（原文の取得の節に照合済み、2026-10-19。docs/official/reconciliation/acquisition-kenkyu-2026-10-19.md）。
 const KENKYU = "研究";
 const KENKYU_CHECKED_AT = "2026-10-07";
 const KENKYU_SOURCE: RuleSource = { title: "在留資格「研究」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/researcher.html", kind: "page", comparedAt: "2026-10-18" };
@@ -2546,7 +2546,7 @@ export const GINO_RENEWAL: RuleSet = {
 // 案内ページの原文とPDF7点を照合済み（2026-10-18。docs/official/reconciliation/kigyonai-2026-10-18.md。Issue #333・#373）。名称は原文に合わせた（E-1〜E-3）。
 // 案内ページとチェックシートの食い違いはなかったため、要確認（verify）の項目はない。
 // 「在留資格『企業内転勤』の提出書類の変更について（令和8年4月1日運用開始）」（001457117.pdf）は、認定・変更の表2の9から「(3)登記事項証明書」を削除した（取り消し線）。10の登記事項証明書は引き続き必要で、提出する書類の範囲は変わらない。
-// 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式L（認定・変更・更新とも）。取得は KIGYONAI_ACQUISITION（原文の取得の節に照合済み、2026-10-19。docs/official/reconciliation/acquisition-kigyounai-tenkin-2026-10-19.md）。
 const KIGYONAI = "企業内転勤";
 const KIGYONAI_CHECKED_AT = "2026-10-12";
 const KIGYONAI_PAGE_SOURCE: RuleSource = { title: "在留資格「企業内転勤」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/intracompanytransfee.html", kind: "page", comparedAt: "2026-10-18" };
@@ -2733,6 +2733,133 @@ export const KIGYONAI_RENEWAL: RuleSet = {
       note: "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。入国後間もない場合や転居等で発行されないときは、最寄りの出入国在留管理官署に問い合わせる。提出できない場合は、給与について申告済みであることを明らかにする資料を提出する",
     },
   ],
+};
+
+/**
+ * 経営・管理／研究／企業内転勤の在留資格取得許可申請（Issue #420。照合表は docs/official/reconciliation/ の
+ * acquisition-keiei-kanri-2026-10-19.md（#423）・acquisition-kenkyu-2026-10-19.md（#426）・acquisition-kigyounai-tenkin-2026-10-19.md（#427））。
+ * 各ページの取得の節（原文の控え）と照合済み（2026-10-19）。人の判断「推奨のとおり」（2026-10-19）で、経営・管理 R-1〜R-10、研究 R-1〜R-13、企業内転勤 R-1〜R-8 を反映した専用の規則集合。
+ * 事由別の書類は、技人国の取得（GIJINKOKU_ACQUISITION）と同じく ACQUISITION_BY_CAUSE から引き継ぎ、同じ上書き・削除をする
+ * （R-2 出生の3書類を外し、出生を cause_proof の対象に／R-3 写真「写真（40mm×30mm）」を全事由の必須、注記は年齢のみ／R-4 日米地位協定の例を外す／
+ * R-5 activity_materials を外す／R-6 申請取次者の注記を原文のとおり／R-7 旅券の理由書を外す）。ACQUISITION_BY_CAUSE の文言は変えない。
+ * カテゴリー別の書類（R-1）は、各在留資格の変更の規則集合（チェックシートで照合済み）の書類を、同じ割り当てで写す（取得の節の書類の部分は、変更の節と同じ文言のため）。
+ * 取得のチェックシートは無く、取得の列の位置そのものは未確認。判定の軸は、取得の事由と所属機関のカテゴリー（alsoBasis）。カテゴリーが未選択の間は、共通の書類だけを出す。
+ * `checkedAt` は新しい規則集合の作成日。ACQUISITION_BY_CAUSE より先に照合する（RULE_SETS の並び順）。
+ */
+const ACQ_SET1_COMPARED_AT = "2026-10-19";
+const ACQ_SET1_CHECKED_AT = "2026-10-19";
+// 事由別の書類（R-2〜R-7）。技人国の取得と同じ削除・上書き
+const acqSet1CauseRules: RequirementRule[] = ACQUISITION_BY_CAUSE.rules
+  .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id))
+  .map((r) => (GIJINKOKU_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...GIJINKOKU_ACQUISITION_OVERRIDES[r.id] } : r));
+// 出典（経営・管理 R-10・研究 R-13・企業内転勤 R-8）：各ページ（取得の節。2026-10-19 に照合）・手続案内・申請書様式（記載事項は未照合のため日付なし）
+const acqSet1Sources = (status: string, url: string): RuleSource[] => [
+  { title: `在留資格「${status}」在留資格取得許可申請（出入国在留管理庁）`, url, kind: "page", comparedAt: ACQ_SET1_COMPARED_AT },
+  ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+  ...ACQUISITION_BY_CAUSE.sources,
+];
+const acqSet1CopyRules = (from: RuleSet, ids: string[]): RequirementRule[] =>
+  ids.map((id) => {
+    const rule = from.rules.find((r) => r.id === id);
+    if (!rule) throw new Error(`${from.id} に規則 ${id} がない`);
+    return rule;
+  });
+
+// 経営・管理（R-1）：KEIEI_KANRI_CHANGE のカテゴリー別の書類12件を、同じ割り当てで写す。返信用封筒・本邦事業所の設置の委託は認定のみのため写さない。
+// R-9：改正概要による注記（KEIEI_NOTE_*）は、そのまま引き継ぐ
+const KEIEI_KANRI_ACQUISITION_CATEGORY_IDS = [
+  "category_proof",
+  "activity_documents",
+  "business_plan",
+  "business_description",
+  "financial_statements",
+  "business_licenses",
+  "office_facility_documents",
+  "business_scale_documents",
+  "japanese_ability",
+  "career_documents",
+  "representative_declaration",
+  "statutory_report_unavailable_reason",
+];
+// R-8：取得では、活動内容の資料の名称の括弧内を原文（businessmanager_2026-10-18.txt 363行「外国法人内の日本支店に転勤する場合及び会社以外の団体の役員に就任する場合」）に合わせる。
+// 認定・変更の同じ定数（KEIEI_ACTIVITY_NAME）は変えない（別件で判断）
+const KEIEI_ACQUISITION_ACTIVITY_NAME = "申請人の活動の内容等を明らかにする資料（役員就任、外国法人内の日本支店への転勤・会社以外の団体の役員就任、管理者としての雇用のいずれか）";
+const KEIEI_KANRI_ACQUISITION_CATEGORY_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  activity_documents: { name: KEIEI_ACQUISITION_ACTIVITY_NAME },
+};
+export const KEIEI_KANRI_ACQUISITION: RuleSet = {
+  id: "keiei_kanri_acquisition",
+  title: "経営・管理 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: KEIEI_KANRI,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  checkedAt: ACQ_SET1_CHECKED_AT,
+  sources: acqSet1Sources(KEIEI_KANRI, KEIEI_KANRI_SOURCE.url),
+  rules: [
+    ...acqSet1CauseRules,
+    ...acqSet1CopyRules(KEIEI_KANRI_CHANGE, KEIEI_KANRI_ACQUISITION_CATEGORY_IDS).map((r) =>
+      KEIEI_KANRI_ACQUISITION_CATEGORY_OVERRIDES[r.id] ? { ...r, ...KEIEI_KANRI_ACQUISITION_CATEGORY_OVERRIDES[r.id] } : r,
+    ),
+  ],
+};
+
+// 研究（R-1）：KENKYU_CHANGE のカテゴリー別の書類を、同じ割り当てで写す。返信用封筒は認定のみのため写さない。
+// R-8：提出書類省略に関する説明書（omission_statement）は、変更の節にだけあり取得の節に無いため写さない
+// R-9：カテゴリーの証明の注記から、変更・更新のチェックシートの「受付印」の1文を外す
+const kenkyuAcquisitionCategoryProof: RequirementRule = {
+  ...kenkyuCategoryProof,
+  note: kenkyuCategoryProof.note?.replace("。チェックシートでは、変更・更新に「受付印のあるものの写し」とある", ""),
+};
+// R-10：取得の申請書は1種類（researcher_2026-10-18.txt 327〜330行）のため「申請書は様式L」を外し、条件は原文（365行）のとおりにする
+const kenkyuAcquisitionTransferDocuments: RequirementRule = {
+  ...kenkyuTransferDocuments,
+  note: "基準省令ただし書きの適用を受ける者（転勤）の場合のみ。過去1年間の業務内容・地位・報酬を明示した転勤直前の機関の文書と、支店の登記事項証明書又は出資・資本関係を明らかにする資料",
+};
+// R-11：カテゴリー4は要確認のまま（K-2 の判断）。注記から変更のチェックシートの記号を外し、取得のチェックシートが無いことを書く
+const kenkyuAcquisitionFinancialStatements: RequirementRule = {
+  ...kenkyuFinancialStatements,
+  note: "新規事業の場合は事業計画書。取得の案内ページの読み方は、カテゴリー4は必要（カテゴリー3のみ「転勤して研究を行う業務に従事する場合に限る」）。取得のチェックシートは無い。認定・変更のチェックシートでは行全体（カテゴリー3・4）に転勤の条件が付くため要確認",
+};
+export const KENKYU_ACQUISITION: RuleSet = {
+  id: "kenkyu_acquisition",
+  title: "研究 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: KENKYU,
+  // R-12：「特定活動（研究活動等）」の取得には出さない
+  excludeStatuses: KENKYU_EXCLUDE,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  checkedAt: ACQ_SET1_CHECKED_AT,
+  sources: acqSet1Sources(KENKYU, KENKYU_SOURCE.url),
+  rules: [
+    ...acqSet1CauseRules,
+    kenkyuAcquisitionCategoryProof,
+    kenkyuOnlineApproval,
+    kenkyuDispatch,
+    kenkyuActivityDocuments,
+    kenkyuCareerDocuments,
+    kenkyuAcquisitionTransferDocuments,
+    kenkyuBusinessMaterials,
+    kenkyuAcquisitionFinancialStatements,
+    kenkyuFinancialStatementsCat3,
+    kenkyuRepresentativeDeclaration,
+    ...kenkyuWithholdingRules,
+  ],
+};
+
+// 企業内転勤（R-1）：取得の 38〜86行は変更の節と1行ずつ同じ文言のため、KIGYONAI_CHANGE の kigyonaiCategoryRules を、名称・注記・割り当て・区分のまま写す。
+// R-8：ページの URL は KIGYONAI_PAGE_SOURCE と同じ intracompanytransfee.html（人が 2026-10-19 に確認した）
+export const KIGYONAI_ACQUISITION: RuleSet = {
+  id: "kigyonai_acquisition",
+  title: "企業内転勤 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: KIGYONAI,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  checkedAt: ACQ_SET1_CHECKED_AT,
+  sources: acqSet1Sources(KIGYONAI, KIGYONAI_PAGE_SOURCE.url),
+  rules: [...acqSet1CauseRules, ...kigyonaiCategoryRules],
 };
 
 // 在留資格「特定活動」のうち、特定研究等活動（告示36号）の本人（種別 tokuteiKenkyu。Issue #299）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
@@ -3139,6 +3266,10 @@ export const RULE_SETS: RuleSet[] = [
   // 技人国・家族滞在の取得（Issue #396）も、ACQUISITION_BY_CAUSE より先に照合する
   GIJINKOKU_ACQUISITION,
   KAZOKUTAIZAI_ACQUISITION,
+  // 経営・管理・研究・企業内転勤の取得（Issue #420。#423・#426・#427）も、ACQUISITION_BY_CAUSE より先に照合する
+  KEIEI_KANRI_ACQUISITION,
+  KENKYU_ACQUISITION,
+  KIGYONAI_ACQUISITION,
   ACQUISITION_BY_CAUSE,
   // 介護（Issue #297）
   KAIGO_RENEWAL,

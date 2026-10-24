@@ -290,6 +290,12 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Materials showing the applicant's activities, etc. (notice of working conditions, articles of incorporation setting officers' remuneration, etc.)",
     "신청인의 활동 내용 등을 밝히는 자료(근로조건통지서·임원 보수를 정한 정관 등)",
   ],
+
+  // 経営・管理の在留資格取得許可申請（Issue #420。#423 R-8）。研究・企業内転勤の取得は、既存の書類名のみ
+  "申請人の活動の内容等を明らかにする資料（役員就任、外国法人内の日本支店への転勤・会社以外の団体の役員就任、管理者としての雇用のいずれか）": [
+    "Materials showing the applicant's activities, etc. (any one of: appointment as an officer; transfer to the Japan branch of a foreign corporation or appointment as an officer of an organization other than a company; employment as a manager)",
+    "신청인의 활동 내용 등을 밝히는 자료(임원 취임, 외국 법인 내 일본 지점으로의 전근·회사 이외 단체의 임원 취임, 관리자로서의 고용 중 하나)",
+  ],
 };
 
 /** 規則の書類（規則の id で示す）か。行政書士が追加した書類（自由記述）は、規則の id を持たない */
