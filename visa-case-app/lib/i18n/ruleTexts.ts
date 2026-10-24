@@ -1522,9 +1522,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "1통. 개인번호(마이넘버)는 생략하고 그 밖의 사항은 생략이 없는 것. 배우자의 경우에는 배우자(일본인)의 세대 전원이 기재된 주민표 사본으로 발행일로부터 3개월 이내의 것. 친자·특별양자의 경우에는 일본인(신청인의 부모 또는 양부모)의 세대 전원이 기재된 것",
   ],
   "質問書": ["Questionnaire", "질문서"],
-  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。チェックシートは未照合のため、要否は行政書士が確認する": [
-    "1 copy. For a spouse, the questionnaire on the spouse page (the form was revised on June 6, 2017, so submit the new form; versions in 10 languages including English are available). For a biological child or special adopted child, the questionnaire on that page (a different form from the spouse's). The checklist has not been checked against, so the administrative scrivener confirms whether it is required",
-    "1통. 배우자의 경우 배우자 페이지의 질문서(2017년 6월 6일에 양식을 개정했으므로 새 양식으로 제출한다. 영어 등 10개 언어판이 있음). 친자·특별양자의 경우 친자·특별양자 페이지의 질문서(배우자의 질문서와는 다른 양식). 체크시트는 미대조이므로 필요 여부는 행정서사가 확인한다",
+  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。実子・特別養子の場合は、取得のチェックシート（PDF 001426551）に項目がある。配偶者の場合は、チェックシートが未照合のため、要否は行政書士が確認する": [
+    "1 copy. For a spouse, the questionnaire on the spouse page (the form was revised on June 6, 2017, so submit the new form; versions in 10 languages including English are available). For a biological child or special adopted child, the questionnaire on that page (a different form from the spouse's). For a biological child or special adopted child, the acquisition checklist (PDF 001426551) lists this item. For a spouse, the checklist has not been checked against, so the administrative scrivener confirms whether it is required",
+    "1통. 배우자의 경우 배우자 페이지의 질문서(2017년 6월 6일에 양식을 개정했으므로 새 양식으로 제출한다. 영어 등 10개 언어판이 있음). 친자·특별양자의 경우 친자·특별양자 페이지의 질문서(배우자의 질문서와는 다른 양식). 친자·특별양자의 경우 취득 체크시트(PDF 001426551)에 이 항목이 있다. 배우자의 경우 체크시트는 미대조이므로 필요 여부는 행정서사가 확인한다",
   ],
   "夫婦間の交流が確認できる資料": [
     "Materials confirming the interaction between the spouses",
