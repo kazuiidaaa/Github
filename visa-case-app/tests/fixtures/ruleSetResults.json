@@ -974,5 +974,55 @@
       "cause_proof"
     ],
     "digest": "90997c2dcad2dbc0842132b807cc82f936ea6466710aaad0216c18b7c4570dec"
+  },
+  "nihonjin_haigusha_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "nihonjin_spouse_family_register",
+      "nihonjin_child_family_register",
+      "nihonjin_marriage_certificate",
+      "nihonjin_child_birth_or_adoption",
+      "nihonjin_stay_expense",
+      "nihonjin_guarantee_letter",
+      "household_residence_certificate",
+      "nihonjin_child_supporter_residence_certificate",
+      "parents_questionnaire",
+      "nihonjin_spouse_exchange",
+      "return_envelope"
+    ],
+    "digest": "f20f4397b54c33c726993c526e44323f08cdb2100a2a4ab89ec8f01e60d98b44"
+  },
+  "nihonjin_haigusha_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "nihonjin_spouse_family_register",
+      "nihonjin_child_family_register",
+      "nihonjin_marriage_certificate",
+      "nihonjin_child_birth_or_adoption",
+      "nihonjin_stay_expense",
+      "nihonjin_guarantee_letter",
+      "household_residence_certificate",
+      "nihonjin_applicant_residence_certificate",
+      "parents_questionnaire",
+      "nihonjin_spouse_exchange"
+    ],
+    "digest": "c9e4c06cc3692ca78f1ae3da345d959f75a6b7df58f7442312fd63bb7daf4add"
+  },
+  "nihonjin_haigusha_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "nihonjin_spouse_family_register",
+      "nihonjin_stay_expense",
+      "nihonjin_guarantee_letter",
+      "household_residence_certificate",
+      "nihonjin_applicant_residence_certificate"
+    ],
+    "digest": "214812dac372acafd2d98477dbd309e8dcc06b7b31795f5b3d356f1dd26eda8f"
   }
 }

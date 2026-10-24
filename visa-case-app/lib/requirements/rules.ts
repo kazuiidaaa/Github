@@ -4015,6 +4015,128 @@ export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
 };
 // ===== ここまで（取得：文化活動・日本人の配偶者等） =====
 
+// ===== 日本人の配偶者等の在留資格認定証明書交付申請・在留資格変更許可申請・在留期間更新許可申請（Issue #420） =====
+// 照合表は docs/official/reconciliation/coe-change-renewal-nihonjinhaigusha-2026-10-24.md（照合日 2026-10-24）。
+// 提出書類は、入管庁の「提出書類一覧」（チェックシート。docs/official/nihonjinhaigusha-{coe|change|renewal}-checksheet-{spouse|child}_*.pdf の6点）のとおり。シートにない書類は足さない。
+// 判定は申請人の身分（配偶者〔夫又は妻〕／実子・特別養子。formDetails.applicantIdentity）だけ（basis: identity）。取得の事由・所属機関のカテゴリーは使わない。
+// 身分が未選択の間は、身分に共通の書類（申請書・写真・旅券・身元保証書・滞在費用など）だけを出す。取得（NIHONJIN_HAIGUSHA_ACQUISITION）の規則は書き換えない。
+// 同じ書類は取得と同じ id・書類名にして訳を共有する。注記は、シートに書かれたことだけを書く（取得の注記にある案内ページ由来の事項は、認定・変更・更新のシートに無いため写さない）。
+const NIHONJIN_PROCEDURE_COMPARED_AT = "2026-10-24";
+type NihonjinProcedure = CommonProcedure;
+interface NihonjinDoc {
+  rule: Omit<RequirementRule, "party" | "causes" | "categories" | "identities">;
+  /** 手続ごとの対象の身分（省略した手続には出さない。全身分なら undefined 相当の ALL_IDENTITIES） */
+  procedures: Partial<Record<NihonjinProcedure, ApplicantIdentity[]>>;
+}
+const NH_BOTH: ApplicantIdentity[] = ["spouse", "child"];
+const NH_SPOUSE: ApplicantIdentity[] = ["spouse"];
+const NH_CHILD: ApplicantIdentity[] = ["child"];
+const NH_EXPENSE_NOTE =
+  "(1)を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)の資料などを提出する。" +
+  "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）。" +
+  "(2)その他：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよい）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／これらに準ずるもの";
+// シートの並び（申請書・写真・戸籍謄本・結婚証明書／身分関係・滞在費用・身元保証書・住民票・質問書・夫婦間の交流・返信用封筒）に合わせる。申請書・写真・旅券等は procedureCommonRules
+const NIHONJIN_PROCEDURE_DOCS: NihonjinDoc[] = [
+  // 戸籍謄本：配偶者は3手続、実子・特別養子は認定・変更のみ（更新のシートに無い）
+  { rule: { id: "nihonjin_spouse_family_register", name: "配偶者（日本人）の方の戸籍謄本（全部事項証明書）", level: "required" }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE, renewal: NH_SPOUSE } },
+  { rule: { id: "nihonjin_child_family_register", name: "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" }, procedures: { coe: NH_CHILD, change: NH_CHILD } },
+  { rule: { id: "nihonjin_marriage_certificate", name: "申請人の国籍国（外国）の機関から発行された結婚証明書", level: "required" }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE } },
+  {
+    rule: {
+      id: "nihonjin_child_birth_or_adoption",
+      name: "出生又は特別養子縁組を証する文書（日本で出生／海外で出生／特別養子の場合ごとに、次のいずれか）",
+      level: "required",
+      note: "該当する場合ごとに、次のいずれか。日本で生まれた場合：出生届受理証明書又は認知届受理証明書／海外で生まれた場合：出生国の機関から発行された出生証明書又は認知に係る証明書／特別養子の場合：特別養子縁組届出受理証明書又は日本の家庭裁判所発行の養子縁組に係る審判書謄本及び確定証明書",
+    },
+    procedures: { coe: NH_CHILD, change: NH_CHILD },
+  },
+  { rule: { id: "nihonjin_stay_expense", name: "日本での滞在費用を証明する資料", level: "required", note: NH_EXPENSE_NOTE }, procedures: { coe: NH_BOTH, change: NH_BOTH, renewal: NH_BOTH } },
+  {
+    rule: {
+      id: "nihonjin_guarantee_letter",
+      name: "身元保証書",
+      level: "required",
+      note: "配偶者の場合は配偶者（日本人）の身元保証書、実子・特別養子の場合は日本人（申請人の親又は養親）の身元保証書",
+    },
+    procedures: { coe: NH_BOTH, change: NH_BOTH, renewal: NH_BOTH },
+  },
+  // 住民票：誰の住民票かは、身分と手続による（配偶者は配偶者〔日本人〕。実子・特別養子は、認定は扶養者／同居者、変更・更新は申請人）
+  {
+    rule: { id: "household_residence_certificate", name: "日本人の方（配偶者又は親・養親）の世帯全員の記載のある住民票", level: "required", note: "配偶者（日本人）の世帯全員の記載のある住民票の写し" },
+    procedures: { coe: NH_SPOUSE, change: NH_SPOUSE, renewal: NH_SPOUSE },
+  },
+  {
+    rule: {
+      id: "nihonjin_child_supporter_residence_certificate",
+      name: "住民票（世帯全員の記載があるもの）（申請人が未成年の場合は扶養者の方、成人の場合は本邦における同居者の方）",
+      level: "required",
+      note: "申請人が未成年である場合は扶養者の方の住民票、申請人が成人している場合は本邦における同居者の住民票（いずれも世帯全員の記載があるもの）",
+    },
+    procedures: { coe: NH_CHILD },
+  },
+  { rule: { id: "nihonjin_applicant_residence_certificate", name: "申請人の住民票（世帯全員の記載があるもの）", level: "required" }, procedures: { change: NH_CHILD, renewal: NH_CHILD } },
+  { rule: { id: "parents_questionnaire", name: "質問書", level: "required", note: "様式の記載内容は未確認", verify: true }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE } },
+  {
+    rule: {
+      id: "nihonjin_spouse_exchange",
+      name: "夫婦間の交流が確認できる資料",
+      level: "required",
+      note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可） 2〜3葉。その他、提出できるもの：SNS記録、通話記録",
+    },
+    procedures: { coe: NH_SPOUSE, change: NH_SPOUSE },
+  },
+  // 返信用封筒は認定のみ（他の在留資格の認定は party: organization だが、この書類は申請人側が用意する。定住者の認定と同じ）
+  { rule: { id: "return_envelope", name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）", level: "required" }, procedures: { coe: NH_BOTH } },
+];
+const NIHONJIN_PROCEDURE_SHEET_LABELS: Record<NihonjinProcedure, string> = {
+  coe: "在留資格認定証明書交付申請用",
+  change: "在留資格変更許可申請用",
+  renewal: "在留期間更新許可申請用",
+};
+// シートの番号（配偶者／実子・特別養子）。URL は既存の書式に合わせて番号から組み立てた（未確認）
+const NIHONJIN_PROCEDURE_SHEET_IDS: Record<NihonjinProcedure, [spouse: string, child: string]> = {
+  coe: ["001426538", "001426545"],
+  change: ["001426540", "001426547"],
+  renewal: ["001426542", "001426549"],
+};
+function nihonjinProcedureSources(procedure: NihonjinProcedure): RuleSource[] {
+  const [spouse, child] = NIHONJIN_PROCEDURE_SHEET_IDS[procedure];
+  const make = (who: string, id: string): RuleSource => ({
+    title: `「日本人の配偶者等」（${who}）に係る提出書類一覧（${NIHONJIN_PROCEDURE_SHEET_LABELS[procedure]}。URL は番号から組み立てた。未確認）（出入国在留管理庁）`,
+    url: `https://www.moj.go.jp/isa/content/${id}.pdf`,
+    kind: "pdf",
+    comparedAt: NIHONJIN_PROCEDURE_COMPARED_AT,
+  });
+  return [make("日本人の配偶者（夫又は妻）", spouse), make("日本人の実子・特別養子", child)];
+}
+function nihonjinProcedureRules(procedure: NihonjinProcedure): RequirementRule[] {
+  const docs = NIHONJIN_PROCEDURE_DOCS.flatMap((d): RequirementRule[] => {
+    const identities = d.procedures[procedure];
+    // 全身分の書類は identities を省略する（身分が未選択の間も出す）
+    return identities ? [{ ...d.rule, party: "applicant", ...(identities.length === NH_BOTH.length ? {} : { identities }) }] : [];
+  });
+  return [...procedureCommonRules(procedure), ...docs];
+}
+const NIHONJIN_PROCEDURE_TITLES: Record<NihonjinProcedure, string> = {
+  coe: "日本人の配偶者等 在留資格認定証明書交付申請",
+  change: "日本人の配偶者等 在留資格変更許可申請",
+  renewal: "日本人の配偶者等 在留期間更新許可申請",
+};
+const nihonjinProcedureSet = (procedure: NihonjinProcedure): RuleSet => ({
+  id: `nihonjin_haigusha_${procedure}`,
+  title: NIHONJIN_PROCEDURE_TITLES[procedure],
+  procedureType: procedure,
+  residenceStatus: "日本人の配偶者等",
+  basis: "identity",
+  checkedAt: NIHONJIN_PROCEDURE_COMPARED_AT,
+  sources: nihonjinProcedureSources(procedure),
+  rules: nihonjinProcedureRules(procedure),
+});
+export const NIHONJIN_HAIGUSHA_COE: RuleSet = nihonjinProcedureSet("coe");
+export const NIHONJIN_HAIGUSHA_CHANGE: RuleSet = nihonjinProcedureSet("change");
+export const NIHONJIN_HAIGUSHA_RENEWAL: RuleSet = nihonjinProcedureSet("renewal");
+// ===== ここまで（日本人の配偶者等の認定・変更・更新） =====
+
 // ===== 在留資格取得許可申請（永住者の配偶者等・定住者。Issue #420） =====
 // 照合表は docs/official/reconciliation/acquisition-eijushahaigusha-2026-10-24.md・acquisition-teijusha-2026-10-24.md（照合日 2026-10-24）。
 // 人の判断（2026-10-24）：各照合表の「判断」欄の推奨のとおり（全件）。取得のチェックシート（PDF）は、永住者の配偶者等は照合済み（001426557。差分なし）、定住者も照合済み（12ページ分。差分なし）。案内ページの本文で作った。
@@ -4586,6 +4708,10 @@ export const RULE_SETS: RuleSet[] = [
   // 取得：文化活動・日本人の配偶者等（Issue #420）
   BUNKA_KATSUDO_ACQUISITION,
   NIHONJIN_HAIGUSHA_ACQUISITION,
+  // 日本人の配偶者等の認定・変更・更新（Issue #420。チェックシートによる）
+  NIHONJIN_HAIGUSHA_COE,
+  NIHONJIN_HAIGUSHA_CHANGE,
+  NIHONJIN_HAIGUSHA_RENEWAL,
   GEIJUTSU_ACQUISITION,
   SHUKYO_ACQUISITION,
   HOUMU_KAIKEI_ACQUISITION,

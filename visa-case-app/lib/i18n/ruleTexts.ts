@@ -1552,6 +1552,60 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Submit (1). If (1) cannot prove the cost of staying, for example because the applicant has only recently entered Japan or has moved, submit materials such as those in (2). (1) A residence tax (taxable or non-taxable) certificate and a tax payment certificate (stating total income and tax payment status for one year) for the most recent year of the person bearing the applicant's cost of staying, 1 copy each. Issued by the municipality of residence as of January 1. If one certificate states both the total income and the tax payment status, either one is sufficient. Issued within the past 3 months. For a biological child or special adopted child, if several people support the applicant, the one with the highest income. (2) Others: a copy of a bank passbook (as appropriate; a copy of a web passbook screen showing the transaction history is acceptable only if printed in a form that cannot be altered; Excel files, etc. are not accepted) / a certificate of planned employment or a notice of informal job offer (issued by a Japanese company; as appropriate) / documents equivalent to these (as appropriate)",
     "(1)을 제출한다. 입국 후 얼마 안 된 경우나 이사 등으로 (1)의 자료로는 체재 비용을 증명할 수 없는 경우에는 (2)의 자료 등을 제출한다. (1) 신청인의 체재 비용을 지불하는 사람의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세 증명서(1년간의 총소득 및 납세 상황이 기재된 것) 각 1통. 1월 1일 현재 거주하는 시구정촌에서 발급한다. 1년간의 총소득 및 납세 상황이 모두 기재되어 있으면 어느 한쪽이어도 된다. 발행일로부터 3개월 이내의 것. 친자·특별양자의 경우 여러 사람이 부양할 때는 수입이 많은 사람. (2) 그 밖의 자료: 예금 통장 사본(적절히. 웹 통장 화면의 사본 등(거래 내역을 알 수 있는 것)도 가능하나 가공할 수 없는 상태로 인쇄한 것에 한하며 Excel 파일 등은 불가)／고용 예정 증명서 또는 채용 내정 통지서(일본 회사 발행. 적절히)／이에 준하는 것(적절히)",
   ],
+  // 日本人の配偶者等の認定・変更・更新（チェックシートによる。仮訳）
+  "該当する場合ごとに、次のいずれか。日本で生まれた場合：出生届受理証明書又は認知届受理証明書／海外で生まれた場合：出生国の機関から発行された出生証明書又は認知に係る証明書／特別養子の場合：特別養子縁組届出受理証明書又は日本の家庭裁判所発行の養子縁組に係る審判書謄本及び確定証明書": [
+    "For each applicable case, any one of the following. Born in Japan: certificate of acceptance of the birth notification or of the acknowledgment notification / born abroad: birth certificate or certificate of acknowledgment issued by an authority of the country of birth / special adoption: certificate of acceptance of the special adoption notification, or a transcript of the adjudication on the adoption and a certificate of finality issued by a Japanese family court",
+    "해당하는 경우마다 다음 중 하나. 일본에서 출생한 경우: 출생신고 수리 증명서 또는 인지신고 수리 증명서／해외에서 출생한 경우: 출생국 기관에서 발급한 출생 증명서 또는 인지에 관한 증명서／특별양자의 경우: 특별양자결연 신고 수리 증명서 또는 일본 가정법원 발급의 양자결연에 관한 심판서 등본 및 확정 증명서",
+  ],
+  "(1)を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)の資料などを提出する。(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）。(2)その他：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよい）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／これらに準ずるもの": [
+    "Submit (1). If (1) cannot prove the cost of staying, for example because the applicant has only recently entered Japan or has moved, submit materials such as those in (2). (1) A residence tax (taxable or non-taxable) certificate and a tax payment certificate (stating total income and tax payment status for one year) for the most recent year of the person bearing the applicant's cost of staying. (2) Others: a copy of a bank passbook (a copy of a web passbook screen showing the transaction history is also acceptable) / a certificate of planned employment or a notice of informal job offer (issued by a Japanese company) / documents equivalent to these",
+    "(1)을 제출한다. 입국 후 얼마 안 된 경우나 이사 등으로 (1)의 자료로는 체재 비용을 증명할 수 없는 경우에는 (2)의 자료 등을 제출한다. (1) 신청인의 체재 비용을 지불하는 사람의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세 증명서(1년간의 총소득 및 납세 상황이 기재된 것). (2) 그 밖의 자료: 예금 통장 사본(웹 통장 화면의 사본 등(거래 내역을 알 수 있는 것)도 가능)／고용 예정 증명서 또는 채용 내정 통지서(일본 회사 발행)／이에 준하는 것",
+  ],
+  "配偶者の場合は配偶者（日本人）の身元保証書、実子・特別養子の場合は日本人（申請人の親又は養親）の身元保証書": [
+    "For a spouse, the letter of guarantee of the spouse (Japanese national); for a biological child or special adopted child, the letter of guarantee of the Japanese national (the applicant's parent or adoptive parent)",
+    "배우자의 경우 배우자(일본인)의 신원보증서, 친자·특별양자의 경우 일본인(신청인의 부모 또는 양부모)의 신원보증서",
+  ],
+  "配偶者（日本人）の世帯全員の記載のある住民票の写し": [
+    "A copy of the certificate of residence of the spouse (Japanese national) stating all household members",
+    "배우자(일본인)의 세대 전원이 기재된 주민표 사본",
+  ],
+  "住民票（世帯全員の記載があるもの）（申請人が未成年の場合は扶養者の方、成人の場合は本邦における同居者の方）": [
+    "Certificate of residence stating all household members (of the supporter if the applicant is a minor; of a cohabitant in Japan if the applicant is an adult)",
+    "주민표(세대 전원이 기재된 것)(신청인이 미성년인 경우 부양자, 성인인 경우 본방의 동거인)",
+  ],
+  "申請人が未成年である場合は扶養者の方の住民票、申請人が成人している場合は本邦における同居者の住民票（いずれも世帯全員の記載があるもの）": [
+    "If the applicant is a minor, the certificate of residence of the supporter; if the applicant is an adult, the certificate of residence of a cohabitant in Japan (either one stating all household members)",
+    "신청인이 미성년인 경우에는 부양자의 주민표, 신청인이 성인인 경우에는 본방의 동거인의 주민표(모두 세대 전원이 기재된 것)",
+  ],
+  "様式の記載内容は未確認": ["The contents of the form have not been verified", "양식의 기재 내용은 미확인"],
+  // 日本人の配偶者等の認定・変更・更新の題名と出典
+  "日本人の配偶者等 在留資格認定証明書交付申請": ["Spouse or Child of Japanese National: Application for Certificate of Eligibility", "일본인의 배우자 등 사증발급인정서 교부 신청"],
+  "日本人の配偶者等 在留資格変更許可申請": ["Spouse or Child of Japanese National: Application for Change of Status of Residence", "일본인의 배우자 등 체류자격 변경 허가 신청"],
+  "日本人の配偶者等 在留期間更新許可申請": ["Spouse or Child of Japanese National: Application for Extension of the Period of Stay", "일본인의 배우자 등 체류기간 연장 허가 신청"],
+  "「日本人の配偶者等」（日本人の配偶者（夫又は妻））に係る提出書類一覧（在留資格認定証明書交付申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Spouse or Child of Japanese National\" (spouse (husband or wife) of a Japanese national) (certificate of eligibility application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「일본인의 배우자 등」(일본인의 배우자(남편 또는 아내))에 관한 제출 서류 일람(사증발급인정서 교부 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「日本人の配偶者等」（日本人の実子・特別養子）に係る提出書類一覧（在留資格認定証明書交付申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Spouse or Child of Japanese National\" (biological child or special adopted child of a Japanese national) (certificate of eligibility application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「일본인의 배우자 등」(일본인의 친자·특별양자)에 관한 제출 서류 일람(사증발급인정서 교부 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「日本人の配偶者等」（日本人の配偶者（夫又は妻））に係る提出書類一覧（在留資格変更許可申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Spouse or Child of Japanese National\" (spouse (husband or wife) of a Japanese national) (change of status of residence application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「일본인의 배우자 등」(일본인의 배우자(남편 또는 아내))에 관한 제출 서류 일람(체류자격 변경 허가 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「日本人の配偶者等」（日本人の実子・特別養子）に係る提出書類一覧（在留資格変更許可申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Spouse or Child of Japanese National\" (biological child or special adopted child of a Japanese national) (change of status of residence application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「일본인의 배우자 등」(일본인의 친자·특별양자)에 관한 제출 서류 일람(체류자격 변경 허가 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「日本人の配偶者等」（日本人の配偶者（夫又は妻））に係る提出書類一覧（在留期間更新許可申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Spouse or Child of Japanese National\" (spouse (husband or wife) of a Japanese national) (extension of the period of stay application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「일본인의 배우자 등」(일본인의 배우자(남편 또는 아내))에 관한 제출 서류 일람(체류기간 연장 허가 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
+  "「日本人の配偶者等」（日本人の実子・特別養子）に係る提出書類一覧（在留期間更新許可申請用。URL は番号から組み立てた。未確認）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Spouse or Child of Japanese National\" (biological child or special adopted child of a Japanese national) (extension of the period of stay application; the URL was built from the document number and is unverified) (Immigration Services Agency of Japan)",
+    "「일본인의 배우자 등」(일본인의 친자·특별양자)에 관한 제출 서류 일람(체류기간 연장 허가 신청용. URL은 번호로 조립한 것으로 미확인)(출입국재류관리청)",
+  ],
   "身元保証書": ["Letter of guarantee", "신원보증서"],
   "1通（様式は案内ページにある日本語版・英語版）。身元保証人は、配偶者の場合は日本に居住する配偶者(日本人)、実子・特別養子の場合は日本に居住する日本人の方（申請人の親又は養親）等": [
     "1 copy (the form, in Japanese and English versions, is on the guidance page). The guarantor is, for a spouse, the spouse (Japanese national) residing in Japan, and for a biological child or special adopted child, a Japanese national residing in Japan (the applicant's parent or adoptive parent), etc.",
