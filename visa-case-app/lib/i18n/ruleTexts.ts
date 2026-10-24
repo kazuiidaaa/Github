@@ -1253,6 +1253,31 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Researcher: application for permission for acquisition of status of residence (only partly covered)",
     "연구 체류자격 취득 허가 신청(일부만 정비)",
   ],
+  // 取得：教授・教育・報道（照合済み 2026-10-24。Issue #420）
+  "教授 在留資格取得許可申請（一部のみ整備）": [
+    "Professor: application for permission for acquisition of status of residence (only partly covered)",
+    "교수 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "教育 在留資格取得許可申請（一部のみ整備）": [
+    "Instructor: application for permission for acquisition of status of residence (only partly covered)",
+    "교육 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "報道 在留資格取得許可申請（一部のみ整備）": [
+    "Journalist: application for permission for acquisition of status of residence (only partly covered)",
+    "보도 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "取得の案内ページでは「日本での活動内容に応じた資料（在留資格変更許可申請と同様の資料）」とある。カテゴリー1（常勤職員）は、その他の資料は原則不要": [
+    "The acquisition guidance page says \"materials according to the activities in Japan (the same materials as for an application for permission for change of status of residence)\". For category 1 (full-time staff), other materials are in principle unnecessary",
+    "취득 안내 페이지에는 '일본에서의 활동 내용에 따른 자료(체류자격 변경 허가 신청과 같은 자료)'라고 되어 있다. 카테고리 1(상근 직원)은 그 밖의 자료가 원칙적으로 불필요하다",
+  ],
+  "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請書類を提出する場合も、提示が必要": [
+    "Presentation only; not a document to be submitted with a copy attached. Presentation is also required when a person other than the applicant submits the application documents",
+    "제시만 하며, 사본을 첨부하여 제출하는 서류가 아니다. 신청인 이외의 사람이 신청 서류를 제출하는 경우에도 제시가 필요하다",
+  ],
+  "代理人が申請する場合や申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示": [
+    "When an agent applies or a person other than the applicant submits the documents. Present a document proving the identity of the submitting person (certificate of an authorized application agent, family register extract, etc.)",
+    "대리인이 신청하는 경우나 신청인 본인 이외의 사람이 제출하는 경우. 제출하는 사람의 신분을 증명하는 서류(신청취차자 증명서, 호적등본 등)를 제시한다",
+  ],
   "企業内転勤 在留資格取得許可申請（一部のみ整備）": [
     "Intra-company Transferee: application for permission for acquisition of status of residence (only partly covered)",
     "기업 내 전근 체류자격 취득 허가 신청(일부만 정비)",
