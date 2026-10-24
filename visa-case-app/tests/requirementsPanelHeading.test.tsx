@@ -41,10 +41,15 @@ describe("RequirementsPanel の見出しの日付（規則の確認日）", () =
     expect(html).not.toContain("2026-10-12");
   });
 
-  it("照合していない資格は、従来どおり checkedAt を出す（教授）", () => {
-    const rs = RULE_SETS.find((r) => r.id === "professor_renewal")!;
-    expect(rs.sources.some((s) => s.comparedAt)).toBe(false);
-    expect(render("教授")).toContain(`規則の確認日：${rs.checkedAt}`);
+  it("照合していない資格は、従来どおり checkedAt を出す（出典に comparedAt が1つもない更新の規則集合）", () => {
+    // 教授は 2026-10-24 にチェックシートと照合した（Issue #420）ため、別の資格を動的に選ぶ
+    const rs = RULE_SETS.find((r) => r.procedureType === "renewal" && !r.anyResidenceStatus && r.subtype === undefined && !r.sources.some((s) => s.comparedAt))!;
+    expect(rs).toBeDefined();
+    expect(render(rs.residenceStatus)).toContain(`規則の確認日：${rs.checkedAt}`);
+  });
+
+  it("チェックシートと照合した教授は、照合日（2026-10-24）を出す（Issue #420）", () => {
+    expect(render("教授")).toContain("規則の確認日：2026-10-24");
   });
 
   it("kind（案内ページ・PDFなどの種類）は画面に出さない", () => {

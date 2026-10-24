@@ -1692,7 +1692,7 @@ export const PROFESSOR_COE: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf", kind: "pdf" },
+    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -1717,7 +1717,7 @@ export const PROFESSOR_CHANGE: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf", kind: "pdf" },
+    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [...procedureCommonRules("change"), professorActivityProof],
 };
@@ -1731,7 +1731,7 @@ export const PROFESSOR_RENEWAL: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf", kind: "pdf" },
+    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2151,7 +2151,7 @@ export const EDUCATION_COE: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf", kind: "pdf" },
+    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2179,7 +2179,7 @@ export const EDUCATION_CHANGE: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf", kind: "pdf" },
+    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("change"),
@@ -2201,7 +2201,7 @@ export const EDUCATION_RENEWAL: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf", kind: "pdf" },
+    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2275,7 +2275,7 @@ export const HODO_COE: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf", kind: "pdf" },
+    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2302,7 +2302,7 @@ export const HODO_CHANGE: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf", kind: "pdf" },
+    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [...procedureCommonRules("change"), hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
 };
@@ -2316,7 +2316,7 @@ export const HODO_RENEWAL: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf", kind: "pdf" },
+    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2344,6 +2344,180 @@ export const HODO_RENEWAL: RuleSet = {
       level: "check",
       note: `${HODO_FIRST_RENEWAL_NOTE}。案内ページには記載があるが、チェックシート（更新）にはないため要確認`,
       verify: true,
+    },
+  ],
+};
+
+// 在留資格「芸術」。チェックシート（認定 001404121／変更 001365828／更新 001365832）に所属機関のカテゴリー区分はなく、全書類を全カテゴリー共通（ALL）とする。
+// 提出書類はチェックシートの表（○の位置まで）による。照合済み（2026-10-24。照合表は docs/official/reconciliation/coe-change-renewal-artist-2026-10-24.md、Issue #420）。取得は GEIJUTSU_ACQUISITION が扱う。
+// 出典の URL は、PDF の番号から組み立てた（ページ側の掲載は未確認）。
+const ARTIST = "芸術";
+const ARTIST_CHECKED_AT = "2026-10-24";
+const ARTIST_PAGE_SOURCE: RuleSource = { title: "在留資格「芸術」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/artist.html", kind: "page" };
+const artistPdfSource = (procedure: string, no: string): RuleSource => ({
+  title: `「芸術」に係る提出書類一覧（${procedure}用）（出入国在留管理庁）`,
+  url: `https://www.moj.go.jp/isa/content/${no}.pdf`,
+  kind: "pdf",
+  comparedAt: "2026-10-24",
+});
+const artistActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "申請人の活動の内容等を明らかにする資料",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "次のいずれか。(1)公私の機関又は個人との契約に基づいて活動を行う場合：活動の内容、期間、地位及び報酬を証明する文書 (2)公私の機関又は個人との契約に基づかないで活動を行う場合：申請人が作成する具体的な活動の内容、期間及び行おうとする活動から生じる収入の見込額を記載した文書（適宜の様式）",
+};
+const artistResume: RequirementRule = {
+  id: "artistic_career_resume",
+  name: "芸術上の活動歴を詳細に記載した履歴書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+};
+const artistAchievements: RequirementRule = {
+  id: "artistic_achievements",
+  name: "芸術活動上の業績を明らかにすることができるもの",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "次のいずれか。関係団体からの推薦状／過去の活動に関する報道／入賞、入選等の実績／過去の作品等の目録／これらに準ずるもの",
+};
+const RESIDENT_TAX_NOTE = "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）";
+
+export const ARTIST_COE: RuleSet = {
+  id: "artist_coe",
+  title: "芸術 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: ARTIST,
+  checkedAt: ARTIST_CHECKED_AT,
+  sources: [ARTIST_PAGE_SOURCE, artistPdfSource("在留資格認定証明書交付申請", "001404121")],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    artistActivityDocuments,
+    artistResume,
+    artistAchievements,
+  ],
+};
+
+export const ARTIST_CHANGE: RuleSet = {
+  id: "artist_change",
+  title: "芸術 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: ARTIST,
+  checkedAt: ARTIST_CHECKED_AT,
+  sources: [ARTIST_PAGE_SOURCE, artistPdfSource("在留資格変更許可申請", "001365828")],
+  rules: [...procedureCommonRules("change"), artistActivityDocuments, artistResume, artistAchievements],
+};
+
+export const ARTIST_RENEWAL: RuleSet = {
+  id: "artist_renewal",
+  title: "芸術 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: ARTIST,
+  checkedAt: ARTIST_CHECKED_AT,
+  sources: [ARTIST_PAGE_SOURCE, artistPdfSource("在留期間更新許可申請", "001365832")],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    artistActivityDocuments,
+    { id: "resident_tax_certificates", name: "住民税の課税（又は非課税）証明書及び納税証明書", party: "applicant", categories: ALL, level: "required", note: RESIDENT_TAX_NOTE },
+  ],
+};
+
+// 在留資格「宗教」。チェックシート（認定 001404122／変更 001365798／更新 001365799）に所属機関のカテゴリー区分はなく、全書類を全カテゴリー共通（ALL）とする。
+// 提出書類はチェックシートの表（○・△の位置まで）による。照合済み（2026-10-24。照合表は docs/official/reconciliation/coe-change-renewal-religiousactivities-2026-10-24.md、Issue #420）。取得は SHUKYO_ACQUISITION が扱う。
+// 出典の URL は、PDF の番号から組み立てた（ページ側の掲載は未確認）。
+const SHUKYO = "宗教";
+const SHUKYO_CHECKED_AT = "2026-10-24";
+const SHUKYO_PAGE_SOURCE: RuleSource = { title: "在留資格「宗教」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/religiousactivities.html", kind: "page" };
+const shukyoPdfSource = (procedure: string, no: string): RuleSource => ({
+  title: `「宗教」に係る提出書類一覧（${procedure}用）（出入国在留管理庁）`,
+  url: `https://www.moj.go.jp/isa/content/${no}.pdf`,
+  kind: "pdf",
+  comparedAt: "2026-10-24",
+});
+const shukyoDispatchLetter: RequirementRule = {
+  id: "dispatch_letter",
+  name: "外国の宗教団体からの派遣状等の写し等派遣機関からの派遣期間、地位及び報酬を証明する文書",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const shukyoOrganizationOverview: RequirementRule = {
+  id: "organization_overview",
+  name: "派遣機関及び受入機関の概要（宗派、沿革、代表者名、組織、施設、信者数等）を明らかにする資料",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const shukyoStatusCareer: RequirementRule = {
+  id: "religious_status_career",
+  name: "宗教家としての地位及び職歴を証明する文書",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: "派遣機関からの証明書等で、申請人の宗教家としての地位、職歴を証明する文書。派遣状等（上記の派遣期間、地位及び報酬を証明する文書）に、地位・職歴が記載されている場合は提出不要（チェックシートで△）",
+};
+
+export const SHUKYO_COE: RuleSet = {
+  id: "shukyo_coe",
+  title: "宗教 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: SHUKYO,
+  checkedAt: SHUKYO_CHECKED_AT,
+  sources: [SHUKYO_PAGE_SOURCE, shukyoPdfSource("在留資格認定証明書交付申請", "001404122")],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    shukyoDispatchLetter,
+    shukyoOrganizationOverview,
+    shukyoStatusCareer,
+  ],
+};
+
+export const SHUKYO_CHANGE: RuleSet = {
+  id: "shukyo_change",
+  title: "宗教 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: SHUKYO,
+  checkedAt: SHUKYO_CHECKED_AT,
+  sources: [SHUKYO_PAGE_SOURCE, shukyoPdfSource("在留資格変更許可申請", "001365798")],
+  rules: [...procedureCommonRules("change"), shukyoDispatchLetter, shukyoOrganizationOverview, shukyoStatusCareer],
+};
+
+export const SHUKYO_RENEWAL: RuleSet = {
+  id: "shukyo_renewal",
+  title: "宗教 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: SHUKYO,
+  checkedAt: SHUKYO_CHECKED_AT,
+  sources: [SHUKYO_PAGE_SOURCE, shukyoPdfSource("在留期間更新許可申請", "001365799")],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    shukyoOrganizationOverview,
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      verify: true,
+      note: `チェックシートで△だが、凡例がなく条件が読み取れないため要確認。${RESIDENT_TAX_NOTE}`,
     },
   ],
 };
@@ -4622,6 +4796,13 @@ export const RULE_SETS: RuleSet[] = [
   HODO_RENEWAL,
   HODO_CHANGE,
   HODO_COE,
+  // 芸術・宗教の認定・変更・更新（Issue #420）
+  ARTIST_RENEWAL,
+  ARTIST_CHANGE,
+  ARTIST_COE,
+  SHUKYO_RENEWAL,
+  SHUKYO_CHANGE,
+  SHUKYO_COE,
   // 技能（Issue #298）
   GINO_RENEWAL,
   GINO_CHANGE,

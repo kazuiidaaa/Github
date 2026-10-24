@@ -754,6 +754,38 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "'교육' 관련 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)",
   ],
 
+  // 芸術・宗教の認定・変更・更新（Issue #420。仮訳）
+  "芸術 在留期間更新許可申請": ["Art: application for extension of the period of stay", "예술 체류기간 연장 허가 신청"],
+  "芸術 在留資格変更許可申請": ["Art: application for change of status of residence", "예술 체류자격 변경 허가 신청"],
+  "芸術 在留資格認定証明書交付申請": ["Art: application for certificate of eligibility", "예술 사증발급인정서 교부 신청"],
+  "在留資格「芸術」（出入国在留管理庁）": ["Status of residence \"Artist\" (Immigration Services Agency of Japan)", "체류자격 '예술'(출입국재류관리청)"],
+  "「芸術」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）": ["List of documents to submit for \"Artist\" (for certificate of eligibility applications) (Immigration Services Agency of Japan)", "'예술'에 관한 제출 서류 일람(사증발급인정서 교부 신청용)(출입국재류관리청)"],
+  "「芸術」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）": ["List of documents to submit for \"Artist\" (for change of status of residence applications) (Immigration Services Agency of Japan)", "'예술'에 관한 제출 서류 일람(체류자격 변경 허가 신청용)(출입국재류관리청)"],
+  "「芸術」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": ["List of documents to submit for \"Artist\" (for extension of the period of stay applications) (Immigration Services Agency of Japan)", "'예술'에 관한 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)"],
+  "次のいずれか。(1)公私の機関又は個人との契約に基づいて活動を行う場合：活動の内容、期間、地位及び報酬を証明する文書 (2)公私の機関又は個人との契約に基づかないで活動を行う場合：申請人が作成する具体的な活動の内容、期間及び行おうとする活動から生じる収入の見込額を記載した文書（適宜の様式）": [
+    "One of the following. (1) If the applicant acts under a contract with a public or private organization or an individual: a document certifying the content, period, position and remuneration of the activities. (2) If the applicant acts without such a contract: a document prepared by the applicant stating the specific content and period of the activities and the expected income from them (any format)",
+    "다음 중 하나. (1) 공사 기관 또는 개인과의 계약에 근거하여 활동하는 경우: 활동 내용, 기간, 지위 및 보수를 증명하는 문서. (2) 계약에 근거하지 않고 활동하는 경우: 신청인이 작성하는 구체적인 활동 내용, 기간 및 활동에서 발생하는 예상 수입액을 기재한 문서(임의 양식)",
+  ],
+  "次のいずれか。関係団体からの推薦状／過去の活動に関する報道／入賞、入選等の実績／過去の作品等の目録／これらに準ずるもの": [
+    "One of the following: a letter of recommendation from a related organization / press coverage of past activities / a record of prizes or selections / a catalog of past works / equivalent materials",
+    "다음 중 하나. 관계 단체의 추천서 / 과거 활동에 관한 보도 / 입상·입선 등의 실적 / 과거 작품 등의 목록 / 이에 준하는 것",
+  ],
+  "宗教 在留期間更新許可申請": ["Religious Activities: application for extension of the period of stay", "종교 체류기간 연장 허가 신청"],
+  "宗教 在留資格変更許可申請": ["Religious Activities: application for change of status of residence", "종교 체류자격 변경 허가 신청"],
+  "宗教 在留資格認定証明書交付申請": ["Religious Activities: application for certificate of eligibility", "종교 사증발급인정서 교부 신청"],
+  "在留資格「宗教」（出入国在留管理庁）": ["Status of residence \"Religious Activities\" (Immigration Services Agency of Japan)", "체류자격 '종교'(출입국재류관리청)"],
+  "「宗教」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）": ["List of documents to submit for \"Religious Activities\" (for certificate of eligibility applications) (Immigration Services Agency of Japan)", "'종교'에 관한 제출 서류 일람(사증발급인정서 교부 신청용)(출입국재류관리청)"],
+  "「宗教」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）": ["List of documents to submit for \"Religious Activities\" (for change of status of residence applications) (Immigration Services Agency of Japan)", "'종교'에 관한 제출 서류 일람(체류자격 변경 허가 신청용)(출입국재류관리청)"],
+  "「宗教」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）": ["List of documents to submit for \"Religious Activities\" (for extension of the period of stay applications) (Immigration Services Agency of Japan)", "'종교'에 관한 제출 서류 일람(체류기간 연장 허가 신청용)(출입국재류관리청)"],
+  "派遣機関からの証明書等で、申請人の宗教家としての地位、職歴を証明する文書。派遣状等（上記の派遣期間、地位及び報酬を証明する文書）に、地位・職歴が記載されている場合は提出不要（チェックシートで△）": [
+    "A document, such as a certificate from the dispatching organization, certifying the applicant's position and career as a religious person. Not required if the position and career are stated in the dispatch letter, etc. (the document above certifying the dispatch period, position and remuneration) (marked △ on the checklist)",
+    "파견 기관의 증명서 등으로 신청인의 종교인으로서의 지위 및 경력을 증명하는 문서. 파견장 등(위의 파견 기간, 지위 및 보수를 증명하는 문서)에 지위·경력이 기재되어 있으면 제출 불필요(체크시트에서 △)",
+  ],
+  "チェックシートで△だが、凡例がなく条件が読み取れないため要確認。1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）": [
+    "Marked △ on the checklist, but there is no legend and the condition cannot be read, so confirm. One stating the total income and tax payment status for one year. If a single certificate states both, either one is sufficient (issued by the municipality of residence as of January 1)",
+    "체크시트에서 △이지만 범례가 없어 조건을 알 수 없으므로 확인 필요. 1년간의 총소득 및 납세 상황이 기재된 것. 두 가지가 모두 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 거주지의 시구정촌에서 발급)",
+  ],
+
   // 報道（Issue #294）
   "報道 在留資格認定証明書交付申請": [
     "Journalist: application for certificate of eligibility",

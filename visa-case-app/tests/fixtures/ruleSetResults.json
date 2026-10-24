@@ -974,5 +974,71 @@
       "cause_proof"
     ],
     "digest": "90997c2dcad2dbc0842132b807cc82f936ea6466710aaad0216c18b7c4570dec"
+  },
+  "artist_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "activity_documents",
+      "resident_tax_certificates"
+    ],
+    "digest": "932c7ebeab0a38b7b2c64cd83dbac5426d770842c5412842732bf000acdd77a3"
+  },
+  "artist_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "activity_documents",
+      "artistic_career_resume",
+      "artistic_achievements"
+    ],
+    "digest": "85be40237c076162a0e479c3229f92b2efc4e7eb3fc7faaefbd15b2ddb1bd464"
+  },
+  "artist_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "activity_documents",
+      "artistic_career_resume",
+      "artistic_achievements"
+    ],
+    "digest": "33189c981ffc424c9ab9d833860cc2c85e7a1b4039d5be1e66147e3d4a25c0b8"
+  },
+  "shukyo_renewal": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "organization_overview",
+      "resident_tax_certificates"
+    ],
+    "digest": "023100ee9012e634cf59bd19860e943ca585fa0fb2aba0e7449ce52cd250a811"
+  },
+  "shukyo_change": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_card",
+      "dispatch_letter",
+      "organization_overview",
+      "religious_status_career"
+    ],
+    "digest": "45e8659e68686b09e894b27b293f2d839dce69eae48cd2fbbf51436554317267"
+  },
+  "shukyo_coe": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_copy",
+      "return_envelope",
+      "dispatch_letter",
+      "organization_overview",
+      "religious_status_career"
+    ],
+    "digest": "d88be2fde454a833e81a2376eacda2512744779aee75c73369a35998420bbc6d"
   }
 }
