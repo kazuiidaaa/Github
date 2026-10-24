@@ -1,4 +1,4 @@
-import type { MedicalApplicantType } from "@/lib/formDetails";
+import type { ApplicantIdentity, MedicalApplicantType } from "@/lib/formDetails";
 import type { Lang } from "@/lib/documents/lang";
 import type { AcquisitionCause, Category, RequirementRule } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
@@ -28,12 +28,18 @@ export type ReasonCode =
   | { kind: "applicantTypeCommon" }
   | { kind: "applicantTypeUnknown" }
   | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] }
+  | { kind: "identityNotRequired"; identity: ApplicantIdentity }
   /** 判定の軸を複数持つ規則集合（RuleSet.alsoBasis。Issue #402）。選択済みの軸の値だけを持つ。どれも持たなければ「全事由・全区分に共通」 */
-  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType };
+  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
   other: "caseRequirements.applicantType_other",
+};
+
+const IDENTITY_KEYS: Record<ApplicantIdentity, MessageKey> = {
+  spouse: "caseRequirements.identity_spouse",
+  child: "caseRequirements.identity_child",
 };
 
 const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
@@ -54,12 +60,13 @@ const LEVEL_KEYS = {
   axes: { required: "caseRequirements.reasonAxesRequired", check: "caseRequirements.reasonAxesCheck", optional: "caseRequirements.reasonAxesOptional" },
 } as const;
 
-/** 複数の軸の理由の文で、選択済みの軸の値を並べる（取得の事由・カテゴリー・申請人の区分の順） */
+/** 複数の軸の理由の文で、選択済みの軸の値を並べる（取得の事由・カテゴリー・申請人の区分・申請人の身分の順） */
 function axesConditions(t: T, code: Extract<ReasonCode, { kind: "axesLevel" }>): string[] {
   const parts: string[] = [];
   if (code.cause) parts.push(t("caseRequirements.axisCause", { cause: t(CAUSE_KEYS[code.cause]) }));
   if (code.category) parts.push(t("caseRequirements.axisCategory", { category: code.category }));
   if (code.type) parts.push(t("caseRequirements.axisApplicantType", { type: t(APPLICANT_TYPE_KEYS[code.type]) }));
+  if (code.identity) parts.push(t("caseRequirements.axisIdentity", { identity: t(IDENTITY_KEYS[code.identity]) }));
   return parts;
 }
 
@@ -98,6 +105,8 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
       return t(LEVEL_KEYS.applicantType[code.level], {
         type: t(APPLICANT_TYPE_KEYS[code.type]),
       });
+    case "identityNotRequired":
+      return t("caseRequirements.reasonIdentityNotRequired", { identity: t(IDENTITY_KEYS[code.identity]) });
     case "axesLevel": {
       const conditions = axesConditions(t, code);
       if (conditions.length === 0) return t("caseRequirements.reasonAxesCommon");
@@ -151,4 +160,10 @@ export function selectionNotices(ev: {
 export function applicantTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsApplicantType: boolean }): MessageKey | null {
   if (!ev.ruleSet || !ev.needsApplicantType) return null;
   return ev.ruleSet.alsoBasis?.includes("applicantType") ? "caseRequirements.needsApplicantTypeAxes" : "caseRequirements.needsApplicantType";
+}
+
+/** 日本人の配偶者等の申請人の身分が未選択のときに出す案内の文。出さないときは null（身分は alsoBasis の軸のため、未選択の間は身分に共通の書類だけを出す） */
+export function identityNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsIdentity: boolean }): MessageKey | null {
+  if (!ev.ruleSet || !ev.needsIdentity) return null;
+  return "caseRequirements.needsIdentityAxes";
 }

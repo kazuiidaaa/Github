@@ -902,6 +902,21 @@
     ],
     "digest": "519d4b1848b8eac88eaa0d11462044d3701a93c85be07459607797ed81255dae"
   },
+  "bunka_katsudo_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "bunka_activity_documents",
+      "bunka_achievements",
+      "bunka_expense_capacity",
+      "bunka_expert_career"
+    ],
+    "digest": "a8b677769ac91ba0f14e1ebc26f1dadffa7ccf88b9ef5ddf49a8de9358486361"
+  },
   "koyo_acquisition": {
     "ruleIds": [
       "application_form",

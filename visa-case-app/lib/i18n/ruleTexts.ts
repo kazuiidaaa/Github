@@ -1363,6 +1363,118 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "체류자격 '특정활동'(일본 대학 등 졸업자) 체류자격 취득 허가 신청(출입국재류관리청)",
   ],
   "在留資格「特定活動」（特定情報処理活動）在留資格取得許可申請（出入国在留管理庁）": [
+
+  // 取得：文化活動・日本人の配偶者等（照合済み 2026-10-24。Issue #420）
+  "文化活動 在留資格取得許可申請（一部のみ整備）": [
+    "Cultural Activities: application for permission for acquisition of status of residence (only partly covered)",
+    "문화활동 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "日本人の配偶者等 在留資格取得許可申請（一部のみ整備）": [
+    "Spouse or Child of Japanese National: application for permission for acquisition of status of residence (only partly covered)",
+    "일본인의 배우자 등 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "具体的な活動の内容、期間及び当該活動を行おうとする機関の概要を明らかにする資料": [
+    "Materials clarifying the specific content and period of the activities and an outline of the organization where the activities will be carried out",
+    "구체적인 활동의 내용, 기간 및 해당 활동을 하려는 기관의 개요를 밝히는 자료",
+  ],
+  "(1)申請人本人又は受入れ機関が作成した日本での活動内容及びその期間を明らかにする文書 1通 (2)申請人本人が当該活動を行おうとする機関の概要を明らかにする資料（パンフレット等） 適宜": [
+    "(1) A document prepared by the applicant or the host organization clarifying the content and period of the activities in Japan (1 copy) (2) Materials prepared by the applicant clarifying an outline of the organization where the activities will be carried out (brochures, etc.) (as appropriate)",
+    "(1) 신청인 본인 또는 접수 기관이 작성한 일본에서의 활동 내용 및 그 기간을 밝히는 문서 1통 (2) 신청인 본인이 해당 활동을 하려는 기관의 개요를 밝히는 자료(팸플릿 등) 적절히",
+  ],
+  "学術上又は芸術上の業績を明らかにする資料": [
+    "Materials clarifying academic or artistic achievements",
+    "학술상 또는 예술상의 업적을 밝히는 자료",
+  ],
+  "次のいずれか。関係団体からの推薦状 1通／過去の活動に関する報道 適宜／入賞、入選等の実績 適宜／過去の論文、作品等の目録 適宜／これらに準ずる文書 適宜": [
+    "Any one of the following: a letter of recommendation from a related organization (1 copy) / press coverage of past activities (as appropriate) / records of prizes, selections, etc. (as appropriate) / a list of past papers, works, etc. (as appropriate) / documents equivalent to these (as appropriate)",
+    "다음 중 하나. 관계 단체의 추천장 1통／과거 활동에 관한 보도 적절히／입상, 입선 등의 실적 적절히／과거 논문, 작품 등의 목록 적절히／이에 준하는 문서 적절히",
+  ],
+  "申請人の日本滞在中の経費支弁能力を証する文書": [
+    "Documents certifying the applicant's ability to cover expenses during the stay in Japan",
+    "신청인의 일본 체류 중 경비 지불 능력을 증명하는 문서",
+  ],
+  "(1)申請人本人が経費を支弁する場合は、次のいずれか：給付金額及び給付期間を明示した奨学金給付に関する証明書 1通／申請人本人名義の銀行等における預金残高証明書／これらに準ずる文書（適宜）。(2)申請人本人以外の者が経費を支弁する場合は、経費負担者に係る次の資料：住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの） 各1通（1年間の総所得及び納税状況の両方が記載されていれば、いずれか一方でよい）／経費支弁者が外国にいる場合は、経費支弁者名義の銀行等における預金残高証明書（適宜）／これらに準ずる文書（適宜）": [
+    "(1) If the applicant pays the expenses, any one of the following: a certificate of scholarship stating the amount and period of the grant (1 copy) / a bank deposit balance certificate in the applicant's name / documents equivalent to these (as appropriate). (2) If someone other than the applicant pays the expenses, the following materials on the person bearing the expenses: a residence tax (taxable or non-taxable) certificate and a tax payment certificate (stating total income and tax payment status for one year), 1 copy each (if one certificate states both the total income and the tax payment status, either one is sufficient) / if the person bearing the expenses is abroad, a bank deposit balance certificate in that person's name (as appropriate) / documents equivalent to these (as appropriate)",
+    "(1) 신청인 본인이 경비를 지불하는 경우에는 다음 중 하나: 급부 금액 및 급부 기간을 명시한 장학금 급부에 관한 증명서 1통／신청인 본인 명의의 은행 등의 예금 잔액 증명서／이에 준하는 문서(적절히). (2) 신청인 본인 이외의 사람이 경비를 지불하는 경우에는 경비 부담자에 관한 다음 자료: 주민세 과세(또는 비과세) 증명서 및 납세 증명서(1년간의 총소득 및 납세 상황이 기재된 것) 각 1통(1년간의 총소득 및 납세 상황이 모두 기재되어 있으면 어느 한쪽이어도 됨)／경비 지불자가 외국에 있는 경우에는 경비 지불자 명의의 은행 등의 예금 잔액 증명서(적절히)／이에 준하는 문서(적절히)",
+  ],
+  "当該専門家の経歴及び業績を明らかにする資料": [
+    "Materials clarifying the career and achievements of the expert",
+    "해당 전문가의 경력 및 업적을 밝히는 자료",
+  ],
+  "専門家の指導を受けて修得する場合（文化活動２）のみ。次のいずれか。免許等の写し 1通／論文、作品集等 適宜／履歴書 1通": [
+    "Only if the applicant is to learn under the guidance of an expert (Cultural Activities 2). Any one of the following: a copy of a license, etc. (1 copy) / papers, collections of works, etc. (as appropriate) / a curriculum vitae (1 copy)",
+    "전문가의 지도를 받아 습득하는 경우(문화활동 2)에만 해당. 다음 중 하나. 면허 등의 사본 1통／논문, 작품집 등 적절히／이력서 1통",
+  ],
+  "配偶者（日本人）の方の戸籍謄本（全部事項証明書）": [
+    "Family register transcript (full certificate of matters) of the spouse (Japanese national)",
+    "배우자(일본인)의 호적등본(전부사항증명서)",
+  ],
+  "1通。申請人との婚姻事実の記載があるもの。婚姻事実の記載がない場合は、戸籍謄本に加え婚姻届出受理証明書を提出する。発行日から3か月以内のもの": [
+    "1 copy. One that records the marriage with the applicant. If the marriage is not recorded, submit a certificate of acceptance of the marriage notification in addition to the family register transcript. Issued within the past 3 months",
+    "1통. 신청인과의 혼인 사실이 기재되어 있는 것. 혼인 사실이 기재되어 있지 않은 경우에는 호적등본에 더해 혼인신고 수리 증명서를 제출한다. 발행일로부터 3개월 이내의 것",
+  ],
+  "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）": [
+    "Family register transcript or removed family register transcript (full certificate of matters) of the Japanese national (the applicant's parent or adoptive parent)",
+    "일본인(신청인의 부모 또는 양부모)의 호적등본 또는 제적등본(전부사항증명서)",
+  ],
+  "申請人の国籍国（外国）の機関から発行された結婚証明書": [
+    "Marriage certificate issued by an authority of the applicant's country of nationality (foreign country)",
+    "신청인의 국적국(외국) 기관에서 발급한 결혼 증명서",
+  ],
+  "1通。申請人が韓国籍等で戸籍謄本が発行される場合は、お二方の婚姻が記載された外国機関発行の戸籍謄本の提出でもよい": [
+    "1 copy. If the applicant is a national of Korea, etc. and a family register transcript is issued, a family register transcript issued by the foreign authority recording the marriage of the two persons may be submitted instead",
+    "1통. 신청인이 한국 국적 등으로 호적등본이 발급되는 경우에는 두 사람의 혼인이 기재된 외국 기관 발급 호적등본을 제출해도 된다",
+  ],
+  "出生又は特別養子縁組を証する文書（日本で出生／海外で出生／特別養子の場合ごとに、次のいずれか）": [
+    "Document certifying birth or special adoption (for each case of birth in Japan / birth abroad / special adoption, any one of the following)",
+    "출생 또는 특별양자결연을 증명하는 문서(일본에서 출생／해외에서 출생／특별양자의 경우마다 다음 중 하나)",
+  ],
+  "該当する場合ごとに、次のいずれか1通。日本で出生した場合：(1)出生届受理証明書 (2)認知届受理証明書（発行日から3か月以内のもの。(2)は日本の役所に届出をしている場合のみ）。海外で出生した場合：(1)出生国の機関から発行された出生証明書 (2)出生国の機関から発行された申請人の認知に係る証明書（認知に係る証明書がある方のみ）。特別養子の場合：(1)特別養子縁組届出受理証明書 (2)日本の家庭裁判所発行の養子縁組に係る審判書謄本及び確定証明書。出生の事由の「出生したことを証する書類」と同じ文書で足りるかは、案内ページに記載がないため、行政書士が確認する": [
+    "For each applicable case, any one of the following (1 copy). Born in Japan: (1) certificate of acceptance of the birth notification (2) certificate of acceptance of the acknowledgment notification (issued within the past 3 months; (2) only if the notification was filed with a Japanese government office). Born abroad: (1) birth certificate issued by an authority of the country of birth (2) certificate of acknowledgment of the applicant issued by an authority of the country of birth (only if such a certificate exists). Special adoption: (1) certificate of acceptance of the special adoption notification (2) a transcript of the adjudication on the adoption and a certificate of finality issued by a Japanese family court. Whether the same document as the \"document certifying the birth\" for the cause of birth is sufficient is not stated on the guidance page, so the administrative scrivener confirms it",
+    "해당하는 경우마다 다음 중 하나 1통. 일본에서 출생한 경우: (1) 출생신고 수리 증명서 (2) 인지신고 수리 증명서(발행일로부터 3개월 이내의 것. (2)는 일본 관공서에 신고한 경우에만). 해외에서 출생한 경우: (1) 출생국 기관에서 발급한 출생 증명서 (2) 출생국 기관에서 발급한 신청인의 인지에 관한 증명서(인지에 관한 증명서가 있는 사람만). 특별양자의 경우: (1) 특별양자결연 신고 수리 증명서 (2) 일본 가정법원 발급의 양자결연에 관한 심판서 등본 및 확정 증명서. 출생 사유의 '출생했음을 증명하는 서류'와 같은 문서로 충분한지는 안내 페이지에 기재가 없으므로 행정서사가 확인한다",
+  ],
+  "日本での滞在費用を証明する資料": [
+    "Materials certifying the cost of staying in Japan",
+    "일본에서의 체재 비용을 증명하는 자료",
+  ],
+  "(1)を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)の資料などを提出する。(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの） 各1通。1月1日現在の住所の市区町村が発行する。1年間の総所得及び納税状況の両方が記載されていれば、いずれか一方でよい。発行日から3か月以内のもの。実子・特別養子の場合は、複数の方が扶養するときは収入の多い方。(2)その他：預貯金通帳の写し（適宜。Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよいが、加工等できない状態で印刷したものに限り、Excelファイル等は不可）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの。適宜）／これらに準ずるもの（適宜）": [
+    "Submit (1). If (1) cannot prove the cost of staying, for example because the applicant has only recently entered Japan or has moved, submit materials such as those in (2). (1) A residence tax (taxable or non-taxable) certificate and a tax payment certificate (stating total income and tax payment status for one year) for the most recent year of the person bearing the applicant's cost of staying, 1 copy each. Issued by the municipality of residence as of January 1. If one certificate states both the total income and the tax payment status, either one is sufficient. Issued within the past 3 months. For a biological child or special adopted child, if several people support the applicant, the one with the highest income. (2) Others: a copy of a bank passbook (as appropriate; a copy of a web passbook screen showing the transaction history is acceptable only if printed in a form that cannot be altered; Excel files, etc. are not accepted) / a certificate of planned employment or a notice of informal job offer (issued by a Japanese company; as appropriate) / documents equivalent to these (as appropriate)",
+    "(1)을 제출한다. 입국 후 얼마 안 된 경우나 이사 등으로 (1)의 자료로는 체재 비용을 증명할 수 없는 경우에는 (2)의 자료 등을 제출한다. (1) 신청인의 체재 비용을 지불하는 사람의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세 증명서(1년간의 총소득 및 납세 상황이 기재된 것) 각 1통. 1월 1일 현재 거주하는 시구정촌에서 발급한다. 1년간의 총소득 및 납세 상황이 모두 기재되어 있으면 어느 한쪽이어도 된다. 발행일로부터 3개월 이내의 것. 친자·특별양자의 경우 여러 사람이 부양할 때는 수입이 많은 사람. (2) 그 밖의 자료: 예금 통장 사본(적절히. 웹 통장 화면의 사본 등(거래 내역을 알 수 있는 것)도 가능하나 가공할 수 없는 상태로 인쇄한 것에 한하며 Excel 파일 등은 불가)／고용 예정 증명서 또는 채용 내정 통지서(일본 회사 발행. 적절히)／이에 준하는 것(적절히)",
+  ],
+  "身元保証書": ["Letter of guarantee", "신원보증서"],
+  "1通（様式は案内ページにある日本語版・英語版）。身元保証人は、配偶者の場合は日本に居住する配偶者(日本人)、実子・特別養子の場合は日本に居住する日本人の方（申請人の親又は養親）等": [
+    "1 copy (the form, in Japanese and English versions, is on the guidance page). The guarantor is, for a spouse, the spouse (Japanese national) residing in Japan, and for a biological child or special adopted child, a Japanese national residing in Japan (the applicant's parent or adoptive parent), etc.",
+    "1통(양식은 안내 페이지에 있는 일본어판·영어판). 신원보증인은 배우자의 경우 일본에 거주하는 배우자(일본인), 친자·특별양자의 경우 일본에 거주하는 일본인(신청인의 부모 또는 양부모) 등",
+  ],
+  "日本人の方（配偶者又は親・養親）の世帯全員の記載のある住民票": [
+    "Certificate of residence of the Japanese national (spouse, parent, or adoptive parent) stating all household members",
+    "일본인(배우자 또는 부모·양부모)의 세대 전원이 기재된 주민표",
+  ],
+  "1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。配偶者の場合は、配偶者（日本人）の世帯全員の記載のある住民票の写しで、発行日から3か月以内のもの。実子・特別養子の場合は、日本人の方（申請人の親又は養親）の世帯全員の記載があるもの": [
+    "1 copy. The Individual Number (My Number) omitted and all other items not omitted. For a spouse, a copy of the certificate of residence of the spouse (Japanese national) stating all household members, issued within the past 3 months. For a biological child or special adopted child, one stating all household members of the Japanese national (the applicant's parent or adoptive parent)",
+    "1통. 개인번호(마이넘버)는 생략하고 그 밖의 사항은 생략이 없는 것. 배우자의 경우에는 배우자(일본인)의 세대 전원이 기재된 주민표 사본으로 발행일로부터 3개월 이내의 것. 친자·특별양자의 경우에는 일본인(신청인의 부모 또는 양부모)의 세대 전원이 기재된 것",
+  ],
+  "質問書": ["Questionnaire", "질문서"],
+  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。チェックシートは未照合のため、要否は行政書士が確認する": [
+    "1 copy. For a spouse, the questionnaire on the spouse page (the form was revised on June 6, 2017, so submit the new form; versions in 10 languages including English are available). For a biological child or special adopted child, the questionnaire on that page (a different form from the spouse's). The checklist has not been checked against, so the administrative scrivener confirms whether it is required",
+    "1통. 배우자의 경우 배우자 페이지의 질문서(2017년 6월 6일에 양식을 개정했으므로 새 양식으로 제출한다. 영어 등 10개 언어판이 있음). 친자·특별양자의 경우 친자·특별양자 페이지의 질문서(배우자의 질문서와는 다른 양식). 체크시트는 미대조이므로 필요 여부는 행정서사가 확인한다",
+  ],
+  "夫婦間の交流が確認できる資料": [
+    "Materials confirming the interaction between the spouses",
+    "부부 간의 교류를 확인할 수 있는 자료",
+  ],
+  "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可） 2〜3葉。その他、提出できるもの：SNS記録、通話記録": [
+    "Snapshots (showing the two persons together, with their appearance clearly identifiable; photos altered with apps are not accepted), 2 to 3 photos. Other items that can be submitted: social media records, call records",
+    "스냅 사진(두 사람이 함께 찍혀 있고 용모를 분명히 확인할 수 있는 것. 앱으로 가공한 것은 불가) 2~3장. 그 밖에 제출할 수 있는 것: SNS 기록, 통화 기록",
+  ],
+  "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請書類を提出する場合であっても、提示が必要": [
+    "To be presented only; not a document to be submitted with a copy. Presentation is required even when someone other than the applicant submits the application documents",
+    "제시만 하며, 제출 서류로 사본을 첨부하는 서류가 아니다. 신청인 이외의 사람이 신청 서류를 제출하는 경우에도 제시가 필요하다",
+  ],
+  "このページ（日本人の実子・特別養子の取得の節）には記載が無い。提示の要否は、行政書士が確認する": [
+    "Not stated on this page (the acquisition section for a biological child or special adopted child of a Japanese national). The administrative scrivener confirms whether presentation is required",
+    "이 페이지(일본인의 친자·특별양자의 취득 항목)에는 기재가 없다. 제시의 필요 여부는 행정서사가 확인한다",
+  ],
     "Status of residence \"Designated Activities\" (designated information processing activities): application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
     "체류자격 '특정활동'(특정정보처리활동) 체류자격 취득 허가 신청(출입국재류관리청)",
   ],
