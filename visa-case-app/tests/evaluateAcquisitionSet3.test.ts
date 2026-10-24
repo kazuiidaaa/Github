@@ -226,7 +226,7 @@ describe("変えないもの", () => {
   it("ACQUISITION_BY_CAUSE は変えない。興行（#429）・未整備の資格の取得は ACQUISITION_BY_CAUSE のまま", () => {
     expect(base.checkedAt).toBe("2026-10-04");
     expect(base.sources.every((s) => s.comparedAt === undefined)).toBe(true);
-    for (const status of ["興行", "留学", ""]) expect(evaluate(make(status, "other")).ruleSet?.id, status).toBe("acquisition_by_cause");
+    for (const status of ["興行", ""]) expect(evaluate(make(status, "other")).ruleSet?.id, status).toBe("acquisition_by_cause");
   });
 
   it("規則集合：ACQUISITION_BY_CAUSE から引き継ぐ書類は verify: true のまま。規則の id は重複しない", () => {

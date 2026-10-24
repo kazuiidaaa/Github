@@ -3670,6 +3670,116 @@ export const HODO_ACQUISITION: RuleSet = {
   rules: [...acqSet1CauseRules, hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
 };
 
+// ===== 在留資格取得許可申請（公用・技能実習・留学。Issue #420） =====
+// 照合表は docs/official/reconciliation/acquisition-koyo-2026-10-24.md・acquisition-ginoujisshu-2026-10-24.md・acquisition-ryugaku-2026-10-24.md（いずれも照合日 2026-10-24）。
+// 人の判断（2026-10-24）：各照合表の推奨のとおり、全件を反映した。認定・変更・更新の規則集合は無く、取得だけを先に作る（芸術 R-10 と同じ）。
+// 共通の扱いは技人国の取得（#396）と同じ（acquisitionSet3BaseRules）。ページの URL は未記録のため、出典は URL 未記録の一覧・手続案内・申請書様式とする（推測で書かない）。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。
+const ACQUISITION_SET4_COMPARED_AT = "2026-10-24";
+const ACQUISITION_SET4_CHECKED_AT = "2026-10-24";
+const ACQUISITION_SET4_SOURCES: RuleSource[] = [
+  { ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, comparedAt: ACQUISITION_SET4_COMPARED_AT },
+  ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+  ...ACQUISITION_BY_CAUSE.sources,
+];
+
+// 公用（acquisition-koyo-2026-10-24.md。原文 koyo_2026-10-18.txt 102〜116行）。原文の項目と一対一になる：申請書・事由別の書類・旅券の提示・口上書等・申請取次者の書類。
+// KO-1：口上書等を全事由の必須で足す。KO-2：写真は外す（原文に項目が無く、公用は中長期在留者とならない在留資格。#396 の写真の扱いは適用しない）。
+const KOYO_ACQUISITION_RULES: RequirementRule[] = [
+  {
+    id: "koyo_diplomatic_note",
+    name: "口上書その他外国政府又は国際機関が発行した身分及び用務を証する文書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通",
+    verify: true,
+  },
+];
+export const KOYO_ACQUISITION: RuleSet = {
+  id: "koyo_acquisition",
+  title: "公用 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "公用",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_CHECKED_AT,
+  sources: ACQUISITION_SET4_SOURCES,
+  // 原文の並び（申請書・事由別の書類・旅券の提示・口上書等・申請取次者の書類）に合わせ、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules({}, ["photo"]).flatMap((r) => (r.id === "passport_presentation" ? [r, ...KOYO_ACQUISITION_RULES] : [r])),
+};
+
+// 技能実習（acquisition-ginoujisshu-2026-10-24.md。原文 ginoujisshu_2026-10-24.txt 67〜87行）。
+// GJ-1：技能実習計画認定通知書等の写しを全事由の必須で足す。GJ-9：号・企業単独型／団体監理型の入力欄は足さず、区分の違いは注記で案内する（82行の例は書かない）。
+// GJ-2：住民税の証明書を全事由の必須で足す（名称は教育の更新と同じ）。GJ-4：写真は技人国の取得と同じ（年齢の注記）。
+const GINOU_JISSHU_ACQUISITION_RULES: RequirementRule[] = [
+  {
+    id: "ginou_jisshu_plan_certificate",
+    name: "技能実習計画認定通知書及び認定の申請書の写し",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通。技能実習法第8条第1項の認定（変更の認定があったときは変更後のもの）を受けた技能実習計画に係るもの。申請する在留資格の技能実習の区分（1号〜3号、企業単独型・団体監理型）に対応する計画のもの",
+    verify: true,
+  },
+  {
+    id: "resident_tax_certificates",
+    name: "住民税の課税（又は非課税）証明書及び納税証明書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "各1通。1年間の総所得及び納税状況が記載されたもの。1月1日現在の住所地の市区町村から発行される。総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。入国後間もない場合や転居等により発行されない場合は、最寄りの地方出入国在留管理官署に問い合わせる",
+    verify: true,
+  },
+];
+export const GINOU_JISSHU_ACQUISITION: RuleSet = {
+  id: "ginou_jisshu_acquisition",
+  title: "技能実習 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "技能実習",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_CHECKED_AT,
+  sources: ACQUISITION_SET4_SOURCES,
+  // 固有の書類は、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...GINOU_JISSHU_ACQUISITION_RULES] : [r])),
+};
+
+// 留学（acquisition-ryugaku-2026-10-24.md。原文 ryugaku_2026-10-24.txt 114〜137行）。
+// RY-1：教育機関の種類・適正校の区分ごとの提出書類一覧表（PDF）は未入手のため、書類の名前は出さず、要確認の1行で一覧表を案内する（RY-7：活動に応じた資料はこの行に置き換える）。
+// RY-3：留意事項・別表・経費支弁書・奨学金の証明書一覧は別行にせず、RY-1 の注記に書名だけ書く。RY-11：教育機関の種類・適正校の区分の入力欄は足さない。
+// RY-2：各種確認書（別紙）は要確認の1行（教育機関が作成する）。
+const RYUGAKU_ACQUISITION_RULES: RequirementRule[] = [
+  {
+    id: "ryugaku_document_list",
+    name: "教育機関の種類と適正校の区分に応じた提出書類一覧表に掲げる資料",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "check",
+    note: "提出書類は、教育機関の種類（(1)大学・大学に準ずる機関・高等専門学校 (2)専修学校・各種学校等 (3)告示日本語教育機関・認定日本語教育機関 (4)高等学校・中学校・小学校）と、適正校の区分（クラスⅠ・クラスⅡ・通知を受けていない機関）ごとの一覧表による。取得では、一覧表を「１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用」する。取得の節に「申請に当たっての留意事項・別表・経費支弁書・奨学金の給付に関する証明書一覧」のリンクがある。一覧表は入管庁の留学のページで確認する（画面には書類の名前を載せていない）",
+    verify: true,
+  },
+  {
+    id: "ryugaku_confirmation_form",
+    name: "各種確認書（別紙）",
+    party: "organization",
+    causes: ALL_CAUSES,
+    level: "check",
+    note: "在籍予定又は在籍中の教育機関が作成する（申請人本人が作成するものではない）。最新様式を使用する。(1)専修学校又は各種学校で日本語教育以外の教育を受ける方、(2)高等学校で教育を受ける方、(3)専ら日本語教育を受ける方（日本語別科を含む）で別表に掲げる国・地域の国籍を有し外国の高等教育機関（大学等）の卒業証書等を提出する方、(4)前回の在留諸申請から在籍する教育機関に変更がない方（専ら日本語教育を受けていた方が、他の教育を同じ教育機関で受ける場合を除く）は提出不要。令和8年6月以前に申請する場合は従前の各種確認書でよい",
+    verify: true,
+  },
+];
+export const RYUGAKU_ACQUISITION: RuleSet = {
+  id: "ryugaku_acquisition",
+  title: "留学 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "留学",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_CHECKED_AT,
+  sources: ACQUISITION_SET4_SOURCES,
+  // 固有の書類は、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...RYUGAKU_ACQUISITION_RULES] : [r])),
+};
+// ===== ここまで（取得：公用・技能実習・留学） =====
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -3706,6 +3816,10 @@ export const RULE_SETS: RuleSet[] = [
   SHUKYO_ACQUISITION,
   HOUMU_KAIKEI_ACQUISITION,
   TANKI_TAIZAI_ACQUISITION,
+  // 取得：公用・技能実習・留学（Issue #420。照合 2026-10-24）
+  KOYO_ACQUISITION,
+  GINOU_JISSHU_ACQUISITION,
+  RYUGAKU_ACQUISITION,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
   KAIGO_CHANGE,

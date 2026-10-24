@@ -901,5 +901,42 @@
       "resident_tax_certificates"
     ],
     "digest": "519d4b1848b8eac88eaa0d11462044d3701a93c85be07459607797ed81255dae"
+  },
+  "koyo_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "passport_presentation",
+      "koyo_diplomatic_note",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof"
+    ],
+    "digest": "df317816f359302b26e5b2abc502a9f1818ad30a0e5c8d447e38bd029bad8300"
+  },
+  "ginou_jisshu_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "ginou_jisshu_plan_certificate",
+      "resident_tax_certificates",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof"
+    ],
+    "digest": "a1779b75af698eb983c3693e23ec22d5ac2323a8df831969a918ba7295948105"
+  },
+  "ryugaku_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "ryugaku_document_list",
+      "ryugaku_confirmation_form",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof"
+    ],
+    "digest": "90997c2dcad2dbc0842132b807cc82f936ea6466710aaad0216c18b7c4570dec"
   }
 }

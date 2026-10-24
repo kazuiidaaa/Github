@@ -123,7 +123,9 @@ describe("技能の取得（acquisition-ginou-chouri・gino-sonota-2026-10-19.md
     expect(evaluate(make("技能", "other")).ruleSet?.id).toBe("gino_acquisition");
     expect(gino.basis).toBe("acquisitionCause");
     expect(gino.alsoBasis).toEqual(["category"]);
-    for (const status of ["特定技能", "技能実習"]) expect(evaluate(make(status, "other")).ruleSet?.id, status).toBe("acquisition_by_cause");
+    expect(evaluate(make("特定技能", "other")).ruleSet?.id).toBe("acquisition_by_cause");
+    // 技能実習は専用の規則集合（#420。acquisition-ginoujisshu-2026-10-24.md）
+    expect(evaluate(make("技能実習", "other")).ruleSet?.id).toBe("ginou_jisshu_acquisition");
   });
 
   it("R-1：カテゴリー別の書類は、変更（GINO_CHANGE）の手続共通の書類を除いた規則を、同じ定義で写す", () => {
