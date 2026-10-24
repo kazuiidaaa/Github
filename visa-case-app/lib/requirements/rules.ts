@@ -3850,13 +3850,13 @@ export const BUNKA_KATSUDO_ACQUISITION: RuleSet = {
 };
 
 // 日本人の配偶者等（NH-1〜NH-20。原文 nihonjinhaigusha-spouse-acquisition_2026-10-24.txt 6〜54行・nihonjinhaigusha-child-acquisition_2026-10-24.txt 6〜51行）。
-// 取得の提出書類のチェックシート（PDF）は両ページにある。子（日本人の実子・特別養子）は PDF 001426551 に照合済み（差分なし）。配偶者は手元に無く、チェックシート未照合（NH-19）。ページの本文で作った。
+// 取得の提出書類のチェックシート（PDF）は両ページにある。配偶者は PDF 001426543、子（日本人の実子・特別養子）は PDF 001426551 に照合済み（いずれも差分なし。NH-19）。
 // NH-1：判定の軸を、取得の事由と申請人の身分（配偶者／実子・特別養子。formDetails.applicantIdentity）の2つにする（alsoBasis）。身分が未選択の間は、身分に共通の書類だけを出す。
 // NH-2：原文は事由を3区分（国籍離脱・出生・それ以外）で書くため、出生したことを証する書類（birth_certificate）は外さない（家族滞在の取得と同じ）。
 // NH-6・NH-8：旅券の理由書・活動に応じた資料は外す（活動に応じた資料は、NH-11〜NH-16 の書類群がこれに当たる）
 const NIHONJIN_HAIGUSHA_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "activity_materials"];
 const NIHONJIN_HAIGUSHA_QUESTIONNAIRE_NOTE =
-  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。実子・特別養子の場合は、取得のチェックシート（PDF 001426551）に項目がある。配偶者の場合は、チェックシートが未照合のため、要否は行政書士が確認する";
+  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。配偶者の場合は PDF 001426543、実子・特別養子の場合は PDF 001426551 の取得のチェックシートに、この項目がある";
 const NIHONJIN_HAIGUSHA_RESIDENCE_CERTIFICATE_NOTE =
   "1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。配偶者の場合は、配偶者（日本人）の世帯全員の記載のある住民票の写しで、発行日から3か月以内のもの。実子・特別養子の場合は、日本人の方（申請人の親又は養親）の世帯全員の記載があるもの";
 const NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
@@ -3999,7 +3999,7 @@ const nihonjinHaigushaRules: RequirementRule[] = [
   NIHONJIN_HAIGUSHA_NEW_RULES.child_passport_presentation,
   nihonjinHaigushaBaseById.agent_identity_document,
 ];
-// NH-20：チェックシートは子のみ照合済み（配偶者は未照合）。題名は「一部のみ整備」
+// NH-20：チェックシートは配偶者・子とも照合済み（差分なし）。題名は「一部のみ整備」
 export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
   id: "nihonjin_haigusha_acquisition",
   title: "日本人の配偶者等 在留資格取得許可申請（一部のみ整備）",
@@ -4015,7 +4015,7 @@ export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
 
 // ===== 在留資格取得許可申請（永住者の配偶者等・定住者。Issue #420） =====
 // 照合表は docs/official/reconciliation/acquisition-eijushahaigusha-2026-10-24.md・acquisition-teijusha-2026-10-24.md（照合日 2026-10-24）。
-// 人の判断（2026-10-24）：各照合表の「判断」欄の推奨のとおり（全件）。取得のチェックシート（PDF）は、子は照合済み（001426551。差分なし）、配偶者は手元に無い（未照合）。案内ページの本文で作った。
+// 人の判断（2026-10-24）：各照合表の「判断」欄の推奨のとおり（全件）。取得のチェックシート（PDF）は、永住者の配偶者等は照合済み（001426557。差分なし）、定住者は手元に無い（未照合）。案内ページの本文で作った。
 // 永住者の配偶者等・定住者には、認定・変更・更新の規則集合が無い（取得だけを先に作る）。共通の扱いは技人国の取得（#396）と同じ：
 // 旅券の理由書・活動に応じた資料を外し、写真は「写真（40mm×30mm）」を全事由の必須（注記は年齢の注記のみ）、申請取次者の書類の注記は原文のとおり。
 // ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。出典のページの URL は控えに無いため推測せず、「URL 未記録」の出典（2026-10-24 の版）を置く。
