@@ -1277,6 +1277,20 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "For a new business, a business plan. Read according to the acquisition guidance page, it is required for Category 4 (only Category 3 is \"limited to engaging in research work after a transfer\"). There is no checklist for acquisition. In the certificate of eligibility and change checklists, the transfer condition applies to the whole row (Categories 3 and 4), so confirmation is required",
     "신규 사업의 경우 사업계획서. 취득 안내 페이지에 따르면 카테고리 4는 필요(카테고리 3만 '전근하여 연구 업무에 종사하는 경우에 한함'). 취득 체크시트는 없다. 인정·변경 체크시트에서는 행 전체(카테고리 3·4)에 전근 조건이 붙으므로 확인 필요",
   ],
+
+  // 医療・技能・介護の在留資格取得許可申請（Issue #420。照合表 acquisition-iryou・ginou-chouri・gino-sonota・kaigo-2026-10-19.md）
+  "医療 在留資格取得許可申請（一部のみ整備）": [
+    "Medical Services: application for permission for acquisition of status of residence (only partly covered)",
+    "의료 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "技能 在留資格取得許可申請（一部のみ整備）": [
+    "Skilled Labor: application for permission for acquisition of status of residence (only partly covered)",
+    "기능 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "介護 在留資格取得許可申請（一部のみ整備）": [
+    "Nursing Care: application for permission for acquisition of status of residence (only partly covered)",
+    "개호 체류자격 취득 허가 신청(일부만 정비)",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

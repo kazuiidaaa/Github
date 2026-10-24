@@ -94,7 +94,7 @@ describe("evaluate: 在留資格取得許可申請（取得の事由別）", () 
   it("希望する在留資格が空でも何であっても同じ規則が適用される", () => {
     for (const cause of ["", "birth", "other"] as Cause[]) {
       const base = ids(evaluate(make(cause)), "required");
-      for (const targetStatus of ["", "留学", "永住者", "介護"]) {
+      for (const targetStatus of ["", "留学", "永住者", "特定技能（介護）"]) {
         const e = evaluate(make(cause, { targetStatus, currentStatus: "留学" }));
         expect(e.ruleSet?.id).toBe("acquisition_by_cause");
         expect(e.notApplicableReason).toBeUndefined();
@@ -277,7 +277,7 @@ describe("evaluate: 高度専門職の在留資格取得許可申請（Issue #21
 
   it("他の在留資格の取得は、従来どおり ACQUISITION_BY_CAUSE（技人国・家族滞在は専用の規則集合。Issue #396）", () => {
     for (const row of EXPECTED) {
-      for (const targetStatus of ["", "留学", "永住者", "介護"]) {
+      for (const targetStatus of ["", "留学", "永住者", "特定技能（介護）"]) {
         const e = evaluate(make(row.cause, { targetStatus }));
         expect(e.ruleSet?.id).toBe("acquisition_by_cause");
         expect(ids(e, "required")).toEqual(row.required);

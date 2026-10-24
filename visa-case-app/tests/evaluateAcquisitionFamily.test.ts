@@ -272,7 +272,7 @@ describe("evaluate: 技術・人文知識・国際業務／家族滞在の在留
   });
 
   it("他の在留資格の取得は、従来どおり ACQUISITION_BY_CAUSE", () => {
-    for (const status of ["", "留学", "介護", "永住者"]) expect(evaluate(make("birth", { targetStatus: status })).ruleSet?.id, status).toBe("acquisition_by_cause");
+    for (const status of ["", "留学", "特定技能（介護）", "永住者"]) expect(evaluate(make("birth", { targetStatus: status })).ruleSet?.id, status).toBe("acquisition_by_cause");
   });
 
   it("規則集合：すべて verify: true、IDは重複せず、basis は取得の事由。HSP_ACQUISITION の後、ACQUISITION_BY_CAUSE の前に照合する", () => {
