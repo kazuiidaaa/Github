@@ -19,6 +19,7 @@ import {
   type WorkEntry,
 } from "@/lib/formDetails";
 import { isTokuteiKatsudo, ruleSetFor, statusForRules } from "@/lib/requirements/evaluate";
+import { eijuuTypesOf } from "@/lib/requirements/rules";
 import { HspPointSection } from "@/components/HspPointSection";
 import { formLabelText } from "@/lib/i18n/formLabels";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
@@ -96,6 +97,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const showIdentity = medicalRuleSet?.alsoBasis?.includes("identity") ?? false;
   // 定住者の区分は、定住者の規則集合（取得は alsoBasis、認定・変更・更新は basis に teijushaType を持つ）が引かれるときだけ尋ねる
   const showTeijushaType = medicalRuleSet?.basis === "teijushaType" || (medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false);
+  // 永住許可申請の提出書類一覧表の区分は、永住許可申請の規則集合（basis が eijuuType）が引かれるときだけ尋ねる。選べるのは、その規則集合が扱う区分のみ
+  const eijuuOptions = medicalRuleSet?.basis === "eijuuType" ? eijuuTypesOf(medicalRuleSet) : [];
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);
@@ -171,7 +174,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "tokuteiKatsudoType"
       | "medicalApplicantType"
       | "applicantIdentity"
-      | "teijushaType",
+      | "teijushaType"
+      | "eijuuType",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -277,6 +281,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {showMedicalType && select("medicalApplicantType", MEDICAL_APPLICANT_TYPES.map((v) => [v, t(`caseRequirements.applicantType_${v}`)]), t("caseRequirements.applicantTypeLabel"))}
         {showIdentity && select("applicantIdentity", APPLICANT_IDENTITIES.map((v) => [v, t(`caseRequirements.identity_${v}`)]), t("caseRequirements.identityLabel"))}
         {showTeijushaType && select("teijushaType", TEIJUSHA_TYPES.map((v) => [v, t(`caseRequirements.teijushaType_${v}`)]), t("caseRequirements.teijushaTypeLabel"))}
+        {eijuuOptions.length > 0 && select("eijuuType", eijuuOptions.map((v) => [v, t(`caseRequirements.eijuuType_${v}`)]), t("caseRequirements.eijuuTypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (

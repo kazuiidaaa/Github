@@ -25,6 +25,7 @@ export const caseNew = defineMessages({
     procedure_change_desc: "現在の在留資格から、別の在留資格への変更を申請する案件です。",
     procedure_coe_desc: "海外から呼び寄せる外国人について、認定証明書の交付を申請する案件です。",
     procedure_acquisition_desc: "出生や日本国籍の離脱・喪失などにより、上陸の手続を経ずに在留資格を取得する案件です。",
+    procedure_permanent_desc: "在留資格を有する外国人が、永住者の在留資格への変更（又は出生等による取得）を希望する場合の申請の案件です。",
     procedure_other_desc: "上記以外の案件です。",
     caseNameLabel: "案件名",
     caseNameHint: "例：李明さん 在留期間更新（内部管理用。正式な氏名としては扱いません）",
@@ -90,6 +91,7 @@ export const caseNew = defineMessages({
     procedure_coe_desc: "A case to apply for a certificate of eligibility for a foreign national being invited from overseas.",
     procedure_acquisition_desc:
       "A case to acquire a residence status without going through landing procedures, for example due to birth or loss or renunciation of Japanese nationality.",
+    procedure_permanent_desc: "A case to apply for permanent residence (a change to, or acquisition by birth etc. of, the Permanent Resident status) for a foreign national who holds a status of residence.",
     procedure_other_desc: "A case other than the above.",
     caseNameLabel: "Case name",
     caseNameHint: "Example: Ms. Li Ming, extension of period of stay (for internal management; not treated as an official name)",
@@ -154,6 +156,7 @@ export const caseNew = defineMessages({
     procedure_change_desc: "현재의 체류자격에서 다른 체류자격으로의 변경을 신청하는 사건입니다.",
     procedure_coe_desc: "해외에서 초청하는 외국인에 대해 사증발급인정서 발급을 신청하는 사건입니다.",
     procedure_acquisition_desc: "출생이나 일본 국적의 이탈・상실 등으로 상륙 절차를 거치지 않고 체류자격을 취득하는 사건입니다.",
+    procedure_permanent_desc: "체류자격을 가진 외국인이 영주자 체류자격으로의 변경(또는 출생 등에 의한 취득)을 희망하는 경우의 신청 사건입니다.",
     procedure_other_desc: "위에 해당하지 않는 사건입니다.",
     caseNameLabel: "사건명",
     caseNameHint: "예: 이명 님 체류기간 연장(내부 관리용. 정식 성명으로 취급하지 않습니다)",

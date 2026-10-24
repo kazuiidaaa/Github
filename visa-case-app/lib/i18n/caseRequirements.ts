@@ -1,4 +1,4 @@
-import type { ApplicantIdentity, MedicalApplicantType, TeijushaType } from "@/lib/formDetails";
+import type { ApplicantIdentity, EijuuType, MedicalApplicantType, TeijushaType } from "@/lib/formDetails";
 import type { Lang } from "@/lib/documents/lang";
 import type { AcquisitionCause, Category, RequirementRule } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
@@ -30,8 +30,9 @@ export type ReasonCode =
   | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] }
   | { kind: "identityNotRequired"; identity: ApplicantIdentity }
   | { kind: "teijushaTypeNotRequired"; type: TeijushaType }
+  | { kind: "eijuuTypeNotRequired"; type: EijuuType }
   /** 判定の軸を複数持つ規則集合（RuleSet.alsoBasis。Issue #402）。選択済みの軸の値だけを持つ。どれも持たなければ「全事由・全区分に共通」 */
-  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity; teijushaType?: TeijushaType };
+  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity; teijushaType?: TeijushaType; eijuuType?: EijuuType };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
@@ -52,6 +53,13 @@ const TEIJUSHA_TYPE_KEYS: Record<TeijushaType, MessageKey> = {
   childPermanentSpouse: "caseRequirements.teijushaType_childPermanentSpouse",
   adoptedJapanese: "caseRequirements.teijushaType_adoptedJapanese",
   adoptedPermanent: "caseRequirements.teijushaType_adoptedPermanent",
+};
+
+const EIJUU_TYPE_KEYS: Record<EijuuType, MessageKey> = {
+  nihonjinSpouse: "caseRequirements.eijuuType_nihonjinSpouse",
+  nihonjinChild: "caseRequirements.eijuuType_nihonjinChild",
+  eijushaSpouse: "caseRequirements.eijuuType_eijushaSpouse",
+  eijushaChild: "caseRequirements.eijuuType_eijushaChild",
 };
 
 const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
@@ -80,6 +88,7 @@ function axesConditions(t: T, code: Extract<ReasonCode, { kind: "axesLevel" }>):
   if (code.type) parts.push(t("caseRequirements.axisApplicantType", { type: t(APPLICANT_TYPE_KEYS[code.type]) }));
   if (code.identity) parts.push(t("caseRequirements.axisIdentity", { identity: t(IDENTITY_KEYS[code.identity]) }));
   if (code.teijushaType) parts.push(t("caseRequirements.axisTeijushaType", { type: t(TEIJUSHA_TYPE_KEYS[code.teijushaType]) }));
+  if (code.eijuuType) parts.push(t("caseRequirements.axisEijuuType", { type: t(EIJUU_TYPE_KEYS[code.eijuuType]) }));
   return parts;
 }
 
@@ -122,6 +131,8 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
       return t("caseRequirements.reasonIdentityNotRequired", { identity: t(IDENTITY_KEYS[code.identity]) });
     case "teijushaTypeNotRequired":
       return t("caseRequirements.reasonTeijushaTypeNotRequired", { type: t(TEIJUSHA_TYPE_KEYS[code.type]) });
+    case "eijuuTypeNotRequired":
+      return t("caseRequirements.reasonEijuuTypeNotRequired", { type: t(EIJUU_TYPE_KEYS[code.type]) });
     case "axesLevel": {
       const conditions = axesConditions(t, code);
       if (conditions.length === 0) return t("caseRequirements.reasonAxesCommon");
@@ -190,4 +201,13 @@ export function identityNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } 
 export function teijushaTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsTeijushaType: boolean }): MessageKey | null {
   if (!ev.ruleSet || !ev.needsTeijushaType) return null;
   return "caseRequirements.needsTeijushaTypeAxes";
+}
+
+/**
+ * 永住許可申請の提出書類一覧表の区分が未選択のときに出す案内の文。出さないときは null。
+ * 区分は basis の軸のため、未選択の間は、区分に共通の書類だけを出す。
+ */
+export function eijuuTypeNotice(ev: { ruleSet: { basis?: string } | null; needsEijuuType: boolean }): MessageKey | null {
+  if (!ev.ruleSet || !ev.needsEijuuType) return null;
+  return "caseRequirements.needsEijuuTypeAxes";
 }

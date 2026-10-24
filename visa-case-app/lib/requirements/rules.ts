@@ -1,4 +1,5 @@
-import type { ApplicantIdentity, FormDetails, MedicalApplicantType, TeijushaType, TokuteiKatsudoType } from "../formDetails";
+import type { ApplicantIdentity, EijuuType, FormDetails, MedicalApplicantType, TeijushaType, TokuteiKatsudoType } from "../formDetails";
+import { EIJUU_TYPES } from "../formDetails";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 import {
@@ -17,7 +18,7 @@ export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
 /** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
 export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
-export type { ApplicantIdentity, MedicalApplicantType, TeijushaType };
+export type { ApplicantIdentity, EijuuType, MedicalApplicantType, TeijushaType };
 
 export interface RequirementRule {
   id: string;
@@ -35,6 +36,8 @@ export interface RequirementRule {
   applicantTypes?: MedicalApplicantType[];
   /** この書類が必要となる定住者の区分（軸 teijushaType を持つ規則集合のみ。省略時は全区分） */
   teijushaTypes?: TeijushaType[];
+  /** この書類が必要となる永住許可申請の提出書類一覧表の区分（軸 eijuuType を持つ規則集合のみ。省略時は全区分） */
+  eijuuTypes?: EijuuType[];
   /** この書類が必要となる申請人の身分（軸 identity を持つ規則集合のみ。日本人の配偶者等。省略時は全身分） */
   identities?: ApplicantIdentity[];
   /** required：必要、check：必要となる場合があり確認を要する、optional：提出は必須でないが、実務では取得するのが通例（不足にも要確認にも数えない） */
@@ -46,8 +49,8 @@ export interface RequirementRule {
   verify?: boolean;
 }
 
-/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分（いずれも案件の入力） */
-export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType";
+/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分、eijuuType＝永住許可申請の提出書類一覧表の区分（いずれも案件の入力） */
+export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType" | "eijuuType";
 
 export interface RuleSet {
   id: string;
@@ -4789,6 +4792,227 @@ export const TEIJUSHA_RENEWAL: RuleSet = {
 };
 // ===== ここまで（定住者の認定・変更・更新） =====
 
+// ===== 永住許可申請（手続種別 permanent。Issue #420） =====
+// 照合表は docs/official/reconciliation/eijuu-2026-10-24.md（照合日 2026-10-24）。人の判断は未了（各行「推奨(未判断)」）。推奨のとおりに実装した。
+// 照合元は、提出書類一覧表（xlsx）4点：日本人の配偶者（001422063）・日本人の実子・特別養子（001422064）・永住者等の配偶者（001422065）・永住者等の実子（001422066）。
+// 一覧表にない書類（旅券・在留カードの提示、申請取次者の書類、所得の預貯金通帳、セルフチェックシートなど。照合表 EJ-4〜EJ-8）は足さない。
+// 手続（EJ-1）：永住許可申請を手続種別 permanent として足した。規則を引く在留資格は、取得・変更・認定と違い、現在の在留資格（statusForRules の既定）。
+// 区分（EJ-2）：現在の在留資格（日本人の配偶者等／永住者の配偶者等）ごとに規則集合を作り、一覧表の区分（配偶者／実子）は軸 eijuuType（basis）で判定する。
+// 区分が未選択の間は、区分に共通の書類（eijuuTypes を省略した行）だけを出す。
+// level（EJ-3）：一覧表の「●」で条件の記載がない書類は required。「〜の方は」「〜場合」など該当者のみの書類は check（注記に条件）。一覧表に「できれば」の書類は無く、optional は使わない。
+// 一覧表の「申請人」「配偶者（扶養する方）」の列は、書類を用意する人の別。規則の party は applicant のまま、注記の先頭に「申請人及び配偶者の分」と書く。
+// 配偶者向け（spouse）と実子向け（child）で、年数・留意事項が違う行は、区分ごとに別の行にする（id の末尾 _spouse／_child）。
+const EIJUU_COMPARED_AT = "2026-10-24";
+const EIJUU_PAGE_SOURCE: RuleSource = {
+  title: "入管庁『手続の種類から探す』永住許可申請・永住許可申請１（URL 未記録）",
+  url: "https://www.moj.go.jp/isa/index.html",
+  kind: "page",
+  comparedAt: EIJUU_COMPARED_AT,
+};
+const eijuuChecklistSource = (title: string, fileId: string): RuleSource => ({
+  title,
+  url: `https://www.moj.go.jp/isa/content/${fileId}.xlsx`,
+  kind: "form",
+  comparedAt: EIJUU_COMPARED_AT,
+});
+const EIJUU_CERT_NOTE = "日本で発行される証明書は、発行日から3か月以内のもの";
+
+/** 永住許可申請の規則集合が扱う提出書類一覧表の区分（規則に書かれた区分の和集合。EIJUU_TYPES の順）。案件の入力欄の選択肢に使う */
+export function eijuuTypesOf(ruleSet: Pick<RuleSet, "rules">): EijuuType[] {
+  const used = new Set<EijuuType>();
+  for (const r of ruleSet.rules) r.eijuuTypes?.forEach((t) => used.add(t));
+  return EIJUU_TYPES.filter((t) => used.has(t));
+}
+
+type EijuuFamily = "nihonjin" | "eijusha";
+type EijuuGroup = "spouse" | "child";
+
+function eijuuRulesOf(family: EijuuFamily): RequirementRule[] {
+  const spouseType: EijuuType = family === "nihonjin" ? "nihonjinSpouse" : "eijushaSpouse";
+  const childType: EijuuType = family === "nihonjin" ? "nihonjinChild" : "eijushaChild";
+  const typeOf = (g: EijuuGroup): EijuuType => (g === "spouse" ? spouseType : childType);
+  const rule = (id: string, name: string, level: RequirementRule["level"], note: string | undefined, types?: EijuuType[]): RequirementRule => ({
+    id,
+    name,
+    party: "applicant",
+    level,
+    ...(note ? { note } : {}),
+    ...(types ? { eijuuTypes: types } : {}),
+  });
+  // 配偶者向け・実子向けで中身が違う行。年数は、配偶者は住民税3年・年金等2年、実子は1年・1年（一覧表のとおり）
+  const group = (g: EijuuGroup) => {
+    const tax = g === "spouse" ? 3 : 1;
+    const ins = g === "spouse" ? 2 : 1;
+    const who = g === "spouse" ? "申請人及び配偶者の分。" : "申請人及び申請人を扶養する方（同一世帯の方）の分。";
+    const t = [typeOf(g)];
+    const sfx = `_${g}`;
+    return {
+      occupation: rule(
+        `eijuu_occupation${sfx}`,
+        "申請人又は申請人を扶養する方の職業を証明するいずれかの資料",
+        "required",
+        `${who}(1)会社等に勤務している場合：在職証明書／(2)自営業等である場合：確定申告書控えの写し、営業許可書の写し（ある場合）。自営業等の方は、自ら職業等について立証する必要がある（登記事項証明書等）／(3)その他の場合：職業に係る説明書（書式自由）及びその立証資料。申請人及び配偶者の方お二方とも無職の場合も、その旨を説明書（書式自由）に記載して提出する`,
+        t,
+      ),
+      taxCertificate: rule(
+        `eijuu_resident_tax_certificate${sfx}`,
+        `直近${tax}年分の住民税の課税（又は非課税）証明書（1年間の総所得及び納税状況が記載されたもの）`,
+        "required",
+        `${who}お住まいの市区町村から発行される。1年間の総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。${
+          g === "spouse"
+            ? "市区町村において直近3年分の証明書が発行されない場合は、発行される最長期間分を提出する。入国後間もない場合や転居等により市区町村から発行されない場合は、最寄りの地方出入国在留管理官署に問い合わせる。"
+            : "入国から1年後に永住許可申請を行う場合など、この証明書が提出できない場合は、これに代えて、給与所得の源泉徴収票（写し）又は給与明細書（写し）等の資料を提出する。"
+        }未納・遅延納付がないことを確認する。${EIJUU_CERT_NOTE}`,
+        t,
+      ),
+      taxPayment: rule(
+        `eijuu_resident_tax_payment${sfx}`,
+        `直近${tax}年分の住民税の納税証明書（1年間の総所得及び納税状況が記載されたもの）`,
+        "required",
+        `${who}課税（又は非課税）証明書に総所得及び納税状況の両方が記載されている場合は、いずれか一方でよい（課税証明書の行の留意事項）。${EIJUU_CERT_NOTE}`,
+        t,
+      ),
+      taxTimely: rule(
+        `eijuu_resident_tax_timely${sfx}`,
+        `直近${tax}年間において住民税を適正な時期に納めていることを証明する資料（通帳の写し、領収証書等）`,
+        "check",
+        `${who}直近${tax}年間において住民税が特別徴収（給与から天引き）されていない期間がある方は、当該期間分について提出する。直近${tax}年間の全ての期間で特別徴収されている方は不要（課税証明書・納税証明書のみ提出する）。Web通帳の画面の写し等（取引履歴が分かるもの）でもよい。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      nationalTax: rule(
+        `eijuu_national_tax_certificate${sfx}`,
+        "源泉所得税及び復興特別所得税、申告所得税及び復興特別所得税、消費税及び地方消費税、相続税、贈与税に係る納税証明書（その３）",
+        "required",
+        `${who}住所地を管轄する税務署から発行される。納税証明書（その３）は、証明日現在で未納がないことを証明するもので、対象期間の指定は不要。5税目全てに係る納税証明書を提出する。未納がないことを確認する。${EIJUU_CERT_NOTE}`,
+        t,
+      ),
+      pension: rule(
+        `eijuu_pension_record${sfx}`,
+        "年金事務所発行の「被保険者記録照会回答票」、「被保険者記録照会（納付Ⅰ）」及び「被保険者記録照会（納付Ⅱ）」",
+        "required",
+        `${who}最寄りの年金事務所の窓口又は電話に問い合わせる。このほか、ア「ねんきん定期便」（全期間の年金記録情報が表示されているもの）、イ ねんきんネットの「各月の年金記録」の印刷画面、ウ 国民年金保険料領収証書（写し）を提出することも可能（基礎年金番号部分は黒塗りする）。イの提出で、申請時の直近${ins}年間に国民年金の被保険者であった期間がある方は、「国民年金の年金記録（各月の納付状況）」の印刷画面も併せて提出する。「ねんきん定期便」は、35・45・59歳の誕生月に封書で送付されたものが使える（毎年送付されるハガキ形式のものは不可）。直近${ins}年間に国民年金に加入していた期間がある方は、当該期間分の領収証書（写し）を全て提出する。直近${ins}年間の全ての期間で国民年金に加入し、直近${ins}年間（${ins * 12}月分）の領収証書（写し）を提出できる場合は、年金事務所発行の資料は提出不要。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      healthCard: rule(
+        `eijuu_health_insurance_card${sfx}`,
+        "世帯全員分の健康保険被保険者証（写し）",
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、健康保険に加入している方は提出する。直近${ins}年間の全ての期間において引き続き健康保険に加入している方は、国民健康保険に関する3つの資料（被保険者証・納付証明書・領収証書）は不要`,
+        t,
+      ),
+      nhiCard: rule(
+        `eijuu_national_health_insurance_card${sfx}`,
+        "世帯全員分の国民健康保険被保険者証（写し）",
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、国民健康保険に加入している方は提出する`,
+        t,
+      ),
+      nhiPayment: rule(
+        `eijuu_nhi_payment_certificate${sfx}`,
+        `直近${ins}年間の国民健康保険料（税）納付証明書`,
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近${ins}年間において国民健康保険に加入していた期間がある方は提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      nhiReceipt: rule(
+        `eijuu_nhi_receipt${sfx}`,
+        `直近${ins}年間の国民健康保険料（税）領収証書（写し）`,
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近${ins}年間において国民健康保険に加入していた期間がある方は、当該期間分の領収書（写し）を全て提出する。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      socialReceipt: rule(
+        `eijuu_social_insurance_receipt${sfx}`,
+        `直近${ins}年間の健康保険・厚生年金保険料領収証書（写し）`,
+        "check",
+        `${who}申請時の直近${ins}年間において社会保険適用事業所の事業主である期間がある方は、この資料か、次の行の社会保険料納入証明書等のいずれかを提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      socialCertificate: rule(
+        `eijuu_social_insurance_certificate${sfx}`,
+        `直近${ins}年間の社会保険料納入証明書又は社会保険料納入確認（申請）書（いずれも未納の有無を証明・確認する場合）`,
+        "check",
+        `${who}申請時の直近${ins}年間において社会保険適用事業所の事業主である期間がある方は、前の行の領収証書（写し）か、この資料のいずれかを提出する`,
+        t,
+      ),
+    };
+  };
+  const sp = group("spouse");
+  const ch = group("child");
+  // 身分関係の書類（一覧表の3番）。区分ごとに書類が違う
+  const identityDocs: RequirementRule[] =
+    family === "nihonjin"
+      ? [
+          rule("eijuu_spouse_family_register", "配偶者の戸籍謄本（全部事項証明書）", "required", EIJUU_CERT_NOTE, [spouseType]),
+          rule("eijuu_spouse_marriage_certificate", "申請人の国籍国の機関から発行された婚姻証明書", "required", "外国語で作成されている場合は、訳文（日本語）を添付する", [spouseType]),
+          rule("eijuu_child_family_register", "日本人親の戸籍謄本（全部事項証明書）", "required", EIJUU_CERT_NOTE, [childType]),
+        ]
+      : [
+          rule("eijuu_marriage_proof", "婚姻関係を証明する資料（次のいずれか）", "required", "a.配偶者との婚姻証明書／b.上記aに準ずる文書（申請人と配偶者の方の身分関係を証するもの）。外国語で作成されている場合は、訳文（日本語）を添付する", [spouseType]),
+          rule("eijuu_parentage_proof", "親子関係を証明する資料（次のいずれか）", "required", "a.出生証明書／b.上記aに準ずる文書（申請人と永住者又は特別永住者との身分関係を証するもの）。外国語で作成されている場合は、訳文（日本語）を添付する", [childType]),
+        ];
+  const pairs = <K extends keyof typeof sp>(k: K) => [sp[k], ch[k]];
+  return [
+    rule("eijuu_application_form", "永住許可申請書", "required", "出入国在留管理庁のホームページからダウンロードできる。必要な事項が全て記載されていることを確認する"),
+    rule(
+      "eijuu_photo",
+      "写真（縦4cm×横3cm）",
+      "required",
+      "申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。写真の裏面に申請人の氏名を記載して、永住許可申請書の写真欄に貼付して提出する。1歳に満たない方は、写真の提出は不要（令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは、1歳以上の方について写真の提出が必要）",
+    ),
+    ...identityDocs,
+    rule("eijuu_household_residence_certificate", "申請人を含む家族全員（世帯）の住民票", "required", `個人番号（マイナンバー）は省略し、他の事項については省略のないもの。${EIJUU_CERT_NOTE}`),
+    ...pairs("occupation"),
+    ...pairs("taxCertificate"),
+    ...pairs("taxPayment"),
+    ...pairs("taxTimely"),
+    ...pairs("nationalTax"),
+    ...pairs("pension"),
+    ...pairs("healthCard"),
+    ...pairs("nhiCard"),
+    ...pairs("nhiPayment"),
+    ...pairs("nhiReceipt"),
+    ...pairs("socialReceipt"),
+    ...pairs("socialCertificate"),
+    // 親族一覧表：一覧表では配偶者の区分だけにある（案内ページ：「実子又は特別養子を除く」）
+    rule("eijuu_relatives_list", "親族一覧表", "required", "案内ページでは、申請人が「日本人の配偶者等」又は「永住者の配偶者等」（実子又は特別養子を除く。）の在留資格である場合に提出する", [spouseType]),
+    rule("eijuu_identity_guarantee", "身元保証書", "required", "身元保証人には、通常、日本に居住する日本人、永住者又は特別永住者の方になっていただく"),
+    rule("eijuu_identity_guarantee_documents", "身元保証書に係る資料", "required", "身元保証人の身分事項を明らかにする書類（運転免許証、在留カードの写し等）"),
+    rule("eijuu_written_acknowledgment", "了解書", "required", "出入国在留管理庁のホームページからダウンロードできる"),
+  ];
+}
+
+export const EIJUU_NIHONJIN_HAIGUSHA: RuleSet = {
+  id: "eijuu_nihonjin_haigusha",
+  title: "日本人の配偶者等 永住許可申請（一部のみ整備）",
+  procedureType: "permanent",
+  residenceStatus: "日本人の配偶者等",
+  basis: "eijuuType",
+  checkedAt: EIJUU_COMPARED_AT,
+  sources: [
+    EIJUU_PAGE_SOURCE,
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（日本人の配偶者の方）", "001422063"),
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（日本人の実子（特別養子縁組含む。）の方）", "001422064"),
+  ],
+  rules: eijuuRulesOf("nihonjin"),
+};
+
+export const EIJUU_EIJUSHA_HAIGUSHA: RuleSet = {
+  id: "eijuu_eijusha_haigusha",
+  title: "永住者の配偶者等 永住許可申請（一部のみ整備）",
+  procedureType: "permanent",
+  residenceStatus: "永住者の配偶者等",
+  basis: "eijuuType",
+  checkedAt: EIJUU_COMPARED_AT,
+  sources: [
+    EIJUU_PAGE_SOURCE,
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（永住者又は特別永住者の配偶者の方）", "001422065"),
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（永住者又は特別永住者の実子の方）", "001422066"),
+  ],
+  rules: eijuuRulesOf("eijusha"),
+};
+// ===== ここまで（永住許可申請） =====
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -4839,6 +5063,9 @@ export const RULE_SETS: RuleSet[] = [
   KOYO_ACQUISITION,
   GINOU_JISSHU_ACQUISITION,
   RYUGAKU_ACQUISITION,
+  // 永住許可申請（Issue #420。照合 2026-10-24）
+  EIJUU_NIHONJIN_HAIGUSHA,
+  EIJUU_EIJUSHA_HAIGUSHA,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
   KAIGO_CHANGE,
