@@ -34,11 +34,11 @@ describe("文化活動の取得（BK-1〜BK-12）", () => {
     expect(evaluate(make("外交", "other")).ruleSet?.id).toBe("acquisition_by_cause");
   });
 
-  it("判定は取得の事由だけ（alsoBasis なし）。見出しは URL 未記録の出典で、照合日は 2026-10-24", () => {
+  it("判定は取得の事由だけ（alsoBasis なし）。出典のページは人が確認した URL で、照合日は 2026-10-24", () => {
     expect(bunka.basis).toBe("acquisitionCause");
     expect(bunka.alsoBasis).toBeUndefined();
     expect(bunka.title).toBe("文化活動 在留資格取得許可申請（一部のみ整備）");
-    expect(bunka.sources[0].title).toContain("URL 未記録");
+    expect(bunka.sources[0]).toMatchObject({ title: "在留資格「文化活動」在留資格取得許可申請（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/culturalactivities.html" });
     expect(bunka.sources[0].comparedAt).toBe("2026-10-24");
     expect(ruleSetComparedAt(bunka)).toBe("2026-10-24");
     expect(bunka.sources.every((s) => s.kind === "page" || s.kind === "form")).toBe(true);
@@ -99,7 +99,7 @@ describe("日本人の配偶者等の取得（NH-1〜NH-20）", () => {
     expect(nihonjin.basis).toBe("acquisitionCause");
     expect(nihonjin.alsoBasis).toEqual(["identity"]);
     expect(nihonjin.title).toBe("日本人の配偶者等 在留資格取得許可申請（一部のみ整備）");
-    expect(nihonjin.sources[0].comparedAt).toBe("2026-10-24");
+    expect(nihonjin.sources[0]).toMatchObject({ title: "在留資格「日本人の配偶者等」在留資格取得許可申請（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/spouseorchildofjapanese.html", comparedAt: "2026-10-24" });
     expect(ruleSetComparedAt(nihonjin)).toBe("2026-10-24");
     expect(base.rules.find((r) => r.id === "cause_proof")!.note).toContain("日米地位協定");
   });
