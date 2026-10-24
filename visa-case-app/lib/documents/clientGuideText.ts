@@ -186,6 +186,7 @@ const PROCEDURE_LABEL_TRANSLATIONS: Record<string, { en: string; ko: string }> =
   在留資格変更許可申請: { en: "Application for Change of Status of Residence", ko: "체류자격 변경 허가 신청" },
   在留資格認定証明書交付申請: { en: "Application for Certificate of Eligibility", ko: "체류자격 인정 증명서 교부 신청" },
   在留資格取得許可申請: { en: "Application for Permission to Acquire Status of Residence", ko: "체류자격 취득 허가 신청" },
+  永住許可申請: { en: "Application for Permission for Permanent Residence", ko: "영주 허가 신청" },
   その他: { en: "Other", ko: "기타" },
 };
 

@@ -37,20 +37,20 @@ describe("evaluate", () => {
     expect(evaluate(make({ procedureType: "other" })).ruleSet).toBeNull();
     // 変更の必要書類の判定基準は currentStatus から targetStatus へ移り得るため、両方に設定する
     expect(
-      evaluate(make({ procedureType: "change", currentStatus: "留学", targetStatus: "留学" })).ruleSet,
+      evaluate(make({ procedureType: "change", currentStatus: "家族滞在", targetStatus: "家族滞在" })).ruleSet,
     ).toBeNull();
-    expect(evaluate(make({ currentStatus: "留学" })).notApplicableReason).toBeTruthy();
+    expect(evaluate(make({ currentStatus: "家族滞在" })).notApplicableReason).toBeTruthy();
   });
 
   it("確認済みの申請人情報の在留資格を、案件の入力より優先する", () => {
-    const c = make({ currentStatus: "留学" });
+    const c = make({ currentStatus: "家族滞在" });
     c.applicant.residenceStatus = "技術・人文知識・国際業務";
     c.applicant.confirmationStatus = "confirmed";
     expect(evaluate(c).ruleSet).not.toBeNull();
   });
 
   it("下書きの申請人情報は、判定に使わない", () => {
-    const c = make({ currentStatus: "留学" });
+    const c = make({ currentStatus: "家族滞在" });
     c.applicant.residenceStatus = "技術・人文知識・国際業務";
     expect(evaluate(c).ruleSet).toBeNull();
   });
@@ -305,12 +305,12 @@ describe("案件作成画面向けの規則判定", () => {
   it("未整備の組み合わせでは false（規則が増えない other を使う）", () => {
     expect(hasRuleSetFor("other", "技術・人文知識・国際業務")).toBe(false);
     expect(hasRuleSetFor("other", "")).toBe(false);
-    expect(hasRuleSetFor("renewal", "留学")).toBe(false);
+    expect(hasRuleSetFor("renewal", "家族滞在")).toBe(false);
     expect(hasRuleSetFor("renewal", "")).toBe(false);
   });
 
   it("案内文は必要書類タブの未整備の案内と同一で、対応する組み合わせを示す", () => {
-    const reason = evaluate(make({ procedureType: "other", currentStatus: "留学" })).notApplicableReason;
+    const reason = evaluate(make({ procedureType: "other", currentStatus: "家族滞在" })).notApplicableReason;
     expect(reason).toBe(notApplicableMessage());
     expect(reason).toContain("「技術・人文知識・国際業務」の「在留期間更新許可申請」");
   });
@@ -330,7 +330,7 @@ describe("案件作成画面向けの規則判定", () => {
 
 describe("規則を引く在留資格の決め方", () => {
   it("変更では、現在=留学・変更後=技人国の案件が一致する", () => {
-    const c = make({ procedureType: "change", currentStatus: "留学", targetStatus: "技術・人文知識・国際業務" });
+    const c = make({ procedureType: "change", currentStatus: "家族滞在", targetStatus: "技術・人文知識・国際業務" });
     expect(evaluate(c, TEST_SETS).ruleSet?.id).toBe("test-change");
   });
 
@@ -341,24 +341,24 @@ describe("規則を引く在留資格の決め方", () => {
 
   it("変更では、確認済みの申請人情報の在留資格（現在）でも引かない", () => {
     const applicant = { ...EMPTY_APPLICANT, confirmationStatus: "confirmed" as const, residenceStatus: "技術・人文知識・国際業務" };
-    const c = make({ procedureType: "change", currentStatus: "留学", targetStatus: "", applicant });
+    const c = make({ procedureType: "change", currentStatus: "家族滞在", targetStatus: "", applicant });
     expect(evaluate(c, TEST_SETS).ruleSet).toBeNull();
   });
 
   it("更新では、確認済みの申請人情報があればそれを、なければ現在の在留資格を使う", () => {
     const applicant = { ...EMPTY_APPLICANT, confirmationStatus: "confirmed" as const, residenceStatus: "技術・人文知識・国際業務" };
-    expect(evaluate(make({ currentStatus: "留学", applicant })).ruleSet).not.toBeNull();
-    expect(evaluate(make({ currentStatus: "留学" })).ruleSet).toBeNull();
+    expect(evaluate(make({ currentStatus: "家族滞在", applicant })).ruleSet).not.toBeNull();
+    expect(evaluate(make({ currentStatus: "家族滞在" })).ruleSet).toBeNull();
   });
 
   it("statusForRules は手続種別ごとに基準を切り替える", () => {
-    const i = { currentStatus: "留学", targetStatus: "教授", confirmedResidenceStatus: "芸術" };
+    const i = { currentStatus: "家族滞在", targetStatus: "教授", confirmedResidenceStatus: "芸術" };
     expect(statusForRules("change", i)).toBe("教授");
     expect(statusForRules("coe", i)).toBe("教授");
     expect(statusForRules("acquisition", i)).toBe("教授");
     expect(statusForRules("renewal", i)).toBe("芸術");
     expect(statusForRules("other", i)).toBe("芸術");
-    expect(statusForRules("other", { ...i, confirmedResidenceStatus: "" })).toBe("留学");
+    expect(statusForRules("other", { ...i, confirmedResidenceStatus: "" })).toBe("家族滞在");
     expect(statusForRules("change", { ...i, targetStatus: "" })).toBe("");
   });
 
@@ -366,13 +366,13 @@ describe("規則を引く在留資格の決め方", () => {
   const table: [string, string, string, boolean][] = [
     // 手続種別, 現在, 変更後, 規則が一致するか
     ["renewal", T, "", true],
-    ["renewal", "留学", "", false],
+    ["renewal", "家族滞在", "", false],
     ["renewal", "", "", false],
     ["other", T, "", false],
     ["other", "", T, false],
-    ["change", "留学", T, true],
+    ["change", "家族滞在", T, true],
     ["change", T, "", false],
-    ["change", T, "留学", false],
+    ["change", T, "家族滞在", false],
     ["coe", "", T, false],
   ];
   it.each(table)("案内と evaluate が一致する: %s / 現在=%s / 変更後=%s", (procedureType, currentStatus, targetStatus, matched) => {
@@ -385,7 +385,7 @@ describe("規則を引く在留資格の決め方", () => {
   });
 
   it("手続種別が未選択のときは案内を出さない", () => {
-    expect(shouldShowNoRuleGuide("", "留学", "", TEST_SETS)).toBe(false);
+    expect(shouldShowNoRuleGuide("", "家族滞在", "", TEST_SETS)).toBe(false);
   });
 });
 
@@ -455,7 +455,7 @@ describe("高度専門職の規則（Issue #186）", () => {
     for (const status of ["高度専門職", "高度専門職（1号イ）", "高度専門職（1号ロ）", "高度専門職（1号ハ）"]) {
       expect(find("acquisition", status).ruleSet?.id, status).toBe("hsp_acquisition");
     }
-    for (const status of ["", "留学", "高度専門職（2号）"]) {
+    for (const status of ["", "外交", "高度専門職（2号）"]) {
       expect(find("acquisition", status).ruleSet?.id, status).toBe("acquisition_by_cause");
     }
     // 技人国・家族滞在は専用の規則集合（Issue #396）

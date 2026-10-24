@@ -18,6 +18,7 @@ const DESCRIPTION_KEYS: Record<ProcedureType, MessageKey> = {
   change: "caseNew.procedure_change_desc",
   coe: "caseNew.procedure_coe_desc",
   acquisition: "caseNew.procedure_acquisition_desc",
+  permanent: "caseNew.procedure_permanent_desc",
   other: "caseNew.procedure_other_desc",
 };
 

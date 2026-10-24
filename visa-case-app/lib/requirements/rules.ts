@@ -1,6 +1,16 @@
-import type { FormDetails, MedicalApplicantType, TokuteiKatsudoType } from "../formDetails";
+import type { ApplicantIdentity, EijuuType, FormDetails, MedicalApplicantType, RenewalTimes, SchoolType, TeijushaType, TokuteiKatsudoType } from "../formDetails";
+import { ryugakuSheetRules } from "./ryugakuSheets";
+import { EIJUU_TYPES } from "../formDetails";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
+import {
+  TEIJUSHA_INCOME_NAME,
+  teijushaIncomeNote,
+  teijushaResidenceName,
+  teijushaTaxName,
+  type TeijushaIncomeTarget,
+  type TeijushaResidencePerson,
+} from "./teijushaProcedureTexts";
 
 // 必要書類の規則。プログラムから分離したデータとして保持し、改正時はここだけを修正する。
 // 最終的な判断は行政書士が行う前提で、確認が不十分な項目は verify: true とする。
@@ -9,7 +19,7 @@ export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
 /** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
 export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
-export type { MedicalApplicantType };
+export type { ApplicantIdentity, EijuuType, MedicalApplicantType, RenewalTimes, SchoolType, TeijushaType };
 
 export interface RequirementRule {
   id: string;
@@ -25,6 +35,16 @@ export interface RequirementRule {
   causes?: AcquisitionCause[];
   /** この書類が必要となる申請人の区分（軸 applicantType を持つ規則集合のみ。省略時は全区分） */
   applicantTypes?: MedicalApplicantType[];
+  /** この書類が必要となる定住者の区分（軸 teijushaType を持つ規則集合のみ。省略時は全区分） */
+  teijushaTypes?: TeijushaType[];
+  /** この書類が必要となる入学先の種類（軸 schoolType を持つ規則集合のみ。留学。省略時は全9区分） */
+  schoolTypes?: SchoolType[];
+  /** この書類が必要となる更新の回数（軸 renewalTimes を持つ規則集合のみ。定住者の更新で、区分が日系3世のときだけ見る。省略時は初回・2回目以降の両方） */
+  renewalTimes?: RenewalTimes[];
+  /** この書類が必要となる永住許可申請の提出書類一覧表の区分（軸 eijuuType を持つ規則集合のみ。省略時は全区分） */
+  eijuuTypes?: EijuuType[];
+  /** この書類が必要となる申請人の身分（軸 identity を持つ規則集合のみ。日本人の配偶者等。省略時は全身分） */
+  identities?: ApplicantIdentity[];
   /** required：必要、check：必要となる場合があり確認を要する、optional：提出は必須でないが、実務では取得するのが通例（不足にも要確認にも数えない） */
   level: "required" | "check" | "optional";
   /** 入力された雇用・会社情報が真の場合のみ適用する条件 */
@@ -34,8 +54,8 @@ export interface RequirementRule {
   verify?: boolean;
 }
 
-/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分（いずれも案件の入力） */
-export type RuleAxis = "category" | "acquisitionCause" | "applicantType";
+/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分、eijuuType＝永住許可申請の提出書類一覧表の区分、renewalTimes＝定住者（日系3世）の更新の回数、schoolType＝留学の入学先の種類（いずれも案件の入力） */
+export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType" | "eijuuType" | "renewalTimes" | "schoolType";
 
 export interface RuleSet {
   id: string;
@@ -1661,7 +1681,7 @@ export const HOUMU_KAIKEI_RENEWAL: RuleSet = {
 };
 
 // 在留資格「教授」。所属機関のカテゴリーは、1＝常勤職員・2＝非常勤職員の2区分（会社の1〜4区分とは別。categoryDefinition）。
-// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-07 に照合済み（Issue #292）。申請書は様式 I（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-07 に照合済み（Issue #292）。申請書は様式 I（認定・変更・更新とも）。取得は、教授の取得の規則集合（PROFESSOR_ACQUISITION。照合表は acquisition-kyoju-2026-10-24.md）が扱う。
 const PROFESSOR = "教授";
 const PROFESSOR_CHECKED_AT = "2026-10-07";
 const PROFESSOR_PAGE_SOURCE: RuleSource = { title: "在留資格「教授」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/professor.html", kind: "page" };
@@ -1688,7 +1708,7 @@ export const PROFESSOR_COE: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf", kind: "pdf" },
+    { title: "「教授」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404120.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -1713,7 +1733,7 @@ export const PROFESSOR_CHANGE: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf", kind: "pdf" },
+    { title: "「教授」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368410.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [...procedureCommonRules("change"), professorActivityProof],
 };
@@ -1727,7 +1747,7 @@ export const PROFESSOR_RENEWAL: RuleSet = {
   checkedAt: PROFESSOR_CHECKED_AT,
   sources: [
     PROFESSOR_PAGE_SOURCE,
-    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf", kind: "pdf" },
+    { title: "「教授」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001368411.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2092,7 +2112,7 @@ export const KENKYU_RENEWAL: RuleSet = {
 
 // 在留資格「教育」。所属機関のカテゴリーは、1＝小学校〜特別支援学校に常勤・2＝左記以外の教育機関に常勤・3＝非常勤の3区分（会社の1〜4区分とは別。categoryDefinition）。
 // 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○・△の位置まで）による。2026-10-07 に照合済み（Issue #293）。
-// 申請書は様式 I（認定・変更・更新とも。公式の教育の様式は、教授と同じファイル）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式 I（認定・変更・更新とも。公式の教育の様式は、教授と同じファイル）。取得は、教育の取得の規則集合（EDUCATION_ACQUISITION。照合表は acquisition-kyoiku-2026-10-24.md）が扱う。
 const EDUCATION = "教育";
 const EDUCATION_CHECKED_AT = "2026-10-07";
 const EDUCATION_PAGE_SOURCE: RuleSource = { title: "在留資格「教育」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/instructor.html", kind: "page" };
@@ -2147,7 +2167,7 @@ export const EDUCATION_COE: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf", kind: "pdf" },
+    { title: "「教育」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404130.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2175,7 +2195,7 @@ export const EDUCATION_CHANGE: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf", kind: "pdf" },
+    { title: "「教育」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367667.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("change"),
@@ -2197,7 +2217,7 @@ export const EDUCATION_RENEWAL: RuleSet = {
   checkedAt: EDUCATION_CHECKED_AT,
   sources: [
     EDUCATION_PAGE_SOURCE,
-    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf", kind: "pdf" },
+    { title: "「教育」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001367669.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2227,7 +2247,7 @@ export const EDUCATION_RENEWAL: RuleSet = {
 // 在留資格「報道」。所属機関のカテゴリーは、1＝外務省報道官から外国記者登録証を発行された者を雇用する外国の報道機関に雇用される場合・2＝それ以外の団体・個人の2区分（会社の1〜4区分とは別。categoryDefinition）。
 // 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-12 に照合済み（Issue #294）。
 // 食い違いは更新の「外国の報道機関の概要」だけ（案内ページには転職後初回の資料にあるが、チェックシート（更新）にはない）。この1件は要確認とした。
-// 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式L（認定・変更・更新とも）。取得は、報道の取得の規則集合（HODO_ACQUISITION。照合表は acquisition-hodo-2026-10-24.md）が扱う。
 const HODO = "報道";
 const HODO_CHECKED_AT = "2026-10-12";
 const HODO_PAGE_SOURCE: RuleSource = { title: "在留資格「報道」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/journalist.html", kind: "page" };
@@ -2271,7 +2291,7 @@ export const HODO_COE: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf", kind: "pdf" },
+    { title: "「報道」に係る提出書類一覧（在留資格認定証明書交付申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001404123.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("coe"),
@@ -2298,7 +2318,7 @@ export const HODO_CHANGE: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf", kind: "pdf" },
+    { title: "「報道」に係る提出書類一覧（在留資格変更許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365757.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [...procedureCommonRules("change"), hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
 };
@@ -2312,7 +2332,7 @@ export const HODO_RENEWAL: RuleSet = {
   categoryDefinition: HODO_CATEGORIES,
   sources: [
     HODO_PAGE_SOURCE,
-    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf", kind: "pdf" },
+    { title: "「報道」に係る提出書類一覧（在留期間更新許可申請用）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/content/001365760.pdf", kind: "pdf", comparedAt: "2026-10-24" },
   ],
   rules: [
     ...procedureCommonRules("renewal"),
@@ -2340,6 +2360,180 @@ export const HODO_RENEWAL: RuleSet = {
       level: "check",
       note: `${HODO_FIRST_RENEWAL_NOTE}。案内ページには記載があるが、チェックシート（更新）にはないため要確認`,
       verify: true,
+    },
+  ],
+};
+
+// 在留資格「芸術」。チェックシート（認定 001404121／変更 001365828／更新 001365832）に所属機関のカテゴリー区分はなく、全書類を全カテゴリー共通（ALL）とする。
+// 提出書類はチェックシートの表（○の位置まで）による。照合済み（2026-10-24。照合表は docs/official/reconciliation/coe-change-renewal-artist-2026-10-24.md、Issue #420）。取得は GEIJUTSU_ACQUISITION が扱う。
+// 出典の URL は、PDF の番号から組み立てた（ページ側の掲載は未確認）。
+const ARTIST = "芸術";
+const ARTIST_CHECKED_AT = "2026-10-24";
+const ARTIST_PAGE_SOURCE: RuleSource = { title: "在留資格「芸術」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/artist.html", kind: "page" };
+const artistPdfSource = (procedure: string, no: string): RuleSource => ({
+  title: `「芸術」に係る提出書類一覧（${procedure}用）（出入国在留管理庁）`,
+  url: `https://www.moj.go.jp/isa/content/${no}.pdf`,
+  kind: "pdf",
+  comparedAt: "2026-10-24",
+});
+const artistActivityDocuments: RequirementRule = {
+  id: "activity_documents",
+  name: "申請人の活動の内容等を明らかにする資料",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "次のいずれか。(1)公私の機関又は個人との契約に基づいて活動を行う場合：活動の内容、期間、地位及び報酬を証明する文書 (2)公私の機関又は個人との契約に基づかないで活動を行う場合：申請人が作成する具体的な活動の内容、期間及び行おうとする活動から生じる収入の見込額を記載した文書（適宜の様式）",
+};
+const artistResume: RequirementRule = {
+  id: "artistic_career_resume",
+  name: "芸術上の活動歴を詳細に記載した履歴書",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+};
+const artistAchievements: RequirementRule = {
+  id: "artistic_achievements",
+  name: "芸術活動上の業績を明らかにすることができるもの",
+  party: "applicant",
+  categories: ALL,
+  level: "required",
+  note: "次のいずれか。関係団体からの推薦状／過去の活動に関する報道／入賞、入選等の実績／過去の作品等の目録／これらに準ずるもの",
+};
+const RESIDENT_TAX_NOTE = "1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）";
+
+export const ARTIST_COE: RuleSet = {
+  id: "artist_coe",
+  title: "芸術 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: ARTIST,
+  checkedAt: ARTIST_CHECKED_AT,
+  sources: [ARTIST_PAGE_SOURCE, artistPdfSource("在留資格認定証明書交付申請", "001404121")],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    artistActivityDocuments,
+    artistResume,
+    artistAchievements,
+  ],
+};
+
+export const ARTIST_CHANGE: RuleSet = {
+  id: "artist_change",
+  title: "芸術 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: ARTIST,
+  checkedAt: ARTIST_CHECKED_AT,
+  sources: [ARTIST_PAGE_SOURCE, artistPdfSource("在留資格変更許可申請", "001365828")],
+  rules: [...procedureCommonRules("change"), artistActivityDocuments, artistResume, artistAchievements],
+};
+
+export const ARTIST_RENEWAL: RuleSet = {
+  id: "artist_renewal",
+  title: "芸術 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: ARTIST,
+  checkedAt: ARTIST_CHECKED_AT,
+  sources: [ARTIST_PAGE_SOURCE, artistPdfSource("在留期間更新許可申請", "001365832")],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    artistActivityDocuments,
+    { id: "resident_tax_certificates", name: "住民税の課税（又は非課税）証明書及び納税証明書", party: "applicant", categories: ALL, level: "required", note: RESIDENT_TAX_NOTE },
+  ],
+};
+
+// 在留資格「宗教」。チェックシート（認定 001404122／変更 001365798／更新 001365799）に所属機関のカテゴリー区分はなく、全書類を全カテゴリー共通（ALL）とする。
+// 提出書類はチェックシートの表（○・△の位置まで）による。照合済み（2026-10-24。照合表は docs/official/reconciliation/coe-change-renewal-religiousactivities-2026-10-24.md、Issue #420）。取得は SHUKYO_ACQUISITION が扱う。
+// 出典の URL は、PDF の番号から組み立てた（ページ側の掲載は未確認）。
+const SHUKYO = "宗教";
+const SHUKYO_CHECKED_AT = "2026-10-24";
+const SHUKYO_PAGE_SOURCE: RuleSource = { title: "在留資格「宗教」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/religiousactivities.html", kind: "page" };
+const shukyoPdfSource = (procedure: string, no: string): RuleSource => ({
+  title: `「宗教」に係る提出書類一覧（${procedure}用）（出入国在留管理庁）`,
+  url: `https://www.moj.go.jp/isa/content/${no}.pdf`,
+  kind: "pdf",
+  comparedAt: "2026-10-24",
+});
+const shukyoDispatchLetter: RequirementRule = {
+  id: "dispatch_letter",
+  name: "外国の宗教団体からの派遣状等の写し等派遣機関からの派遣期間、地位及び報酬を証明する文書",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const shukyoOrganizationOverview: RequirementRule = {
+  id: "organization_overview",
+  name: "派遣機関及び受入機関の概要（宗派、沿革、代表者名、組織、施設、信者数等）を明らかにする資料",
+  party: "organization",
+  categories: ALL,
+  level: "required",
+};
+const shukyoStatusCareer: RequirementRule = {
+  id: "religious_status_career",
+  name: "宗教家としての地位及び職歴を証明する文書",
+  party: "organization",
+  categories: ALL,
+  level: "check",
+  note: "派遣機関からの証明書等で、申請人の宗教家としての地位、職歴を証明する文書。派遣状等（上記の派遣期間、地位及び報酬を証明する文書）に、地位・職歴が記載されている場合は提出不要（チェックシートで△）",
+};
+
+export const SHUKYO_COE: RuleSet = {
+  id: "shukyo_coe",
+  title: "宗教 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: SHUKYO,
+  checkedAt: SHUKYO_CHECKED_AT,
+  sources: [SHUKYO_PAGE_SOURCE, shukyoPdfSource("在留資格認定証明書交付申請", "001404122")],
+  rules: [
+    ...procedureCommonRules("coe"),
+    {
+      id: "return_envelope",
+      name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）",
+      party: "organization",
+      categories: ALL,
+      level: "required",
+      note: "申請結果（認定証明書等）の返送に使用する",
+    },
+    shukyoDispatchLetter,
+    shukyoOrganizationOverview,
+    shukyoStatusCareer,
+  ],
+};
+
+export const SHUKYO_CHANGE: RuleSet = {
+  id: "shukyo_change",
+  title: "宗教 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: SHUKYO,
+  checkedAt: SHUKYO_CHECKED_AT,
+  sources: [SHUKYO_PAGE_SOURCE, shukyoPdfSource("在留資格変更許可申請", "001365798")],
+  rules: [...procedureCommonRules("change"), shukyoDispatchLetter, shukyoOrganizationOverview, shukyoStatusCareer],
+};
+
+export const SHUKYO_RENEWAL: RuleSet = {
+  id: "shukyo_renewal",
+  title: "宗教 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: SHUKYO,
+  checkedAt: SHUKYO_CHECKED_AT,
+  sources: [SHUKYO_PAGE_SOURCE, shukyoPdfSource("在留期間更新許可申請", "001365799")],
+  rules: [
+    ...procedureCommonRules("renewal"),
+    shukyoOrganizationOverview,
+    {
+      id: "resident_tax_certificates",
+      name: "住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      categories: ALL,
+      level: "check",
+      verify: true,
+      note: `チェックシートで△だが、凡例がなく条件が読み取れないため要確認。${RESIDENT_TAX_NOTE}`,
     },
   ],
 };
@@ -3380,13 +3574,15 @@ function changeRuleOf(set: RuleSet, id: string): RequirementRule {
   return rule;
 }
 
-// 芸術・宗教のページの URL は未記録（照合表 R-10。推測で書かない）。出典の名称に「URL 未記録」と書き、リンク先は「在留資格から探す」の一覧とする
-const ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE: RuleSource = {
-  title: "入管庁『在留資格から探す』の各ページ（URL 未記録）",
-  url: "https://www.moj.go.jp/isa/applications/status/index.html",
+// 取得の規則集合の出典（各ページ）。URL は人が確認した（2026-10-24。ページの内容は取得して確かめていない。moj.go.jp は 403）。
+// 資格ごとに別の URL のため、芸術・宗教から文化活動・定住者まで、共通の定数ではなく資格ごとの出典を作る（他の規則集合には影響しない）。
+const acquisitionStatusPageSource = (status: string, url: string, comparedAt: string): RuleSource => ({
+  title: `在留資格「${status}」在留資格取得許可申請（出入国在留管理庁）`,
+  url,
   kind: "page",
-  comparedAt: ACQUISITION_SET3_COMPARED_AT,
-};
+  comparedAt,
+});
+const ACQUISITION_STATUS_PAGE_BASE = "https://www.moj.go.jp/isa/applications/status/";
 
 // 芸術（#421。原文 geijutsu_2026-10-18.txt 135〜164行）
 const GEIJUTSU_ACQUISITION_PASSPORT_NOTE = "提示のみで、提出書類としてコピーを付ける書類ではない。案内ページの原文は「パスポート及び在留カード 提示」";
@@ -3397,7 +3593,7 @@ export const GEIJUTSU_ACQUISITION: RuleSet = {
   residenceStatus: "芸術",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET3_CHECKED_AT,
-  sources: [ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: [acquisitionStatusPageSource("芸術", `${ACQUISITION_STATUS_PAGE_BASE}artist.html`, ACQUISITION_SET3_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
   rules: [
     // R-6：名称・区分は変えず、注記に原文の「パスポート及び在留カード 提示」を書く
     ...acquisitionSet3BaseRules({ passport_presentation: { note: GEIJUTSU_ACQUISITION_PASSPORT_NOTE } }),
@@ -3433,7 +3629,7 @@ export const SHUKYO_ACQUISITION: RuleSet = {
   residenceStatus: "宗教",
   basis: "acquisitionCause",
   checkedAt: ACQUISITION_SET3_CHECKED_AT,
-  sources: [ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  sources: [acquisitionStatusPageSource("宗教", `${ACQUISITION_STATUS_PAGE_BASE}religiousactivities.html`, ACQUISITION_SET3_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
   rules: [
     ...acquisitionSet3BaseRules(),
     // R-1・R-2：必須。「適宜」は数量の指定のため注記に書く
@@ -3586,6 +3782,1637 @@ export const TOKUTEI_JOHO_ACQUISITION: RuleSet = {
 };
 // ===== ここまで（取得：芸術・宗教・法律・会計業務・短期滞在・特定活動〔07・08・11〕） =====
 
+/**
+ * 教授／教育／報道の在留資格取得許可申請（Issue #420。照合表は docs/official/reconciliation/ の
+ * acquisition-kyoju-2026-10-24.md・acquisition-kyoiku-2026-10-24.md・acquisition-hodo-2026-10-24.md）。
+ * 各ページの取得の節（原文の控え kyoju_/kyoiku_/hodo_2026-10-24.txt）と照合済み（2026-10-24）。人の判断「推奨のとおり」（2026-10-24）で、
+ * 教授 KJ-1〜KJ-9、教育 KI-1〜KI-9、報道 HD-1〜HD-9 を反映した専用の規則集合。
+ * 事由別の書類は、技人国の取得と同じく ACQUISITION_BY_CAUSE から引き継ぎ、同じ上書き・削除をする（acqSet1CauseRules。出生の3書類・活動に応じた資料・旅券の理由書を外す／
+ * 写真「写真（40mm×30mm）」を全事由の必須／日米地位協定の例を外す／申請取次者の注記を原文のとおり）。ACQUISITION_BY_CAUSE の文言は変えない。
+ * カテゴリー別の書類は、各在留資格の認定・変更の規則集合（チェックシートで照合済み）の書類を、同じ割り当てで写す（取得の節の書類は、変更〔または認定〕の節と同じ文言のため）。
+ * 取得のチェックシートは無く、取得の列の位置そのものは未確認。判定の軸は、取得の事由と所属機関のカテゴリー（alsoBasis）。カテゴリーが未選択の間は、共通の書類だけを出す。
+ * 3つのページの URL は、控えには未提示だが、人が確認した（2026-10-24）。出典は、研究・経営・管理などの取得（acqSet1Sources）と同じ形で、各ページの URL
+ * （professor.html・instructor.html・journalist.html。認定・変更・更新の出典 PROFESSOR_PAGE_SOURCE 等と同じ URL）と照合日（2026-10-24）を書く。
+ * `checkedAt` は新しい規則集合の作成日。ACQUISITION_BY_CAUSE より先に照合する（RULE_SETS の並び順）。
+ */
+const ACQ_KYOJU_COMPARED_AT = "2026-10-24";
+const ACQ_KYOJU_CHECKED_AT = "2026-10-24";
+// 出典（KJ-9・KI-8・HD-9）：各ページ（取得の節。2026-10-24 に照合。URL は人が確認〔2026-10-24〕）・手続案内・申請書様式（日付なし）
+const acqKyojuSources = (status: string, url: string): RuleSource[] => [
+  { title: `在留資格「${status}」在留資格取得許可申請（出入国在留管理庁）`, url, kind: "page", comparedAt: ACQ_KYOJU_COMPARED_AT },
+  ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+  ...ACQUISITION_BY_CAUSE.sources,
+];
+
+// 教授（KJ-1〜KJ-9。原文 kyoju_2026-10-24.txt 86〜103行）。
+// KJ-2：活動に応じた資料は、変更の professorActivityProof（カテゴリー2のみ・必須）を写す。カテゴリー1は「その他の資料は原則不要」で書類を足さない
+// KJ-6：旅券の提示の注記の末尾に、原文 102行の注意を足す／KJ-7：申請取次者の注記は、原文 103行のとおり教授だけの文言にする
+const PROFESSOR_ACQUISITION_ACTIVITY_NOTE =
+  "取得の案内ページでは「日本での活動内容に応じた資料（在留資格変更許可申請と同様の資料）」とある。カテゴリー1（常勤職員）は、その他の資料は原則不要";
+const PROFESSOR_ACQUISITION_PASSPORT_NOTE = "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請書類を提出する場合も、提示が必要";
+const PROFESSOR_ACQUISITION_AGENT_NOTE =
+  "代理人が申請する場合や申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示";
+export const PROFESSOR_ACQUISITION: RuleSet = {
+  id: "professor_acquisition",
+  title: "教授 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: PROFESSOR,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  categoryDefinition: PROFESSOR_CATEGORIES,
+  checkedAt: ACQ_KYOJU_CHECKED_AT,
+  sources: acqKyojuSources(PROFESSOR, PROFESSOR_PAGE_SOURCE.url),
+  rules: [
+    ...acqSet1CauseRules.map((r) =>
+      r.id === "passport_presentation"
+        ? { ...r, note: PROFESSOR_ACQUISITION_PASSPORT_NOTE }
+        : r.id === "agent_identity_document"
+          ? { ...r, note: PROFESSOR_ACQUISITION_AGENT_NOTE }
+          : r,
+    ),
+    { ...professorActivityProof, note: PROFESSOR_ACQUISITION_ACTIVITY_NOTE },
+  ],
+};
+
+// 教育（KI-1〜KI-9。原文 kyoiku_2026-10-24.txt 107〜127行）。
+// KI-1：認定・変更の部品4つを、名称・注記・割り当て・区分のまま写す。返信用封筒は認定のみのため写さない。
+// KI-9：取得の節のカテゴリー2・3の書類は、控えでは「認定と同文」の書き込み（124行）。人が同文であることを確かめた記録として扱う
+export const EDUCATION_ACQUISITION: RuleSet = {
+  id: "education_acquisition",
+  title: "教育 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: EDUCATION,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  categoryDefinition: EDUCATION_CATEGORIES,
+  checkedAt: ACQ_KYOJU_CHECKED_AT,
+  sources: acqKyojuSources(EDUCATION, EDUCATION_PAGE_SOURCE.url),
+  rules: [...acqSet1CauseRules, educationActivityDocuments, educationCareerDocuments, educationBusinessDocuments, educationFinancialStatements],
+};
+
+// 報道（HD-1〜HD-9。原文 hodo_2026-10-24.txt 98〜124行）。
+// HD-1：報道に固有の書類3点は、変更の部品を、名称・注記・区分のまま写す。返信用封筒は認定のみのため写さない。
+// HD-2：記者登録証の社員を雇用していることの証明文書は、変更と同じくカテゴリー1のみ・必須（カテゴリー1の機関のときだけ出す）。
+// 控えの4行目の人の注の読み方は、人がページの表で確かめる。取得のチェックシートは無く、取得の列の位置は未確認
+export const HODO_ACQUISITION: RuleSet = {
+  id: "hodo_acquisition",
+  title: "報道 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: HODO,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  categoryDefinition: HODO_CATEGORIES,
+  checkedAt: ACQ_KYOJU_CHECKED_AT,
+  sources: acqKyojuSources(HODO, HODO_PAGE_SOURCE.url),
+  rules: [...acqSet1CauseRules, hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
+};
+
+// ===== 在留資格取得許可申請（公用・技能実習・留学。Issue #420） =====
+// 照合表は docs/official/reconciliation/acquisition-koyo-2026-10-24.md・acquisition-ginoujisshu-2026-10-24.md・acquisition-ryugaku-2026-10-24.md（いずれも照合日 2026-10-24）。
+// 人の判断（2026-10-24）：各照合表の推奨のとおり、全件を反映した。認定・変更・更新の規則集合は無く、取得だけを先に作る（芸術 R-10 と同じ）。
+// 共通の扱いは技人国の取得（#396）と同じ（acquisitionSet3BaseRules）。ページの URL は控えには無いが、人が確認した（2026-10-24）。出典は、各ページの URL・手続案内・申請書様式とする。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。
+const ACQUISITION_SET4_COMPARED_AT = "2026-10-24";
+const ACQUISITION_SET4_CHECKED_AT = "2026-10-24";
+const acquisitionSet4Sources = (status: string, page: string): RuleSource[] => [
+  acquisitionStatusPageSource(status, `${ACQUISITION_STATUS_PAGE_BASE}${page}`, ACQUISITION_SET4_COMPARED_AT),
+  ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+  ...ACQUISITION_BY_CAUSE.sources,
+];
+
+// 公用（acquisition-koyo-2026-10-24.md。原文 koyo_2026-10-18.txt 102〜116行）。原文の項目と一対一になる：申請書・事由別の書類・旅券の提示・口上書等・申請取次者の書類。
+// KO-1：口上書等を全事由の必須で足す。KO-2：写真は外す（原文に項目が無く、公用は中長期在留者とならない在留資格。#396 の写真の扱いは適用しない）。
+const KOYO_ACQUISITION_RULES: RequirementRule[] = [
+  {
+    id: "koyo_diplomatic_note",
+    name: "口上書その他外国政府又は国際機関が発行した身分及び用務を証する文書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通",
+    verify: true,
+  },
+];
+export const KOYO_ACQUISITION: RuleSet = {
+  id: "koyo_acquisition",
+  title: "公用 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "公用",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_CHECKED_AT,
+  sources: acquisitionSet4Sources("公用", "official.html"),
+  // 原文の並び（申請書・事由別の書類・旅券の提示・口上書等・申請取次者の書類）に合わせ、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules({}, ["photo"]).flatMap((r) => (r.id === "passport_presentation" ? [r, ...KOYO_ACQUISITION_RULES] : [r])),
+};
+
+// 技能実習（acquisition-ginoujisshu-2026-10-24.md。原文 ginoujisshu_2026-10-24.txt 67〜87行）。
+// GJ-1：技能実習計画認定通知書等の写しを全事由の必須で足す。GJ-9：号・企業単独型／団体監理型の入力欄は足さず、区分の違いは注記で案内する（82行の例は書かない）。
+// GJ-2：住民税の証明書を全事由の必須で足す（名称は教育の更新と同じ）。GJ-4：写真は技人国の取得と同じ（年齢の注記）。
+const GINOU_JISSHU_ACQUISITION_RULES: RequirementRule[] = [
+  {
+    id: "ginou_jisshu_plan_certificate",
+    name: "技能実習計画認定通知書及び認定の申請書の写し",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通。技能実習法第8条第1項の認定（変更の認定があったときは変更後のもの）を受けた技能実習計画に係るもの。申請する在留資格の技能実習の区分（1号〜3号、企業単独型・団体監理型）に対応する計画のもの",
+    verify: true,
+  },
+  {
+    id: "resident_tax_certificates",
+    name: "住民税の課税（又は非課税）証明書及び納税証明書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "各1通。1年間の総所得及び納税状況が記載されたもの。1月1日現在の住所地の市区町村から発行される。総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。入国後間もない場合や転居等により発行されない場合は、最寄りの地方出入国在留管理官署に問い合わせる",
+    verify: true,
+  },
+];
+export const GINOU_JISSHU_ACQUISITION: RuleSet = {
+  id: "ginou_jisshu_acquisition",
+  title: "技能実習 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "技能実習",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_CHECKED_AT,
+  sources: acquisitionSet4Sources("技能実習", "technicalinterntraining.html"),
+  // 固有の書類は、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...GINOU_JISSHU_ACQUISITION_RULES] : [r])),
+};
+
+// 留学。入管庁の提出書類一覧表（チェックシート）による（docs/official/reconciliation/ryugaku-procedures-2026-10-24.md）。
+// 取得の規則は、変更・取得用の一覧表（9点）に合わせて直した（RY-1：案内ページの要確認1行と各種確認書の1行を、一覧表の書類に置き換える）。
+// 判定の軸は、入学先の種類（schoolType。ページが掲載する9区分）と取得の事由（alsoBasis）。手元に一覧表がある区分は書類を出し、無い区分は「一覧表は未取得」の要確認の1行を出す。入学先が未選択の間は、全ての入学先に共通の書類だけを出す。
+// 取得は、案内ページの「１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用」により、活動資料を外す。
+const RYUGAKU_COMPARED_AT = "2026-10-24";
+const RYUGAKU_CHECKED_AT = "2026-10-24";
+const RYUGAKU_PAGE_URL = `${ACQUISITION_STATUS_PAGE_BASE}student.html`;
+type RyugakuProcedure = "coe" | "change" | "renewal" | "acquisition";
+const RYUGAKU_SHEET_LABELS: Record<RyugakuProcedure, string> = {
+  coe: "在留資格認定証明書交付申請用（入学先の9区分すべて）",
+  change: "在留資格変更許可申請用＝変更・取得用（入学先の9区分すべて）",
+  renewal: "在留期間更新許可申請用（入学先の9区分すべて）",
+  acquisition: "在留資格取得許可申請用＝変更・取得用（入学先の9区分すべて）",
+};
+const ryugakuSheetSource = (procedure: RyugakuProcedure): RuleSource => ({
+  title: `「留学」の提出書類一覧表（${RYUGAKU_SHEET_LABELS[procedure]}。入学先の種類・適正校の区分ごとのPDF。PDFのURLは番号がなく、取得できていない。未確認）（出入国在留管理庁）`,
+  url: RYUGAKU_PAGE_URL,
+  kind: "page",
+  comparedAt: RYUGAKU_COMPARED_AT,
+});
+export const RYUGAKU_ACQUISITION: RuleSet = {
+  id: "ryugaku_acquisition",
+  title: "留学 在留資格取得許可申請",
+  procedureType: "acquisition",
+  residenceStatus: "留学",
+  basis: "schoolType",
+  alsoBasis: ["acquisitionCause"],
+  checkedAt: RYUGAKU_CHECKED_AT,
+  sources: [...acquisitionSet4Sources("留学", "student.html"), ryugakuSheetSource("acquisition")],
+  // 固有の書類は、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...ryugakuSheetRules("acquisition")] : [r])),
+};
+
+// 留学の認定・変更・更新。申請書・写真・旅券等の共通の書類（procedureCommonRules）の後ろに、一覧表の書類を並べる。
+// 認定は、一覧表に「旅券の身分事項ページ（写し）」が○であるため、共通の任意の「旅券の写し」の代わりにその書類を置く（RY-2）
+const ryugakuProcedureSet = (procedure: Exclude<RyugakuProcedure, "acquisition">, title: string): RuleSet => ({
+  id: `ryugaku_${procedure}`,
+  title,
+  procedureType: procedure,
+  residenceStatus: "留学",
+  basis: "schoolType",
+  checkedAt: RYUGAKU_CHECKED_AT,
+  sources: [acquisitionStatusPageSource("留学", RYUGAKU_PAGE_URL, RYUGAKU_COMPARED_AT), ryugakuSheetSource(procedure)],
+  rules: [...procedureCommonRules(procedure).filter((r) => !(procedure === "coe" && r.id === "passport_copy")), ...ryugakuSheetRules(procedure)],
+});
+export const RYUGAKU_COE: RuleSet = ryugakuProcedureSet("coe", "留学 在留資格認定証明書交付申請");
+export const RYUGAKU_CHANGE: RuleSet = ryugakuProcedureSet("change", "留学 在留資格変更許可申請");
+export const RYUGAKU_RENEWAL: RuleSet = ryugakuProcedureSet("renewal", "留学 在留期間更新許可申請");
+// ===== ここまで（取得：公用・技能実習・留学） =====
+
+// ===== 在留資格取得許可申請（文化活動・日本人の配偶者等。Issue #420） =====
+// 照合表は docs/official/reconciliation/acquisition-bunkakatsudo-2026-10-24.md・acquisition-nihonjinhaigusha-2026-10-24.md（いずれも 2026-10-24）。
+// 人の判断「推奨のとおり」（2026-10-24）の R 項目（BK-1〜BK-12・NH-1〜NH-20）をすべて反映した。取得だけを先に作る（認定・変更・更新は未整備）。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。ページの URL は控えには無いが、人が確認した（2026-10-24）。
+
+// 文化活動（BK-1〜BK-12。原文 bunkakatsudo1-acquisition_2026-10-24.txt 12〜47行・bunkakatsudo2-acquisition_2026-10-24.txt 11〜50行）。
+// 共通の扱いは技人国の取得（#396）と同じ（BK-2 出生の3書類を外し事由の証明に含める・BK-3 写真・BK-4 注記の例を外す・BK-9 活動に応じた資料を外す・BK-10 申請取次者の注記・BK-11 旅券の理由書を外す）。
+// BK-1：ページ１とページ２の違いは、ページ２だけにある専門家の経歴及び業績の資料の1行のみ。活動の種類を入力する欄は足さず、この1行を「専門家の指導を受ける場合のみ」の要確認にする（案B）
+const BUNKA_KATSUDO_EXPENSE_NOTE =
+  "(1)申請人本人が経費を支弁する場合は、次のいずれか：給付金額及び給付期間を明示した奨学金給付に関する証明書 1通／申請人本人名義の銀行等における預金残高証明書／これらに準ずる文書（適宜）。" +
+  "(2)申請人本人以外の者が経費を支弁する場合は、経費負担者に係る次の資料：住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの） 各1通（1年間の総所得及び納税状況の両方が記載されていれば、いずれか一方でよい）／経費支弁者が外国にいる場合は、経費支弁者名義の銀行等における預金残高証明書（適宜）／これらに準ずる文書（適宜）";
+export const BUNKA_KATSUDO_ACQUISITION: RuleSet = {
+  id: "bunka_katsudo_acquisition",
+  title: "文化活動 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "文化活動",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_COMPARED_AT,
+  sources: acquisitionSet4Sources("文化活動", "culturalactivities.html"),
+  rules: [
+    ...acquisitionSet3BaseRules(),
+    // BK-5：必須。(1)(2)とも出す
+    {
+      id: "bunka_activity_documents",
+      name: "具体的な活動の内容、期間及び当該活動を行おうとする機関の概要を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "(1)申請人本人又は受入れ機関が作成した日本での活動内容及びその期間を明らかにする文書 1通 (2)申請人本人が当該活動を行おうとする機関の概要を明らかにする資料（パンフレット等） 適宜",
+      verify: true,
+    },
+    // BK-6：必須（5種のいずれか）
+    {
+      id: "bunka_achievements",
+      name: "学術上又は芸術上の業績を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "次のいずれか。関係団体からの推薦状 1通／過去の活動に関する報道 適宜／入賞、入選等の実績 適宜／過去の論文、作品等の目録 適宜／これらに準ずる文書 適宜",
+      verify: true,
+    },
+    // BK-7 案A：支弁者により(1)(2)。必須の1行にまとめ、中身の違いは注記に書く
+    {
+      id: "bunka_expense_capacity",
+      name: "申請人の日本滞在中の経費支弁能力を証する文書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: BUNKA_KATSUDO_EXPENSE_NOTE,
+      verify: true,
+    },
+    // BK-1・BK-8：ページ２（専門家の指導を受けて修得する場合）だけの書類。要確認
+    {
+      id: "bunka_expert_career",
+      name: "当該専門家の経歴及び業績を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: "専門家の指導を受けて修得する場合（文化活動２）のみ。次のいずれか。免許等の写し 1通／論文、作品集等 適宜／履歴書 1通",
+      verify: true,
+    },
+  ],
+};
+
+// 日本人の配偶者等（NH-1〜NH-20。原文 nihonjinhaigusha-spouse-acquisition_2026-10-24.txt 6〜54行・nihonjinhaigusha-child-acquisition_2026-10-24.txt 6〜51行）。
+// 取得の提出書類のチェックシート（PDF）は両ページにある。配偶者は PDF 001426543、子（日本人の実子・特別養子）は PDF 001426551 に照合済み（いずれも差分なし。NH-19）。
+// NH-1：判定の軸を、取得の事由と申請人の身分（配偶者／実子・特別養子。formDetails.applicantIdentity）の2つにする（alsoBasis）。身分が未選択の間は、身分に共通の書類だけを出す。
+// NH-2：原文は事由を3区分（国籍離脱・出生・それ以外）で書くため、出生したことを証する書類（birth_certificate）は外さない（家族滞在の取得と同じ）。
+// NH-6・NH-8：旅券の理由書・活動に応じた資料は外す（活動に応じた資料は、NH-11〜NH-16 の書類群がこれに当たる）
+const NIHONJIN_HAIGUSHA_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "activity_materials"];
+const NIHONJIN_HAIGUSHA_QUESTIONNAIRE_NOTE =
+  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。配偶者の場合は PDF 001426543、実子・特別養子の場合は PDF 001426551 の取得のチェックシートに、この項目がある";
+const NIHONJIN_HAIGUSHA_RESIDENCE_CERTIFICATE_NOTE =
+  "1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。配偶者の場合は、配偶者（日本人）の世帯全員の記載のある住民票の写しで、発行日から3か月以内のもの。実子・特別養子の場合は、日本人の方（申請人の親又は養親）の世帯全員の記載があるもの";
+const NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  // NH-3：技人国の取得（R-3）と同じ。全事由の必須、名称は申請書のとおり、注記は年齢の注記
+  photo: { causes: ALL_CAUSES, name: ACQUISITION_FORM_PHOTO_NAME, note: ACQUISITION_PHOTO_AGE_NOTE },
+  // NH-4：原文は「その事由を証する書類」のみ。原文に無い注記の例（日米地位協定）を外す
+  cause_proof: { note: undefined },
+  // NH-7：原文は「申請人本人以外の方が申請書類を提出する場合」。名称は変えない
+  agent_identity_document: { note: ACQUISITION_AGENT_IDENTITY_NOTE },
+  // NH-5：配偶者のページは「パスポート 提示」。申請人以外の方が提出する場合でも提示が必要（実子・特別養子は別の行）
+  passport_presentation: {
+    identities: ["spouse"],
+    note: "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請書類を提出する場合であっても、提示が必要",
+  },
+  // NH-9：全事由の必須。名称は原文のとおり「質問書」（家族滞在 R-11 と同じ）
+  parents_questionnaire: { causes: ALL_CAUSES, name: "質問書", note: NIHONJIN_HAIGUSHA_QUESTIONNAIRE_NOTE },
+  // NH-10：全事由の必須。誰の住民票かは身分で違うため、名称は両方を併記し、違いは注記に書く
+  household_residence_certificate: {
+    causes: ALL_CAUSES,
+    name: "日本人の方（配偶者又は親・養親）の世帯全員の記載のある住民票",
+    note: NIHONJIN_HAIGUSHA_RESIDENCE_CERTIFICATE_NOTE,
+  },
+};
+const NIHONJIN_HAIGUSHA_NEW_RULES: Record<string, RequirementRule> = {
+  // NH-11：戸籍謄本。配偶者と実子・特別養子で書類が違うため、身分ごとの2行
+  spouse_family_register: {
+    id: "nihonjin_spouse_family_register",
+    name: "配偶者（日本人）の方の戸籍謄本（全部事項証明書）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["spouse"],
+    level: "required",
+    note: "1通。申請人との婚姻事実の記載があるもの。婚姻事実の記載がない場合は、戸籍謄本に加え婚姻届出受理証明書を提出する。発行日から3か月以内のもの",
+    verify: true,
+  },
+  child_family_register: {
+    id: "nihonjin_child_family_register",
+    name: "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["child"],
+    level: "required",
+    note: "1通",
+    verify: true,
+  },
+  // NH-12：配偶者のみ
+  marriage_certificate: {
+    id: "nihonjin_marriage_certificate",
+    name: "申請人の国籍国（外国）の機関から発行された結婚証明書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["spouse"],
+    level: "required",
+    note: "1通。申請人が韓国籍等で戸籍謄本が発行される場合は、お二方の婚姻が記載された外国機関発行の戸籍謄本の提出でもよい",
+    verify: true,
+  },
+  // NH-13 案A：実子・特別養子のみ。3つの場合ごとの「次のいずれか」を、必須の1行にまとめる
+  child_birth_or_adoption: {
+    id: "nihonjin_child_birth_or_adoption",
+    name: "出生又は特別養子縁組を証する文書（日本で出生／海外で出生／特別養子の場合ごとに、次のいずれか）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["child"],
+    level: "required",
+    note:
+      "該当する場合ごとに、次のいずれか1通。日本で出生した場合：(1)出生届受理証明書 (2)認知届受理証明書（発行日から3か月以内のもの。(2)は日本の役所に届出をしている場合のみ）。" +
+      "海外で出生した場合：(1)出生国の機関から発行された出生証明書 (2)出生国の機関から発行された申請人の認知に係る証明書（認知に係る証明書がある方のみ）。" +
+      "特別養子の場合：(1)特別養子縁組届出受理証明書 (2)日本の家庭裁判所発行の養子縁組に係る審判書謄本及び確定証明書。" +
+      "出生の事由の「出生したことを証する書類」と同じ文書で足りるかは、案内ページに記載がないため、行政書士が確認する",
+    verify: true,
+  },
+  // NH-14：(1)(2)のどちらか。必須の1行にまとめる（家族滞在 R-19 案A と同じ形）
+  stay_expense: {
+    id: "nihonjin_stay_expense",
+    name: "日本での滞在費用を証明する資料",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note:
+      "(1)を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)の資料などを提出する。" +
+      "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの） 各1通。1月1日現在の住所の市区町村が発行する。1年間の総所得及び納税状況の両方が記載されていれば、いずれか一方でよい。発行日から3か月以内のもの。実子・特別養子の場合は、複数の方が扶養するときは収入の多い方。" +
+      "(2)その他：預貯金通帳の写し（適宜。Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよいが、加工等できない状態で印刷したものに限り、Excelファイル等は不可）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの。適宜）／これらに準ずるもの（適宜）",
+    verify: true,
+  },
+  // NH-15：両ページ共通の必須。身元保証人は身分で違うため注記に書く
+  guarantee_letter: {
+    id: "nihonjin_guarantee_letter",
+    name: "身元保証書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通（様式は案内ページにある日本語版・英語版）。身元保証人は、配偶者の場合は日本に居住する配偶者(日本人)、実子・特別養子の場合は日本に居住する日本人の方（申請人の親又は養親）等",
+    verify: true,
+  },
+  // NH-16：配偶者のみ
+  spouse_exchange: {
+    id: "nihonjin_spouse_exchange",
+    name: "夫婦間の交流が確認できる資料",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["spouse"],
+    level: "required",
+    note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可） 2〜3葉。その他、提出できるもの：SNS記録、通話記録",
+    verify: true,
+  },
+  // NH-5 案A：実子・特別養子のページの取得の節には旅券の項が無い。確認が必要な書類として出す
+  child_passport_presentation: {
+    id: "nihonjin_child_passport_presentation",
+    name: "旅券（提示）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["child"],
+    level: "check",
+    note: "このページ（日本人の実子・特別養子の取得の節）には記載が無い。提示の要否は、行政書士が確認する",
+    verify: true,
+  },
+};
+// 原文の並び（申請書・写真・事由別の書類・身分関係の書類・滞在費用・身元保証書・住民票・質問書・夫婦間の交流・旅券・申請取次者の書類）に合わせる
+const nihonjinHaigushaBaseById = Object.fromEntries(
+  ACQUISITION_BY_CAUSE.rules
+    .filter((r) => !NIHONJIN_HAIGUSHA_ACQUISITION_REMOVED_IDS.includes(r.id))
+    .map((r) => [r.id, NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES[r.id] } : r]),
+) as Record<string, RequirementRule>;
+const nihonjinHaigushaRules: RequirementRule[] = [
+  nihonjinHaigushaBaseById.application_form,
+  nihonjinHaigushaBaseById.photo,
+  nihonjinHaigushaBaseById.nationality_proof,
+  nihonjinHaigushaBaseById.birth_certificate,
+  nihonjinHaigushaBaseById.cause_proof,
+  NIHONJIN_HAIGUSHA_NEW_RULES.spouse_family_register,
+  NIHONJIN_HAIGUSHA_NEW_RULES.child_family_register,
+  NIHONJIN_HAIGUSHA_NEW_RULES.marriage_certificate,
+  NIHONJIN_HAIGUSHA_NEW_RULES.child_birth_or_adoption,
+  NIHONJIN_HAIGUSHA_NEW_RULES.stay_expense,
+  NIHONJIN_HAIGUSHA_NEW_RULES.guarantee_letter,
+  nihonjinHaigushaBaseById.household_residence_certificate,
+  nihonjinHaigushaBaseById.parents_questionnaire,
+  NIHONJIN_HAIGUSHA_NEW_RULES.spouse_exchange,
+  nihonjinHaigushaBaseById.passport_presentation,
+  NIHONJIN_HAIGUSHA_NEW_RULES.child_passport_presentation,
+  nihonjinHaigushaBaseById.agent_identity_document,
+];
+// NH-20：チェックシートは配偶者・子とも照合済み（差分なし）。題名は「一部のみ整備」
+export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
+  id: "nihonjin_haigusha_acquisition",
+  title: "日本人の配偶者等 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "日本人の配偶者等",
+  basis: "acquisitionCause",
+  alsoBasis: ["identity"],
+  checkedAt: ACQUISITION_SET4_COMPARED_AT,
+  sources: acquisitionSet4Sources("日本人の配偶者等", "spouseorchildofjapanese.html"),
+  rules: nihonjinHaigushaRules,
+};
+// ===== ここまで（取得：文化活動・日本人の配偶者等） =====
+
+// ===== 日本人の配偶者等の在留資格認定証明書交付申請・在留資格変更許可申請・在留期間更新許可申請（Issue #420） =====
+// 照合表は docs/official/reconciliation/coe-change-renewal-nihonjinhaigusha-2026-10-24.md（照合日 2026-10-24）。
+// 提出書類は、入管庁の「提出書類一覧」（チェックシート。docs/official/nihonjinhaigusha-{coe|change|renewal}-checksheet-{spouse|child}_*.pdf の6点）のとおり。シートにない書類は足さない。
+// 判定は申請人の身分（配偶者〔夫又は妻〕／実子・特別養子。formDetails.applicantIdentity）だけ（basis: identity）。取得の事由・所属機関のカテゴリーは使わない。
+// 身分が未選択の間は、身分に共通の書類（申請書・写真・旅券・身元保証書・滞在費用など）だけを出す。取得（NIHONJIN_HAIGUSHA_ACQUISITION）の規則は書き換えない。
+// 同じ書類は取得と同じ id・書類名にして訳を共有する。注記は、シートに書かれたことだけを書く（取得の注記にある案内ページ由来の事項は、認定・変更・更新のシートに無いため写さない）。
+const NIHONJIN_PROCEDURE_COMPARED_AT = "2026-10-24";
+type NihonjinProcedure = CommonProcedure;
+interface NihonjinDoc {
+  rule: Omit<RequirementRule, "party" | "causes" | "categories" | "identities">;
+  /** 手続ごとの対象の身分（省略した手続には出さない。全身分なら undefined 相当の ALL_IDENTITIES） */
+  procedures: Partial<Record<NihonjinProcedure, ApplicantIdentity[]>>;
+}
+const NH_BOTH: ApplicantIdentity[] = ["spouse", "child"];
+const NH_SPOUSE: ApplicantIdentity[] = ["spouse"];
+const NH_CHILD: ApplicantIdentity[] = ["child"];
+const NH_EXPENSE_NOTE =
+  "(1)を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)の資料などを提出する。" +
+  "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）。" +
+  "(2)その他：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよい）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／これらに準ずるもの";
+// シートの並び（申請書・写真・戸籍謄本・結婚証明書／身分関係・滞在費用・身元保証書・住民票・質問書・夫婦間の交流・返信用封筒）に合わせる。申請書・写真・旅券等は procedureCommonRules
+const NIHONJIN_PROCEDURE_DOCS: NihonjinDoc[] = [
+  // 戸籍謄本：配偶者は3手続、実子・特別養子は認定・変更のみ（更新のシートに無い）
+  { rule: { id: "nihonjin_spouse_family_register", name: "配偶者（日本人）の方の戸籍謄本（全部事項証明書）", level: "required" }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE, renewal: NH_SPOUSE } },
+  { rule: { id: "nihonjin_child_family_register", name: "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" }, procedures: { coe: NH_CHILD, change: NH_CHILD } },
+  { rule: { id: "nihonjin_marriage_certificate", name: "申請人の国籍国（外国）の機関から発行された結婚証明書", level: "required" }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE } },
+  {
+    rule: {
+      id: "nihonjin_child_birth_or_adoption",
+      name: "出生又は特別養子縁組を証する文書（日本で出生／海外で出生／特別養子の場合ごとに、次のいずれか）",
+      level: "required",
+      note: "該当する場合ごとに、次のいずれか。日本で生まれた場合：出生届受理証明書又は認知届受理証明書／海外で生まれた場合：出生国の機関から発行された出生証明書又は認知に係る証明書／特別養子の場合：特別養子縁組届出受理証明書又は日本の家庭裁判所発行の養子縁組に係る審判書謄本及び確定証明書",
+    },
+    procedures: { coe: NH_CHILD, change: NH_CHILD },
+  },
+  { rule: { id: "nihonjin_stay_expense", name: "日本での滞在費用を証明する資料", level: "required", note: NH_EXPENSE_NOTE }, procedures: { coe: NH_BOTH, change: NH_BOTH, renewal: NH_BOTH } },
+  {
+    rule: {
+      id: "nihonjin_guarantee_letter",
+      name: "身元保証書",
+      level: "required",
+      note: "配偶者の場合は配偶者（日本人）の身元保証書、実子・特別養子の場合は日本人（申請人の親又は養親）の身元保証書",
+    },
+    procedures: { coe: NH_BOTH, change: NH_BOTH, renewal: NH_BOTH },
+  },
+  // 住民票：誰の住民票かは、身分と手続による（配偶者は配偶者〔日本人〕。実子・特別養子は、認定は扶養者／同居者、変更・更新は申請人）
+  {
+    rule: { id: "household_residence_certificate", name: "日本人の方（配偶者又は親・養親）の世帯全員の記載のある住民票", level: "required", note: "配偶者（日本人）の世帯全員の記載のある住民票の写し" },
+    procedures: { coe: NH_SPOUSE, change: NH_SPOUSE, renewal: NH_SPOUSE },
+  },
+  {
+    rule: {
+      id: "nihonjin_child_supporter_residence_certificate",
+      name: "住民票（世帯全員の記載があるもの）（申請人が未成年の場合は扶養者の方、成人の場合は本邦における同居者の方）",
+      level: "required",
+      note: "申請人が未成年である場合は扶養者の方の住民票、申請人が成人している場合は本邦における同居者の住民票（いずれも世帯全員の記載があるもの）",
+    },
+    procedures: { coe: NH_CHILD },
+  },
+  { rule: { id: "nihonjin_applicant_residence_certificate", name: "申請人の住民票（世帯全員の記載があるもの）", level: "required" }, procedures: { change: NH_CHILD, renewal: NH_CHILD } },
+  { rule: { id: "parents_questionnaire", name: "質問書", level: "required", note: "様式の記載内容は未確認", verify: true }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE } },
+  {
+    rule: {
+      id: "nihonjin_spouse_exchange",
+      name: "夫婦間の交流が確認できる資料",
+      level: "required",
+      note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可） 2〜3葉。その他、提出できるもの：SNS記録、通話記録",
+    },
+    procedures: { coe: NH_SPOUSE, change: NH_SPOUSE },
+  },
+  // 返信用封筒は認定のみ（他の在留資格の認定は party: organization だが、この書類は申請人側が用意する。定住者の認定と同じ）
+  { rule: { id: "return_envelope", name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）", level: "required" }, procedures: { coe: NH_BOTH } },
+];
+const NIHONJIN_PROCEDURE_SHEET_LABELS: Record<NihonjinProcedure, string> = {
+  coe: "在留資格認定証明書交付申請用",
+  change: "在留資格変更許可申請用",
+  renewal: "在留期間更新許可申請用",
+};
+// シートの番号（配偶者／実子・特別養子）。URL は既存の書式に合わせて番号から組み立てた（未確認）
+const NIHONJIN_PROCEDURE_SHEET_IDS: Record<NihonjinProcedure, [spouse: string, child: string]> = {
+  coe: ["001426538", "001426545"],
+  change: ["001426540", "001426547"],
+  renewal: ["001426542", "001426549"],
+};
+function nihonjinProcedureSources(procedure: NihonjinProcedure): RuleSource[] {
+  const [spouse, child] = NIHONJIN_PROCEDURE_SHEET_IDS[procedure];
+  const make = (who: string, id: string): RuleSource => ({
+    title: `「日本人の配偶者等」（${who}）に係る提出書類一覧（${NIHONJIN_PROCEDURE_SHEET_LABELS[procedure]}。URL は番号から組み立てた。未確認）（出入国在留管理庁）`,
+    url: `https://www.moj.go.jp/isa/content/${id}.pdf`,
+    kind: "pdf",
+    comparedAt: NIHONJIN_PROCEDURE_COMPARED_AT,
+  });
+  return [make("日本人の配偶者（夫又は妻）", spouse), make("日本人の実子・特別養子", child)];
+}
+function nihonjinProcedureRules(procedure: NihonjinProcedure): RequirementRule[] {
+  const docs = NIHONJIN_PROCEDURE_DOCS.flatMap((d): RequirementRule[] => {
+    const identities = d.procedures[procedure];
+    // 全身分の書類は identities を省略する（身分が未選択の間も出す）
+    return identities ? [{ ...d.rule, party: "applicant", ...(identities.length === NH_BOTH.length ? {} : { identities }) }] : [];
+  });
+  return [...procedureCommonRules(procedure), ...docs];
+}
+const NIHONJIN_PROCEDURE_TITLES: Record<NihonjinProcedure, string> = {
+  coe: "日本人の配偶者等 在留資格認定証明書交付申請",
+  change: "日本人の配偶者等 在留資格変更許可申請",
+  renewal: "日本人の配偶者等 在留期間更新許可申請",
+};
+const nihonjinProcedureSet = (procedure: NihonjinProcedure): RuleSet => ({
+  id: `nihonjin_haigusha_${procedure}`,
+  title: NIHONJIN_PROCEDURE_TITLES[procedure],
+  procedureType: procedure,
+  residenceStatus: "日本人の配偶者等",
+  basis: "identity",
+  checkedAt: NIHONJIN_PROCEDURE_COMPARED_AT,
+  sources: nihonjinProcedureSources(procedure),
+  rules: nihonjinProcedureRules(procedure),
+});
+export const NIHONJIN_HAIGUSHA_COE: RuleSet = nihonjinProcedureSet("coe");
+export const NIHONJIN_HAIGUSHA_CHANGE: RuleSet = nihonjinProcedureSet("change");
+export const NIHONJIN_HAIGUSHA_RENEWAL: RuleSet = nihonjinProcedureSet("renewal");
+// ===== ここまで（日本人の配偶者等の認定・変更・更新） =====
+
+// ===== 在留資格取得許可申請（永住者の配偶者等・定住者。Issue #420） =====
+// 照合表は docs/official/reconciliation/acquisition-eijushahaigusha-2026-10-24.md・acquisition-teijusha-2026-10-24.md（照合日 2026-10-24）。
+// 人の判断（2026-10-24）：各照合表の「判断」欄の推奨のとおり（全件）。取得のチェックシート（PDF）は、永住者の配偶者等は照合済み（001426557。差分なし）、定住者も照合済み（12ページ分。差分なし）。案内ページの本文で作った。
+// 永住者の配偶者等・定住者には、認定・変更・更新の規則集合が無い（取得だけを先に作る）。共通の扱いは技人国の取得（#396）と同じ：
+// 旅券の理由書・活動に応じた資料を外し、写真は「写真（40mm×30mm）」を全事由の必須（注記は年齢の注記のみ）、申請取次者の書類の注記は原文のとおり。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。出典のページの URL は控えには無いが、人が確認した（2026-10-24）。各ページの URL の出典（2026-10-24 の版）を置く。
+const EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT = "2026-10-24";
+
+// 永住者の配偶者等（EH-1〜EH-14。原文 eijushahaigusha-acquisition_2026-10-24.txt の取得の節 11〜55行）。判定は取得の事由だけ（alsoBasis なし）。
+// 該当範囲は「永住者等の配偶者」と「本邦で出生した永住者等の子」。取得の節の書類は配偶者向けだけで事由の別が無いため（EH-1 案A）、
+// 結婚証明書（EH-4）・夫婦間の交流（EH-9）は出生では出さず、身元保証書・住民票・質問書（EH-6〜EH-8）は出生のときは要確認にして「行政書士が確認」と書く。
+// 事由を証する書類（EH-3）は事由「その他」のまま注記を外す。出生したことを証する書類（23行）・国籍を証する書類（21〜22行）は残す。旅券の理由書（EH-12）・活動に応じた資料（EH-10）は外す。
+const EIJUSHA_HAIGUSHA_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "activity_materials", "parents_questionnaire", "household_residence_certificate"];
+const EIJUSHA_HAIGUSHA_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  photo: GIJINKOKU_ACQUISITION_OVERRIDES.photo,
+  agent_identity_document: GIJINKOKU_ACQUISITION_OVERRIDES.agent_identity_document,
+  cause_proof: { note: undefined },
+};
+const EIJUSHA_HAIGUSHA_BIRTH_NOTE = "このページには、出生で取得する子の場合の記載が無い（取得の節の書類は配偶者向け）。出生の場合の扱いは、行政書士が確認する";
+const EIJUSHA_HAIGUSHA_SPOUSE_NOTE = "配偶者の場合の書類（国籍離脱・その他の場合）";
+export const EIJUSHA_HAIGUSHA_ACQUISITION: RuleSet = {
+  id: "eijusha_haigusha_acquisition",
+  title: "永住者の配偶者等 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "永住者の配偶者等",
+  basis: "acquisitionCause",
+  checkedAt: EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT,
+  sources: [acquisitionStatusPageSource("永住者の配偶者等", `${ACQUISITION_STATUS_PAGE_BASE}spouseorchildofpermanentresident.html`, EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    ...ACQUISITION_BY_CAUSE.rules
+      .filter((r) => !EIJUSHA_HAIGUSHA_ACQUISITION_REMOVED_IDS.includes(r.id))
+      .map((r) => (EIJUSHA_HAIGUSHA_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...EIJUSHA_HAIGUSHA_ACQUISITION_OVERRIDES[r.id] } : r)),
+    // EH-4：配偶者向け。出生では出さない
+    {
+      id: "marriage_certificate",
+      name: "配偶者（永住者）及び申請人の国籍国（外国）の機関から発行された結婚証明書",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: "1通。韓国籍等で戸籍謄本が発行される場合は、婚姻が記載された外国機関発行の戸籍謄本でもよい。日本の役所に届け出ている場合は、婚姻届出受理証明書を提出する",
+      verify: true,
+    },
+    // EH-5 案A：(1)(2)を必須の1行にまとめ、中身は注記に書く
+    {
+      id: "stay_cost_documents",
+      name: "日本での滞在費用を証明する資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "(1)滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書 各1通（1年間の総所得及び納税状況の両方が記載されていれば一方でよい。発行日から3か月以内）。入国後間もない場合や転居等で(1)で証明できない場合は、(2)預貯金通帳の写し（Web通帳の画面の写し等も可。加工できない状態で印刷したもの）、雇用予定証明書又は採用内定通知書（日本の会社発行）、これらに準ずるもの（各適宜）",
+      verify: true,
+    },
+    // EH-6：身元保証人は日本に居住する配偶者（永住者）。出生は要確認
+    {
+      id: "identity_guarantee",
+      name: "配偶者（永住者）の身元保証書",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: `1通。身元保証人は、日本に居住する配偶者（永住者）。様式は日本語版・英語版がある。${EIJUSHA_HAIGUSHA_SPOUSE_NOTE}`,
+      verify: true,
+    },
+    {
+      id: "identity_guarantee_birth",
+      name: "配偶者（永住者）の身元保証書",
+      party: "applicant",
+      causes: ["birth"],
+      level: "check",
+      note: `1通。身元保証人は、日本に居住する配偶者（永住者）。${EIJUSHA_HAIGUSHA_BIRTH_NOTE}`,
+      verify: true,
+    },
+    // EH-7：原文のとおりの名称。出生は要確認
+    {
+      id: "household_residence_certificate",
+      name: "配偶者（永住者）の世帯全員の記載のある住民票",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: `1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。${EIJUSHA_HAIGUSHA_SPOUSE_NOTE}`,
+      verify: true,
+    },
+    {
+      id: "household_residence_certificate_birth",
+      name: "配偶者（永住者）の世帯全員の記載のある住民票",
+      party: "applicant",
+      causes: ["birth"],
+      level: "check",
+      note: `1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。${EIJUSHA_HAIGUSHA_BIRTH_NOTE}`,
+      verify: true,
+    },
+    // EH-8：名称は原文のとおり「質問書」（家族滞在 R-11 と同じ）。出生は要確認
+    {
+      id: "questionnaire",
+      name: "質問書",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: `1通。平成29年6月6日改訂の新様式で提出する。日本語のほか、英語・中国語・韓国語などの版がある。様式の記載内容は未確認。${EIJUSHA_HAIGUSHA_SPOUSE_NOTE}`,
+      verify: true,
+    },
+    {
+      id: "questionnaire_birth",
+      name: "質問書",
+      party: "applicant",
+      causes: ["birth"],
+      level: "check",
+      note: `1通。平成29年6月6日改訂の新様式で提出する。様式の記載内容は未確認。${EIJUSHA_HAIGUSHA_BIRTH_NOTE}`,
+      verify: true,
+    },
+    // EH-9：配偶者向け。出生では出さない
+    {
+      id: "marital_exchange_materials",
+      name: "夫婦間の交流が確認できる資料",
+      party: "applicant",
+      causes: ["nationalityLoss", "other"],
+      level: "required",
+      note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可）2〜3葉。その他、提出できるもの（SNS記録・通話記録）",
+      verify: true,
+    },
+  ],
+};
+
+// ===== 永住者の配偶者等の在留資格認定証明書交付申請・在留資格変更許可申請・在留期間更新許可申請（Issue #420） =====
+// 照合表は docs/official/reconciliation/coe-change-renewal-eijushahaigusha-2026-10-24.md（照合日 2026-10-24）。
+// 提出書類は、入管庁の「提出書類一覧」（チェックシート。docs/official/eijushahaigusha-{coe|change|renewal}-checksheet_*.pdf の3点）のとおり。シートにない書類は足さない。
+// シートは身分（配偶者・子）で分かれず1枚ずつ。判定の軸は無いので、従来の共通の書類と同じ流儀（categories: ALL）で全区分に適用する。取得（EIJUSHA_HAIGUSHA_ACQUISITION）の規則は書き換えない。
+// 同じ書類は取得と同じ id・書類名にして訳を共有する。注記は、シートに書かれたことだけを書く（取得の注記にある案内ページ由来の事項は、これらのシートに無いため写さない）。
+// 取得との差分：認定は返信用封筒が加わり、国籍・出生・事由を証する書類が無い／変更は後者だけ無い／更新は結婚証明書・質問書・夫婦間の交流が無く、婚姻の継続を証明する文書が加わる。
+const EIJUSHA_PROCEDURE_COMPARED_AT = "2026-10-24";
+type EijushaProcedure = CommonProcedure;
+const EIJUSHA_STAY_COST_NOTE =
+  "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）を提出する。" +
+  "入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)その他の資料などを提出する：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよい）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／これらに準ずるもの";
+const eijushaDoc = (rule: Omit<RequirementRule, "party" | "categories">): RequirementRule => ({ ...rule, party: "applicant", categories: ALL });
+// シートの並び。申請書・写真・旅券等は procedureCommonRules。返信用封筒は認定の3番目、結婚証明書（更新は婚姻継続の文書）が続く
+const EIJUSHA_RETURN_ENVELOPE = eijushaDoc({ id: "return_envelope", name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）", level: "required" });
+const EIJUSHA_MARRIAGE_CERTIFICATE = eijushaDoc({ id: "marriage_certificate", name: "配偶者（永住者）及び申請人の国籍国（外国）の機関から発行された結婚証明書", level: "required" });
+const EIJUSHA_MARRIAGE_CONTINUATION = eijushaDoc({
+  id: "marriage_continuation_proof",
+  name: "申請人に係る婚姻が継続していることを証明する文書",
+  level: "required",
+  note: "シートに、文書の具体例の記載は無い。提出する文書は、行政書士が確認する",
+  verify: true,
+});
+const EIJUSHA_STAY_COST = eijushaDoc({ id: "stay_cost_documents", name: "日本での滞在費用を証明する資料", level: "required", note: EIJUSHA_STAY_COST_NOTE });
+const EIJUSHA_GUARANTEE = eijushaDoc({ id: "identity_guarantee", name: "配偶者（永住者）の身元保証書", level: "required" });
+const EIJUSHA_RESIDENCE = eijushaDoc({ id: "household_residence_certificate", name: "配偶者（永住者）の世帯全員の記載のある住民票", level: "required" });
+const EIJUSHA_QUESTIONNAIRE = eijushaDoc({ id: "questionnaire", name: "質問書", level: "required", note: "様式の記載内容は未確認", verify: true });
+const EIJUSHA_EXCHANGE = eijushaDoc({
+  id: "marital_exchange_materials",
+  name: "夫婦間の交流が確認できる資料",
+  level: "required",
+  note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可）2〜3葉。その他、提出できるもの（SNS記録・通話記録）",
+});
+const EIJUSHA_PROCEDURE_DOCS: Record<EijushaProcedure, RequirementRule[]> = {
+  coe: [EIJUSHA_RETURN_ENVELOPE, EIJUSHA_MARRIAGE_CERTIFICATE, EIJUSHA_STAY_COST, EIJUSHA_GUARANTEE, EIJUSHA_RESIDENCE, EIJUSHA_QUESTIONNAIRE, EIJUSHA_EXCHANGE],
+  change: [EIJUSHA_MARRIAGE_CERTIFICATE, EIJUSHA_STAY_COST, EIJUSHA_GUARANTEE, EIJUSHA_RESIDENCE, EIJUSHA_QUESTIONNAIRE, EIJUSHA_EXCHANGE],
+  renewal: [EIJUSHA_MARRIAGE_CONTINUATION, EIJUSHA_STAY_COST, EIJUSHA_GUARANTEE, EIJUSHA_RESIDENCE],
+};
+const EIJUSHA_PROCEDURE_SHEET_LABELS: Record<EijushaProcedure, string> = {
+  coe: "在留資格認定証明書交付申請用",
+  change: "在留資格変更許可申請用",
+  renewal: "在留期間更新許可申請用",
+};
+const EIJUSHA_PROCEDURE_SHEET_IDS: Record<EijushaProcedure, string> = { coe: "001426553", change: "001426554", renewal: "001426555" };
+const EIJUSHA_PROCEDURE_TITLES: Record<EijushaProcedure, string> = {
+  coe: "永住者の配偶者等 在留資格認定証明書交付申請",
+  change: "永住者の配偶者等 在留資格変更許可申請",
+  renewal: "永住者の配偶者等 在留期間更新許可申請",
+};
+// URL は既存の書式に合わせて番号から組み立てた（未確認）
+const eijushaProcedureSet = (procedure: EijushaProcedure): RuleSet => ({
+  id: `eijusha_haigusha_${procedure}`,
+  title: EIJUSHA_PROCEDURE_TITLES[procedure],
+  procedureType: procedure,
+  residenceStatus: "永住者の配偶者等",
+  checkedAt: EIJUSHA_PROCEDURE_COMPARED_AT,
+  sources: [
+    {
+      title: `「永住者の配偶者等」に係る提出書類一覧（${EIJUSHA_PROCEDURE_SHEET_LABELS[procedure]}。URL は番号から組み立てた。未確認）（出入国在留管理庁）`,
+      url: `https://www.moj.go.jp/isa/content/${EIJUSHA_PROCEDURE_SHEET_IDS[procedure]}.pdf`,
+      kind: "pdf",
+      comparedAt: EIJUSHA_PROCEDURE_COMPARED_AT,
+    },
+  ],
+  rules: [...procedureCommonRules(procedure), ...EIJUSHA_PROCEDURE_DOCS[procedure]],
+});
+export const EIJUSHA_HAIGUSHA_RENEWAL: RuleSet = eijushaProcedureSet("renewal");
+export const EIJUSHA_HAIGUSHA_CHANGE: RuleSet = eijushaProcedureSet("change");
+export const EIJUSHA_HAIGUSHA_COE: RuleSet = eijushaProcedureSet("coe");
+// ===== ここまで（永住者の配偶者等の認定・変更・更新） =====
+
+// 定住者（TJ-1〜TJ-32。原文 teijusha*-acquisition_2026-10-24.txt の12ページ。種類1〜5）。判定は取得の事由と「定住者の区分」（alsoBasis: teijushaType。TJ-1・TJ-3 案A）。
+// 区分が未選択の間は、全区分に共通の書類（申請書・写真・旅券・申請取次者・身元保証書）だけを出す。
+// 配偶者の仕事（会社勤め・自営業・無職）を選ぶ欄は足さず、収入の書類を必須の1行にまとめて仕事ごとの違いを注記に書く（TJ-2・TJ-15）。
+// 日系人のときだけの3書類（4-1。TJ-25）・日本語能力の証明書（5年を希望する場合のみ。TJ-20）・ページに記載の無い書類（5-1 の事由別の書類〔TJ-4〕、5-2 の住民税・住民票・質問書〔TJ-29〕）は、要確認にして条件を注記に書く。
+// 新しい書類の party は、扶養者・配偶者・祖父母の書類も applicant とする（所属機関の書類ではないため）。出生の事由の「出生したことを証する書類」と、実子・養子等の出生証明書は別の行（TJ-24）。
+const TJ_N3: TeijushaType = "nikkei3";
+const TJ_N2S: TeijushaType = "nikkei2Spouse";
+const TJ_N3S: TeijushaType = "nikkei3Spouse";
+const TJ_C1: TeijushaType = "childPermanent";
+const TJ_C2: TeijushaType = "childJapaneseSpouse";
+const TJ_C3: TeijushaType = "childPermanentSpouse";
+const TJ_A1: TeijushaType = "adoptedJapanese";
+const TJ_A2: TeijushaType = "adoptedPermanent";
+const TEIJUSHA_NOT_LISTED_NOTE = "このページには記載が無い（他の定住者の区分・認定・変更にはある）。行政書士が確認する";
+const TEIJUSHA_BANK_BOOK_NOTE = "預貯金通帳の写し 適宜（Web通帳の画面の写し等も可。加工できない状態で印刷したもの。Excel等は不可）";
+const TEIJUSHA_TAX_FOOTNOTE = "1月1日現在の住所の市区町村が発行する。総所得と納税状況の両方が記載されていれば一方でよい。発行されない場合は地方出入国在留管理官署に問い合わせる";
+const TEIJUSHA_TAX_NOTE = `各1通。${TEIJUSHA_TAX_FOOTNOTE}`;
+const TEIJUSHA_RESIDENCE_NOTE = "1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの";
+const TEIJUSHA_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  photo: GIJINKOKU_ACQUISITION_OVERRIDES.photo,
+  agent_identity_document: GIJINKOKU_ACQUISITION_OVERRIDES.agent_identity_document,
+  cause_proof: { note: undefined },
+};
+const TEIJUSHA_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "activity_materials", "parents_questionnaire", "household_residence_certificate"];
+// 事由別の3書類（国籍を証する書類・出生したことを証する書類・事由を証する書類）は、5-1 以外の7区分では原文どおりの区分、5-1 では原文に無いため要確認の別の行にする（TJ-4）
+const TEIJUSHA_CAUSE_RULE_IDS = ["nationality_proof", "cause_proof", "birth_certificate"];
+const TEIJUSHA_WITHOUT_A1: TeijushaType[] = [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A2];
+const teijushaCauseRules: RequirementRule[] = ACQUISITION_BY_CAUSE.rules
+  .filter((r) => !TEIJUSHA_ACQUISITION_REMOVED_IDS.includes(r.id))
+  .flatMap((r) => {
+    const base = TEIJUSHA_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...TEIJUSHA_ACQUISITION_OVERRIDES[r.id] } : r;
+    if (!TEIJUSHA_CAUSE_RULE_IDS.includes(r.id)) return [base];
+    return [
+      { ...base, teijushaTypes: TEIJUSHA_WITHOUT_A1 },
+      {
+        ...base,
+        id: `${r.id}_adopted_japanese`,
+        teijushaTypes: [TJ_A1],
+        level: "check" as const,
+        note: `この区分（日本人が扶養する6歳未満の養子）の取得の案内には、事由の区分ごとの書類の記載がない。${TEIJUSHA_NOT_LISTED_NOTE}`,
+      },
+    ];
+  });
+export const TEIJUSHA_ACQUISITION: RuleSet = {
+  id: "teijusha_acquisition",
+  title: "定住者 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "定住者",
+  basis: "acquisitionCause",
+  alsoBasis: ["teijushaType"],
+  checkedAt: EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT,
+  sources: [acquisitionStatusPageSource("定住者", `${ACQUISITION_STATUS_PAGE_BASE}longtermresident.html`, EIJUSHA_TEIJUSHA_ACQUISITION_COMPARED_AT), ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    ...teijushaCauseRules,
+    // TJ-23：全区分の必須。身元保証人は区分による
+    {
+      id: "teijusha_identity_guarantee",
+      name: "身元保証書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "1通。身元保証人は区分による。通常、日系3世は日本に居住している日本人又は永住者／日系2世の配偶者は2世の方／日系3世の配偶者は3世の方／実子（永住者・定住者・特別永住者が扶養）は扶養者／実子（日本人の配偶者が扶養）・養子（日本人が扶養）は日本人（申請人の扶養者）／実子（永住者の配偶者が扶養）は永住者の方（申請人の扶養者）／養子（永住者・定住者・特別永住者が扶養）は申請人の扶養者",
+      verify: true,
+    },
+    // TJ-11：名称は原文のとおり。5-2 は原文に無いため要確認の別の行（TJ-29）
+    {
+      id: "teijusha_questionnaire",
+      name: "質問書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1],
+      level: "required",
+      note: "1通。日系2世の配偶者・日系3世の配偶者は、平成29年6月6日改訂の新様式で提出する。様式の記載内容は未確認",
+      verify: true,
+    },
+    {
+      id: "teijusha_questionnaire_adopted_permanent",
+      name: "質問書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_A2],
+      level: "check",
+      note: TEIJUSHA_NOT_LISTED_NOTE,
+      verify: true,
+    },
+    // TJ-12：住民票。対象者が区分で違う。5-2 は原文に無いため要確認
+    {
+      id: "teijusha_residence_certificate",
+      name: "申請人の住民票（世帯全員の記載があるもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_A1],
+      level: "required",
+      note: TEIJUSHA_RESIDENCE_NOTE,
+      verify: true,
+    },
+    {
+      id: "teijusha_residence_certificate_japanese",
+      name: "日本人の方の住民票（世帯全員の記載があるもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C2],
+      level: "required",
+      note: `${TEIJUSHA_RESIDENCE_NOTE}。発行日から3か月以内のもの`,
+      verify: true,
+    },
+    {
+      id: "teijusha_residence_certificate_permanent",
+      name: "永住者又は永住者の配偶者の方の住民票（世帯全員の記載があるもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C3],
+      level: "required",
+      note: TEIJUSHA_RESIDENCE_NOTE,
+      verify: true,
+    },
+    {
+      id: "teijusha_residence_certificate_adopted_permanent",
+      name: "住民票（世帯全員の記載があるもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_A2],
+      level: "check",
+      note: TEIJUSHA_NOT_LISTED_NOTE,
+      verify: true,
+    },
+    // TJ-13：住民税の課税・納税証明書。対象者が区分で違う。日系3世は滞在費用（TJ-14）、5-2 は要確認
+    {
+      id: "teijusha_tax_certificates",
+      name: "直近1年分の住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1],
+      level: "required",
+      note: `${TEIJUSHA_TAX_NOTE}。対象者は区分による：日系2世の配偶者は2世の方又は申請人（収入の多い方）／日系3世の配偶者は3世の方又は申請人（収入の多い方）／実子（永住者・定住者・特別永住者が扶養）は扶養者／実子（日本人の配偶者が扶養）は日本人又は日本人の配偶者の方（収入の多い方。戸籍謄本・住民票とともに発行日から3か月以内のもの）／実子（永住者の配偶者が扶養）は永住者又は永住者の配偶者の方（収入の多い方）／養子（日本人が扶養）は日本人の方`,
+      verify: true,
+    },
+    {
+      id: "teijusha_tax_certificates_adopted_permanent",
+      name: "直近1年分の住民税の課税（又は非課税）証明書及び納税証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_A2],
+      level: "check",
+      note: TEIJUSHA_NOT_LISTED_NOTE,
+      verify: true,
+    },
+    // TJ-14：日系3世の滞在費用。(1)(2)を必須の1行にまとめる（家族滞在 R-19 案A）
+    {
+      id: "teijusha_stay_cost_documents",
+      name: "日本での滞在費用を証明するもの",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "required",
+      note: `次のいずれか。(1)申請人が自ら証明する場合：預貯金残高証明書（申請人名義のもの）適宜、雇用予定証明書又は採用内定通知書（日本の会社発行のもの）1通 (2)申請人に代わって滞在費用支弁者が日本にいる場合：滞在費用支弁者の方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書 各1通（${TEIJUSHA_TAX_FOOTNOTE}）`,
+      verify: true,
+    },
+    // TJ-2・TJ-15：職業・収入の書類。会社勤務・自営業等・無職の別は入力せず、必須の1行にまとめる
+    {
+      id: "teijusha_income_documents",
+      name: "職業・収入を証明するもの",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2],
+      level: "required",
+      note: `次のいずれか（仕事の別による）。会社に勤務：在職証明書 1通／自営業等：確定申告書の控えの写し 1通・営業許可書の写し（ある場合）1通（自ら職業等について立証する）／無職：${TEIJUSHA_BANK_BOOK_NOTE}。対象者は区分による：日系2世・3世の配偶者は2世・3世の方又は申請人（収入の多い方）／実子（永住者・定住者・特別永住者が扶養）・養子（永住者・定住者・特別永住者が扶養）は扶養者／実子（日本人の配偶者が扶養）は日本人又は日本人の配偶者の方（収入の多い方）／実子（永住者の配偶者が扶養）は永住者又は永住者の配偶者の方（収入の多い方）／養子（日本人が扶養）は日本人の方`,
+      verify: true,
+    },
+    // TJ-16：日系3世の身分関係の書類（市区町村）
+    {
+      id: "teijusha_grandparent_family_register",
+      name: "祖父母（日本人）の戸籍謄本又は除籍謄本（全部事項証明書）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "required",
+      note: "1通",
+      verify: true,
+    },
+    {
+      id: "teijusha_marriage_notification_grandparents",
+      name: "婚姻届出受理証明書（祖父母と両親のもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "check",
+      note: "各1通。日本の役所に届出をしている場合のみ",
+      verify: true,
+    },
+    {
+      id: "teijusha_birth_notification_applicant",
+      name: "出生届出受理証明書（申請人のもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "check",
+      note: "1通。日本の役所に届出をしている場合のみ。出生の事由の「出生したことを証する書類」と同じ文書で足りるかは、行政書士が確認する",
+      verify: true,
+    },
+    {
+      id: "teijusha_death_notification",
+      name: "死亡届出受理証明書（祖父母と両親のもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "check",
+      note: "各1通。日本の役所に届出をしている場合のみ",
+      verify: true,
+    },
+    // TJ-17：日系3世の本国の結婚・出生証明書
+    {
+      id: "teijusha_foreign_marriage_certificates",
+      name: "祖父母及び両親の本国（外国）の機関から発行された結婚証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "required",
+      note: "各1通",
+      verify: true,
+    },
+    {
+      id: "teijusha_foreign_birth_certificates_family",
+      name: "両親及び申請人の本国（外国）の機関から発行された出生証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "required",
+      note: "各1通",
+      verify: true,
+    },
+    // TJ-18：認知に係る証明書（日系3世と実子）。ある方のみ
+    {
+      id: "teijusha_recognition_certificate",
+      name: "申請人の本国（外国）の機関から発行された認知に係る証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3, TJ_C1, TJ_C2, TJ_C3],
+      level: "check",
+      note: "1通。認知に係る証明書がある方のみ。日系3世の案内ページの原文は「(5)については、認知に係る証明書がある方のみ」と書く（(5)は出生証明書、認知の証明書は(6)）。原文のとおり記録する",
+      verify: true,
+    },
+    // TJ-19・TJ-21・TJ-25：犯罪経歴証明書・実在の公的資料・本人であることの公的資料。実子（永住者・定住者・特別永住者が扶養）は日系人のときだけ（要確認）
+    {
+      id: "teijusha_criminal_record",
+      name: "申請人の犯罪経歴証明書（本国の機関から発行されたもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3, TJ_N3S],
+      level: "required",
+      note: "1通",
+      verify: true,
+    },
+    {
+      id: "teijusha_criminal_record_nikkei_supported",
+      name: "申請人の犯罪経歴証明書（本国の機関から発行されたもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C1],
+      level: "check",
+      note: "1通。申請人が「定住者」の方の扶養を受ける日系人である場合のみ",
+      verify: true,
+    },
+    {
+      id: "teijusha_ancestors_existence",
+      name: "祖父母及び父母が実在していたことを証明する公的な資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3],
+      level: "required",
+      note: "適宜（例：祖父母及び父母の旅券、死亡証明書、運転免許証等）",
+      verify: true,
+    },
+    {
+      id: "teijusha_ancestors_existence_nikkei_supported",
+      name: "祖父母及び父母が実在していたことを証明する公的な資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C1],
+      level: "check",
+      note: "適宜（例：祖父母及び父母の旅券、死亡証明書、運転免許証等）。申請人が「定住者」の方の扶養を受ける日系人である場合のみ",
+      verify: true,
+    },
+    {
+      id: "teijusha_identity_proof",
+      name: "申請人が本人であることを証明する公的な資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3, TJ_N3S],
+      level: "required",
+      note: "適宜（例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等）",
+      verify: true,
+    },
+    {
+      id: "teijusha_identity_proof_nikkei_supported",
+      name: "申請人が本人であることを証明する公的な資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C1],
+      level: "check",
+      note: "適宜（例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等）。申請人が「定住者」の方の扶養を受ける日系人である場合のみ",
+      verify: true,
+    },
+    // TJ-21・TJ-22：日系2世・3世の配偶者の婚姻・身分の書類と夫婦間の交流
+    {
+      id: "teijusha_marriage_notification",
+      name: "婚姻届出受理証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N2S, TJ_N3S],
+      level: "check",
+      note: "1通。日本の役所に届出ている場合のみ",
+      verify: true,
+    },
+    {
+      id: "teijusha_applicant_marriage_certificate",
+      name: "申請人の本国（外国）の機関から発行された結婚証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N2S, TJ_N3S],
+      level: "required",
+      note: "1通",
+      verify: true,
+    },
+    {
+      id: "teijusha_marital_exchange_materials",
+      name: "夫婦間の交流が確認できる資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N2S, TJ_N3S],
+      level: "required",
+      note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可）2〜3葉。その他、提出できるもの（SNS記録・通話記録）",
+      verify: true,
+    },
+    // TJ-20：日本語能力の証明書。在留期間「5年」を希望する場合のみ必要（希望の在留期間の欄とは連動させない）
+    {
+      id: "teijusha_japanese_proficiency",
+      name: "一定の日本語能力があることを証明する証明書（次のいずれか）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3, TJ_N2S, TJ_N3S],
+      level: "check",
+      note: "在留期間「5年」を希望する場合に提出が必要（未成年者を除く）。次のいずれか：法務大臣が告示で定める日本語教育機関において6月以上の日本語教育を受けたことを証明する文書／「日本語教育の参照枠」におけるB1相当以上の日本語能力を有していることを証明する文書（日本語能力試験N2に合格したことを証明する文書、N3に合格し総合得点が104点以上であることを証明する文書、又はBJTビジネス日本語能力テストで400点以上を取得したことを証明する文書）／学校教育法第1条に規定する学校（幼稚園を除く）において1年以上の教育を受けたことを証明する文書",
+      verify: true,
+    },
+    // TJ-24・TJ-27：実子・養子の書類
+    {
+      id: "teijusha_support_reason_statement",
+      name: "理由書（扶養を受けなければならないことを説明したもの）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C1, TJ_C2, TJ_C3, TJ_A2],
+      level: "required",
+      note: "1通。適宜の様式",
+      verify: true,
+    },
+    {
+      id: "teijusha_japanese_family_register",
+      name: "日本人の方の戸籍謄本（全部事項証明書）",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C2, TJ_A1],
+      level: "required",
+      note: "1通。発行日から3か月以内のもの。養子（日本人が扶養）で養子縁組事実の記載がない場合は、戸籍謄本に加え養子縁組届出受理証明書も提出する",
+      verify: true,
+    },
+    {
+      id: "teijusha_birth_notification_child",
+      name: "申請人の出生届出受理証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_C1, TJ_C3],
+      level: "check",
+      note: "1通。日本の役所に届出をしている場合のみ。出生の事由の「出生したことを証する書類」と同じ文書で足りるかは、行政書士が確認する",
+      verify: true,
+    },
+    {
+      id: "teijusha_foreign_birth_certificate",
+      name: "申請人の本国（外国）の機関から発行された出生証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2],
+      level: "required",
+      note: "1通。出生の事由の「出生したことを証する書類」とは別の行。同じ文書で足りるかは、行政書士が確認する",
+      verify: true,
+    },
+    // TJ-28：養子（永住者・定住者・特別永住者が扶養）の書類
+    {
+      id: "teijusha_adoption_court_permission",
+      name: "養子縁組に係る家庭裁判所の許可書謄本",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_A2],
+      level: "check",
+      note: "1通。日本において養子縁組を成立させた場合のみ",
+      verify: true,
+    },
+    {
+      id: "teijusha_adoption_foreign_certificate",
+      name: "申請人と養子縁組が成立していることを証明する本国（外国）の機関から発行された証明書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      teijushaTypes: [TJ_A2],
+      level: "required",
+      note: "1通",
+      verify: true,
+    },
+  ],
+};
+// ===== ここまで（取得：永住者の配偶者等・定住者） =====
+
+// ===== 定住者の在留資格認定証明書交付申請・在留資格変更許可申請・在留期間更新許可申請（Issue #420） =====
+// 照合表は docs/official/reconciliation/coe-change-renewal-teijusha-2026-10-24.md（照合日 2026-10-24）。
+// 提出書類は、入管庁の「提出書類一覧」（チェックシート。docs/official/teijusha-{coe|change|renewal}-checksheet-*.pdf）のとおり。案内ページの控えは取得の節だけで、認定・変更・更新の節は無い。シートにない書類は足さない。
+// 判定は「定住者の区分」（teijushaType。取得と同じ8区分）だけ。取得の事由・所属機関のカテゴリーは使わない（basis: teijushaType）。区分が未選択の間は、全区分に共通の書類（申請書・写真・パスポート及び在留カードの提示）だけを出す。
+// 3手続に共通の書類は、下の TEIJUSHA_DOCS に1回だけ書き、手続ごとに対象の区分を割り当てる。取得の TEIJUSHA_ACQUISITION の規則は書き換えない（同じ書類は、同じ id・書類名にして訳を共有する）。
+// 日系2世の配偶者・日系3世の配偶者は、各手続とも同じ内容のシートが3枚ある（バイト列が同一）。シートの中身は仕事（会社勤務・自営業等・無職）の3通りを1枚に並べたもので、3枚の違いは無い。
+// 日系3世の更新用シートは、「初めて更新許可申請を行う場合」（12項目）と「2回目以降の更新許可申請を行う場合」（8項目）の2種類（各4点が同一内容）。TJ-CR-1。
+// 画面で「更新の回数」（formDetails.renewalTimes）を尋ね、軸 renewalTimes（alsoBasis）で出し分ける。尋ねるのは区分が日系3世のときだけで、他の区分の判定には影響しない。
+// 回数が未選択の間は、初回・2回目以降の両方にある書類だけを出す（初回のみの祖父母の戸籍謄本・結婚証明書・出生証明書・認知に係る証明書は出さず、画面で回数の選択を案内する）。
+const TEIJUSHA_PROCEDURE_COMPARED_AT = "2026-10-24";
+type TeijushaProcedure = "coe" | "change" | "renewal";
+const TJ_ALL_TYPES: TeijushaType[] = [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2];
+const TJ_NIKKEI_SPOUSES: TeijushaType[] = [TJ_N2S, TJ_N3S];
+// 手続ごとの対象の区分の割り当て（省略した手続には出さない）
+type TeijushaTypesByProcedure = Partial<Record<TeijushaProcedure, TeijushaType[]>>;
+const tjCoeChange = (types: TeijushaType[]): TeijushaTypesByProcedure => ({ coe: types, change: types });
+const tjAll3 = (types: TeijushaType[]): TeijushaTypesByProcedure => ({ coe: types, change: types, renewal: types });
+interface TeijushaDoc {
+  rule: Omit<RequirementRule, "party" | "causes" | "categories" | "teijushaTypes" | "renewalTimes">;
+  types: TeijushaTypesByProcedure;
+  /** 更新の回数による出し分け（更新の規則集合だけで使う。省略時は初回・2回目以降の両方。日系3世の更新だけが対象） */
+  renewalTimes?: RenewalTimes[];
+}
+const tjDoc = (rule: TeijushaDoc["rule"], types: TeijushaTypesByProcedure, renewalTimes?: RenewalTimes[]): TeijushaDoc => ({ rule, types, ...(renewalTimes ? { renewalTimes } : {}) });
+/** 日系3世の更新のシートで、初めての更新にだけある書類 */
+const TJ_FIRST_RENEWAL: RenewalTimes[] = ["first"];
+
+const TJ_NOTIFIED_NOTE = "日本の役所に届出している場合のみ提出する";
+const TJ_NIKKEI_SUPPORTED_NOTE = "申請人が「定住者」の方の扶養を受ける日系人の場合のみ";
+const TJ_NEVER_SUBMITTED_NOTE = "一度も入管当局へ提出したことがない方のみ";
+const TJ_CRIMINAL_RECORD_NAME = "申請人の犯罪経歴証明書（本国の機関から発行されたもの）";
+const TJ_ANCESTORS_NAME = "祖父母及び父母が実在していたことを証明する公的な資料";
+const TJ_ANCESTORS_NOTE = "例：祖父母及び父母の旅券、死亡証明書、運転免許証等";
+const TJ_IDENTITY_PROOF_NAME = "申請人が本人であることを証明する公的な資料";
+const TJ_IDENTITY_PROOF_NOTE = "例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等";
+const TJ_TAX_NOTE = "1年間の総所得及び納税状況が記載されたもの";
+
+// 対象者が区分と手続で違う書類（住民票・住民税の証明書・職業収入）は、対象者ごとに1行にして、対象の区分と手続を割り当てる
+const tjResidence = (person: TeijushaResidencePerson, types: TeijushaTypesByProcedure, level: RequirementRule["level"] = "required", note?: string): TeijushaDoc =>
+  tjDoc({ id: person === "applicant" ? "teijusha_residence_certificate" : `teijusha_residence_certificate_${person}`, name: teijushaResidenceName(person), level, ...(note ? { note } : {}) }, types);
+const tjTax = (target: TeijushaIncomeTarget, types: TeijushaTypesByProcedure): TeijushaDoc =>
+  tjDoc({ id: `teijusha_tax_certificates_${target}`, name: teijushaTaxName(target), level: "required", note: TJ_TAX_NOTE }, types);
+const tjIncome = (target: TeijushaIncomeTarget, types: TeijushaTypesByProcedure): TeijushaDoc =>
+  tjDoc({ id: `teijusha_income_documents_${target}`, name: TEIJUSHA_INCOME_NAME, level: "required", note: teijushaIncomeNote(target) }, types);
+
+const TEIJUSHA_DOCS: TeijushaDoc[] = [
+  // 認定のみ（全区分）
+  tjDoc({ id: "return_envelope", name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）", level: "required" }, { coe: TJ_ALL_TYPES }),
+  // 日系3世の身分関係の書類（TJ-CR-2）
+  tjDoc({ id: "teijusha_grandparent_family_register", name: "祖父母（日本人）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" }, { coe: [TJ_N3], change: [TJ_N3], renewal: [TJ_N3] }, TJ_FIRST_RENEWAL),
+  tjDoc({ id: "teijusha_marriage_notification_grandparents", name: "婚姻届出受理証明書（祖父母と両親のもの）", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange([TJ_N3])),
+  tjDoc({ id: "teijusha_birth_notification_applicant", name: "出生届出受理証明書（申請人のもの）", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange([TJ_N3])),
+  tjDoc({ id: "teijusha_death_notification", name: "死亡届出受理証明書（祖父母と両親のもの）", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange([TJ_N3])),
+  tjDoc({ id: "teijusha_foreign_marriage_certificates", name: "祖父母及び両親の本国（外国）の機関から発行された結婚証明書", level: "required" }, { coe: [TJ_N3], change: [TJ_N3], renewal: [TJ_N3] }, TJ_FIRST_RENEWAL),
+  tjDoc({ id: "teijusha_foreign_birth_certificates_family", name: "両親及び申請人の本国（外国）の機関から発行された出生証明書", level: "required" }, { coe: [TJ_N3], change: [TJ_N3], renewal: [TJ_N3] }, TJ_FIRST_RENEWAL),
+  // 住民票（TJ-CR-3：誰の住民票かは、区分と手続による）
+  tjResidence("applicant", { change: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_A1, TJ_A2], renewal: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2] }),
+  tjResidence("nikkei2", { coe: [TJ_N2S] }),
+  tjResidence("nikkei3", { coe: [TJ_N3S] }),
+  tjResidence("japanese", { coe: [TJ_C2, TJ_A1], change: [TJ_C2] }),
+  tjResidence("permanentOrSpouse", { coe: [TJ_C3], change: [TJ_C3] }),
+  tjResidence("supporter", { coe: [TJ_C1, TJ_A2] }),
+  tjDoc(
+    { id: "teijusha_cohabitant_residence_certificate", name: "本邦における同居者の住民票（世帯全員の記載があるもの）", level: "check", note: "本邦に居住する方と同居する場合のみ提出する" },
+    { coe: [TJ_N3] },
+  ),
+  // 住民税の課税・納税証明書（日系3世は滞在費用の行にある）
+  tjTax("nikkei2", { coe: [TJ_N2S] }),
+  tjTax("nikkei2OrApplicant", { change: [TJ_N2S], renewal: [TJ_N2S] }),
+  tjTax("nikkei3", { coe: [TJ_N3S] }),
+  tjTax("nikkei3OrApplicant", { change: [TJ_N3S], renewal: [TJ_N3S] }),
+  tjTax("applicantOrSpouse", { renewal: [TJ_N3] }),
+  tjTax("supporter", tjAll3([TJ_C1, TJ_A2])),
+  tjTax("japaneseOrSpouse", tjAll3([TJ_C2])),
+  tjTax("permanentOrSpouse", tjAll3([TJ_C3])),
+  tjTax("japanese", tjAll3([TJ_A1])),
+  // 職業・収入を証明するもの。会社勤務・自営業等・無職の別は入力せず、必須の1行にまとめる（取得 TJ-2・TJ-15 と同じ）
+  tjIncome("nikkei2", { coe: [TJ_N2S] }),
+  tjIncome("nikkei2OrApplicant", { change: [TJ_N2S], renewal: [TJ_N2S] }),
+  tjIncome("nikkei3", { coe: [TJ_N3S] }),
+  tjIncome("nikkei3OrApplicant", { change: [TJ_N3S], renewal: [TJ_N3S] }),
+  tjIncome("applicantOrSpouse", { renewal: [TJ_N3] }),
+  tjIncome("supporter", tjAll3([TJ_C1, TJ_A2])),
+  tjIncome("japaneseOrSpouse", tjAll3([TJ_C2])),
+  tjIncome("permanentOrSpouse", tjAll3([TJ_C3])),
+  tjIncome("japanese", tjAll3([TJ_A1])),
+  // 日系3世：申請人が自ら証明するか、滞在費用支弁者が証明する（(1)(2)を必須の1行にまとめる。取得 TJ-14 と同じ）
+  tjDoc(
+    {
+      id: "teijusha_stay_cost_documents",
+      name: TEIJUSHA_INCOME_NAME,
+      level: "required",
+      note: "次のいずれか。(1)申請人が自ら証明する場合：預貯金残高証明書（申請人名義のもの。変更用のシートでは「預貯金通帳残高証明書」と記載）及び雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／(2)申請人に代わって滞在費用支弁者が日本にいる場合：滞在費用支弁者の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）",
+    },
+    tjCoeChange([TJ_N3]),
+  ),
+  // 身元保証書（身元保証人は区分による）
+  tjDoc(
+    {
+      id: "teijusha_identity_guarantee",
+      name: "身元保証書",
+      level: "required",
+      note: "1通。身元保証人は区分による。通常、日系3世は日本に居住している日本人又は永住者／日系2世の配偶者は2世の方／日系3世の配偶者は3世の方／実子（永住者・定住者・特別永住者が扶養）は扶養者／実子（日本人の配偶者が扶養）・養子（日本人が扶養）は日本人（申請人の扶養者）／実子（永住者の配偶者が扶養）は永住者の方（申請人の扶養者）／養子（永住者・定住者・特別永住者が扶養）は申請人の扶養者",
+    },
+    tjAll3(TJ_ALL_TYPES),
+  ),
+  // 犯罪経歴証明書（区分と手続で条件が違う）
+  tjDoc({ id: "teijusha_criminal_record", name: TJ_CRIMINAL_RECORD_NAME, level: "required" }, tjCoeChange([TJ_N3, TJ_N3S])),
+  tjDoc({ id: "teijusha_criminal_record_renewal", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: TJ_NEVER_SUBMITTED_NOTE }, { renewal: [TJ_N3, TJ_N3S] }),
+  tjDoc({ id: "teijusha_criminal_record_nikkei_supported", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: TJ_NIKKEI_SUPPORTED_NOTE }, tjCoeChange([TJ_C1])),
+  tjDoc(
+    { id: "teijusha_criminal_record_nikkei_supported_renewal", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: "申請人が「定住者」の方の扶養を受ける日系人の場合で、一度も入管当局へ提出したことがない方のみ" },
+    { renewal: [TJ_C1] },
+  ),
+  // 実在の公的資料・本人であることの公的資料（日系3世は必須、日系人の扶養を受ける実子は日系人のときだけ）
+  tjDoc({ id: "teijusha_ancestors_existence", name: TJ_ANCESTORS_NAME, level: "required", note: TJ_ANCESTORS_NOTE }, tjCoeChange([TJ_N3])),
+  tjDoc({ id: "teijusha_ancestors_existence_nikkei_supported", name: TJ_ANCESTORS_NAME, level: "check", note: `${TJ_ANCESTORS_NOTE}。${TJ_NIKKEI_SUPPORTED_NOTE}` }, tjCoeChange([TJ_C1])),
+  tjDoc({ id: "teijusha_identity_proof", name: TJ_IDENTITY_PROOF_NAME, level: "required", note: TJ_IDENTITY_PROOF_NOTE }, tjCoeChange([TJ_N3, TJ_N3S])),
+  tjDoc({ id: "teijusha_identity_proof_nikkei_supported", name: TJ_IDENTITY_PROOF_NAME, level: "check", note: `${TJ_IDENTITY_PROOF_NOTE}。${TJ_NIKKEI_SUPPORTED_NOTE}` }, tjCoeChange([TJ_C1])),
+  // 認知に係る証明書（ある方のみ）
+  tjDoc(
+    { id: "teijusha_recognition_certificate", name: "申請人の本国（外国）の機関から発行された認知に係る証明書", level: "check", note: "認知に係る証明書がある方のみ提出する" },
+    { coe: [TJ_N3, TJ_C1, TJ_C2, TJ_C3], change: [TJ_N3, TJ_C1, TJ_C2, TJ_C3], renewal: [TJ_N3] },
+    TJ_FIRST_RENEWAL,
+  ),
+  // 日系2世・3世の配偶者の婚姻・夫婦の書類
+  tjDoc({ id: "teijusha_marriage_notification", name: "婚姻届出受理証明書", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange(TJ_NIKKEI_SPOUSES)),
+  tjDoc({ id: "teijusha_applicant_marriage_certificate", name: "申請人の本国（外国）の機関から発行された結婚証明書", level: "required" }, tjCoeChange(TJ_NIKKEI_SPOUSES)),
+  tjDoc({ id: "teijusha_questionnaire", name: "質問書", level: "required", note: "様式の記載内容は未確認", verify: true }, tjCoeChange(TJ_NIKKEI_SPOUSES)),
+  tjDoc(
+    {
+      id: "teijusha_marital_exchange_materials",
+      name: "夫婦間の交流が確認できる資料",
+      level: "required",
+      note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可）2〜3葉。その他、提出できるもの（SNS記録・通話記録）",
+    },
+    tjCoeChange(TJ_NIKKEI_SPOUSES),
+  ),
+  tjDoc({ id: "teijusha_marriage_continuation", name: "お二方の婚姻が継続していることを証明する資料", level: "required" }, { renewal: TJ_NIKKEI_SPOUSES }),
+  // 日本語能力（在留期間「5年」を希望する場合のみ。希望の在留期間の欄とは連動させない。取得 TJ-20 と同じ）
+  tjDoc(
+    {
+      id: "teijusha_japanese_proficiency",
+      name: "一定の日本語能力があることを証明する文書",
+      level: "check",
+      note: "在留期間「5年」を希望する場合に提出が必要（未成年者を除く）。例：日本語能力試験N2に合格したことを証明する文書",
+    },
+    { coe: [TJ_N3, TJ_N2S, TJ_N3S], change: [TJ_N3, TJ_N2S, TJ_N3S], renewal: [TJ_N3, ...TJ_NIKKEI_SPOUSES] },
+  ),
+  // 実子・養子の書類
+  tjDoc(
+    { id: "teijusha_support_reason_statement", name: "理由書（扶養を受けなければならないことを説明したもの）", level: "required", note: "適宜の様式" },
+    tjCoeChange([TJ_C1, TJ_C2, TJ_C3, TJ_A2]),
+  ),
+  tjDoc({ id: "teijusha_japanese_family_register", name: "日本人の方の戸籍謄本（全部事項証明書）", level: "required" }, tjAll3([TJ_C2, TJ_A1])),
+  tjDoc({ id: "teijusha_birth_notification_child", name: "申請人の出生届出受理証明書", level: "required" }, tjCoeChange([TJ_C1, TJ_C3])),
+  tjDoc({ id: "teijusha_foreign_birth_certificate", name: "申請人の本国（外国）の機関から発行された出生証明書", level: "required" }, tjCoeChange([TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2])),
+  tjDoc(
+    { id: "teijusha_adoption_notification_adopted_japanese", name: "養子縁組届出受理証明書", level: "check", note: "日本人の方の戸籍謄本に養子縁組事実の記載がない場合のみ提出する" },
+    tjCoeChange([TJ_A1]),
+  ),
+  tjDoc({ id: "teijusha_adoption_notification", name: "申請人の養子縁組届出受理証明書", level: "required" }, tjCoeChange([TJ_A2])),
+  tjDoc({ id: "teijusha_adoption_court_permission", name: "養子縁組に係る家庭裁判所の許可書謄本", level: "check", note: "日本において養子縁組を成立させた場合のみ提出する" }, { change: [TJ_A2] }),
+  tjDoc(
+    { id: "teijusha_adoption_foreign_certificate", name: "申請人と養子縁組が成立していることを証明する本国（外国）の機関から発行された証明書", level: "required" },
+    tjCoeChange([TJ_A2]),
+  ),
+];
+
+const TEIJUSHA_PROCEDURE_SHEET_SOURCES: Record<TeijushaProcedure, RuleSource> = {
+  coe: {
+    title: "「定住者」に係る提出書類一覧（在留資格認定証明書交付申請用。区分ごとに別のPDFで、日系3世の方の分を掲載）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426562.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+  change: {
+    title: "「定住者」に係る提出書類一覧（在留資格変更許可申請用。区分ごとに別のPDFで、日系3世の方の分を掲載）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426564.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+  renewal: {
+    title: "「定住者」に係る提出書類一覧（在留期間更新許可申請用。区分ごとに別のPDFで、日系2世の方の配偶者の分を掲載）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426582.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+};
+
+function teijushaProcedureRules(procedure: TeijushaProcedure): RequirementRule[] {
+  const docs = TEIJUSHA_DOCS.flatMap((d): RequirementRule[] => {
+    const types = d.types[procedure];
+    // 更新の回数による出し分けは、更新の規則集合だけ（認定・変更には軸 renewalTimes が無い）
+    return types ? [{ ...d.rule, party: "applicant", teijushaTypes: types, ...(procedure === "renewal" && d.renewalTimes ? { renewalTimes: d.renewalTimes } : {}) }] : [];
+  });
+  // 申請書・写真・旅券等は、手続ごとの共通の書類（procedureCommonRules）。シートの末尾の「パスポート及び在留カードの提示」（変更・更新）に当たる
+  return [...procedureCommonRules(procedure), ...docs];
+}
+
+export const TEIJUSHA_COE: RuleSet = {
+  id: "teijusha_coe",
+  title: "定住者 在留資格認定証明書交付申請",
+  procedureType: "coe",
+  residenceStatus: "定住者",
+  basis: "teijushaType",
+  checkedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  sources: [TEIJUSHA_PROCEDURE_SHEET_SOURCES.coe],
+  rules: teijushaProcedureRules("coe"),
+};
+export const TEIJUSHA_CHANGE: RuleSet = {
+  id: "teijusha_change",
+  title: "定住者 在留資格変更許可申請",
+  procedureType: "change",
+  residenceStatus: "定住者",
+  basis: "teijushaType",
+  checkedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  sources: [TEIJUSHA_PROCEDURE_SHEET_SOURCES.change],
+  rules: teijushaProcedureRules("change"),
+};
+// 日系3世の更新のシート2種（初めての更新・2回目以降。各4点が同一内容）。URL は既存の書式に合わせて番号から組み立てた（未確認。TJ-CR-13）
+const TEIJUSHA_RENEWAL_NIKKEI3_SOURCES: RuleSource[] = [
+  {
+    title: "「定住者」（日系3世の方）に係る提出書類一覧（在留期間更新許可申請用・初めて更新許可申請を行う場合）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426567.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+  {
+    title: "「定住者」（日系3世の方）に係る提出書類一覧（在留期間更新許可申請用・2回目以降の更新許可申請を行う場合）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426572.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+];
+export const TEIJUSHA_RENEWAL: RuleSet = {
+  id: "teijusha_renewal",
+  title: "定住者 在留期間更新許可申請",
+  procedureType: "renewal",
+  residenceStatus: "定住者",
+  basis: "teijushaType",
+  checkedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  // 日系3世の更新だけ、更新の回数（初めて／2回目以降）の軸を足す（alsoBasis）。ほかの区分の判定には影響しない
+  alsoBasis: ["renewalTimes"],
+  sources: [TEIJUSHA_PROCEDURE_SHEET_SOURCES.renewal, ...TEIJUSHA_RENEWAL_NIKKEI3_SOURCES],
+  rules: teijushaProcedureRules("renewal"),
+};
+// ===== ここまで（定住者の認定・変更・更新） =====
+
+// ===== 永住許可申請（手続種別 permanent。Issue #420） =====
+// 照合表は docs/official/reconciliation/eijuu-2026-10-24.md（照合日 2026-10-24）。人の判断は未了（各行「推奨(未判断)」）。推奨のとおりに実装した。
+// 照合元は、提出書類一覧表（xlsx）4点：日本人の配偶者（001422063）・日本人の実子・特別養子（001422064）・永住者等の配偶者（001422065）・永住者等の実子（001422066）。
+// 一覧表にない書類（旅券・在留カードの提示、申請取次者の書類、所得の預貯金通帳、セルフチェックシートなど。照合表 EJ-4〜EJ-8）は足さない。
+// 手続（EJ-1）：永住許可申請を手続種別 permanent として足した。規則を引く在留資格は、取得・変更・認定と違い、現在の在留資格（statusForRules の既定）。
+// 区分（EJ-2）：現在の在留資格（日本人の配偶者等／永住者の配偶者等）ごとに規則集合を作り、一覧表の区分（配偶者／実子）は軸 eijuuType（basis）で判定する。
+// 区分が未選択の間は、区分に共通の書類（eijuuTypes を省略した行）だけを出す。
+// level（EJ-3）：一覧表の「●」で条件の記載がない書類は required。「〜の方は」「〜場合」など該当者のみの書類は check（注記に条件）。一覧表に「できれば」の書類は無く、optional は使わない。
+// 一覧表の「申請人」「配偶者（扶養する方）」の列は、書類を用意する人の別。規則の party は applicant のまま、注記の先頭に「申請人及び配偶者の分」と書く。
+// 配偶者向け（spouse）と実子向け（child）で、年数・留意事項が違う行は、区分ごとに別の行にする（id の末尾 _spouse／_child）。
+const EIJUU_COMPARED_AT = "2026-10-24";
+const EIJUU_PAGE_SOURCE: RuleSource = {
+  title: "入管庁『手続の種類から探す』永住許可申請・永住許可申請１（URL 未記録）",
+  url: "https://www.moj.go.jp/isa/index.html",
+  kind: "page",
+  comparedAt: EIJUU_COMPARED_AT,
+};
+const eijuuChecklistSource = (title: string, fileId: string): RuleSource => ({
+  title,
+  url: `https://www.moj.go.jp/isa/content/${fileId}.xlsx`,
+  kind: "form",
+  comparedAt: EIJUU_COMPARED_AT,
+});
+const EIJUU_CERT_NOTE = "日本で発行される証明書は、発行日から3か月以内のもの";
+
+/** 永住許可申請の規則集合が扱う提出書類一覧表の区分（規則に書かれた区分の和集合。EIJUU_TYPES の順）。案件の入力欄の選択肢に使う */
+export function eijuuTypesOf(ruleSet: Pick<RuleSet, "rules">): EijuuType[] {
+  const used = new Set<EijuuType>();
+  for (const r of ruleSet.rules) r.eijuuTypes?.forEach((t) => used.add(t));
+  return EIJUU_TYPES.filter((t) => used.has(t));
+}
+
+type EijuuFamily = "nihonjin" | "eijusha";
+type EijuuGroup = "spouse" | "child";
+
+function eijuuRulesOf(family: EijuuFamily): RequirementRule[] {
+  const spouseType: EijuuType = family === "nihonjin" ? "nihonjinSpouse" : "eijushaSpouse";
+  const childType: EijuuType = family === "nihonjin" ? "nihonjinChild" : "eijushaChild";
+  const typeOf = (g: EijuuGroup): EijuuType => (g === "spouse" ? spouseType : childType);
+  const rule = (id: string, name: string, level: RequirementRule["level"], note: string | undefined, types?: EijuuType[]): RequirementRule => ({
+    id,
+    name,
+    party: "applicant",
+    level,
+    ...(note ? { note } : {}),
+    ...(types ? { eijuuTypes: types } : {}),
+  });
+  // 配偶者向け・実子向けで中身が違う行。年数は、配偶者は住民税3年・年金等2年、実子は1年・1年（一覧表のとおり）
+  const group = (g: EijuuGroup) => {
+    const tax = g === "spouse" ? 3 : 1;
+    const ins = g === "spouse" ? 2 : 1;
+    const who = g === "spouse" ? "申請人及び配偶者の分。" : "申請人及び申請人を扶養する方（同一世帯の方）の分。";
+    const t = [typeOf(g)];
+    const sfx = `_${g}`;
+    return {
+      occupation: rule(
+        `eijuu_occupation${sfx}`,
+        "申請人又は申請人を扶養する方の職業を証明するいずれかの資料",
+        "required",
+        `${who}(1)会社等に勤務している場合：在職証明書／(2)自営業等である場合：確定申告書控えの写し、営業許可書の写し（ある場合）。自営業等の方は、自ら職業等について立証する必要がある（登記事項証明書等）／(3)その他の場合：職業に係る説明書（書式自由）及びその立証資料。申請人及び配偶者の方お二方とも無職の場合も、その旨を説明書（書式自由）に記載して提出する`,
+        t,
+      ),
+      taxCertificate: rule(
+        `eijuu_resident_tax_certificate${sfx}`,
+        `直近${tax}年分の住民税の課税（又は非課税）証明書（1年間の総所得及び納税状況が記載されたもの）`,
+        "required",
+        `${who}お住まいの市区町村から発行される。1年間の総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。${
+          g === "spouse"
+            ? "市区町村において直近3年分の証明書が発行されない場合は、発行される最長期間分を提出する。入国後間もない場合や転居等により市区町村から発行されない場合は、最寄りの地方出入国在留管理官署に問い合わせる。"
+            : "入国から1年後に永住許可申請を行う場合など、この証明書が提出できない場合は、これに代えて、給与所得の源泉徴収票（写し）又は給与明細書（写し）等の資料を提出する。"
+        }未納・遅延納付がないことを確認する。${EIJUU_CERT_NOTE}`,
+        t,
+      ),
+      taxPayment: rule(
+        `eijuu_resident_tax_payment${sfx}`,
+        `直近${tax}年分の住民税の納税証明書（1年間の総所得及び納税状況が記載されたもの）`,
+        "required",
+        `${who}課税（又は非課税）証明書に総所得及び納税状況の両方が記載されている場合は、いずれか一方でよい（課税証明書の行の留意事項）。${EIJUU_CERT_NOTE}`,
+        t,
+      ),
+      taxTimely: rule(
+        `eijuu_resident_tax_timely${sfx}`,
+        `直近${tax}年間において住民税を適正な時期に納めていることを証明する資料（通帳の写し、領収証書等）`,
+        "check",
+        `${who}直近${tax}年間において住民税が特別徴収（給与から天引き）されていない期間がある方は、当該期間分について提出する。直近${tax}年間の全ての期間で特別徴収されている方は不要（課税証明書・納税証明書のみ提出する）。Web通帳の画面の写し等（取引履歴が分かるもの）でもよい。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      nationalTax: rule(
+        `eijuu_national_tax_certificate${sfx}`,
+        "源泉所得税及び復興特別所得税、申告所得税及び復興特別所得税、消費税及び地方消費税、相続税、贈与税に係る納税証明書（その３）",
+        "required",
+        `${who}住所地を管轄する税務署から発行される。納税証明書（その３）は、証明日現在で未納がないことを証明するもので、対象期間の指定は不要。5税目全てに係る納税証明書を提出する。未納がないことを確認する。${EIJUU_CERT_NOTE}`,
+        t,
+      ),
+      pension: rule(
+        `eijuu_pension_record${sfx}`,
+        "年金事務所発行の「被保険者記録照会回答票」、「被保険者記録照会（納付Ⅰ）」及び「被保険者記録照会（納付Ⅱ）」",
+        "required",
+        `${who}最寄りの年金事務所の窓口又は電話に問い合わせる。このほか、ア「ねんきん定期便」（全期間の年金記録情報が表示されているもの）、イ ねんきんネットの「各月の年金記録」の印刷画面、ウ 国民年金保険料領収証書（写し）を提出することも可能（基礎年金番号部分は黒塗りする）。イの提出で、申請時の直近${ins}年間に国民年金の被保険者であった期間がある方は、「国民年金の年金記録（各月の納付状況）」の印刷画面も併せて提出する。「ねんきん定期便」は、35・45・59歳の誕生月に封書で送付されたものが使える（毎年送付されるハガキ形式のものは不可）。直近${ins}年間に国民年金に加入していた期間がある方は、当該期間分の領収証書（写し）を全て提出する。直近${ins}年間の全ての期間で国民年金に加入し、直近${ins}年間（${ins * 12}月分）の領収証書（写し）を提出できる場合は、年金事務所発行の資料は提出不要。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      healthCard: rule(
+        `eijuu_health_insurance_card${sfx}`,
+        "世帯全員分の健康保険被保険者証（写し）",
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、健康保険に加入している方は提出する。直近${ins}年間の全ての期間において引き続き健康保険に加入している方は、国民健康保険に関する3つの資料（被保険者証・納付証明書・領収証書）は不要`,
+        t,
+      ),
+      nhiCard: rule(
+        `eijuu_national_health_insurance_card${sfx}`,
+        "世帯全員分の国民健康保険被保険者証（写し）",
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。現在、国民健康保険に加入している方は提出する`,
+        t,
+      ),
+      nhiPayment: rule(
+        `eijuu_nhi_payment_certificate${sfx}`,
+        `直近${ins}年間の国民健康保険料（税）納付証明書`,
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近${ins}年間において国民健康保険に加入していた期間がある方は提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      nhiReceipt: rule(
+        `eijuu_nhi_receipt${sfx}`,
+        `直近${ins}年間の国民健康保険料（税）領収証書（写し）`,
+        "check",
+        `${who}保険者番号及び被保険者等記号・番号を黒塗りしたものを提出する。直近${ins}年間において国民健康保険に加入していた期間がある方は、当該期間分の領収書（写し）を全て提出する。提出が困難な方は、その理由を記載した理由書（任意の様式に作成者と作成年月日を記載したもの）を提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      socialReceipt: rule(
+        `eijuu_social_insurance_receipt${sfx}`,
+        `直近${ins}年間の健康保険・厚生年金保険料領収証書（写し）`,
+        "check",
+        `${who}申請時の直近${ins}年間において社会保険適用事業所の事業主である期間がある方は、この資料か、次の行の社会保険料納入証明書等のいずれかを提出する。未納・遅延納付がないことを確認する`,
+        t,
+      ),
+      socialCertificate: rule(
+        `eijuu_social_insurance_certificate${sfx}`,
+        `直近${ins}年間の社会保険料納入証明書又は社会保険料納入確認（申請）書（いずれも未納の有無を証明・確認する場合）`,
+        "check",
+        `${who}申請時の直近${ins}年間において社会保険適用事業所の事業主である期間がある方は、前の行の領収証書（写し）か、この資料のいずれかを提出する`,
+        t,
+      ),
+    };
+  };
+  const sp = group("spouse");
+  const ch = group("child");
+  // 身分関係の書類（一覧表の3番）。区分ごとに書類が違う
+  const identityDocs: RequirementRule[] =
+    family === "nihonjin"
+      ? [
+          rule("eijuu_spouse_family_register", "配偶者の戸籍謄本（全部事項証明書）", "required", EIJUU_CERT_NOTE, [spouseType]),
+          rule("eijuu_spouse_marriage_certificate", "申請人の国籍国の機関から発行された婚姻証明書", "required", "外国語で作成されている場合は、訳文（日本語）を添付する", [spouseType]),
+          rule("eijuu_child_family_register", "日本人親の戸籍謄本（全部事項証明書）", "required", EIJUU_CERT_NOTE, [childType]),
+        ]
+      : [
+          rule("eijuu_marriage_proof", "婚姻関係を証明する資料（次のいずれか）", "required", "a.配偶者との婚姻証明書／b.上記aに準ずる文書（申請人と配偶者の方の身分関係を証するもの）。外国語で作成されている場合は、訳文（日本語）を添付する", [spouseType]),
+          rule("eijuu_parentage_proof", "親子関係を証明する資料（次のいずれか）", "required", "a.出生証明書／b.上記aに準ずる文書（申請人と永住者又は特別永住者との身分関係を証するもの）。外国語で作成されている場合は、訳文（日本語）を添付する", [childType]),
+        ];
+  const pairs = <K extends keyof typeof sp>(k: K) => [sp[k], ch[k]];
+  return [
+    rule("eijuu_application_form", "永住許可申請書", "required", "出入国在留管理庁のホームページからダウンロードできる。必要な事項が全て記載されていることを確認する"),
+    rule(
+      "eijuu_photo",
+      "写真（縦4cm×横3cm）",
+      "required",
+      "申請前6か月以内に正面から撮影された無帽・無背景で鮮明なもの。写真の裏面に申請人の氏名を記載して、永住許可申請書の写真欄に貼付して提出する。1歳に満たない方は、写真の提出は不要（令和8年6月13日以前は16歳未満の方が不要だったが、令和8年6月14日以降に交付される在留カードからは、1歳以上の方について写真の提出が必要）",
+    ),
+    ...identityDocs,
+    rule("eijuu_household_residence_certificate", "申請人を含む家族全員（世帯）の住民票", "required", `個人番号（マイナンバー）は省略し、他の事項については省略のないもの。${EIJUU_CERT_NOTE}`),
+    ...pairs("occupation"),
+    ...pairs("taxCertificate"),
+    ...pairs("taxPayment"),
+    ...pairs("taxTimely"),
+    ...pairs("nationalTax"),
+    ...pairs("pension"),
+    ...pairs("healthCard"),
+    ...pairs("nhiCard"),
+    ...pairs("nhiPayment"),
+    ...pairs("nhiReceipt"),
+    ...pairs("socialReceipt"),
+    ...pairs("socialCertificate"),
+    // 親族一覧表：一覧表では配偶者の区分だけにある（案内ページ：「実子又は特別養子を除く」）
+    rule("eijuu_relatives_list", "親族一覧表", "required", "案内ページでは、申請人が「日本人の配偶者等」又は「永住者の配偶者等」（実子又は特別養子を除く。）の在留資格である場合に提出する", [spouseType]),
+    rule("eijuu_identity_guarantee", "身元保証書", "required", "身元保証人には、通常、日本に居住する日本人、永住者又は特別永住者の方になっていただく"),
+    rule("eijuu_identity_guarantee_documents", "身元保証書に係る資料", "required", "身元保証人の身分事項を明らかにする書類（運転免許証、在留カードの写し等）"),
+    rule("eijuu_written_acknowledgment", "了解書", "required", "出入国在留管理庁のホームページからダウンロードできる"),
+  ];
+}
+
+export const EIJUU_NIHONJIN_HAIGUSHA: RuleSet = {
+  id: "eijuu_nihonjin_haigusha",
+  title: "日本人の配偶者等 永住許可申請（一部のみ整備）",
+  procedureType: "permanent",
+  residenceStatus: "日本人の配偶者等",
+  basis: "eijuuType",
+  checkedAt: EIJUU_COMPARED_AT,
+  sources: [
+    EIJUU_PAGE_SOURCE,
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（日本人の配偶者の方）", "001422063"),
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（日本人の実子（特別養子縁組含む。）の方）", "001422064"),
+  ],
+  rules: eijuuRulesOf("nihonjin"),
+};
+
+export const EIJUU_EIJUSHA_HAIGUSHA: RuleSet = {
+  id: "eijuu_eijusha_haigusha",
+  title: "永住者の配偶者等 永住許可申請（一部のみ整備）",
+  procedureType: "permanent",
+  residenceStatus: "永住者の配偶者等",
+  basis: "eijuuType",
+  checkedAt: EIJUU_COMPARED_AT,
+  sources: [
+    EIJUU_PAGE_SOURCE,
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（永住者又は特別永住者の配偶者の方）", "001422065"),
+    eijuuChecklistSource("永住許可申請に係る提出書類一覧表（永住者又は特別永住者の実子の方）", "001422066"),
+  ],
+  rules: eijuuRulesOf("eijusha"),
+};
+// ===== ここまで（永住許可申請） =====
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -3611,13 +5438,42 @@ export const RULE_SETS: RuleSet[] = [
   IRYO_ACQUISITION,
   GINO_ACQUISITION,
   KAIGO_ACQUISITION,
+  // 永住者の配偶者等・定住者の取得（Issue #420）も、ACQUISITION_BY_CAUSE より先に照合する
+  EIJUSHA_HAIGUSHA_ACQUISITION,
+  TEIJUSHA_ACQUISITION,
+  // 定住者の認定・変更・更新（Issue #420。チェックシートによる）
+  TEIJUSHA_COE,
+  TEIJUSHA_CHANGE,
+  TEIJUSHA_RENEWAL,
+  // 教授・教育・報道の取得（Issue #420）も、ACQUISITION_BY_CAUSE より先に照合する
+  PROFESSOR_ACQUISITION,
+  EDUCATION_ACQUISITION,
+  HODO_ACQUISITION,
   ACQUISITION_BY_CAUSE,
   // 取得：芸術・宗教・法律・会計業務・短期滞在（Issue #421・#422・#424・#431）。在留資格に固有の規則集合は、
   // 在留資格を問わない ACQUISITION_BY_CAUSE より先に選ばれる（並び順によらない。matchRuleSet）
+  // 取得：文化活動・日本人の配偶者等（Issue #420）
+  BUNKA_KATSUDO_ACQUISITION,
+  NIHONJIN_HAIGUSHA_ACQUISITION,
+  // 日本人の配偶者等の認定・変更・更新（Issue #420。チェックシートによる）
+  NIHONJIN_HAIGUSHA_COE,
+  NIHONJIN_HAIGUSHA_CHANGE,
+  NIHONJIN_HAIGUSHA_RENEWAL,
   GEIJUTSU_ACQUISITION,
   SHUKYO_ACQUISITION,
   HOUMU_KAIKEI_ACQUISITION,
   TANKI_TAIZAI_ACQUISITION,
+  // 取得：公用・技能実習・留学（Issue #420。照合 2026-10-24）
+  KOYO_ACQUISITION,
+  GINOU_JISSHU_ACQUISITION,
+  RYUGAKU_ACQUISITION,
+  // 留学の認定・変更・更新（Issue #420。提出書類一覧表による）
+  RYUGAKU_COE,
+  RYUGAKU_CHANGE,
+  RYUGAKU_RENEWAL,
+  // 永住許可申請（Issue #420。照合 2026-10-24）
+  EIJUU_NIHONJIN_HAIGUSHA,
+  EIJUU_EIJUSHA_HAIGUSHA,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
   KAIGO_CHANGE,
@@ -3646,6 +5502,13 @@ export const RULE_SETS: RuleSet[] = [
   HODO_RENEWAL,
   HODO_CHANGE,
   HODO_COE,
+  // 芸術・宗教の認定・変更・更新（Issue #420）
+  ARTIST_RENEWAL,
+  ARTIST_CHANGE,
+  ARTIST_COE,
+  SHUKYO_RENEWAL,
+  SHUKYO_CHANGE,
+  SHUKYO_COE,
   // 技能（Issue #298）
   GINO_RENEWAL,
   GINO_CHANGE,
@@ -3654,6 +5517,10 @@ export const RULE_SETS: RuleSet[] = [
   KIGYONAI_RENEWAL,
   KIGYONAI_CHANGE,
   KIGYONAI_COE,
+  // 永住者の配偶者等（Issue #420。チェックシートによる）
+  EIJUSHA_HAIGUSHA_RENEWAL,
+  EIJUSHA_HAIGUSHA_CHANGE,
+  EIJUSHA_HAIGUSHA_COE,
   // 特定活動（特定研究等活動。Issue #299）
   TOKUTEI_KENKYU_RENEWAL,
   TOKUTEI_KENKYU_CHANGE,

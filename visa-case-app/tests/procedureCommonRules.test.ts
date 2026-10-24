@@ -29,7 +29,9 @@ describe("手続共通の書類（Issue #291）", () => {
     const common = procedureCommonRules("coe").find((r) => r.id === "passport_copy");
     for (const set of RULE_SETS) {
       const found = set.rules.filter((r) => r.id === "passport_copy");
-      if (set.procedureType === "coe") expect(found, set.id).toEqual([common]);
+      // 留学の認定は、一覧表の「旅券の身分事項ページ（写し）」（○）を持つため、任意の旅券の写しの代わりにする（照合表 ryugaku-procedures-2026-10-24.md の RY-2）
+      if (set.id === "ryugaku_coe") expect(found, set.id).toEqual([]);
+      else if (set.procedureType === "coe") expect(found, set.id).toEqual([common]);
       else expect(found, set.id).toEqual([]);
     }
   });
@@ -40,6 +42,7 @@ describe("手続共通の書類（Issue #291）", () => {
     for (const set of targets) {
       for (const common of procedureCommonRules(set.procedureType as CommonProcedure)) {
         const found = set.rules.find((r) => r.id === common.id);
+        if (set.id === "ryugaku_coe" && common.id === "passport_copy") continue;
         expect(found, `${set.id}:${common.id}`).toEqual(common);
       }
     }
@@ -54,8 +57,8 @@ describe("手続共通の書類（Issue #291）", () => {
   it("取得の規則集合（事由別・高度専門職）は、申請書・写真・旅券の提示を持ち、在留カードは持たない", () => {
     for (const set of RULE_SETS.filter((r) => r.procedureType === "acquisition")) {
       const ids = set.rules.map((r) => r.id);
-      // 短期滞在の取得は、例外として写真を持たない（原文に項目が無く、中長期在留者とならない。#431 R-3）
-      const common = set.id === "tanki_taizai_acquisition" ? ["application_form", "passport_presentation"] : ["application_form", "photo", "passport_presentation"];
+      // 短期滞在・公用の取得は、例外として写真を持たない（原文に項目が無く、中長期在留者とならない。#431 R-3・#420 KO-2）
+      const common = ["tanki_taizai_acquisition", "koyo_acquisition"].includes(set.id) ? ["application_form", "passport_presentation"] : ["application_form", "photo", "passport_presentation"];
       expect(ids, set.id).toEqual(expect.arrayContaining(common));
       expect(ids.includes("passport_card"), set.id).toBe(false);
     }
