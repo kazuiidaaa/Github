@@ -5,7 +5,8 @@ import { CATALOG } from "../lib/i18n/messages";
 
 const html = (procedureType: string, current?: string, target?: string) =>
   renderToStaticMarkup(<StatusTransition procedureType={procedureType} current={current} target={target} />);
-const text = (m: string) => m.replace(/<[^>]+>/g, "");
+// 描画した HTML から、タグの間にある文字だけを取り出してつなぐ
+const text = (m: string) => (m.match(/(?<=>)[^<]+(?=<)/g) ?? []).join("");
 
 describe("StatusTransition（手続と在留資格の「今 → 申請後」の表示）", () => {
   it("更新は、在留資格を1つだけ示し「（更新）」を添える（矢印なし）", () => {
