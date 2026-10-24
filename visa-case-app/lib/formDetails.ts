@@ -39,6 +39,10 @@ export type TokuteiKatsudoType = (typeof TOKUTEI_KATSUDO_TYPES)[number];
 export const MEDICAL_APPLICANT_TYPES = ["doctor", "other"] as const;
 export type MedicalApplicantType = (typeof MEDICAL_APPLICANT_TYPES)[number];
 
+/** 在留資格「日本人の配偶者等」の申請人の身分（spouse＝日本人の配偶者、child＝日本人の実子・特別養子。入管庁の案内ページが身分ごとに分かれる。在留資格が日本人の配偶者等のときだけ使う） */
+export const APPLICANT_IDENTITIES = ["spouse", "child"] as const;
+export type ApplicantIdentity = (typeof APPLICANT_IDENTITIES)[number];
+
 export interface FormDetails {
   // 申請人等作成用1
   /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
@@ -100,6 +104,8 @@ export interface FormDetails {
   tokuteiKatsudoType: "" | TokuteiKatsudoType;
   /** 在留資格「医療」の申請人の区分。"" は未選択（この項目がない既存の案件も ""） */
   medicalApplicantType: "" | MedicalApplicantType;
+  /** 在留資格「日本人の配偶者等」の申請人の身分。"" は未選択（この項目がない既存の案件も ""） */
+  applicantIdentity: "" | ApplicantIdentity;
   // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
@@ -206,6 +212,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   dispatchPeriod: "",
   tokuteiKatsudoType: "",
   medicalApplicantType: "",
+  applicantIdentity: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
@@ -258,6 +265,7 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     hspPointChecks: sanitizePointChecks(r.hspPointChecks),
     tokuteiKatsudoType: (TOKUTEI_KATSUDO_TYPES as readonly unknown[]).includes(r.tokuteiKatsudoType) ? (r.tokuteiKatsudoType as TokuteiKatsudoType) : "",
     medicalApplicantType: (MEDICAL_APPLICANT_TYPES as readonly unknown[]).includes(r.medicalApplicantType) ? (r.medicalApplicantType as MedicalApplicantType) : "",
+    applicantIdentity: (APPLICANT_IDENTITIES as readonly unknown[]).includes(r.applicantIdentity) ? (r.applicantIdentity as ApplicantIdentity) : "",
   };
 }
 

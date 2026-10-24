@@ -1,4 +1,4 @@
-import type { FormDetails, MedicalApplicantType, TokuteiKatsudoType } from "../formDetails";
+import type { ApplicantIdentity, FormDetails, MedicalApplicantType, TokuteiKatsudoType } from "../formDetails";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
@@ -9,7 +9,7 @@ export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
 /** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
 export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
-export type { MedicalApplicantType };
+export type { ApplicantIdentity, MedicalApplicantType };
 
 export interface RequirementRule {
   id: string;
@@ -25,6 +25,8 @@ export interface RequirementRule {
   causes?: AcquisitionCause[];
   /** この書類が必要となる申請人の区分（軸 applicantType を持つ規則集合のみ。省略時は全区分） */
   applicantTypes?: MedicalApplicantType[];
+  /** この書類が必要となる申請人の身分（軸 identity を持つ規則集合のみ。日本人の配偶者等。省略時は全身分） */
+  identities?: ApplicantIdentity[];
   /** required：必要、check：必要となる場合があり確認を要する、optional：提出は必須でないが、実務では取得するのが通例（不足にも要確認にも数えない） */
   level: "required" | "check" | "optional";
   /** 入力された雇用・会社情報が真の場合のみ適用する条件 */
@@ -34,8 +36,8 @@ export interface RequirementRule {
   verify?: boolean;
 }
 
-/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分（いずれも案件の入力） */
-export type RuleAxis = "category" | "acquisitionCause" | "applicantType";
+/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分（いずれも案件の入力） */
+export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity";
 
 export interface RuleSet {
   id: string;
@@ -3586,6 +3588,236 @@ export const TOKUTEI_JOHO_ACQUISITION: RuleSet = {
 };
 // ===== ここまで（取得：芸術・宗教・法律・会計業務・短期滞在・特定活動〔07・08・11〕） =====
 
+// ===== 在留資格取得許可申請（文化活動・日本人の配偶者等。Issue #420） =====
+// 照合表は docs/official/reconciliation/acquisition-bunkakatsudo-2026-10-24.md・acquisition-nihonjinhaigusha-2026-10-24.md（いずれも 2026-10-24）。
+// 人の判断「推奨のとおり」（2026-10-24）の R 項目（BK-1〜BK-12・NH-1〜NH-20）をすべて反映した。取得だけを先に作る（認定・変更・更新は未整備）。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。ページの URL は控えに無く、推測して書かない（「URL 未記録」の出典）。
+const ACQUISITION_SET4_COMPARED_AT = "2026-10-24";
+const ACQUISITION_SET4_PAGES_SOURCE: RuleSource = { ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, comparedAt: ACQUISITION_SET4_COMPARED_AT };
+
+// 文化活動（BK-1〜BK-12。原文 bunkakatsudo1-acquisition_2026-10-24.txt 12〜47行・bunkakatsudo2-acquisition_2026-10-24.txt 11〜50行）。
+// 共通の扱いは技人国の取得（#396）と同じ（BK-2 出生の3書類を外し事由の証明に含める・BK-3 写真・BK-4 注記の例を外す・BK-9 活動に応じた資料を外す・BK-10 申請取次者の注記・BK-11 旅券の理由書を外す）。
+// BK-1：ページ１とページ２の違いは、ページ２だけにある専門家の経歴及び業績の資料の1行のみ。活動の種類を入力する欄は足さず、この1行を「専門家の指導を受ける場合のみ」の要確認にする（案B）
+const BUNKA_KATSUDO_EXPENSE_NOTE =
+  "(1)申請人本人が経費を支弁する場合は、次のいずれか：給付金額及び給付期間を明示した奨学金給付に関する証明書 1通／申請人本人名義の銀行等における預金残高証明書／これらに準ずる文書（適宜）。" +
+  "(2)申請人本人以外の者が経費を支弁する場合は、経費負担者に係る次の資料：住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの） 各1通（1年間の総所得及び納税状況の両方が記載されていれば、いずれか一方でよい）／経費支弁者が外国にいる場合は、経費支弁者名義の銀行等における預金残高証明書（適宜）／これらに準ずる文書（適宜）";
+export const BUNKA_KATSUDO_ACQUISITION: RuleSet = {
+  id: "bunka_katsudo_acquisition",
+  title: "文化活動 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "文化活動",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET4_COMPARED_AT,
+  sources: [ACQUISITION_SET4_PAGES_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    ...acquisitionSet3BaseRules(),
+    // BK-5：必須。(1)(2)とも出す
+    {
+      id: "bunka_activity_documents",
+      name: "具体的な活動の内容、期間及び当該活動を行おうとする機関の概要を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "(1)申請人本人又は受入れ機関が作成した日本での活動内容及びその期間を明らかにする文書 1通 (2)申請人本人が当該活動を行おうとする機関の概要を明らかにする資料（パンフレット等） 適宜",
+      verify: true,
+    },
+    // BK-6：必須（5種のいずれか）
+    {
+      id: "bunka_achievements",
+      name: "学術上又は芸術上の業績を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "次のいずれか。関係団体からの推薦状 1通／過去の活動に関する報道 適宜／入賞、入選等の実績 適宜／過去の論文、作品等の目録 適宜／これらに準ずる文書 適宜",
+      verify: true,
+    },
+    // BK-7 案A：支弁者により(1)(2)。必須の1行にまとめ、中身の違いは注記に書く
+    {
+      id: "bunka_expense_capacity",
+      name: "申請人の日本滞在中の経費支弁能力を証する文書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: BUNKA_KATSUDO_EXPENSE_NOTE,
+      verify: true,
+    },
+    // BK-1・BK-8：ページ２（専門家の指導を受けて修得する場合）だけの書類。要確認
+    {
+      id: "bunka_expert_career",
+      name: "当該専門家の経歴及び業績を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: "専門家の指導を受けて修得する場合（文化活動２）のみ。次のいずれか。免許等の写し 1通／論文、作品集等 適宜／履歴書 1通",
+      verify: true,
+    },
+  ],
+};
+
+// 日本人の配偶者等（NH-1〜NH-20。原文 nihonjinhaigusha-spouse-acquisition_2026-10-24.txt 6〜54行・nihonjinhaigusha-child-acquisition_2026-10-24.txt 6〜51行）。
+// 取得の提出書類のチェックシート（PDF）は両ページにあるが手元に無く、チェックシート未照合（NH-19）。ページの本文で作った。
+// NH-1：判定の軸を、取得の事由と申請人の身分（配偶者／実子・特別養子。formDetails.applicantIdentity）の2つにする（alsoBasis）。身分が未選択の間は、身分に共通の書類だけを出す。
+// NH-2：原文は事由を3区分（国籍離脱・出生・それ以外）で書くため、出生したことを証する書類（birth_certificate）は外さない（家族滞在の取得と同じ）。
+// NH-6・NH-8：旅券の理由書・活動に応じた資料は外す（活動に応じた資料は、NH-11〜NH-16 の書類群がこれに当たる）
+const NIHONJIN_HAIGUSHA_ACQUISITION_REMOVED_IDS = ["passport_reason_statement", "activity_materials"];
+const NIHONJIN_HAIGUSHA_QUESTIONNAIRE_NOTE =
+  "1通。配偶者の場合は、配偶者のページの質問書（平成29年6月6日に様式を改訂しているため、新様式で提出する。英語など10の言語の版がある）。実子・特別養子の場合は、実子・特別養子のページの質問書（配偶者の質問書とは別の様式）。チェックシートは未照合のため、要否は行政書士が確認する";
+const NIHONJIN_HAIGUSHA_RESIDENCE_CERTIFICATE_NOTE =
+  "1通。個人番号（マイナンバー）は省略し、他の事項は省略のないもの。配偶者の場合は、配偶者（日本人）の世帯全員の記載のある住民票の写しで、発行日から3か月以内のもの。実子・特別養子の場合は、日本人の方（申請人の親又は養親）の世帯全員の記載があるもの";
+const NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES: Record<string, Partial<RequirementRule>> = {
+  // NH-3：技人国の取得（R-3）と同じ。全事由の必須、名称は申請書のとおり、注記は年齢の注記
+  photo: { causes: ALL_CAUSES, name: ACQUISITION_FORM_PHOTO_NAME, note: ACQUISITION_PHOTO_AGE_NOTE },
+  // NH-4：原文は「その事由を証する書類」のみ。原文に無い注記の例（日米地位協定）を外す
+  cause_proof: { note: undefined },
+  // NH-7：原文は「申請人本人以外の方が申請書類を提出する場合」。名称は変えない
+  agent_identity_document: { note: ACQUISITION_AGENT_IDENTITY_NOTE },
+  // NH-5：配偶者のページは「パスポート 提示」。申請人以外の方が提出する場合でも提示が必要（実子・特別養子は別の行）
+  passport_presentation: {
+    identities: ["spouse"],
+    note: "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請書類を提出する場合であっても、提示が必要",
+  },
+  // NH-9：全事由の必須。名称は原文のとおり「質問書」（家族滞在 R-11 と同じ）
+  parents_questionnaire: { causes: ALL_CAUSES, name: "質問書", note: NIHONJIN_HAIGUSHA_QUESTIONNAIRE_NOTE },
+  // NH-10：全事由の必須。誰の住民票かは身分で違うため、名称は両方を併記し、違いは注記に書く
+  household_residence_certificate: {
+    causes: ALL_CAUSES,
+    name: "日本人の方（配偶者又は親・養親）の世帯全員の記載のある住民票",
+    note: NIHONJIN_HAIGUSHA_RESIDENCE_CERTIFICATE_NOTE,
+  },
+};
+const NIHONJIN_HAIGUSHA_NEW_RULES: Record<string, RequirementRule> = {
+  // NH-11：戸籍謄本。配偶者と実子・特別養子で書類が違うため、身分ごとの2行
+  spouse_family_register: {
+    id: "nihonjin_spouse_family_register",
+    name: "配偶者（日本人）の方の戸籍謄本（全部事項証明書）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["spouse"],
+    level: "required",
+    note: "1通。申請人との婚姻事実の記載があるもの。婚姻事実の記載がない場合は、戸籍謄本に加え婚姻届出受理証明書を提出する。発行日から3か月以内のもの",
+    verify: true,
+  },
+  child_family_register: {
+    id: "nihonjin_child_family_register",
+    name: "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["child"],
+    level: "required",
+    note: "1通",
+    verify: true,
+  },
+  // NH-12：配偶者のみ
+  marriage_certificate: {
+    id: "nihonjin_marriage_certificate",
+    name: "申請人の国籍国（外国）の機関から発行された結婚証明書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["spouse"],
+    level: "required",
+    note: "1通。申請人が韓国籍等で戸籍謄本が発行される場合は、お二方の婚姻が記載された外国機関発行の戸籍謄本の提出でもよい",
+    verify: true,
+  },
+  // NH-13 案A：実子・特別養子のみ。3つの場合ごとの「次のいずれか」を、必須の1行にまとめる
+  child_birth_or_adoption: {
+    id: "nihonjin_child_birth_or_adoption",
+    name: "出生又は特別養子縁組を証する文書（日本で出生／海外で出生／特別養子の場合ごとに、次のいずれか）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["child"],
+    level: "required",
+    note:
+      "該当する場合ごとに、次のいずれか1通。日本で出生した場合：(1)出生届受理証明書 (2)認知届受理証明書（発行日から3か月以内のもの。(2)は日本の役所に届出をしている場合のみ）。" +
+      "海外で出生した場合：(1)出生国の機関から発行された出生証明書 (2)出生国の機関から発行された申請人の認知に係る証明書（認知に係る証明書がある方のみ）。" +
+      "特別養子の場合：(1)特別養子縁組届出受理証明書 (2)日本の家庭裁判所発行の養子縁組に係る審判書謄本及び確定証明書。" +
+      "出生の事由の「出生したことを証する書類」と同じ文書で足りるかは、案内ページに記載がないため、行政書士が確認する",
+    verify: true,
+  },
+  // NH-14：(1)(2)のどちらか。必須の1行にまとめる（家族滞在 R-19 案A と同じ形）
+  stay_expense: {
+    id: "nihonjin_stay_expense",
+    name: "日本での滞在費用を証明する資料",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note:
+      "(1)を提出する。入国後間もない場合や転居等で(1)の資料では滞在費用を証明できない場合は、(2)の資料などを提出する。" +
+      "(1)申請人の滞在費用を支弁する方の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの） 各1通。1月1日現在の住所の市区町村が発行する。1年間の総所得及び納税状況の両方が記載されていれば、いずれか一方でよい。発行日から3か月以内のもの。実子・特別養子の場合は、複数の方が扶養するときは収入の多い方。" +
+      "(2)その他：預貯金通帳の写し（適宜。Web通帳の画面の写し等〔取引履歴が分かるもの〕でもよいが、加工等できない状態で印刷したものに限り、Excelファイル等は不可）／雇用予定証明書又は採用内定通知書（日本の会社発行のもの。適宜）／これらに準ずるもの（適宜）",
+    verify: true,
+  },
+  // NH-15：両ページ共通の必須。身元保証人は身分で違うため注記に書く
+  guarantee_letter: {
+    id: "nihonjin_guarantee_letter",
+    name: "身元保証書",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "required",
+    note: "1通（様式は案内ページにある日本語版・英語版）。身元保証人は、配偶者の場合は日本に居住する配偶者(日本人)、実子・特別養子の場合は日本に居住する日本人の方（申請人の親又は養親）等",
+    verify: true,
+  },
+  // NH-16：配偶者のみ
+  spouse_exchange: {
+    id: "nihonjin_spouse_exchange",
+    name: "夫婦間の交流が確認できる資料",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["spouse"],
+    level: "required",
+    note: "スナップ写真（お二人で写っており、容姿がはっきりと確認できるもの。アプリ加工したものは不可） 2〜3葉。その他、提出できるもの：SNS記録、通話記録",
+    verify: true,
+  },
+  // NH-5 案A：実子・特別養子のページの取得の節には旅券の項が無い。確認が必要な書類として出す
+  child_passport_presentation: {
+    id: "nihonjin_child_passport_presentation",
+    name: "旅券（提示）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    identities: ["child"],
+    level: "check",
+    note: "このページ（日本人の実子・特別養子の取得の節）には記載が無い。提示の要否は、行政書士が確認する",
+    verify: true,
+  },
+};
+// 原文の並び（申請書・写真・事由別の書類・身分関係の書類・滞在費用・身元保証書・住民票・質問書・夫婦間の交流・旅券・申請取次者の書類）に合わせる
+const nihonjinHaigushaBaseById = Object.fromEntries(
+  ACQUISITION_BY_CAUSE.rules
+    .filter((r) => !NIHONJIN_HAIGUSHA_ACQUISITION_REMOVED_IDS.includes(r.id))
+    .map((r) => [r.id, NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES[r.id] ? { ...r, ...NIHONJIN_HAIGUSHA_ACQUISITION_OVERRIDES[r.id] } : r]),
+) as Record<string, RequirementRule>;
+const nihonjinHaigushaRules: RequirementRule[] = [
+  nihonjinHaigushaBaseById.application_form,
+  nihonjinHaigushaBaseById.photo,
+  nihonjinHaigushaBaseById.nationality_proof,
+  nihonjinHaigushaBaseById.birth_certificate,
+  nihonjinHaigushaBaseById.cause_proof,
+  NIHONJIN_HAIGUSHA_NEW_RULES.spouse_family_register,
+  NIHONJIN_HAIGUSHA_NEW_RULES.child_family_register,
+  NIHONJIN_HAIGUSHA_NEW_RULES.marriage_certificate,
+  NIHONJIN_HAIGUSHA_NEW_RULES.child_birth_or_adoption,
+  NIHONJIN_HAIGUSHA_NEW_RULES.stay_expense,
+  NIHONJIN_HAIGUSHA_NEW_RULES.guarantee_letter,
+  nihonjinHaigushaBaseById.household_residence_certificate,
+  nihonjinHaigushaBaseById.parents_questionnaire,
+  NIHONJIN_HAIGUSHA_NEW_RULES.spouse_exchange,
+  nihonjinHaigushaBaseById.passport_presentation,
+  NIHONJIN_HAIGUSHA_NEW_RULES.child_passport_presentation,
+  nihonjinHaigushaBaseById.agent_identity_document,
+];
+// NH-20：チェックシート未照合。題名は「一部のみ整備」
+export const NIHONJIN_HAIGUSHA_ACQUISITION: RuleSet = {
+  id: "nihonjin_haigusha_acquisition",
+  title: "日本人の配偶者等 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "日本人の配偶者等",
+  basis: "acquisitionCause",
+  alsoBasis: ["identity"],
+  checkedAt: ACQUISITION_SET4_COMPARED_AT,
+  sources: [ACQUISITION_SET4_PAGES_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: nihonjinHaigushaRules,
+};
+// ===== ここまで（取得：文化活動・日本人の配偶者等） =====
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -3618,6 +3850,9 @@ export const RULE_SETS: RuleSet[] = [
   SHUKYO_ACQUISITION,
   HOUMU_KAIKEI_ACQUISITION,
   TANKI_TAIZAI_ACQUISITION,
+  // 取得：文化活動・日本人の配偶者等（Issue #420）
+  BUNKA_KATSUDO_ACQUISITION,
+  NIHONJIN_HAIGUSHA_ACQUISITION,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
   KAIGO_CHANGE,
