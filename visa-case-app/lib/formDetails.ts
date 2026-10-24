@@ -39,6 +39,23 @@ export type TokuteiKatsudoType = (typeof TOKUTEI_KATSUDO_TYPES)[number];
 export const MEDICAL_APPLICANT_TYPES = ["doctor", "other"] as const;
 export type MedicalApplicantType = (typeof MEDICAL_APPLICANT_TYPES)[number];
 
+/**
+ * 在留資格「定住者」の区分（入管庁の案内ページの種類1〜5・扶養者別の8つ。取得の書類の出し分けに使う。在留資格が定住者のときだけ使う）。
+ * nikkei3＝日系3世／nikkei2Spouse＝日系2世の配偶者／nikkei3Spouse＝日系3世の配偶者／childPermanent＝実子（永住者・定住者・特別永住者が扶養）／
+ * childJapaneseSpouse＝実子（日本人の配偶者が扶養）／childPermanentSpouse＝実子（永住者の配偶者が扶養）／adoptedJapanese＝養子（日本人が扶養）／adoptedPermanent＝養子（永住者・定住者・特別永住者が扶養）
+ */
+export const TEIJUSHA_TYPES = [
+  "nikkei3",
+  "nikkei2Spouse",
+  "nikkei3Spouse",
+  "childPermanent",
+  "childJapaneseSpouse",
+  "childPermanentSpouse",
+  "adoptedJapanese",
+  "adoptedPermanent",
+] as const;
+export type TeijushaType = (typeof TEIJUSHA_TYPES)[number];
+
 export interface FormDetails {
   // 申請人等作成用1
   /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
@@ -100,6 +117,8 @@ export interface FormDetails {
   tokuteiKatsudoType: "" | TokuteiKatsudoType;
   /** 在留資格「医療」の申請人の区分。"" は未選択（この項目がない既存の案件も ""） */
   medicalApplicantType: "" | MedicalApplicantType;
+  /** 在留資格「定住者」の区分。"" は未選択（この項目がない既存の案件も ""） */
+  teijushaType: "" | TeijushaType;
   // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
@@ -206,6 +225,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   dispatchPeriod: "",
   tokuteiKatsudoType: "",
   medicalApplicantType: "",
+  teijushaType: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
@@ -258,6 +278,7 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     hspPointChecks: sanitizePointChecks(r.hspPointChecks),
     tokuteiKatsudoType: (TOKUTEI_KATSUDO_TYPES as readonly unknown[]).includes(r.tokuteiKatsudoType) ? (r.tokuteiKatsudoType as TokuteiKatsudoType) : "",
     medicalApplicantType: (MEDICAL_APPLICANT_TYPES as readonly unknown[]).includes(r.medicalApplicantType) ? (r.medicalApplicantType as MedicalApplicantType) : "",
+    teijushaType: (TEIJUSHA_TYPES as readonly unknown[]).includes(r.teijushaType) ? (r.teijushaType as TeijushaType) : "",
   };
 }
 

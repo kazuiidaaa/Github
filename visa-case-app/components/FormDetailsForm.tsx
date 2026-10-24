@@ -11,6 +11,7 @@ import {
   getFormLayout,
   validateFormDetails,
   MEDICAL_APPLICANT_TYPES,
+  TEIJUSHA_TYPES,
   TOKUTEI_KATSUDO_TYPES,
   type FormDetails,
   type Relative,
@@ -90,6 +91,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   // 取得（IRYO_ACQUISITION）は、basis が取得の事由で、申請人の区分は alsoBasis に持つ（acquisition-iryou-2026-10-19.md の R-1）
   const medicalRuleSet = ruleSetFor(record.procedureType, statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }));
   const showMedicalType = medicalRuleSet?.basis === "applicantType" || (medicalRuleSet?.alsoBasis?.includes("applicantType") ?? false);
+  // 定住者の区分は、定住者の取得の規則集合（alsoBasis に teijushaType を持つ）が引かれるときだけ尋ねる
+  const showTeijushaType = medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false;
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);
@@ -163,7 +166,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "deportationHistory"
       | "acquisitionCause"
       | "tokuteiKatsudoType"
-      | "medicalApplicantType",
+      | "medicalApplicantType"
+      | "teijushaType",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -267,6 +271,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {form.acquisitionCause === "other" && text("acquisitionCauseOther")}
         {showTokuteiType && select("tokuteiKatsudoType", TOKUTEI_KATSUDO_TYPES.map((v) => [v, t(`caseRequirements.subtype_${v}`)]), t("caseRequirements.subtypeLabel"))}
         {showMedicalType && select("medicalApplicantType", MEDICAL_APPLICANT_TYPES.map((v) => [v, t(`caseRequirements.applicantType_${v}`)]), t("caseRequirements.applicantTypeLabel"))}
+        {showTeijushaType && select("teijushaType", TEIJUSHA_TYPES.map((v) => [v, t(`caseRequirements.teijushaType_${v}`)]), t("caseRequirements.teijushaTypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (

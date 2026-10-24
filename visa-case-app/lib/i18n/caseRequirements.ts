@@ -1,4 +1,4 @@
-import type { MedicalApplicantType } from "@/lib/formDetails";
+import type { MedicalApplicantType, TeijushaType } from "@/lib/formDetails";
 import type { Lang } from "@/lib/documents/lang";
 import type { AcquisitionCause, Category, RequirementRule } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
@@ -28,12 +28,24 @@ export type ReasonCode =
   | { kind: "applicantTypeCommon" }
   | { kind: "applicantTypeUnknown" }
   | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] }
+  | { kind: "teijushaTypeNotRequired"; type: TeijushaType }
   /** 判定の軸を複数持つ規則集合（RuleSet.alsoBasis。Issue #402）。選択済みの軸の値だけを持つ。どれも持たなければ「全事由・全区分に共通」 */
-  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType };
+  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; teijushaType?: TeijushaType };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
   other: "caseRequirements.applicantType_other",
+};
+
+const TEIJUSHA_TYPE_KEYS: Record<TeijushaType, MessageKey> = {
+  nikkei3: "caseRequirements.teijushaType_nikkei3",
+  nikkei2Spouse: "caseRequirements.teijushaType_nikkei2Spouse",
+  nikkei3Spouse: "caseRequirements.teijushaType_nikkei3Spouse",
+  childPermanent: "caseRequirements.teijushaType_childPermanent",
+  childJapaneseSpouse: "caseRequirements.teijushaType_childJapaneseSpouse",
+  childPermanentSpouse: "caseRequirements.teijushaType_childPermanentSpouse",
+  adoptedJapanese: "caseRequirements.teijushaType_adoptedJapanese",
+  adoptedPermanent: "caseRequirements.teijushaType_adoptedPermanent",
 };
 
 const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
@@ -60,6 +72,7 @@ function axesConditions(t: T, code: Extract<ReasonCode, { kind: "axesLevel" }>):
   if (code.cause) parts.push(t("caseRequirements.axisCause", { cause: t(CAUSE_KEYS[code.cause]) }));
   if (code.category) parts.push(t("caseRequirements.axisCategory", { category: code.category }));
   if (code.type) parts.push(t("caseRequirements.axisApplicantType", { type: t(APPLICANT_TYPE_KEYS[code.type]) }));
+  if (code.teijushaType) parts.push(t("caseRequirements.axisTeijushaType", { type: t(TEIJUSHA_TYPE_KEYS[code.teijushaType]) }));
   return parts;
 }
 
@@ -98,6 +111,8 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
       return t(LEVEL_KEYS.applicantType[code.level], {
         type: t(APPLICANT_TYPE_KEYS[code.type]),
       });
+    case "teijushaTypeNotRequired":
+      return t("caseRequirements.reasonTeijushaTypeNotRequired", { type: t(TEIJUSHA_TYPE_KEYS[code.type]) });
     case "axesLevel": {
       const conditions = axesConditions(t, code);
       if (conditions.length === 0) return t("caseRequirements.reasonAxesCommon");
@@ -151,4 +166,13 @@ export function selectionNotices(ev: {
 export function applicantTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsApplicantType: boolean }): MessageKey | null {
   if (!ev.ruleSet || !ev.needsApplicantType) return null;
   return ev.ruleSet.alsoBasis?.includes("applicantType") ? "caseRequirements.needsApplicantTypeAxes" : "caseRequirements.needsApplicantType";
+}
+
+/**
+ * 定住者の区分が未選択のときに出す案内の文。出さないときは null。
+ * 区分を alsoBasis に持つ規則集合（定住者の取得。acquisition-teijusha-2026-10-24.md の TJ-1）では、未選択の間は区分に共通の書類だけを出す。
+ */
+export function teijushaTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsTeijushaType: boolean }): MessageKey | null {
+  if (!ev.ruleSet || !ev.needsTeijushaType) return null;
+  return "caseRequirements.needsTeijushaTypeAxes";
 }

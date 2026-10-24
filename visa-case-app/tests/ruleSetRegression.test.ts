@@ -93,6 +93,7 @@ describe("既存の規則集合の結果（alsoBasis を持たないもの）は
       "kigyonai_acquisition",
       "iryo_acquisition",
       "gino_acquisition",
+      "teijusha_acquisition",
     ]);
   });
 });
