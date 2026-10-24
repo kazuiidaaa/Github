@@ -23,7 +23,10 @@ function make(procedureType: string, type: "tokuteiJoho" | "tokuteiKenkyu" | "")
 
 describe("特定情報処理活動（告示37号）の規則集合", () => {
   it("認定・変更・更新の3件が RULE_SETS の末尾にあり、種別 tokuteiJoho・在留資格「特定活動」で、出典に入管庁の案内ページを持ち、規則の id に重複がない", () => {
-    expect(RULE_SETS.slice(-3)).toEqual([TOKUTEI_JOHO_RENEWAL, TOKUTEI_JOHO_CHANGE, TOKUTEI_JOHO_COE]);
+    // 末尾には、特定活動の取得の規則集合（#432）が続く
+    const at = RULE_SETS.indexOf(TOKUTEI_JOHO_RENEWAL);
+    expect(RULE_SETS.slice(at, at + 3)).toEqual([TOKUTEI_JOHO_RENEWAL, TOKUTEI_JOHO_CHANGE, TOKUTEI_JOHO_COE]);
+    expect(RULE_SETS.slice(at + 3).every((r) => r.procedureType === "acquisition" && r.subtype !== undefined)).toBe(true);
     expect(sets.map((s) => s.procedureType)).toEqual(["coe", "change", "renewal"]);
     for (const s of sets) {
       expect(s.subtype).toBe("tokuteiJoho");
@@ -105,8 +108,9 @@ describe("特定情報処理活動（告示37号）の規則集合", () => {
     expect(evaluate(make("renewal", "tokuteiJoho")).ruleSet).toBe(TOKUTEI_JOHO_RENEWAL);
     expect(evaluate(make("renewal", "")).ruleSet).toBeNull();
     expect(evaluate(make("renewal", "tokuteiKenkyu")).ruleSet?.subtype).toBe("tokuteiKenkyu");
-    expect(evaluate(make("acquisition", "tokuteiJoho")).ruleSet?.id).toBe(evaluate(make("acquisition", "")).ruleSet?.id);
-    expect(RULE_SETS.some((r) => r.subtype === "tokuteiJoho" && r.procedureType === "acquisition")).toBe(false);
+    // 取得は、種別 tokuteiJoho の取得の規則集合（#432）。未選択は事由別の規則集合のまま
+    expect(evaluate(make("acquisition", "tokuteiJoho")).ruleSet?.id).toBe("tokutei_joho_acquisition");
+    expect(evaluate(make("acquisition", "")).ruleSet?.id).toBe("acquisition_by_cause");
   });
 
   it("「任意」の書類は、不足にも要確認にも数えない（認定の旅券の写し）", () => {
