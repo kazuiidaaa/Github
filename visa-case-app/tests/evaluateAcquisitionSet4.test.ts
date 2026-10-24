@@ -32,17 +32,9 @@ const CASES = [
     specific: ["ginou_jisshu_plan_certificate", "resident_tax_certificates"],
     order: ["application_form", "photo", "passport_presentation", "ginou_jisshu_plan_certificate", "resident_tax_certificates", "agent_identity_document", "nationality_proof", "cause_proof"],
   },
-  {
-    id: "ryugaku_acquisition",
-    status: "留学",
-    page: "student.html",
-    hasPhoto: true,
-    specific: ["ryugaku_document_list", "ryugaku_confirmation_form"],
-    order: ["application_form", "photo", "passport_presentation", "ryugaku_document_list", "ryugaku_confirmation_form", "agent_identity_document", "nationality_proof", "cause_proof"],
-  },
 ];
 
-describe("evaluate: 公用・技能実習・留学の在留資格取得許可申請（#420）", () => {
+describe("evaluate: 公用・技能実習の在留資格取得許可申請（#420。留学は evaluateRyugakuProcedures.test.ts）", () => {
   for (const c of CASES) {
     const rs = set(c.id);
     const run = (cause: Cause) => evaluate(make(c.status, cause));
@@ -122,25 +114,6 @@ describe("evaluate: 公用・技能実習・留学の在留資格取得許可申
 
   it("技能の取得の規則集合は技能実習に当たらない", () => {
     expect(evaluate(make("技能", "other")).ruleSet?.id).toBe("gino_acquisition");
-  });
-
-  it("留学 RY-1・RY-3・RY-11：一覧表は要確認の1行。書類の名前は出さず、原文の言葉で案内する。入力欄は無い", () => {
-    const rs = set("ryugaku_acquisition");
-    const r = rs.rules.find((x) => x.id === "ryugaku_document_list")!;
-    expect(r.level).toBe("check");
-    expect(r.name).toBe("教育機関の種類と適正校の区分に応じた提出書類一覧表に掲げる資料");
-    for (const w of ["クラスⅠ・クラスⅡ・通知を受けていない機関", "１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用", "留意事項・別表・経費支弁書・奨学金の給付に関する証明書一覧", "入管庁の留学のページで確認する"]) {
-      expect(r.note, w).toContain(w);
-    }
-    expect(rs.categoryDefinition).toBeUndefined();
-    for (const cause of ALL) expect(ids(evaluate(make("留学", cause)), "check"), cause).toContain("ryugaku_document_list");
-  });
-
-  it("留学 RY-2：各種確認書（別紙）は要確認。教育機関が作成する", () => {
-    const r = set("ryugaku_acquisition").rules.find((x) => x.id === "ryugaku_confirmation_form")!;
-    expect(r.level).toBe("check");
-    expect(r.party).toBe("organization");
-    for (const w of ["在籍予定又は在籍中の教育機関が作成する", "最新様式", "前回の在留諸申請から在籍する教育機関に変更がない方", "令和8年6月以前に申請する場合は従前の各種確認書"]) expect(r.note, w).toContain(w);
   });
 
   it("ACQUISITION_BY_CAUSE は変えない", () => {

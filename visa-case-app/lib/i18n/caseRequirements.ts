@@ -1,4 +1,4 @@
-import type { ApplicantIdentity, MedicalApplicantType, TeijushaType } from "@/lib/formDetails";
+import type { ApplicantIdentity, MedicalApplicantType, SchoolType, TeijushaType } from "@/lib/formDetails";
 import type { Lang } from "@/lib/documents/lang";
 import type { AcquisitionCause, Category, RequirementRule } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
@@ -30,8 +30,9 @@ export type ReasonCode =
   | { kind: "applicantTypeLevel"; type: MedicalApplicantType; level: RequirementRule["level"] }
   | { kind: "identityNotRequired"; identity: ApplicantIdentity }
   | { kind: "teijushaTypeNotRequired"; type: TeijushaType }
+  | { kind: "schoolTypeNotRequired"; schoolType: SchoolType }
   /** 判定の軸を複数持つ規則集合（RuleSet.alsoBasis。Issue #402）。選択済みの軸の値だけを持つ。どれも持たなければ「全事由・全区分に共通」 */
-  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity; teijushaType?: TeijushaType };
+  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity; teijushaType?: TeijushaType; schoolType?: SchoolType };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
@@ -52,6 +53,18 @@ const TEIJUSHA_TYPE_KEYS: Record<TeijushaType, MessageKey> = {
   childPermanentSpouse: "caseRequirements.teijushaType_childPermanentSpouse",
   adoptedJapanese: "caseRequirements.teijushaType_adoptedJapanese",
   adoptedPermanent: "caseRequirements.teijushaType_adoptedPermanent",
+};
+
+export const SCHOOL_TYPE_KEYS: Record<SchoolType, MessageKey> = {
+  "univ-approved": "caseRequirements.schoolType_univApproved",
+  "univ-nonapproved": "caseRequirements.schoolType_univNonapproved",
+  "vocational-class1": "caseRequirements.schoolType_vocationalClass1",
+  "vocational-class2": "caseRequirements.schoolType_vocationalClass2",
+  "vocational-nonapproved": "caseRequirements.schoolType_vocationalNonapproved",
+  "japanese-nonapproved": "caseRequirements.schoolType_japaneseNonapproved",
+  "japanese-class1": "caseRequirements.schoolType_japaneseClass1",
+  "japanese-class2": "caseRequirements.schoolType_japaneseClass2",
+  "highschool-below": "caseRequirements.schoolType_highschoolBelow",
 };
 
 const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
@@ -80,6 +93,7 @@ function axesConditions(t: T, code: Extract<ReasonCode, { kind: "axesLevel" }>):
   if (code.type) parts.push(t("caseRequirements.axisApplicantType", { type: t(APPLICANT_TYPE_KEYS[code.type]) }));
   if (code.identity) parts.push(t("caseRequirements.axisIdentity", { identity: t(IDENTITY_KEYS[code.identity]) }));
   if (code.teijushaType) parts.push(t("caseRequirements.axisTeijushaType", { type: t(TEIJUSHA_TYPE_KEYS[code.teijushaType]) }));
+  if (code.schoolType) parts.push(t("caseRequirements.axisSchoolType", { type: t(SCHOOL_TYPE_KEYS[code.schoolType]) }));
   return parts;
 }
 
@@ -122,6 +136,8 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
       return t("caseRequirements.reasonIdentityNotRequired", { identity: t(IDENTITY_KEYS[code.identity]) });
     case "teijushaTypeNotRequired":
       return t("caseRequirements.reasonTeijushaTypeNotRequired", { type: t(TEIJUSHA_TYPE_KEYS[code.type]) });
+    case "schoolTypeNotRequired":
+      return t("caseRequirements.reasonSchoolTypeNotRequired", { type: t(SCHOOL_TYPE_KEYS[code.schoolType]) });
     case "axesLevel": {
       const conditions = axesConditions(t, code);
       if (conditions.length === 0) return t("caseRequirements.reasonAxesCommon");
@@ -190,4 +206,10 @@ export function identityNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } 
 export function teijushaTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsTeijushaType: boolean }): MessageKey | null {
   if (!ev.ruleSet || !ev.needsTeijushaType) return null;
   return "caseRequirements.needsTeijushaTypeAxes";
+}
+
+/** 留学の入学先の種類が未選択のときに出す案内の文。出さないときは null */
+export function schoolTypeNotice(ev: { ruleSet: unknown; needsSchoolType: boolean }): MessageKey | null {
+  if (!ev.ruleSet || !ev.needsSchoolType) return null;
+  return "caseRequirements.needsSchoolTypeAxes";
 }

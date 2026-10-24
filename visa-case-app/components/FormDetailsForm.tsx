@@ -12,6 +12,7 @@ import {
   validateFormDetails,
   APPLICANT_IDENTITIES,
   MEDICAL_APPLICANT_TYPES,
+  SCHOOL_TYPES,
   TEIJUSHA_TYPES,
   TOKUTEI_KATSUDO_TYPES,
   type FormDetails,
@@ -25,6 +26,7 @@ import { useLang, useT } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { HSP_ACTIVITIES, isAdvancedProfessional, resolveChangeForm, resolveCoeForm, resolveRenewalForm } from "@/lib/hspForm";
 import { describeHspForm, hspActivityHintKey, hspStatusOf, type HspProcedure } from "@/lib/hspFormGuide";
+import { SCHOOL_TYPE_KEYS } from "@/lib/i18n/caseRequirements";
 import { logAudit, newId, updateCase } from "@/lib/store";
 import { useAutoSaveForm } from "@/lib/useAutoSaveForm";
 import { FORM_DETAILS_ZENKAKU, RELATIVE_ZENKAKU, WORK_ENTRY_ZENKAKU, zenkakuHandlers, zenkakuModeOf } from "@/lib/zenkaku";
@@ -96,6 +98,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const showIdentity = medicalRuleSet?.basis === "identity" || (medicalRuleSet?.alsoBasis?.includes("identity") ?? false);
   // 定住者の区分は、定住者の取得の規則集合（alsoBasis に teijushaType を持つ）が引かれるときだけ尋ねる
   const showTeijushaType = medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false;
+  // 留学の入学先の種類は、規則集合が入学先の軸を持つとき（留学の認定・変更・更新・取得）だけ尋ねる。9区分から選ぶ
+  const showSchoolType = medicalRuleSet?.basis === "schoolType" || (medicalRuleSet?.alsoBasis?.includes("schoolType") ?? false);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);
@@ -171,7 +175,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "tokuteiKatsudoType"
       | "medicalApplicantType"
       | "applicantIdentity"
-      | "teijushaType",
+      | "teijushaType"
+      | "schoolType",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -277,6 +282,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {showMedicalType && select("medicalApplicantType", MEDICAL_APPLICANT_TYPES.map((v) => [v, t(`caseRequirements.applicantType_${v}`)]), t("caseRequirements.applicantTypeLabel"))}
         {showIdentity && select("applicantIdentity", APPLICANT_IDENTITIES.map((v) => [v, t(`caseRequirements.identity_${v}`)]), t("caseRequirements.identityLabel"))}
         {showTeijushaType && select("teijushaType", TEIJUSHA_TYPES.map((v) => [v, t(`caseRequirements.teijushaType_${v}`)]), t("caseRequirements.teijushaTypeLabel"))}
+        {showSchoolType && select("schoolType", SCHOOL_TYPES.map((v) => [v, t(SCHOOL_TYPE_KEYS[v])]), t("caseRequirements.schoolTypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (

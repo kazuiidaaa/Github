@@ -1,4 +1,4 @@
-import { APPLICANT_IDENTITIES, MEDICAL_APPLICANT_TYPES, TEIJUSHA_TYPES, type FormDetails } from "../formDetails";
+import { APPLICANT_IDENTITIES, MEDICAL_APPLICANT_TYPES, SCHOOL_TYPES, TEIJUSHA_TYPES, type FormDetails } from "../formDetails";
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
@@ -15,6 +15,7 @@ import {
   type RequirementRule,
   type RuleAxis,
   type RuleSet,
+  type SchoolType,
   type TeijushaType,
 } from "./rules";
 
@@ -50,6 +51,8 @@ export interface Evaluation {
   needsIdentity: boolean;
   /** 在留資格「定住者」の区分が未選択のため、区分に共通の書類だけを表示している（alsoBasis に teijushaType を持つ規則集合のみ） */
   needsTeijushaType: boolean;
+  /** 在留資格「留学」の入学先の種類が未選択のため、入学先に共通の書類だけを表示している（basis または alsoBasis に schoolType を持つ規則集合のみ） */
+  needsSchoolType: boolean;
   items: EvaluatedItem[];
   /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
@@ -237,6 +240,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     needsApplicantType: false,
     needsIdentity: false,
     needsTeijushaType: false,
+    needsSchoolType: false,
     items: [],
     missing: [],
     toCheck: [],
@@ -257,7 +261,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
 
   // 判定の軸を複数持つ規則集合（Issue #402）。alsoBasis を持たない規則集合は、下の従来の分岐で判定する（結果を変えない）
   // 日本人の配偶者等の認定・変更・更新は基準が申請人の身分だけ（basis: identity）。同じ仕組みで判定する
-  if ((ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) || ruleSet.basis === "identity") {
+  if ((ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) || ruleSet.basis === "identity" || ruleSet.basis === "schoolType") {
     return { ...evaluateByAxes(c, ruleSet), needsSubtype };
   }
 
@@ -365,6 +369,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
   const type: MedicalApplicantType | "" = c.formDetails.medicalApplicantType;
   const identity: ApplicantIdentity | "" = c.formDetails.applicantIdentity;
   const teijushaType: TeijushaType | "" = c.formDetails.teijushaType;
+  const schoolType: SchoolType | "" = c.formDetails.schoolType;
 
   const needsCategory = has("category") && category === "";
   const categoryOutOfRange = has("category") && entered !== "" && category === "";
@@ -372,6 +377,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
   const needsApplicantType = has("applicantType") && type === "";
   const needsIdentity = has("identity") && identity === "";
   const needsTeijushaType = has("teijushaType") && teijushaType === "";
+  const needsSchoolType = has("schoolType") && schoolType === "";
 
   const items: EvaluatedItem[] = [];
   for (const rule of ruleSet.rules) {
@@ -380,12 +386,14 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
     const types = rule.applicantTypes ?? MEDICAL_APPLICANT_TYPES;
     const identities = rule.identities ?? APPLICANT_IDENTITIES;
     const teijushaTypes = rule.teijushaTypes ?? TEIJUSHA_TYPES;
+    const schoolTypes = rule.schoolTypes ?? SCHOOL_TYPES;
     // 未選択の軸では、全ての値に共通の規則だけを出す
     if (needsCategory && !range.every((k) => categories.includes(k))) continue;
     if (needsCause && !ALL_CAUSES.every((k) => causes.includes(k))) continue;
     if (needsApplicantType && !MEDICAL_APPLICANT_TYPES.every((k) => types.includes(k))) continue;
     if (needsIdentity && !APPLICANT_IDENTITIES.every((k) => identities.includes(k))) continue;
     if (needsTeijushaType && !TEIJUSHA_TYPES.every((k) => teijushaTypes.includes(k))) continue;
+    if (needsSchoolType && !SCHOOL_TYPES.every((k) => schoolTypes.includes(k))) continue;
 
     // 軸の並びで、最初に一致しない軸の「原則不要」の理由
     let notRequired: ReasonCode | undefined;
@@ -395,6 +403,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
       else if (axis === "applicantType" && type !== "" && !types.includes(type)) notRequired = { kind: "applicantTypeNotRequired", type };
       else if (axis === "identity" && identity !== "" && !identities.includes(identity)) notRequired = { kind: "identityNotRequired", identity };
       else if (axis === "teijushaType" && teijushaType !== "" && !teijushaTypes.includes(teijushaType)) notRequired = { kind: "teijushaTypeNotRequired", type: teijushaType };
+      else if (axis === "schoolType" && schoolType !== "" && !schoolTypes.includes(schoolType)) notRequired = { kind: "schoolTypeNotRequired", schoolType };
       if (notRequired) break;
     }
 
@@ -417,12 +426,13 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
         ...(has("applicantType") && type !== "" ? { type } : {}),
         ...(has("identity") && identity !== "" ? { identity } : {}),
         ...(has("teijushaType") && teijushaType !== "" ? { teijushaType } : {}),
+        ...(has("schoolType") && schoolType !== "" ? { schoolType } : {}),
       };
     }
     const state = c.requirementStates[rule.id] ?? NO_STATE;
     pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
   }
-  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType };
+  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType, needsSchoolType };
 }
 
 function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
@@ -436,6 +446,7 @@ function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange:
     needsApplicantType: false,
     needsIdentity: false,
     needsTeijushaType: false,
+    needsSchoolType: false,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
     toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),

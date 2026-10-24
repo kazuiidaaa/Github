@@ -9,7 +9,7 @@ import { CustomRequirementForm, type CustomRequirementInput } from "@/components
 import { findDocumentOfType } from "@/lib/documentKinds";
 import { formatDateTime, todayString } from "@/lib/format";
 import { noRuleMessage } from "@/lib/i18n/caseNew";
-import { applicantTypeNotice, identityNotice, reasonText, requirementName, requirementNote, selectionNotices, teijushaTypeNotice } from "@/lib/i18n/caseRequirements";
+import { applicantTypeNotice, identityNotice, reasonText, schoolTypeNotice, requirementName, requirementNote, selectionNotices, teijushaTypeNotice } from "@/lib/i18n/caseRequirements";
 import { useLang, useT } from "@/lib/i18n/LanguageProvider";
 import { useLabels } from "@/lib/i18n/labels";
 import { ruleText } from "@/lib/i18n/ruleTexts";
@@ -98,6 +98,7 @@ export function RequirementsPanel({
   const notices = selectionNotices(ev);
   const applicantNotice = applicantTypeNotice(ev) ?? teijushaTypeNotice(ev);
   const identityNoticeKey = identityNotice(ev);
+  const schoolNoticeKey = schoolTypeNotice(ev);
   const today = todayString();
   const progress = progressOf(ev, record.customRequirements, today);
   const [copied, setCopied] = useState(false);
@@ -208,6 +209,12 @@ export function RequirementsPanel({
       {identityNoticeKey && (
         <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(identityNoticeKey)}
+        </p>
+      )}
+
+      {schoolNoticeKey && (
+        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+          {t(schoolNoticeKey)}
         </p>
       )}
 

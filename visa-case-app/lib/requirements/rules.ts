@@ -1,4 +1,5 @@
-import type { ApplicantIdentity, FormDetails, MedicalApplicantType, TeijushaType, TokuteiKatsudoType } from "../formDetails";
+import type { ApplicantIdentity, FormDetails, MedicalApplicantType, SchoolType, TeijushaType, TokuteiKatsudoType } from "../formDetails";
+import { ryugakuSheetRules } from "./ryugakuSheets";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
 
@@ -9,7 +10,7 @@ export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
 /** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
 export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
-export type { ApplicantIdentity, MedicalApplicantType, TeijushaType };
+export type { ApplicantIdentity, MedicalApplicantType, SchoolType, TeijushaType };
 
 export interface RequirementRule {
   id: string;
@@ -27,6 +28,8 @@ export interface RequirementRule {
   applicantTypes?: MedicalApplicantType[];
   /** この書類が必要となる定住者の区分（軸 teijushaType を持つ規則集合のみ。省略時は全区分） */
   teijushaTypes?: TeijushaType[];
+  /** この書類が必要となる入学先の種類（軸 schoolType を持つ規則集合のみ。留学。省略時は全9区分） */
+  schoolTypes?: SchoolType[];
   /** この書類が必要となる申請人の身分（軸 identity を持つ規則集合のみ。日本人の配偶者等。省略時は全身分） */
   identities?: ApplicantIdentity[];
   /** required：必要、check：必要となる場合があり確認を要する、optional：提出は必須でないが、実務では取得するのが通例（不足にも要確認にも数えない） */
@@ -38,8 +41,8 @@ export interface RequirementRule {
   verify?: boolean;
 }
 
-/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分（いずれも案件の入力） */
-export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType";
+/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分、schoolType＝留学の入学先の種類（いずれも案件の入力） */
+export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType" | "schoolType";
 
 export interface RuleSet {
   id: string;
@@ -3750,41 +3753,54 @@ export const GINOU_JISSHU_ACQUISITION: RuleSet = {
   rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...GINOU_JISSHU_ACQUISITION_RULES] : [r])),
 };
 
-// 留学（acquisition-ryugaku-2026-10-24.md。原文 ryugaku_2026-10-24.txt 114〜137行）。
-// RY-1：教育機関の種類・適正校の区分ごとの提出書類一覧表（PDF）は未入手のため、書類の名前は出さず、要確認の1行で一覧表を案内する（RY-7：活動に応じた資料はこの行に置き換える）。
-// RY-3：留意事項・別表・経費支弁書・奨学金の証明書一覧は別行にせず、RY-1 の注記に書名だけ書く。RY-11：教育機関の種類・適正校の区分の入力欄は足さない。
-// RY-2：各種確認書（別紙）は要確認の1行（教育機関が作成する）。
-const RYUGAKU_ACQUISITION_RULES: RequirementRule[] = [
-  {
-    id: "ryugaku_document_list",
-    name: "教育機関の種類と適正校の区分に応じた提出書類一覧表に掲げる資料",
-    party: "applicant",
-    causes: ALL_CAUSES,
-    level: "check",
-    note: "提出書類は、教育機関の種類（(1)大学・大学に準ずる機関・高等専門学校 (2)専修学校・各種学校等 (3)告示日本語教育機関・認定日本語教育機関 (4)高等学校・中学校・小学校）と、適正校の区分（クラスⅠ・クラスⅡ・通知を受けていない機関）ごとの一覧表による。取得では、一覧表を「１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用」する。取得の節に「申請に当たっての留意事項・別表・経費支弁書・奨学金の給付に関する証明書一覧」のリンクがある。一覧表は入管庁の留学のページで確認する（画面には書類の名前を載せていない）",
-    verify: true,
-  },
-  {
-    id: "ryugaku_confirmation_form",
-    name: "各種確認書（別紙）",
-    party: "organization",
-    causes: ALL_CAUSES,
-    level: "check",
-    note: "在籍予定又は在籍中の教育機関が作成する（申請人本人が作成するものではない）。最新様式を使用する。(1)専修学校又は各種学校で日本語教育以外の教育を受ける方、(2)高等学校で教育を受ける方、(3)専ら日本語教育を受ける方（日本語別科を含む）で別表に掲げる国・地域の国籍を有し外国の高等教育機関（大学等）の卒業証書等を提出する方、(4)前回の在留諸申請から在籍する教育機関に変更がない方（専ら日本語教育を受けていた方が、他の教育を同じ教育機関で受ける場合を除く）は提出不要。令和8年6月以前に申請する場合は従前の各種確認書でよい",
-    verify: true,
-  },
-];
+// 留学。入管庁の提出書類一覧表（チェックシート）による（docs/official/reconciliation/ryugaku-procedures-2026-10-24.md）。
+// 取得の規則は、変更・取得用の一覧表（5点）に合わせて直した（RY-1：案内ページの要確認1行と各種確認書の1行を、一覧表の書類に置き換える）。
+// 判定の軸は、入学先の種類（schoolType。ページが掲載する9区分）と取得の事由（alsoBasis）。手元に一覧表がある区分は書類を出し、無い区分は「一覧表は未取得」の要確認の1行を出す。入学先が未選択の間は、全ての入学先に共通の書類だけを出す。
+// 取得は、案内ページの「１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用」により、活動資料を外す。
+const RYUGAKU_COMPARED_AT = "2026-10-24";
+const RYUGAKU_CHECKED_AT = "2026-10-24";
+const RYUGAKU_PAGE_URL = `${ACQUISITION_STATUS_PAGE_BASE}student.html`;
+type RyugakuProcedure = "coe" | "change" | "renewal" | "acquisition";
+const RYUGAKU_SHEET_LABELS: Record<RyugakuProcedure, string> = {
+  coe: "在留資格認定証明書交付申請用（大学等・専修学校等）",
+  change: "在留資格変更許可申請用（大学等・日本語教育機関・高等学校等）",
+  renewal: "在留期間更新許可申請用（大学等・日本語教育機関・高等学校等）",
+  acquisition: "在留資格取得許可申請用＝変更・取得用（大学等・日本語教育機関・高等学校等）",
+};
+const ryugakuSheetSource = (procedure: RyugakuProcedure): RuleSource => ({
+  title: `「留学」の提出書類一覧表（${RYUGAKU_SHEET_LABELS[procedure]}。入学先の種類・適正校の区分ごとのPDF。PDFのURLは番号がなく、取得できていない。未確認）（出入国在留管理庁）`,
+  url: RYUGAKU_PAGE_URL,
+  kind: "page",
+  comparedAt: RYUGAKU_COMPARED_AT,
+});
 export const RYUGAKU_ACQUISITION: RuleSet = {
   id: "ryugaku_acquisition",
-  title: "留学 在留資格取得許可申請（一部のみ整備）",
+  title: "留学 在留資格取得許可申請",
   procedureType: "acquisition",
   residenceStatus: "留学",
-  basis: "acquisitionCause",
-  checkedAt: ACQUISITION_SET4_CHECKED_AT,
-  sources: acquisitionSet4Sources("留学", "student.html"),
+  basis: "schoolType",
+  alsoBasis: ["acquisitionCause"],
+  checkedAt: RYUGAKU_CHECKED_AT,
+  sources: [...acquisitionSet4Sources("留学", "student.html"), ryugakuSheetSource("acquisition")],
   // 固有の書類は、旅券の提示の後ろに入れる
-  rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...RYUGAKU_ACQUISITION_RULES] : [r])),
+  rules: acquisitionSet3BaseRules().flatMap((r) => (r.id === "passport_presentation" ? [r, ...ryugakuSheetRules("acquisition")] : [r])),
 };
+
+// 留学の認定・変更・更新。申請書・写真・旅券等の共通の書類（procedureCommonRules）の後ろに、一覧表の書類を並べる。
+// 認定は、一覧表に「旅券の身分事項ページ（写し）」が○であるため、共通の任意の「旅券の写し」の代わりにその書類を置く（RY-2）
+const ryugakuProcedureSet = (procedure: Exclude<RyugakuProcedure, "acquisition">, title: string): RuleSet => ({
+  id: `ryugaku_${procedure}`,
+  title,
+  procedureType: procedure,
+  residenceStatus: "留学",
+  basis: "schoolType",
+  checkedAt: RYUGAKU_CHECKED_AT,
+  sources: [acquisitionStatusPageSource("留学", RYUGAKU_PAGE_URL, RYUGAKU_COMPARED_AT), ryugakuSheetSource(procedure)],
+  rules: [...procedureCommonRules(procedure).filter((r) => !(procedure === "coe" && r.id === "passport_copy")), ...ryugakuSheetRules(procedure)],
+});
+export const RYUGAKU_COE: RuleSet = ryugakuProcedureSet("coe", "留学 在留資格認定証明書交付申請");
+export const RYUGAKU_CHANGE: RuleSet = ryugakuProcedureSet("change", "留学 在留資格変更許可申請");
+export const RYUGAKU_RENEWAL: RuleSet = ryugakuProcedureSet("renewal", "留学 在留期間更新許可申請");
 // ===== ここまで（取得：公用・技能実習・留学） =====
 
 // ===== 在留資格取得許可申請（文化活動・日本人の配偶者等。Issue #420） =====
@@ -4720,6 +4736,10 @@ export const RULE_SETS: RuleSet[] = [
   KOYO_ACQUISITION,
   GINOU_JISSHU_ACQUISITION,
   RYUGAKU_ACQUISITION,
+  // 留学の認定・変更・更新（Issue #420。提出書類一覧表による）
+  RYUGAKU_COE,
+  RYUGAKU_CHANGE,
+  RYUGAKU_RENEWAL,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
   KAIGO_CHANGE,
