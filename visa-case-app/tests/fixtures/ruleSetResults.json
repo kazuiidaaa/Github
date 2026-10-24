@@ -902,6 +902,27 @@
     ],
     "digest": "519d4b1848b8eac88eaa0d11462044d3701a93c85be07459607797ed81255dae"
   },
+  "eijusha_haigusha_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "birth_certificate",
+      "marriage_certificate",
+      "stay_cost_documents",
+      "identity_guarantee",
+      "identity_guarantee_birth",
+      "household_residence_certificate",
+      "household_residence_certificate_birth",
+      "questionnaire",
+      "questionnaire_birth",
+      "marital_exchange_materials"
+    ],
+    "digest": "5cc917a3f482dfe5fad07bddff06dce03ae0bd07e231271bf6476c1e64b8da4b"
+  },
   "bunka_katsudo_acquisition": {
     "ruleIds": [
       "application_form",

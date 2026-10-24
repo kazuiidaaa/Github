@@ -12,6 +12,7 @@ import {
   validateFormDetails,
   APPLICANT_IDENTITIES,
   MEDICAL_APPLICANT_TYPES,
+  TEIJUSHA_TYPES,
   TOKUTEI_KATSUDO_TYPES,
   type FormDetails,
   type Relative,
@@ -93,6 +94,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const showMedicalType = medicalRuleSet?.basis === "applicantType" || (medicalRuleSet?.alsoBasis?.includes("applicantType") ?? false);
   // 日本人の配偶者等の申請人の身分は、手続に使う在留資格が日本人の配偶者等のときだけ尋ねる（規則集合が身分の軸を持つとき）
   const showIdentity = medicalRuleSet?.alsoBasis?.includes("identity") ?? false;
+  // 定住者の区分は、定住者の取得の規則集合（alsoBasis に teijushaType を持つ）が引かれるときだけ尋ねる
+  const showTeijushaType = medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false;
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);
@@ -167,7 +170,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       | "acquisitionCause"
       | "tokuteiKatsudoType"
       | "medicalApplicantType"
-      | "applicantIdentity",
+      | "applicantIdentity"
+      | "teijushaType",
   >(
     key: K,
     options: [FormDetails[K], string][],
@@ -272,6 +276,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {showTokuteiType && select("tokuteiKatsudoType", TOKUTEI_KATSUDO_TYPES.map((v) => [v, t(`caseRequirements.subtype_${v}`)]), t("caseRequirements.subtypeLabel"))}
         {showMedicalType && select("medicalApplicantType", MEDICAL_APPLICANT_TYPES.map((v) => [v, t(`caseRequirements.applicantType_${v}`)]), t("caseRequirements.applicantTypeLabel"))}
         {showIdentity && select("applicantIdentity", APPLICANT_IDENTITIES.map((v) => [v, t(`caseRequirements.identity_${v}`)]), t("caseRequirements.identityLabel"))}
+        {showTeijushaType && select("teijushaType", TEIJUSHA_TYPES.map((v) => [v, t(`caseRequirements.teijushaType_${v}`)]), t("caseRequirements.teijushaTypeLabel"))}
         {text("stayPurpose", { area: true })}
         {text("periodOfStay", { placeholder: t("caseForm.exPeriod3") })}
         {layout.desiredStatusLabel && (

@@ -177,6 +177,6 @@ describe("evaluate: 教授／教育／報道の在留資格取得許可申請（
   });
 
   it("他の在留資格の取得は、従来どおり ACQUISITION_BY_CAUSE", () => {
-    for (const status of ["", "留学", "永住者"]) expect(evaluate(make(status, "birth")).ruleSet?.id, status).toBe("acquisition_by_cause");
+    for (const status of ["", "外交", "永住者"]) expect(evaluate(make(status, "birth")).ruleSet?.id, status).toBe("acquisition_by_cause");
   });
 });

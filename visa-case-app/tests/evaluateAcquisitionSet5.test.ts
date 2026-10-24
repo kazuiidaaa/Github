@@ -31,7 +31,7 @@ describe("文化活動の取得（BK-1〜BK-12）", () => {
   it("在留資格が文化活動の取得でこの規則集合が選ばれ、他の在留資格は従来どおり", () => {
     expect(RESIDENCE_STATUSES).toContain("文化活動");
     for (const cause of ALL) expect(evaluate(make("文化活動", cause)).ruleSet?.id).toBe("bunka_katsudo_acquisition");
-    expect(evaluate(make("教育", "other")).ruleSet?.id).toBe("acquisition_by_cause");
+    expect(evaluate(make("外交", "other")).ruleSet?.id).toBe("acquisition_by_cause");
   });
 
   it("判定は取得の事由だけ（alsoBasis なし）。見出しは URL 未記録の出典で、照合日は 2026-10-24", () => {
