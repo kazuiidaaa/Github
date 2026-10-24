@@ -1661,7 +1661,7 @@ export const HOUMU_KAIKEI_RENEWAL: RuleSet = {
 };
 
 // 在留資格「教授」。所属機関のカテゴリーは、1＝常勤職員・2＝非常勤職員の2区分（会社の1〜4区分とは別。categoryDefinition）。
-// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-07 に照合済み（Issue #292）。申請書は様式 I（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-07 に照合済み（Issue #292）。申請書は様式 I（認定・変更・更新とも）。取得は、教授の取得の規則集合（PROFESSOR_ACQUISITION。照合表は acquisition-kyoju-2026-10-24.md）が扱う。
 const PROFESSOR = "教授";
 const PROFESSOR_CHECKED_AT = "2026-10-07";
 const PROFESSOR_PAGE_SOURCE: RuleSource = { title: "在留資格「教授」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/professor.html", kind: "page" };
@@ -2092,7 +2092,7 @@ export const KENKYU_RENEWAL: RuleSet = {
 
 // 在留資格「教育」。所属機関のカテゴリーは、1＝小学校〜特別支援学校に常勤・2＝左記以外の教育機関に常勤・3＝非常勤の3区分（会社の1〜4区分とは別。categoryDefinition）。
 // 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○・△の位置まで）による。2026-10-07 に照合済み（Issue #293）。
-// 申請書は様式 I（認定・変更・更新とも。公式の教育の様式は、教授と同じファイル）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式 I（認定・変更・更新とも。公式の教育の様式は、教授と同じファイル）。取得は、教育の取得の規則集合（EDUCATION_ACQUISITION。照合表は acquisition-kyoiku-2026-10-24.md）が扱う。
 const EDUCATION = "教育";
 const EDUCATION_CHECKED_AT = "2026-10-07";
 const EDUCATION_PAGE_SOURCE: RuleSource = { title: "在留資格「教育」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/instructor.html", kind: "page" };
@@ -2227,7 +2227,7 @@ export const EDUCATION_RENEWAL: RuleSet = {
 // 在留資格「報道」。所属機関のカテゴリーは、1＝外務省報道官から外国記者登録証を発行された者を雇用する外国の報道機関に雇用される場合・2＝それ以外の団体・個人の2区分（会社の1〜4区分とは別。categoryDefinition）。
 // 提出書類は、案内ページと、認定・変更・更新のチェックシート（PDF）の表（○の位置まで）による。2026-10-12 に照合済み（Issue #294）。
 // 食い違いは更新の「外国の報道機関の概要」だけ（案内ページには転職後初回の資料にあるが、チェックシート（更新）にはない）。この1件は要確認とした。
-// 申請書は様式L（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 申請書は様式L（認定・変更・更新とも）。取得は、報道の取得の規則集合（HODO_ACQUISITION。照合表は acquisition-hodo-2026-10-24.md）が扱う。
 const HODO = "報道";
 const HODO_CHECKED_AT = "2026-10-12";
 const HODO_PAGE_SOURCE: RuleSource = { title: "在留資格「報道」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/journalist.html", kind: "page" };
@@ -3586,6 +3586,90 @@ export const TOKUTEI_JOHO_ACQUISITION: RuleSet = {
 };
 // ===== ここまで（取得：芸術・宗教・法律・会計業務・短期滞在・特定活動〔07・08・11〕） =====
 
+/**
+ * 教授／教育／報道の在留資格取得許可申請（Issue #420。照合表は docs/official/reconciliation/ の
+ * acquisition-kyoju-2026-10-24.md・acquisition-kyoiku-2026-10-24.md・acquisition-hodo-2026-10-24.md）。
+ * 各ページの取得の節（原文の控え kyoju_/kyoiku_/hodo_2026-10-24.txt）と照合済み（2026-10-24）。人の判断「推奨のとおり」（2026-10-24）で、
+ * 教授 KJ-1〜KJ-9、教育 KI-1〜KI-9、報道 HD-1〜HD-9 を反映した専用の規則集合。
+ * 事由別の書類は、技人国の取得と同じく ACQUISITION_BY_CAUSE から引き継ぎ、同じ上書き・削除をする（acqSet1CauseRules。出生の3書類・活動に応じた資料・旅券の理由書を外す／
+ * 写真「写真（40mm×30mm）」を全事由の必須／日米地位協定の例を外す／申請取次者の注記を原文のとおり）。ACQUISITION_BY_CAUSE の文言は変えない。
+ * カテゴリー別の書類は、各在留資格の認定・変更の規則集合（チェックシートで照合済み）の書類を、同じ割り当てで写す（取得の節の書類は、変更〔または認定〕の節と同じ文言のため）。
+ * 取得のチェックシートは無く、取得の列の位置そのものは未確認。判定の軸は、取得の事由と所属機関のカテゴリー（alsoBasis）。カテゴリーが未選択の間は、共通の書類だけを出す。
+ * 3つのページの URL は、控えに未提示のため出典に確定できず、「URL 未記録」の出典にする（推測で書かない）。人が、既に記録された出典の URL
+ * （professor.html・instructor.html・journalist.html）と同じページかを確かめるまで、出典には書かない。
+ * `checkedAt` は新しい規則集合の作成日。ACQUISITION_BY_CAUSE より先に照合する（RULE_SETS の並び順）。
+ */
+const ACQ_KYOJU_COMPARED_AT = "2026-10-24";
+const ACQ_KYOJU_CHECKED_AT = "2026-10-24";
+const ACQ_KYOJU_PAGES_UNRECORDED_SOURCE: RuleSource = {
+  ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE,
+  comparedAt: ACQ_KYOJU_COMPARED_AT,
+};
+const acqKyojuSources = (): RuleSource[] => [ACQ_KYOJU_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources];
+
+// 教授（KJ-1〜KJ-9。原文 kyoju_2026-10-24.txt 86〜103行）。
+// KJ-2：活動に応じた資料は、変更の professorActivityProof（カテゴリー2のみ・必須）を写す。カテゴリー1は「その他の資料は原則不要」で書類を足さない
+// KJ-6：旅券の提示の注記の末尾に、原文 102行の注意を足す／KJ-7：申請取次者の注記は、原文 103行のとおり教授だけの文言にする
+const PROFESSOR_ACQUISITION_ACTIVITY_NOTE =
+  "取得の案内ページでは「日本での活動内容に応じた資料（在留資格変更許可申請と同様の資料）」とある。カテゴリー1（常勤職員）は、その他の資料は原則不要";
+const PROFESSOR_ACQUISITION_PASSPORT_NOTE = "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請書類を提出する場合も、提示が必要";
+const PROFESSOR_ACQUISITION_AGENT_NOTE =
+  "代理人が申請する場合や申請人本人以外の方が提出する場合。提出する方の身分を証する文書（申請取次者証明書、戸籍謄本等）の提示";
+export const PROFESSOR_ACQUISITION: RuleSet = {
+  id: "professor_acquisition",
+  title: "教授 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: PROFESSOR,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  categoryDefinition: PROFESSOR_CATEGORIES,
+  checkedAt: ACQ_KYOJU_CHECKED_AT,
+  sources: acqKyojuSources(),
+  rules: [
+    ...acqSet1CauseRules.map((r) =>
+      r.id === "passport_presentation"
+        ? { ...r, note: PROFESSOR_ACQUISITION_PASSPORT_NOTE }
+        : r.id === "agent_identity_document"
+          ? { ...r, note: PROFESSOR_ACQUISITION_AGENT_NOTE }
+          : r,
+    ),
+    { ...professorActivityProof, note: PROFESSOR_ACQUISITION_ACTIVITY_NOTE },
+  ],
+};
+
+// 教育（KI-1〜KI-9。原文 kyoiku_2026-10-24.txt 107〜127行）。
+// KI-1：認定・変更の部品4つを、名称・注記・割り当て・区分のまま写す。返信用封筒は認定のみのため写さない。
+// KI-9：取得の節のカテゴリー2・3の書類は、控えでは「認定と同文」の書き込み（124行）。人が同文であることを確かめた記録として扱う
+export const EDUCATION_ACQUISITION: RuleSet = {
+  id: "education_acquisition",
+  title: "教育 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: EDUCATION,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  categoryDefinition: EDUCATION_CATEGORIES,
+  checkedAt: ACQ_KYOJU_CHECKED_AT,
+  sources: acqKyojuSources(),
+  rules: [...acqSet1CauseRules, educationActivityDocuments, educationCareerDocuments, educationBusinessDocuments, educationFinancialStatements],
+};
+
+// 報道（HD-1〜HD-9。原文 hodo_2026-10-24.txt 98〜124行）。
+// HD-1：報道に固有の書類3点は、変更の部品を、名称・注記・区分のまま写す。返信用封筒は認定のみのため写さない。
+// HD-2：記者登録証の社員を雇用していることの証明文書は、変更と同じくカテゴリー1のみ・必須（カテゴリー1の機関のときだけ出す）。
+// 控えの4行目の人の注の読み方は、人がページの表で確かめる。取得のチェックシートは無く、取得の列の位置は未確認
+export const HODO_ACQUISITION: RuleSet = {
+  id: "hodo_acquisition",
+  title: "報道 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: HODO,
+  basis: "acquisitionCause",
+  alsoBasis: ["category"],
+  categoryDefinition: HODO_CATEGORIES,
+  checkedAt: ACQ_KYOJU_CHECKED_AT,
+  sources: acqKyojuSources(),
+  rules: [...acqSet1CauseRules, hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
+};
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -3611,6 +3695,10 @@ export const RULE_SETS: RuleSet[] = [
   IRYO_ACQUISITION,
   GINO_ACQUISITION,
   KAIGO_ACQUISITION,
+  // 教授・教育・報道の取得（Issue #420）も、ACQUISITION_BY_CAUSE より先に照合する
+  PROFESSOR_ACQUISITION,
+  EDUCATION_ACQUISITION,
+  HODO_ACQUISITION,
   ACQUISITION_BY_CAUSE,
   // 取得：芸術・宗教・法律・会計業務・短期滞在（Issue #421・#422・#424・#431）。在留資格に固有の規則集合は、
   // 在留資格を問わない ACQUISITION_BY_CAUSE より先に選ばれる（並び順によらない。matchRuleSet）
