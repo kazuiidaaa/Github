@@ -9,6 +9,8 @@ export const TEIJUSHA_INCOME_TARGETS = {
   nikkei2OrApplicant: { who: "2世の方又は申請人（収入の多い方）", unemployed: "2世の方及び申請人" },
   nikkei3: { who: "3世の方", unemployed: "3世の方" },
   nikkei3OrApplicant: { who: "3世の方又は申請人（収入の多い方）", unemployed: "3世の方及び申請人" },
+  /** 日系3世の更新のシート：申請人又は配偶者の方（収入の多い方）。申請人が親等の扶養を受けている場合は「扶養者の方」と読み替える */
+  applicantOrSpouse: { who: "申請人又は配偶者の方（収入の多い方）", unemployed: "申請人及び配偶者" },
   supporter: { who: "扶養者", unemployed: "扶養者" },
   japaneseOrSpouse: { who: "日本人又は日本人の配偶者の方（収入の多い方）", unemployed: "日本人及び日本人の配偶者の方" },
   permanentOrSpouse: { who: "永住者又は永住者の配偶者の方（収入の多い方）", unemployed: "永住者及び永住者の配偶者の方" },
@@ -36,7 +38,8 @@ export function teijushaTaxName(target: TeijushaIncomeTarget): string {
 
 export function teijushaIncomeNote(target: TeijushaIncomeTarget): string {
   const { who, unemployed } = TEIJUSHA_INCOME_TARGETS[target];
-  return `次のいずれか（${who}の仕事による）。会社に勤務：${who}の在職証明書／自営業等：${who}の確定申告書の控えの写し・営業許可書の写し（ある場合）／無職（${unemployed}）：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でも差し支えない）`;
+  const base = `次のいずれか（${who}の仕事による）。会社に勤務：${who}の在職証明書／自営業等：${who}の確定申告書の控えの写し・営業許可書の写し（ある場合）／無職（${unemployed}）：預貯金通帳の写し（Web通帳の画面の写し等〔取引履歴が分かるもの〕でも差し支えない）`;
+  return target === "applicantOrSpouse" ? `${base}。申請人が親等の扶養を受けている場合は、「申請人又は配偶者の方」を「扶養者の方」と読み替える` : base;
 }
 
 export function teijushaResidenceName(person: TeijushaResidencePerson): string {

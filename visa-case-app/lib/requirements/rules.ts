@@ -1,4 +1,4 @@
-import type { ApplicantIdentity, EijuuType, FormDetails, MedicalApplicantType, TeijushaType, TokuteiKatsudoType } from "../formDetails";
+import type { ApplicantIdentity, EijuuType, FormDetails, MedicalApplicantType, RenewalTimes, TeijushaType, TokuteiKatsudoType } from "../formDetails";
 import { EIJUU_TYPES } from "../formDetails";
 import { HSP_EVIDENCE } from "../hspPoints";
 import type { EmploymentInfo, OrgCategory, ProcedureType } from "../types";
@@ -18,7 +18,7 @@ export type Party = "applicant" | "organization";
 export type Category = Exclude<OrgCategory, "">;
 /** 在留資格取得許可申請の取得の事由（formDetails.acquisitionCause の未選択以外の値） */
 export type AcquisitionCause = Exclude<FormDetails["acquisitionCause"], "">;
-export type { ApplicantIdentity, EijuuType, MedicalApplicantType, TeijushaType };
+export type { ApplicantIdentity, EijuuType, MedicalApplicantType, RenewalTimes, TeijushaType };
 
 export interface RequirementRule {
   id: string;
@@ -36,6 +36,8 @@ export interface RequirementRule {
   applicantTypes?: MedicalApplicantType[];
   /** この書類が必要となる定住者の区分（軸 teijushaType を持つ規則集合のみ。省略時は全区分） */
   teijushaTypes?: TeijushaType[];
+  /** この書類が必要となる更新の回数（軸 renewalTimes を持つ規則集合のみ。定住者の更新で、区分が日系3世のときだけ見る。省略時は初回・2回目以降の両方） */
+  renewalTimes?: RenewalTimes[];
   /** この書類が必要となる永住許可申請の提出書類一覧表の区分（軸 eijuuType を持つ規則集合のみ。省略時は全区分） */
   eijuuTypes?: EijuuType[];
   /** この書類が必要となる申請人の身分（軸 identity を持つ規則集合のみ。日本人の配偶者等。省略時は全身分） */
@@ -49,8 +51,8 @@ export interface RequirementRule {
   verify?: boolean;
 }
 
-/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分、eijuuType＝永住許可申請の提出書類一覧表の区分（いずれも案件の入力） */
-export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType" | "eijuuType";
+/** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分、eijuuType＝永住許可申請の提出書類一覧表の区分、renewalTimes＝定住者（日系3世）の更新の回数（いずれも案件の入力） */
+export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType" | "eijuuType" | "renewalTimes";
 
 export interface RuleSet {
   id: string;
@@ -4565,7 +4567,9 @@ export const TEIJUSHA_ACQUISITION: RuleSet = {
 // 判定は「定住者の区分」（teijushaType。取得と同じ8区分）だけ。取得の事由・所属機関のカテゴリーは使わない（basis: teijushaType）。区分が未選択の間は、全区分に共通の書類（申請書・写真・パスポート及び在留カードの提示）だけを出す。
 // 3手続に共通の書類は、下の TEIJUSHA_DOCS に1回だけ書き、手続ごとに対象の区分を割り当てる。取得の TEIJUSHA_ACQUISITION の規則は書き換えない（同じ書類は、同じ id・書類名にして訳を共有する）。
 // 日系2世の配偶者・日系3世の配偶者は、各手続とも同じ内容のシートが3枚ある（バイト列が同一）。シートの中身は仕事（会社勤務・自営業等・無職）の3通りを1枚に並べたもので、3枚の違いは無い。
-// 日系3世の更新用シートは、提供された資料に無い（TJ-CR-1）。要確認の行を1行だけ置く。
+// 日系3世の更新用シートは、「初めて更新許可申請を行う場合」（12項目）と「2回目以降の更新許可申請を行う場合」（8項目）の2種類（各4点が同一内容）。TJ-CR-1。
+// 画面で「更新の回数」（formDetails.renewalTimes）を尋ね、軸 renewalTimes（alsoBasis）で出し分ける。尋ねるのは区分が日系3世のときだけで、他の区分の判定には影響しない。
+// 回数が未選択の間は、初回・2回目以降の両方にある書類だけを出す（初回のみの祖父母の戸籍謄本・結婚証明書・出生証明書・認知に係る証明書は出さず、画面で回数の選択を案内する）。
 const TEIJUSHA_PROCEDURE_COMPARED_AT = "2026-10-24";
 type TeijushaProcedure = "coe" | "change" | "renewal";
 const TJ_ALL_TYPES: TeijushaType[] = [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2];
@@ -4575,10 +4579,14 @@ type TeijushaTypesByProcedure = Partial<Record<TeijushaProcedure, TeijushaType[]
 const tjCoeChange = (types: TeijushaType[]): TeijushaTypesByProcedure => ({ coe: types, change: types });
 const tjAll3 = (types: TeijushaType[]): TeijushaTypesByProcedure => ({ coe: types, change: types, renewal: types });
 interface TeijushaDoc {
-  rule: Omit<RequirementRule, "party" | "causes" | "categories" | "teijushaTypes">;
+  rule: Omit<RequirementRule, "party" | "causes" | "categories" | "teijushaTypes" | "renewalTimes">;
   types: TeijushaTypesByProcedure;
+  /** 更新の回数による出し分け（更新の規則集合だけで使う。省略時は初回・2回目以降の両方。日系3世の更新だけが対象） */
+  renewalTimes?: RenewalTimes[];
 }
-const tjDoc = (rule: TeijushaDoc["rule"], types: TeijushaTypesByProcedure): TeijushaDoc => ({ rule, types });
+const tjDoc = (rule: TeijushaDoc["rule"], types: TeijushaTypesByProcedure, renewalTimes?: RenewalTimes[]): TeijushaDoc => ({ rule, types, ...(renewalTimes ? { renewalTimes } : {}) });
+/** 日系3世の更新のシートで、初めての更新にだけある書類 */
+const TJ_FIRST_RENEWAL: RenewalTimes[] = ["first"];
 
 const TJ_NOTIFIED_NOTE = "日本の役所に届出している場合のみ提出する";
 const TJ_NIKKEI_SUPPORTED_NOTE = "申請人が「定住者」の方の扶養を受ける日系人の場合のみ";
@@ -4602,14 +4610,14 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
   // 認定のみ（全区分）
   tjDoc({ id: "return_envelope", name: "返信用封筒（定形封筒に宛先を明記し、簡易書留用の切手を貼付したもの）", level: "required" }, { coe: TJ_ALL_TYPES }),
   // 日系3世の身分関係の書類（TJ-CR-2）
-  tjDoc({ id: "teijusha_grandparent_family_register", name: "祖父母（日本人）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" }, tjCoeChange([TJ_N3])),
+  tjDoc({ id: "teijusha_grandparent_family_register", name: "祖父母（日本人）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" }, { coe: [TJ_N3], change: [TJ_N3], renewal: [TJ_N3] }, TJ_FIRST_RENEWAL),
   tjDoc({ id: "teijusha_marriage_notification_grandparents", name: "婚姻届出受理証明書（祖父母と両親のもの）", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange([TJ_N3])),
   tjDoc({ id: "teijusha_birth_notification_applicant", name: "出生届出受理証明書（申請人のもの）", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange([TJ_N3])),
   tjDoc({ id: "teijusha_death_notification", name: "死亡届出受理証明書（祖父母と両親のもの）", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange([TJ_N3])),
-  tjDoc({ id: "teijusha_foreign_marriage_certificates", name: "祖父母及び両親の本国（外国）の機関から発行された結婚証明書", level: "required" }, tjCoeChange([TJ_N3])),
-  tjDoc({ id: "teijusha_foreign_birth_certificates_family", name: "両親及び申請人の本国（外国）の機関から発行された出生証明書", level: "required" }, tjCoeChange([TJ_N3])),
+  tjDoc({ id: "teijusha_foreign_marriage_certificates", name: "祖父母及び両親の本国（外国）の機関から発行された結婚証明書", level: "required" }, { coe: [TJ_N3], change: [TJ_N3], renewal: [TJ_N3] }, TJ_FIRST_RENEWAL),
+  tjDoc({ id: "teijusha_foreign_birth_certificates_family", name: "両親及び申請人の本国（外国）の機関から発行された出生証明書", level: "required" }, { coe: [TJ_N3], change: [TJ_N3], renewal: [TJ_N3] }, TJ_FIRST_RENEWAL),
   // 住民票（TJ-CR-3：誰の住民票かは、区分と手続による）
-  tjResidence("applicant", { change: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_A1, TJ_A2], renewal: [TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2] }),
+  tjResidence("applicant", { change: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_A1, TJ_A2], renewal: [TJ_N3, TJ_N2S, TJ_N3S, TJ_C1, TJ_C2, TJ_C3, TJ_A1, TJ_A2] }),
   tjResidence("nikkei2", { coe: [TJ_N2S] }),
   tjResidence("nikkei3", { coe: [TJ_N3S] }),
   tjResidence("japanese", { coe: [TJ_C2, TJ_A1], change: [TJ_C2] }),
@@ -4624,6 +4632,7 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
   tjTax("nikkei2OrApplicant", { change: [TJ_N2S], renewal: [TJ_N2S] }),
   tjTax("nikkei3", { coe: [TJ_N3S] }),
   tjTax("nikkei3OrApplicant", { change: [TJ_N3S], renewal: [TJ_N3S] }),
+  tjTax("applicantOrSpouse", { renewal: [TJ_N3] }),
   tjTax("supporter", tjAll3([TJ_C1, TJ_A2])),
   tjTax("japaneseOrSpouse", tjAll3([TJ_C2])),
   tjTax("permanentOrSpouse", tjAll3([TJ_C3])),
@@ -4633,6 +4642,7 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
   tjIncome("nikkei2OrApplicant", { change: [TJ_N2S], renewal: [TJ_N2S] }),
   tjIncome("nikkei3", { coe: [TJ_N3S] }),
   tjIncome("nikkei3OrApplicant", { change: [TJ_N3S], renewal: [TJ_N3S] }),
+  tjIncome("applicantOrSpouse", { renewal: [TJ_N3] }),
   tjIncome("supporter", tjAll3([TJ_C1, TJ_A2])),
   tjIncome("japaneseOrSpouse", tjAll3([TJ_C2])),
   tjIncome("permanentOrSpouse", tjAll3([TJ_C3])),
@@ -4647,7 +4657,7 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
     },
     tjCoeChange([TJ_N3]),
   ),
-  // 身元保証書（身元保証人は区分による。日系3世の更新用シートは無い）
+  // 身元保証書（身元保証人は区分による）
   tjDoc(
     {
       id: "teijusha_identity_guarantee",
@@ -4655,11 +4665,11 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
       level: "required",
       note: "1通。身元保証人は区分による。通常、日系3世は日本に居住している日本人又は永住者／日系2世の配偶者は2世の方／日系3世の配偶者は3世の方／実子（永住者・定住者・特別永住者が扶養）は扶養者／実子（日本人の配偶者が扶養）・養子（日本人が扶養）は日本人（申請人の扶養者）／実子（永住者の配偶者が扶養）は永住者の方（申請人の扶養者）／養子（永住者・定住者・特別永住者が扶養）は申請人の扶養者",
     },
-    { coe: TJ_ALL_TYPES, change: TJ_ALL_TYPES, renewal: TJ_ALL_TYPES.filter((t) => t !== TJ_N3) },
+    tjAll3(TJ_ALL_TYPES),
   ),
   // 犯罪経歴証明書（区分と手続で条件が違う）
   tjDoc({ id: "teijusha_criminal_record", name: TJ_CRIMINAL_RECORD_NAME, level: "required" }, tjCoeChange([TJ_N3, TJ_N3S])),
-  tjDoc({ id: "teijusha_criminal_record_renewal", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: TJ_NEVER_SUBMITTED_NOTE }, { renewal: [TJ_N3S] }),
+  tjDoc({ id: "teijusha_criminal_record_renewal", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: TJ_NEVER_SUBMITTED_NOTE }, { renewal: [TJ_N3, TJ_N3S] }),
   tjDoc({ id: "teijusha_criminal_record_nikkei_supported", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: TJ_NIKKEI_SUPPORTED_NOTE }, tjCoeChange([TJ_C1])),
   tjDoc(
     { id: "teijusha_criminal_record_nikkei_supported_renewal", name: TJ_CRIMINAL_RECORD_NAME, level: "check", note: "申請人が「定住者」の方の扶養を受ける日系人の場合で、一度も入管当局へ提出したことがない方のみ" },
@@ -4673,7 +4683,8 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
   // 認知に係る証明書（ある方のみ）
   tjDoc(
     { id: "teijusha_recognition_certificate", name: "申請人の本国（外国）の機関から発行された認知に係る証明書", level: "check", note: "認知に係る証明書がある方のみ提出する" },
-    tjCoeChange([TJ_N3, TJ_C1, TJ_C2, TJ_C3]),
+    { coe: [TJ_N3, TJ_C1, TJ_C2, TJ_C3], change: [TJ_N3, TJ_C1, TJ_C2, TJ_C3], renewal: [TJ_N3] },
+    TJ_FIRST_RENEWAL,
   ),
   // 日系2世・3世の配偶者の婚姻・夫婦の書類
   tjDoc({ id: "teijusha_marriage_notification", name: "婚姻届出受理証明書", level: "check", note: TJ_NOTIFIED_NOTE }, tjCoeChange(TJ_NIKKEI_SPOUSES)),
@@ -4697,7 +4708,7 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
       level: "check",
       note: "在留期間「5年」を希望する場合に提出が必要（未成年者を除く）。例：日本語能力試験N2に合格したことを証明する文書",
     },
-    { coe: [TJ_N3, TJ_N2S, TJ_N3S], change: [TJ_N3, TJ_N2S, TJ_N3S], renewal: TJ_NIKKEI_SPOUSES },
+    { coe: [TJ_N3, TJ_N2S, TJ_N3S], change: [TJ_N3, TJ_N2S, TJ_N3S], renewal: [TJ_N3, ...TJ_NIKKEI_SPOUSES] },
   ),
   // 実子・養子の書類
   tjDoc(
@@ -4716,17 +4727,6 @@ const TEIJUSHA_DOCS: TeijushaDoc[] = [
   tjDoc(
     { id: "teijusha_adoption_foreign_certificate", name: "申請人と養子縁組が成立していることを証明する本国（外国）の機関から発行された証明書", level: "required" },
     tjCoeChange([TJ_A2]),
-  ),
-  // 日系3世の更新用シートは無い（TJ-CR-1）。書類の行ではなく、行政書士が確認することを知らせる行
-  tjDoc(
-    {
-      id: "teijusha_renewal_nikkei3_no_checksheet",
-      name: "日系3世の方の在留期間更新許可申請の提出書類一覧は、提供された資料に無い",
-      level: "check",
-      note: "認定・変更・取得にはあるが、更新用の提出書類一覧（チェックシート）は提供された資料にない。申請書・写真・パスポート及び在留カードの提示のほかの書類は、行政書士が確認する",
-      verify: true,
-    },
-    { renewal: [TJ_N3] },
   ),
 ];
 
@@ -4754,7 +4754,8 @@ const TEIJUSHA_PROCEDURE_SHEET_SOURCES: Record<TeijushaProcedure, RuleSource> = 
 function teijushaProcedureRules(procedure: TeijushaProcedure): RequirementRule[] {
   const docs = TEIJUSHA_DOCS.flatMap((d): RequirementRule[] => {
     const types = d.types[procedure];
-    return types ? [{ ...d.rule, party: "applicant", teijushaTypes: types }] : [];
+    // 更新の回数による出し分けは、更新の規則集合だけ（認定・変更には軸 renewalTimes が無い）
+    return types ? [{ ...d.rule, party: "applicant", teijushaTypes: types, ...(procedure === "renewal" && d.renewalTimes ? { renewalTimes: d.renewalTimes } : {}) }] : [];
   });
   // 申請書・写真・旅券等は、手続ごとの共通の書類（procedureCommonRules）。シートの末尾の「パスポート及び在留カードの提示」（変更・更新）に当たる
   return [...procedureCommonRules(procedure), ...docs];
@@ -4780,6 +4781,21 @@ export const TEIJUSHA_CHANGE: RuleSet = {
   sources: [TEIJUSHA_PROCEDURE_SHEET_SOURCES.change],
   rules: teijushaProcedureRules("change"),
 };
+// 日系3世の更新のシート2種（初めての更新・2回目以降。各4点が同一内容）。URL は既存の書式に合わせて番号から組み立てた（未確認。TJ-CR-13）
+const TEIJUSHA_RENEWAL_NIKKEI3_SOURCES: RuleSource[] = [
+  {
+    title: "「定住者」（日系3世の方）に係る提出書類一覧（在留期間更新許可申請用・初めて更新許可申請を行う場合）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426567.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+  {
+    title: "「定住者」（日系3世の方）に係る提出書類一覧（在留期間更新許可申請用・2回目以降の更新許可申請を行う場合）（出入国在留管理庁）",
+    url: "https://www.moj.go.jp/isa/content/001426572.pdf",
+    kind: "pdf",
+    comparedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
+  },
+];
 export const TEIJUSHA_RENEWAL: RuleSet = {
   id: "teijusha_renewal",
   title: "定住者 在留期間更新許可申請",
@@ -4787,7 +4803,9 @@ export const TEIJUSHA_RENEWAL: RuleSet = {
   residenceStatus: "定住者",
   basis: "teijushaType",
   checkedAt: TEIJUSHA_PROCEDURE_COMPARED_AT,
-  sources: [TEIJUSHA_PROCEDURE_SHEET_SOURCES.renewal],
+  // 日系3世の更新だけ、更新の回数（初めて／2回目以降）の軸を足す（alsoBasis）。ほかの区分の判定には影響しない
+  alsoBasis: ["renewalTimes"],
+  sources: [TEIJUSHA_PROCEDURE_SHEET_SOURCES.renewal, ...TEIJUSHA_RENEWAL_NIKKEI3_SOURCES],
   rules: teijushaProcedureRules("renewal"),
 };
 // ===== ここまで（定住者の認定・変更・更新） =====

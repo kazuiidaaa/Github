@@ -1,4 +1,4 @@
-import type { ApplicantIdentity, EijuuType, MedicalApplicantType, TeijushaType } from "@/lib/formDetails";
+import type { ApplicantIdentity, EijuuType, MedicalApplicantType, RenewalTimes, TeijushaType } from "@/lib/formDetails";
 import type { Lang } from "@/lib/documents/lang";
 import type { AcquisitionCause, Category, RequirementRule } from "@/lib/requirements/rules";
 import { HSP_EVIDENCE_RULE_PREFIX } from "@/lib/requirements/rules";
@@ -31,8 +31,9 @@ export type ReasonCode =
   | { kind: "identityNotRequired"; identity: ApplicantIdentity }
   | { kind: "teijushaTypeNotRequired"; type: TeijushaType }
   | { kind: "eijuuTypeNotRequired"; type: EijuuType }
+  | { kind: "renewalTimesNotRequired"; times: RenewalTimes }
   /** 判定の軸を複数持つ規則集合（RuleSet.alsoBasis。Issue #402）。選択済みの軸の値だけを持つ。どれも持たなければ「全事由・全区分に共通」 */
-  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity; teijushaType?: TeijushaType; eijuuType?: EijuuType };
+  | { kind: "axesLevel"; level: RequirementRule["level"]; cause?: AcquisitionCause; category?: Category; type?: MedicalApplicantType; identity?: ApplicantIdentity; teijushaType?: TeijushaType; eijuuType?: EijuuType; renewalTimes?: RenewalTimes };
 
 const APPLICANT_TYPE_KEYS: Record<MedicalApplicantType, MessageKey> = {
   doctor: "caseRequirements.applicantType_doctor",
@@ -62,6 +63,11 @@ const EIJUU_TYPE_KEYS: Record<EijuuType, MessageKey> = {
   eijushaChild: "caseRequirements.eijuuType_eijushaChild",
 };
 
+const RENEWAL_TIMES_KEYS: Record<RenewalTimes, MessageKey> = {
+  first: "caseRequirements.renewalTimes_first",
+  second: "caseRequirements.renewalTimes_second",
+};
+
 const CAUSE_KEYS: Record<AcquisitionCause, MessageKey> = {
   nationalityLoss: "caseRequirements.cause_nationalityLoss",
   birth: "caseRequirements.cause_birth",
@@ -89,6 +95,7 @@ function axesConditions(t: T, code: Extract<ReasonCode, { kind: "axesLevel" }>):
   if (code.identity) parts.push(t("caseRequirements.axisIdentity", { identity: t(IDENTITY_KEYS[code.identity]) }));
   if (code.teijushaType) parts.push(t("caseRequirements.axisTeijushaType", { type: t(TEIJUSHA_TYPE_KEYS[code.teijushaType]) }));
   if (code.eijuuType) parts.push(t("caseRequirements.axisEijuuType", { type: t(EIJUU_TYPE_KEYS[code.eijuuType]) }));
+  if (code.renewalTimes) parts.push(t("caseRequirements.axisRenewalTimes", { times: t(RENEWAL_TIMES_KEYS[code.renewalTimes]) }));
   return parts;
 }
 
@@ -133,6 +140,8 @@ export function reasonText(t: T, code: ReasonCode, noteText: (note: string) => s
       return t("caseRequirements.reasonTeijushaTypeNotRequired", { type: t(TEIJUSHA_TYPE_KEYS[code.type]) });
     case "eijuuTypeNotRequired":
       return t("caseRequirements.reasonEijuuTypeNotRequired", { type: t(EIJUU_TYPE_KEYS[code.type]) });
+    case "renewalTimesNotRequired":
+      return t("caseRequirements.reasonRenewalTimesNotRequired", { times: t(RENEWAL_TIMES_KEYS[code.times]) });
     case "axesLevel": {
       const conditions = axesConditions(t, code);
       if (conditions.length === 0) return t("caseRequirements.reasonAxesCommon");
@@ -210,4 +219,13 @@ export function teijushaTypeNotice(ev: { ruleSet: { alsoBasis?: readonly string[
 export function eijuuTypeNotice(ev: { ruleSet: { basis?: string } | null; needsEijuuType: boolean }): MessageKey | null {
   if (!ev.ruleSet || !ev.needsEijuuType) return null;
   return "caseRequirements.needsEijuuTypeAxes";
+}
+
+/**
+ * 定住者（日系3世）の更新が、初めてか2回目以降かが未選択のときに出す案内の文。出さないときは null。
+ * 回数は alsoBasis の軸のため、未選択の間は、初めてと2回目以降に共通の書類だけを出す（Issue #420）。
+ */
+export function renewalTimesNotice(ev: { ruleSet: { alsoBasis?: readonly string[] } | null; needsRenewalTimes: boolean }): MessageKey | null {
+  if (!ev.ruleSet || !ev.needsRenewalTimes) return null;
+  return "caseRequirements.needsRenewalTimesAxes";
 }

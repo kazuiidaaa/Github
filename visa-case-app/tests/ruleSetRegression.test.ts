@@ -87,8 +87,8 @@ describe("既存の規則集合の結果（alsoBasis を持たないもの）は
     });
   }
 
-  it("alsoBasis を持たずに、期待値へ後から足した規則集合は、定住者の認定・変更・更新だけ（basis: teijushaType。Issue #420。区分ごとの結果も固定する）", () => {
-    expect(legacy.filter((rs) => rs.basis === "teijushaType").map((rs) => rs.id)).toEqual(["teijusha_coe", "teijusha_change", "teijusha_renewal"]);
+  it("alsoBasis を持たずに、期待値へ後から足した規則集合は、定住者の認定・変更だけ（basis: teijushaType。Issue #420。区分ごとの結果も固定する）。更新は日系3世の更新の回数の軸（alsoBasis: renewalTimes）を足したため外れた", () => {
+    expect(legacy.filter((rs) => rs.basis === "teijushaType").map((rs) => rs.id)).toEqual(["teijusha_coe", "teijusha_change"]);
   });
 
   it("alsoBasis を持つ規則集合は、技人国・経営・管理・研究・企業内転勤・医療・技能・定住者・教授・教育・報道・日本人の配偶者等の取得だけ（技人国以外は Issue #420）", () => {
@@ -100,6 +100,7 @@ describe("既存の規則集合の結果（alsoBasis を持たないもの）は
       "iryo_acquisition",
       "gino_acquisition",
       "teijusha_acquisition",
+      "teijusha_renewal",
       "professor_acquisition",
       "education_acquisition",
       "hodo_acquisition",

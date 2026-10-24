@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_FORM_DETAILS, TEIJUSHA_TYPES, type TeijushaType } from "../lib/formDetails";
+import { EMPTY_FORM_DETAILS, RENEWAL_TIMES, TEIJUSHA_TYPES, normalizeFormDetails, type RenewalTimes, type TeijushaType } from "../lib/formDetails";
+import { renewalTimesNotice } from "../lib/i18n/caseRequirements";
 import { ruleDocumentName, ruleText } from "../lib/i18n/ruleTexts";
+import { translate } from "../lib/i18n/translate";
 import { evaluate, ruleSetOfCase } from "../lib/requirements/evaluate";
 import { RULE_SETS, ruleSetComparedAt, type RuleSet } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type ProcedureType } from "../lib/types";
@@ -8,7 +10,7 @@ import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type ProcedureType 
 // Issue #420：定住者の認定・変更・更新。照合表 coe-change-renewal-teijusha-2026-10-24.md。提出書類一覧（チェックシート）の項目数・条件を固定する。
 type Proc = "coe" | "change" | "renewal";
 
-function make(procedureType: ProcedureType, status: string, teijushaType: TeijushaType | "" = ""): CaseRecord {
+function make(procedureType: ProcedureType, status: string, teijushaType: TeijushaType | "" = "", renewalTimes: RenewalTimes | "" = ""): CaseRecord {
   return {
     id: "c1",
     caseName: "試験",
@@ -21,7 +23,7 @@ function make(procedureType: ProcedureType, status: string, teijushaType: Teijus
     updatedAt: "",
     applicant: { ...EMPTY_APPLICANT },
     employment: { ...EMPTY_EMPLOYMENT },
-    formDetails: { ...EMPTY_FORM_DETAILS, teijushaType },
+    formDetails: { ...EMPTY_FORM_DETAILS, teijushaType, renewalTimes },
     requirementStates: {},
     customRequirements: [],
     acceptedDate: "",
@@ -39,26 +41,28 @@ const SETS: Record<Proc, RuleSet> = {
 };
 const ids = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) => i.effective === r).map((i) => i.rule.id);
 /** 区分で出る行（not_required でないもの） */
-const applicable = (proc: Proc, type: TeijushaType) => evaluate(make(proc, "定住者", type)).items.filter((i) => i.effective !== "not_required");
+const applicable = (proc: Proc, type: TeijushaType, times: RenewalTimes | "" = "") => evaluate(make(proc, "定住者", type, times)).items.filter((i) => i.effective !== "not_required");
 
-/** チェックシートの項目数（No. の最大値）。区分 × 手続。renewal の nikkei3 は、シートが無い（TJ-CR-1） */
+/** チェックシートの項目数（No. の最大値）。区分 × 手続。renewal の nikkei3 は、初めての更新（12）と2回目以降（8）の2種類のため、下の SHEET_COUNTS_NIKKEI3_RENEWAL */
 const SHEET_COUNTS: Record<Proc, Partial<Record<TeijushaType, number>>> = {
   coe: { nikkei3: 17, nikkei2Spouse: 12, nikkei3Spouse: 15, childPermanent: 14, childJapaneseSpouse: 11, childPermanentSpouse: 11, adoptedJapanese: 10, adoptedPermanent: 11 },
   change: { nikkei3: 16, nikkei2Spouse: 11, nikkei3Spouse: 14, childPermanent: 13, childJapaneseSpouse: 10, childPermanentSpouse: 10, adoptedJapanese: 9, adoptedPermanent: 11 },
   renewal: { nikkei2Spouse: 8, nikkei3Spouse: 9, childPermanent: 7, childJapaneseSpouse: 7, childPermanentSpouse: 6, adoptedJapanese: 7, adoptedPermanent: 6 },
 };
+const SHEET_COUNTS_NIKKEI3_RENEWAL: Record<RenewalTimes, number> = { first: 12, second: 8 };
 // 共通の書類（procedureCommonRules）のうち、シートに番号のある行は申請書・写真だけ。旅券は末尾の注記（変更・更新）か、シートに無い任意の行（認定）
-const NOT_NUMBERED = ["passport_card", "passport_copy", "teijusha_renewal_nikkei3_no_checksheet"];
+const NOT_NUMBERED = ["passport_card", "passport_copy"];
 
 describe("定住者の認定・変更・更新（coe-change-renewal-teijusha-2026-10-24.md）", () => {
   it("規則集合：定住者の区分だけで判定する（basis: teijushaType）。手続ごとに引かれ、取得とは別", () => {
     for (const [proc, rs] of Object.entries(SETS) as [Proc, RuleSet][]) {
       expect(rs.procedureType).toBe(proc);
       expect(rs.basis).toBe("teijushaType");
-      expect(rs.alsoBasis).toBeUndefined();
+      // 更新だけ、日系3世の更新の回数の軸（renewalTimes）を足す。認定・変更は区分だけ
+      expect(rs.alsoBasis).toEqual(proc === "renewal" ? ["renewalTimes"] : undefined);
       expect(rs.checkedAt).toBe("2026-10-24");
-      expect(rs.sources).toHaveLength(1);
-      expect(rs.sources[0]).toMatchObject({ kind: "pdf", comparedAt: "2026-10-24" });
+      expect(rs.sources).toHaveLength(proc === "renewal" ? 3 : 1);
+      for (const src of rs.sources) expect(src).toMatchObject({ kind: "pdf", comparedAt: "2026-10-24" });
       expect(ruleSetComparedAt(rs)).toBe("2026-10-24");
       expect(ruleSetOfCase(make(proc, "定住者"))?.id).toBe(rs.id);
     }
@@ -69,7 +73,7 @@ describe("定住者の認定・変更・更新（coe-change-renewal-teijusha-202
     }
   });
 
-  it("シートの項目数：区分 × 手続の全組み合わせで、シートの No. の数と一致する（旅券の行・更新の日系3世の知らせの行を除く）", () => {
+  it("シートの項目数：区分 × 手続の全組み合わせで、シートの No. の数と一致する（旅券の行を除く。更新の日系3世は下の試験）", () => {
     for (const proc of ["coe", "change", "renewal"] as const) {
       for (const [type, count] of Object.entries(SHEET_COUNTS[proc]) as [TeijushaType, number][]) {
         const rows = applicable(proc, type).filter((i) => !NOT_NUMBERED.includes(i.rule.id));
@@ -92,10 +96,11 @@ describe("定住者の認定・変更・更新（coe-change-renewal-teijusha-202
     const change = evaluate(make("change", "定住者"));
     expect(change.needsTeijushaType).toBe(true);
     expect(ids(change, "required")).toEqual(["application_form", "photo", "passport_card", "teijusha_identity_guarantee"]);
-    // 更新は日系3世の身元保証書が無いため、身元保証書は共通でなくなる
+    // 更新も、日系3世のシート（申請人の住民票・身元保証書）が加わったため、この2つも全区分に共通
     const renewal = evaluate(make("renewal", "定住者"));
     expect(renewal.needsTeijushaType).toBe(true);
-    expect(ids(renewal, "required")).toEqual(["application_form", "photo", "passport_card"]);
+    expect(renewal.needsRenewalTimes).toBe(false);
+    expect(ids(renewal, "required")).toEqual(["application_form", "photo", "passport_card", "teijusha_residence_certificate", "teijusha_identity_guarantee"]);
     expect(ids(renewal, "check")).toEqual([]);
   });
 
@@ -130,17 +135,120 @@ describe("定住者の認定・変更・更新（coe-change-renewal-teijusha-202
     expect(ids(coe, "required")).not.toContain("teijusha_residence_certificate");
   });
 
-  it("日系3世の更新：シートが無い（TJ-CR-1）。要確認の行を1行だけ出し、日系3世以外の更新の書類は出さない", () => {
-    const e = evaluate(make("renewal", "定住者", "nikkei3"));
-    expect(ids(e, "required")).toEqual(["application_form", "photo", "passport_card"]);
-    expect(ids(e, "check")).toEqual(["teijusha_renewal_nikkei3_no_checksheet"]);
-    const row = SETS.renewal.rules.find((r) => r.id === "teijusha_renewal_nikkei3_no_checksheet")!;
-    expect(row.verify).toBe(true);
-    expect(row.teijushaTypes).toEqual(["nikkei3"]);
-    // 日系3世以外では出ない
-    for (const type of TEIJUSHA_TYPES.filter((t) => t !== "nikkei3")) {
-      expect(applicable("renewal", type).map((i) => i.rule.id), type).not.toContain("teijusha_renewal_nikkei3_no_checksheet");
+  it("日系3世の更新（初めて）：シートの12項目。祖父母の戸籍謄本・結婚証明書・出生証明書・認知に係る証明書を出す", () => {
+    const e = evaluate(make("renewal", "定住者", "nikkei3", "first"));
+    expect(e.needsTeijushaType).toBe(false);
+    expect(e.needsRenewalTimes).toBe(false);
+    expect(ids(e, "required")).toEqual([
+      "application_form",
+      "photo",
+      "passport_card",
+      "teijusha_grandparent_family_register",
+      "teijusha_foreign_marriage_certificates",
+      "teijusha_foreign_birth_certificates_family",
+      "teijusha_residence_certificate",
+      "teijusha_tax_certificates_applicantOrSpouse",
+      "teijusha_income_documents_applicantOrSpouse",
+      "teijusha_identity_guarantee",
+    ]);
+    expect(ids(e, "check")).toEqual(["teijusha_criminal_record_renewal", "teijusha_recognition_certificate", "teijusha_japanese_proficiency"]);
+    expect(e.items.some((i) => i.rule.id === "teijusha_renewal_nikkei3_no_checksheet")).toBe(false);
+    const byId = (id: string) => e.items.find((i) => i.rule.id === id)!.rule;
+    expect(byId("teijusha_tax_certificates_applicantOrSpouse").name).toBe("申請人又は配偶者の方（収入の多い方）の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書");
+    expect(byId("teijusha_income_documents_applicantOrSpouse").note).toContain("申請人又は配偶者の方（収入の多い方）の在職証明書");
+    expect(byId("teijusha_income_documents_applicantOrSpouse").note).toContain("申請人及び配偶者");
+    expect(byId("teijusha_income_documents_applicantOrSpouse").note).toContain("扶養者の方」と読み替える");
+    expect(byId("teijusha_criminal_record_renewal").note).toBe("一度も入管当局へ提出したことがない方のみ");
+  });
+
+  it("日系3世の更新（2回目以降）：シートの8項目。祖父母の戸籍謄本・結婚証明書・出生証明書・認知に係る証明書は出さない（原則不要）", () => {
+    const e = evaluate(make("renewal", "定住者", "nikkei3", "second"));
+    expect(ids(e, "required")).toEqual([
+      "application_form",
+      "photo",
+      "passport_card",
+      "teijusha_residence_certificate",
+      "teijusha_tax_certificates_applicantOrSpouse",
+      "teijusha_income_documents_applicantOrSpouse",
+      "teijusha_identity_guarantee",
+    ]);
+    expect(ids(e, "check")).toEqual(["teijusha_criminal_record_renewal", "teijusha_japanese_proficiency"]);
+    const firstOnly = ["teijusha_grandparent_family_register", "teijusha_foreign_marriage_certificates", "teijusha_foreign_birth_certificates_family", "teijusha_recognition_certificate"];
+    for (const id of firstOnly) {
+      const item = e.items.find((i) => i.rule.id === id)!;
+      expect(item.effective, id).toBe("not_required");
+      expect(item.reasonCode).toEqual({ kind: "renewalTimesNotRequired", times: "second" });
+      expect(item.reason).toContain("2回目以降の更新");
     }
+  });
+
+  it("日系3世の更新（回数が未選択）：初めてと2回目以降に共通の書類だけを出し、初回のみの4書類は出さない。回数の選択を案内する", () => {
+    const e = evaluate(make("renewal", "定住者", "nikkei3"));
+    expect(e.needsRenewalTimes).toBe(true);
+    expect(e.needsTeijushaType).toBe(false);
+    expect(ids(e, "required")).toEqual([
+      "application_form",
+      "photo",
+      "passport_card",
+      "teijusha_residence_certificate",
+      "teijusha_tax_certificates_applicantOrSpouse",
+      "teijusha_income_documents_applicantOrSpouse",
+      "teijusha_identity_guarantee",
+    ]);
+    expect(ids(e, "check")).toEqual(["teijusha_criminal_record_renewal", "teijusha_japanese_proficiency"]);
+    for (const id of ["teijusha_grandparent_family_register", "teijusha_foreign_marriage_certificates", "teijusha_foreign_birth_certificates_family", "teijusha_recognition_certificate"]) {
+      expect(e.items.map((i) => i.rule.id), id).not.toContain(id);
+    }
+    expect(renewalTimesNotice(e)).toBe("caseRequirements.needsRenewalTimesAxes");
+    expect(renewalTimesNotice({ ruleSet: null, needsRenewalTimes: true })).toBeNull();
+    expect(renewalTimesNotice({ ...e, needsRenewalTimes: false })).toBeNull();
+  });
+
+  it("日系3世の更新のシートの項目数：初めて12・2回目以降8（旅券の行を除く）", () => {
+    for (const times of RENEWAL_TIMES) {
+      expect(applicable("renewal", "nikkei3", times).filter((i) => !NOT_NUMBERED.includes(i.rule.id)).length, times).toBe(SHEET_COUNTS_NIKKEI3_RENEWAL[times]);
+    }
+  });
+
+  it("更新の回数は日系3世の更新だけの軸：ほかの区分・認定・変更の判定は、回数の値によらず同じ。回数の軸の注意も出ない", () => {
+    for (const type of TEIJUSHA_TYPES.filter((t) => t !== "nikkei3")) {
+      const base = evaluate(make("renewal", "定住者", type));
+      expect(base.needsRenewalTimes, type).toBe(false);
+      for (const times of RENEWAL_TIMES) {
+        const e = evaluate(make("renewal", "定住者", type, times));
+        expect(e.needsRenewalTimes, `${type}:${times}`).toBe(false);
+        expect(e.items.map((i) => [i.rule.id, i.result, i.reason]), `${type}:${times}`).toEqual(base.items.map((i) => [i.rule.id, i.result, i.reason]));
+      }
+    }
+    for (const proc of ["coe", "change"] as const) {
+      expect(SETS[proc].rules.every((r) => r.renewalTimes === undefined)).toBe(true);
+      const a = evaluate(make(proc, "定住者", "nikkei3", "first"));
+      const b = evaluate(make(proc, "定住者", "nikkei3", "second"));
+      expect(a.needsRenewalTimes).toBe(false);
+      expect(a.items.map((i) => [i.rule.id, i.result])).toEqual(b.items.map((i) => [i.rule.id, i.result]));
+    }
+    // 初回のみの規則は、日系3世の更新の4書類だけ
+    expect(SETS.renewal.rules.filter((r) => r.renewalTimes).map((r) => r.id)).toEqual([
+      "teijusha_grandparent_family_register",
+      "teijusha_foreign_marriage_certificates",
+      "teijusha_foreign_birth_certificates_family",
+      "teijusha_recognition_certificate",
+    ]);
+    // 日系3世以外の更新の書類は、日系3世の更新のために変わっていない（身元保証書は全区分・住民票は申請人のもの）
+    expect(applicable("renewal", "nikkei2Spouse").map((i) => i.rule.id)).not.toContain("teijusha_grandparent_family_register");
+    expect(applicable("renewal", "nikkei3Spouse").map((i) => i.rule.id)).not.toContain("teijusha_tax_certificates_applicantOrSpouse");
+  });
+
+  it("更新の回数：入力の正規化（不正な値・欠けている値は未選択）。表示名は3言語にある", () => {
+    expect(normalizeFormDetails({ renewalTimes: "first" }).renewalTimes).toBe("first");
+    expect(normalizeFormDetails({ renewalTimes: "bogus" }).renewalTimes).toBe("");
+    expect(normalizeFormDetails(null).renewalTimes).toBe("");
+    for (const lang of ["ja", "en", "ko"] as const) {
+      for (const key of ["renewalTimesLabel", "renewalTimes_first", "renewalTimes_second", "needsRenewalTimesAxes", "reasonRenewalTimesNotRequired", "axisRenewalTimes"] as const) {
+        expect(translate(lang, `caseRequirements.${key}`), `${lang}:${key}`).not.toContain("caseRequirements.");
+      }
+    }
+    expect(translate("ja", "caseRequirements.renewalTimes_second")).toBe("2回目以降の更新");
   });
 
   it("日系2世・3世の配偶者：認定は2世・3世の方の書類、変更・更新は「2世・3世の方又は申請人（収入の多い方）」の書類。3枚のシートは同じ内容", () => {

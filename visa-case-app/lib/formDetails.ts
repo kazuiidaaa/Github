@@ -67,6 +67,13 @@ export type TeijushaType = (typeof TEIJUSHA_TYPES)[number];
 export const EIJUU_TYPES = ["nihonjinSpouse", "nihonjinChild", "eijushaSpouse", "eijushaChild"] as const;
 export type EijuuType = (typeof EIJUU_TYPES)[number];
 
+/**
+ * 定住者（日系3世）の在留期間更新許可申請の、更新の回数（入管庁の提出書類一覧が「初めて更新許可申請を行う場合」と「2回目以降の更新許可申請を行う場合」で別のシートのため）。
+ * first＝初めての更新／second＝2回目以降の更新。在留資格が定住者・区分が日系3世の更新のときだけ使う。
+ */
+export const RENEWAL_TIMES = ["first", "second"] as const;
+export type RenewalTimes = (typeof RENEWAL_TIMES)[number];
+
 export interface FormDetails {
   // 申請人等作成用1
   /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
@@ -134,6 +141,8 @@ export interface FormDetails {
   teijushaType: "" | TeijushaType;
   /** 永住許可申請の提出書類一覧表の区分。"" は未選択（この項目がない既存の案件も ""） */
   eijuuType: "" | EijuuType;
+  /** 定住者（日系3世）の更新が、初めてか2回目以降か。"" は未選択（この項目がない既存の案件も ""） */
+  renewalTimes: "" | RenewalTimes;
   // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
@@ -243,6 +252,7 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   applicantIdentity: "",
   teijushaType: "",
   eijuuType: "",
+  renewalTimes: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
@@ -298,6 +308,7 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     applicantIdentity: (APPLICANT_IDENTITIES as readonly unknown[]).includes(r.applicantIdentity) ? (r.applicantIdentity as ApplicantIdentity) : "",
     teijushaType: (TEIJUSHA_TYPES as readonly unknown[]).includes(r.teijushaType) ? (r.teijushaType as TeijushaType) : "",
     eijuuType: (EIJUU_TYPES as readonly unknown[]).includes(r.eijuuType) ? (r.eijuuType as EijuuType) : "",
+    renewalTimes: (RENEWAL_TIMES as readonly unknown[]).includes(r.renewalTimes) ? (r.renewalTimes as RenewalTimes) : "",
   };
 }
 

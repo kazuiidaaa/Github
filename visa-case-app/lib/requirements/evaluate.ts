@@ -1,4 +1,4 @@
-import { APPLICANT_IDENTITIES, EIJUU_TYPES, MEDICAL_APPLICANT_TYPES, TEIJUSHA_TYPES, type FormDetails } from "../formDetails";
+import { APPLICANT_IDENTITIES, EIJUU_TYPES, MEDICAL_APPLICANT_TYPES, RENEWAL_TIMES, TEIJUSHA_TYPES, type FormDetails } from "../formDetails";
 import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../types";
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
@@ -13,6 +13,7 @@ import {
   type Category,
   type EijuuType,
   type MedicalApplicantType,
+  type RenewalTimes,
   type RequirementRule,
   type RuleAxis,
   type RuleSet,
@@ -53,6 +54,8 @@ export interface Evaluation {
   needsTeijushaType: boolean;
   /** 永住許可申請の提出書類一覧表の区分が未選択のため、区分に共通の書類だけを表示している（basis が eijuuType の規則集合のみ） */
   needsEijuuType: boolean;
+  /** 定住者（日系3世）の更新が、初めてか2回目以降かが未選択のため、両方に共通の書類だけを表示している（alsoBasis に renewalTimes を持つ規則集合で、区分が日系3世のときのみ） */
+  needsRenewalTimes: boolean;
   items: EvaluatedItem[];
   /** 必要だが未受領（未受領・依頼済み）の書類 */
   missing: EvaluatedItem[];
@@ -241,6 +244,7 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
     needsIdentity: false,
     needsTeijushaType: false,
     needsEijuuType: false,
+    needsRenewalTimes: false,
     items: [],
     missing: [],
     toCheck: [],
@@ -370,6 +374,9 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
   const identity: ApplicantIdentity | "" = c.formDetails.applicantIdentity;
   const teijushaType: TeijushaType | "" = c.formDetails.teijushaType;
   const eijuuType: EijuuType | "" = c.formDetails.eijuuType;
+  // 更新の回数は、定住者の区分が日系3世のときだけ尋ねる・見る（ほかの区分には初回・2回目以降の別がない）
+  const renewalTimesAsked = has("renewalTimes") && teijushaType === "nikkei3";
+  const renewalTimes: RenewalTimes | "" = renewalTimesAsked ? c.formDetails.renewalTimes : "";
 
   const needsCategory = has("category") && category === "";
   const categoryOutOfRange = has("category") && entered !== "" && category === "";
@@ -378,6 +385,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
   const needsIdentity = has("identity") && identity === "";
   const needsTeijushaType = has("teijushaType") && teijushaType === "";
   const needsEijuuType = has("eijuuType") && eijuuType === "";
+  const needsRenewalTimes = renewalTimesAsked && renewalTimes === "";
 
   const items: EvaluatedItem[] = [];
   for (const rule of ruleSet.rules) {
@@ -387,6 +395,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
     const identities = rule.identities ?? APPLICANT_IDENTITIES;
     const teijushaTypes = rule.teijushaTypes ?? TEIJUSHA_TYPES;
     const eijuuTypes = rule.eijuuTypes ?? EIJUU_TYPES;
+    const renewalTimesOf = rule.renewalTimes ?? RENEWAL_TIMES;
     // 未選択の軸では、全ての値に共通の規則だけを出す
     if (needsCategory && !range.every((k) => categories.includes(k))) continue;
     if (needsCause && !ALL_CAUSES.every((k) => causes.includes(k))) continue;
@@ -394,6 +403,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
     if (needsIdentity && !APPLICANT_IDENTITIES.every((k) => identities.includes(k))) continue;
     if (needsTeijushaType && !TEIJUSHA_TYPES.every((k) => teijushaTypes.includes(k))) continue;
     if (needsEijuuType && !EIJUU_TYPES.every((k) => eijuuTypes.includes(k))) continue;
+    if (needsRenewalTimes && !RENEWAL_TIMES.every((k) => renewalTimesOf.includes(k))) continue;
 
     // 軸の並びで、最初に一致しない軸の「原則不要」の理由
     let notRequired: ReasonCode | undefined;
@@ -404,6 +414,7 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
       else if (axis === "identity" && identity !== "" && !identities.includes(identity)) notRequired = { kind: "identityNotRequired", identity };
       else if (axis === "teijushaType" && teijushaType !== "" && !teijushaTypes.includes(teijushaType)) notRequired = { kind: "teijushaTypeNotRequired", type: teijushaType };
       else if (axis === "eijuuType" && eijuuType !== "" && !eijuuTypes.includes(eijuuType)) notRequired = { kind: "eijuuTypeNotRequired", type: eijuuType };
+      else if (axis === "renewalTimes" && renewalTimes !== "" && !renewalTimesOf.includes(renewalTimes)) notRequired = { kind: "renewalTimesNotRequired", times: renewalTimes };
       if (notRequired) break;
     }
 
@@ -427,12 +438,13 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
         ...(has("identity") && identity !== "" ? { identity } : {}),
         ...(has("teijushaType") && teijushaType !== "" ? { teijushaType } : {}),
         ...(has("eijuuType") && eijuuType !== "" ? { eijuuType } : {}),
+        ...(renewalTimes !== "" ? { renewalTimes } : {}),
       };
     }
     const state = c.requirementStates[rule.id] ?? NO_STATE;
     pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
   }
-  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType, needsEijuuType };
+  return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType, needsEijuuType, needsRenewalTimes };
 }
 
 function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange: boolean, needsCause: boolean, items: EvaluatedItem[]): Evaluation {
@@ -447,6 +459,7 @@ function summarize(ruleSet: RuleSet, needsCategory: boolean, categoryOutOfRange:
     needsIdentity: false,
     needsTeijushaType: false,
     needsEijuuType: false,
+    needsRenewalTimes: false,
     items,
     missing: required.filter((i) => !isCollected(i.state.status)),
     toCheck: items.filter((i) => i.effective === "check" && !isCollected(i.state.status)),
