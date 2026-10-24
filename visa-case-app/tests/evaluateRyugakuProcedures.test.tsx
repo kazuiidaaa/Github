@@ -5,6 +5,7 @@ import { EMPTY_FORM_DETAILS, SCHOOL_TYPES, type SchoolType } from "../lib/formDe
 import { schoolTypeNotice } from "../lib/i18n/caseRequirements";
 import { evaluate, ruleSetOfCase } from "../lib/requirements/evaluate";
 import { RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
+import { RYUGAKU_SHEET_TYPES, ryugakuSheetRules } from "../lib/requirements/ryugakuSheets";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type ProcedureType } from "../lib/types";
 
 // Issue #420：留学の認定・変更・更新・取得。照合表 ryugaku-procedures-2026-10-24.md。提出書類一覧表（入学先の種類ごと）の項目数・条件を固定する。
@@ -25,17 +26,26 @@ const idsOf = (proc: Proc, type: SchoolType | "") => applicable(proc, type).map(
 const find = (proc: Proc, type: SchoolType, key: string) => applicable(proc, type).find((i) => i.rule.id === `ryugaku_${key}` || i.rule.id.startsWith(`ryugaku_${key}_`));
 const sheetIds = (proc: Proc, type: SchoolType) => idsOf(proc, type).filter((id) => id.startsWith("ryugaku_"));
 
-/** 手元に一覧表がある組み合わせ：一覧表の項目数（申請書を除く。シートの No. の最大値 − 1。2列の表は両列が「－」の行を除く） */
-const SHEET_COUNTS: Partial<Record<Proc, Partial<Record<SchoolType, number>>>> = {
-  coe: { "univ-approved": 8, "univ-nonapproved": 15, "vocational-class1": 5, "vocational-class2": 8 },
-  change: { "univ-approved": 8, "japanese-nonapproved": 13, "japanese-class1": 5, "japanese-class2": 10, "highschool-below": 19 },
-  renewal: { "univ-approved": 16, "japanese-nonapproved": 13, "japanese-class1": 13, "japanese-class2": 13, "highschool-below": 13 },
+/** 一覧表の項目数（申請書を除く。シートの No. の最大値 − 1。2列の表は両列が「－」の行を除く）。9区分×3手続の27枚がそろっている */
+const SHEET_COUNTS: Record<Exclude<Proc, "acquisition">, Record<SchoolType, number>> = {
+  coe: {
+    "univ-approved": 8, "univ-nonapproved": 15, "vocational-class1": 5, "vocational-class2": 8, "vocational-nonapproved": 13,
+    "japanese-nonapproved": 13, "japanese-class1": 5, "japanese-class2": 10, "highschool-below": 20,
+  },
+  change: {
+    "univ-approved": 8, "univ-nonapproved": 15, "vocational-class1": 5, "vocational-class2": 8, "vocational-nonapproved": 13,
+    "japanese-nonapproved": 13, "japanese-class1": 5, "japanese-class2": 10, "highschool-below": 19,
+  },
+  renewal: {
+    "univ-approved": 16, "univ-nonapproved": 16, "vocational-class1": 14, "vocational-class2": 14, "vocational-nonapproved": 14,
+    "japanese-nonapproved": 13, "japanese-class1": 13, "japanese-class2": 13, "highschool-below": 13,
+  },
 };
 const HAS_SHEET: Record<Proc, SchoolType[]> = {
-  coe: ["univ-approved", "univ-nonapproved", "vocational-class1", "vocational-class2"],
-  change: ["univ-approved", "japanese-nonapproved", "japanese-class1", "japanese-class2", "highschool-below"],
-  renewal: ["univ-approved", "japanese-nonapproved", "japanese-class1", "japanese-class2", "highschool-below"],
-  acquisition: ["univ-approved", "japanese-nonapproved", "japanese-class1", "japanese-class2", "highschool-below"],
+  coe: [...SCHOOL_TYPES],
+  change: [...SCHOOL_TYPES],
+  renewal: [...SCHOOL_TYPES],
+  acquisition: [...SCHOOL_TYPES],
 };
 const PROCS: Proc[] = ["coe", "change", "renewal", "acquisition"];
 
@@ -52,7 +62,8 @@ describe("留学の認定・変更・更新・取得（ryugaku-procedures-2026-1
   });
 
   it("書類の内訳：入学先の種類 × 手続の項目数が、一覧表の行数と一致する", () => {
-    for (const [proc, byType] of Object.entries(SHEET_COUNTS) as [Proc, Partial<Record<SchoolType, number>>][]) {
+    for (const [proc, byType] of Object.entries(SHEET_COUNTS) as [Proc, Record<SchoolType, number>][]) {
+      expect(Object.keys(byType).sort(), proc).toEqual([...SCHOOL_TYPES].sort());
       for (const [type, count] of Object.entries(byType) as [SchoolType, number][]) {
         expect(sheetIds(proc, type).length, `${proc}:${type}`).toBe(count);
       }
@@ -121,19 +132,31 @@ describe("留学の認定・変更・更新・取得（ryugaku-procedures-2026-1
     expect(find("change", "japanese-class1", "koseki")).toBeUndefined();
   });
 
-  it("資料が無い組み合わせ（ページには掲載あり）は、「掲載なし」とせず、一覧表は未取得の要確認の1行を出す", () => {
+  it("9区分×3手続（変更・取得は同じ一覧）の一覧表がそろっているので、「一覧表は未取得」の行は出ない", () => {
     for (const proc of PROCS) {
-      for (const type of SCHOOL_TYPES.filter((t) => !HAS_SHEET[proc].includes(t))) {
-        const row = applicable(proc, type).find((i) => i.rule.id === "ryugaku_sheet_not_obtained");
-        expect(row?.effective, `${proc}:${type}`).toBe("check");
-        expect(row?.rule.verify).toBe(true);
-        expect(row?.rule.name).toContain("未取得");
-        expect(row?.rule.note).not.toContain("掲載なし");
-        // 他の一覧表の書類は出ない
-        expect(sheetIds(proc, type), `${proc}:${type}`).toEqual(["ryugaku_sheet_not_obtained"]);
+      for (const type of SCHOOL_TYPES) {
+        expect(idsOf(proc, type), `${proc}:${type}`).not.toContain("ryugaku_sheet_not_obtained");
+        expect(sheetIds(proc, type).length, `${proc}:${type}`).toBeGreaterThan(0);
       }
-      // 一覧表がある組み合わせには出ない
-      for (const type of HAS_SHEET[proc]) expect(idsOf(proc, type), `${proc}:${type}`).not.toContain("ryugaku_sheet_not_obtained");
+      expect(RYUGAKU_SHEET_TYPES[proc].slice().sort(), proc).toEqual([...SCHOOL_TYPES].sort());
+    }
+  });
+
+  it("資料が無い組み合わせができたときの仕組み：「掲載なし」とせず、一覧表は未取得の要確認の1行を出す", () => {
+    const saved = RYUGAKU_SHEET_TYPES.coe;
+    try {
+      RYUGAKU_SHEET_TYPES.coe = saved.filter((t) => t !== "vocational-nonapproved");
+      const rules = ryugakuSheetRules("coe");
+      const row = rules.find((r) => r.id === "ryugaku_sheet_not_obtained");
+      expect(row?.schoolTypes).toEqual(["vocational-nonapproved"]);
+      expect(row?.level).toBe("check");
+      expect(row?.verify).toBe(true);
+      expect(row?.name).toContain("未取得");
+      expect(row?.note).not.toContain("掲載なし");
+      // 一覧表がある入学先の書類には、未取得の行の入学先が混ざらない
+      expect(rules.filter((r) => r.id !== "ryugaku_sheet_not_obtained").every((r) => !r.schoolTypes?.includes("vocational-nonapproved"))).toBe(true);
+    } finally {
+      RYUGAKU_SHEET_TYPES.coe = saved;
     }
   });
 
@@ -142,7 +165,8 @@ describe("留学の認定・変更・更新・取得（ryugaku-procedures-2026-1
       const e = evaluate(make(proc, "", proc === "acquisition" ? "other" : ""));
       expect(e.needsSchoolType, proc).toBe(true);
       expect(schoolTypeNotice(e), proc).toBe("caseRequirements.needsSchoolTypeAxes");
-      expect(e.items.some((i) => i.rule.id.startsWith("ryugaku_")), proc).toBe(false);
+      // 9区分すべての表に同じ内容である書類（認定の旅券など）は、入学先に共通の書類なので、未選択でも出る。区分で内容が違う書類は出ない
+      for (const i of e.items.filter((i) => i.rule.id.startsWith("ryugaku_"))) expect(i.rule.schoolTypes?.length, `${proc}:${i.rule.id}`).toBe(SCHOOL_TYPES.length);
       expect(e.items.some((i) => i.rule.id === "application_form"), proc).toBe(true);
     }
     expect(evaluate(make("coe", "univ-approved")).needsSchoolType).toBe(false);
