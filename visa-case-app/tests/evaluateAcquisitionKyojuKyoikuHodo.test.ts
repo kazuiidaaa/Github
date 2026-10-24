@@ -36,9 +36,9 @@ const ids = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) =>
 const find = (id: string) => RULE_SETS.find((r) => r.id === id)!;
 const ALL: Cause[] = ["", "nationalityLoss", "birth", "other"];
 const SETS = [
-  { id: "professor_acquisition", status: "教授", change: "professor_change" },
-  { id: "education_acquisition", status: "教育", change: "education_coe" },
-  { id: "hodo_acquisition", status: "報道", change: "hodo_change" },
+  { id: "professor_acquisition", status: "教授", change: "professor_change", page: "professor.html" },
+  { id: "education_acquisition", status: "教育", change: "education_coe", page: "instructor.html" },
+  { id: "hodo_acquisition", status: "報道", change: "hodo_change", page: "journalist.html" },
 ] as const;
 const REMOVED = ["birth_certificate", "parents_questionnaire", "household_residence_certificate", "activity_materials", "passport_reason_statement"];
 const COMMON = ["application_form", "photo", "passport_presentation", "cause_proof"];
@@ -106,13 +106,11 @@ describe("evaluate: 教授／教育／報道の在留資格取得許可申請（
     }
   });
 
-  it("出典：ページの URL は未記録（2026-10-24）・手続案内・申請書様式（日付なし）。照合日は 2026-10-24", () => {
+  it("出典：ページの URL は人が確認（2026-10-24）・手続案内・申請書様式（日付なし）。照合日は 2026-10-24", () => {
     for (const s of SETS) {
       const set = find(s.id);
-      expect(set.sources[0].title).toContain("URL 未記録");
-      expect(set.sources[0]).toMatchObject({ kind: "page", comparedAt: "2026-10-24" });
-      // 確定できない URL（professor.html・instructor.html・journalist.html）は書かない
-      for (const x of set.sources) expect(x.url, s.id).not.toMatch(/professor\.html|instructor\.html|journalist\.html/);
+      expect(set.sources[0].title).toBe(`在留資格「${s.status}」在留資格取得許可申請（出入国在留管理庁）`);
+      expect(set.sources[0]).toMatchObject({ kind: "page", url: `https://www.moj.go.jp/isa/applications/status/${s.page}`, comparedAt: "2026-10-24" });
       expect(set.sources.find((x) => x.url.endsWith("procedures/16-10.html"))).toMatchObject({ kind: "page" });
       expect(set.sources.find((x) => x.url.endsWith("930004121.xlsx"))?.comparedAt).toBeUndefined();
       expect(new Set(set.sources.map((x) => x.url)).size).toBe(set.sources.length);

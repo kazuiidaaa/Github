@@ -3599,17 +3599,18 @@ export const TOKUTEI_JOHO_ACQUISITION: RuleSet = {
  * 写真「写真（40mm×30mm）」を全事由の必須／日米地位協定の例を外す／申請取次者の注記を原文のとおり）。ACQUISITION_BY_CAUSE の文言は変えない。
  * カテゴリー別の書類は、各在留資格の認定・変更の規則集合（チェックシートで照合済み）の書類を、同じ割り当てで写す（取得の節の書類は、変更〔または認定〕の節と同じ文言のため）。
  * 取得のチェックシートは無く、取得の列の位置そのものは未確認。判定の軸は、取得の事由と所属機関のカテゴリー（alsoBasis）。カテゴリーが未選択の間は、共通の書類だけを出す。
- * 3つのページの URL は、控えに未提示のため出典に確定できず、「URL 未記録」の出典にする（推測で書かない）。人が、既に記録された出典の URL
- * （professor.html・instructor.html・journalist.html）と同じページかを確かめるまで、出典には書かない。
+ * 3つのページの URL は、控えには未提示だが、人が確認した（2026-10-24）。出典は、研究・経営・管理などの取得（acqSet1Sources）と同じ形で、各ページの URL
+ * （professor.html・instructor.html・journalist.html。認定・変更・更新の出典 PROFESSOR_PAGE_SOURCE 等と同じ URL）と照合日（2026-10-24）を書く。
  * `checkedAt` は新しい規則集合の作成日。ACQUISITION_BY_CAUSE より先に照合する（RULE_SETS の並び順）。
  */
 const ACQ_KYOJU_COMPARED_AT = "2026-10-24";
 const ACQ_KYOJU_CHECKED_AT = "2026-10-24";
-const ACQ_KYOJU_PAGES_UNRECORDED_SOURCE: RuleSource = {
-  ...ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE,
-  comparedAt: ACQ_KYOJU_COMPARED_AT,
-};
-const acqKyojuSources = (): RuleSource[] => [ACQ_KYOJU_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources];
+// 出典（KJ-9・KI-8・HD-9）：各ページ（取得の節。2026-10-24 に照合。URL は人が確認〔2026-10-24〕）・手続案内・申請書様式（日付なし）
+const acqKyojuSources = (status: string, url: string): RuleSource[] => [
+  { title: `在留資格「${status}」在留資格取得許可申請（出入国在留管理庁）`, url, kind: "page", comparedAt: ACQ_KYOJU_COMPARED_AT },
+  ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+  ...ACQUISITION_BY_CAUSE.sources,
+];
 
 // 教授（KJ-1〜KJ-9。原文 kyoju_2026-10-24.txt 86〜103行）。
 // KJ-2：活動に応じた資料は、変更の professorActivityProof（カテゴリー2のみ・必須）を写す。カテゴリー1は「その他の資料は原則不要」で書類を足さない
@@ -3628,7 +3629,7 @@ export const PROFESSOR_ACQUISITION: RuleSet = {
   alsoBasis: ["category"],
   categoryDefinition: PROFESSOR_CATEGORIES,
   checkedAt: ACQ_KYOJU_CHECKED_AT,
-  sources: acqKyojuSources(),
+  sources: acqKyojuSources(PROFESSOR, PROFESSOR_PAGE_SOURCE.url),
   rules: [
     ...acqSet1CauseRules.map((r) =>
       r.id === "passport_presentation"
@@ -3653,7 +3654,7 @@ export const EDUCATION_ACQUISITION: RuleSet = {
   alsoBasis: ["category"],
   categoryDefinition: EDUCATION_CATEGORIES,
   checkedAt: ACQ_KYOJU_CHECKED_AT,
-  sources: acqKyojuSources(),
+  sources: acqKyojuSources(EDUCATION, EDUCATION_PAGE_SOURCE.url),
   rules: [...acqSet1CauseRules, educationActivityDocuments, educationCareerDocuments, educationBusinessDocuments, educationFinancialStatements],
 };
 
@@ -3670,7 +3671,7 @@ export const HODO_ACQUISITION: RuleSet = {
   alsoBasis: ["category"],
   categoryDefinition: HODO_CATEGORIES,
   checkedAt: ACQ_KYOJU_CHECKED_AT,
-  sources: acqKyojuSources(),
+  sources: acqKyojuSources(HODO, HODO_PAGE_SOURCE.url),
   rules: [...acqSet1CauseRules, hodoRegisteredEmployerProof, hodoActivityDocuments, hodoOrganizationOverview],
 };
 

@@ -1290,6 +1290,18 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Status of residence \"Researcher\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
     "체류자격 '연구' 체류자격 취득 허가 신청(출입국재류관리청)",
   ],
+  "在留資格「教授」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Professor\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '교수' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「教育」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Instructor\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '교육' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「報道」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Journalist\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '보도' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
   "在留資格「企業内転勤」在留資格取得許可申請（出入国在留管理庁）": [
     "Status of residence \"Intra-company Transferee\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
     "체류자격 '기업 내 전근' 체류자격 취득 허가 신청(출입국재류관리청)",
