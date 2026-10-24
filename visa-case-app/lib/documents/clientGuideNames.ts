@@ -296,6 +296,31 @@ export const REQUIREMENT_NAME_TRANSLATIONS: Record<string, Translated> = {
     "Materials showing the applicant's activities, etc. (any one of: appointment as an officer; transfer to the Japan branch of a foreign corporation or appointment as an officer of an organization other than a company; employment as a manager)",
     "신청인의 활동 내용 등을 밝히는 자료(임원 취임, 외국 법인 내 일본 지점으로의 전근·회사 이외 단체의 임원 취임, 관리자로서의 고용 중 하나)",
   ],
+  // 取得：芸術・宗教・短期滞在・特定活動（特定情報処理活動）（Issue #421・#422・#431・#432）
+  "申請人の活動の内容等を明らかにする資料": ["Materials showing the applicant's activities, etc.", "신청인의 활동 내용 등을 밝히는 자료"],
+  "芸術上の活動歴を詳細に記載した履歴書": ["Résumé describing the applicant's artistic career in detail", "예술상의 활동 경력을 상세히 기재한 이력서"],
+  "芸術活動上の業績を明らかにすることができるもの": ["Materials that can show the applicant's achievements in artistic activities", "예술 활동상의 업적을 밝힐 수 있는 것"],
+  "外国の宗教団体からの派遣状等の写し等派遣機関からの派遣期間、地位及び報酬を証明する文書": [
+    "Document from the dispatching organization certifying the period of dispatch, position, and remuneration, such as a copy of the letter of dispatch from the foreign religious organization",
+    "외국 종교 단체로부터의 파견장 등의 사본 등 파견 기관으로부터의 파견 기간, 지위 및 보수를 증명하는 문서",
+  ],
+  "派遣機関及び受入機関の概要（宗派、沿革、代表者名、組織、施設、信者数等）を明らかにする資料": [
+    "Materials showing an outline of the dispatching and receiving organizations (denomination, history, representative's name, organization, facilities, number of followers, etc.)",
+    "파견 기관 및 수입 기관의 개요(종파, 연혁, 대표자명, 조직, 시설, 신자 수 등)를 밝히는 자료",
+  ],
+  "宗教家としての地位及び職歴を証明する文書": ["Document certifying the applicant's position and career as a religious worker", "종교가로서의 지위 및 경력을 증명하는 문서"],
+  "「短期滞在」の取得を必要とする理由書（書式自由）": [
+    "Statement of reasons why acquisition of \"Temporary Visitor\" status is necessary (free format)",
+    "'단기체재' 취득이 필요한 이유서(서식 자유)",
+  ],
+  "出国するために必要な交通手段を確保していることを明らかにする資料（航空券等）": [
+    "Materials showing that the means of transportation needed to depart Japan has been secured (air ticket, etc.)",
+    "출국에 필요한 교통수단을 확보하고 있음을 밝히는 자료(항공권 등)",
+  ],
+  "前契約機関が作成した退職証明書（退職日を明記したもの）": [
+    "Certificate of resignation issued by the previous contracting organization (stating the date of resignation)",
+    "이전 계약 기관이 작성한 퇴직증명서(퇴직일을 명기한 것)",
+  ],
 };
 
 /** 規則の書類（規則の id で示す）か。行政書士が追加した書類（自由記述）は、規則の id を持たない */

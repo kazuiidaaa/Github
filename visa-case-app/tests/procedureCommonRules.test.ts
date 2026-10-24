@@ -54,7 +54,9 @@ describe("手続共通の書類（Issue #291）", () => {
   it("取得の規則集合（事由別・高度専門職）は、申請書・写真・旅券の提示を持ち、在留カードは持たない", () => {
     for (const set of RULE_SETS.filter((r) => r.procedureType === "acquisition")) {
       const ids = set.rules.map((r) => r.id);
-      expect(ids, set.id).toEqual(expect.arrayContaining(["application_form", "photo", "passport_presentation"]));
+      // 短期滞在の取得は、例外として写真を持たない（原文に項目が無く、中長期在留者とならない。#431 R-3）
+      const common = set.id === "tanki_taizai_acquisition" ? ["application_form", "passport_presentation"] : ["application_form", "photo", "passport_presentation"];
+      expect(ids, set.id).toEqual(expect.arrayContaining(common));
       expect(ids.includes("passport_card"), set.id).toBe(false);
     }
   });

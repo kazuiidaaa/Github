@@ -1291,6 +1291,78 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Nursing Care: application for permission for acquisition of status of residence (only partly covered)",
     "개호 체류자격 취득 허가 신청(일부만 정비)",
   ],
+
+  // 取得：芸術・宗教・法律・会計業務・短期滞在・特定活動〔07・08・11〕（照合済み 2026-10-19。Issue #421・#422・#424・#431・#432）
+  "芸術 在留資格取得許可申請（一部のみ整備）": [
+    "Artist: application for permission for acquisition of status of residence (only partly covered)",
+    "예술 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "宗教 在留資格取得許可申請（一部のみ整備）": [
+    "Religious Activities: application for permission for acquisition of status of residence (only partly covered)",
+    "종교 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "法律・会計業務 在留資格取得許可申請（一部のみ整備）": [
+    "Legal/Accounting Services: application for permission for acquisition of status of residence (only partly covered)",
+    "법률·회계업무 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "短期滞在 在留資格取得許可申請（一部のみ整備）": [
+    "Temporary Visitor: application for permission for acquisition of status of residence (only partly covered)",
+    "단기체재 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "特定活動（特定研究等活動） 在留資格取得許可申請（一部のみ整備）": [
+    "Designated Activities (designated research activities, etc.): application for permission for acquisition of status of residence (only partly covered)",
+    "특정활동(특정연구등활동) 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "特定活動（本邦大学卒業者） 在留資格取得許可申請（一部のみ整備）": [
+    "Designated Activities (graduates of Japanese universities): application for permission for acquisition of status of residence (only partly covered)",
+    "특정활동(일본 대학 졸업자) 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "特定活動（特定情報処理活動） 在留資格取得許可申請（一部のみ整備）": [
+    "Designated Activities (designated information processing activities): application for permission for acquisition of status of residence (only partly covered)",
+    "특정활동(특정정보처리활동) 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "入管庁『在留資格から探す』の各ページ（URL 未記録）": [
+    "Pages of the Immigration Services Agency of Japan's \"Search by status of residence\" (URL not recorded)",
+    "출입국재류관리청 '체류자격으로 찾기'의 각 페이지(URL 미기록)",
+  ],
+  "在留資格「法律・会計業務」在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Legal/Accounting Services\": application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '법률·회계업무' 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「特定活動」（特定研究等活動）在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Designated Activities\" (designated research activities, etc.): application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '특정활동'(특정연구등활동) 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「特定活動」（本邦大学等卒業者）在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Designated Activities\" (graduates of Japanese universities, etc.): application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '특정활동'(일본 대학 등 졸업자) 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "在留資格「特定活動」（特定情報処理活動）在留資格取得許可申請（出入国在留管理庁）": [
+    "Status of residence \"Designated Activities\" (designated information processing activities): application for permission for acquisition of status of residence (Immigration Services Agency of Japan)",
+    "체류자격 '특정활동'(특정정보처리활동) 체류자격 취득 허가 신청(출입국재류관리청)",
+  ],
+  "提示のみで、提出書類としてコピーを付ける書類ではない。案内ページの原文は「パスポート及び在留カード 提示」": [
+    "To be presented only; not a document to be submitted with a copy. The original text on the guidance page reads \"Passport and Residence Card: to be presented\"",
+    "제시만 하며, 제출 서류로 사본을 첨부하는 서류가 아니다. 안내 페이지의 원문은 '여권 및 재류카드 제시'",
+  ],
+  "提示のみで、提出書類としてコピーを付ける書類ではない。在留カードを持たない場合の扱いは、案内ページに記載がないため行政書士が確認する": [
+    "To be presented only; not a document to be submitted with a copy. The handling when the applicant has no residence card is not stated on the guidance page, so the administrative scrivener confirms it",
+    "제시만 하며, 제출 서류로 사본을 첨부하는 서류가 아니다. 재류카드를 가지고 있지 않은 경우의 취급은 안내 페이지에 기재가 없으므로 행정서사가 확인한다",
+  ],
+  "次のいずれか。(1)公私の機関又は個人との契約に基づいて活動を行う場合：活動の内容、期間、地位及び報酬を証明する文書 1通 (2)公私の機関又は個人との契約に基づかないで活動を行う場合：申請人が作成する具体的な活動の内容、期間及び行おうとする活動から生じる収入の見込額を記載した文書（適宜の様式） 適宜": [
+    "Any one of the following. (1) If the activities are based on a contract with a public or private organization or an individual: a document certifying the content, period, position, and remuneration of the activities (1 copy) (2) If the activities are not based on such a contract: a document prepared by the applicant stating the specific content and period of the activities and the expected income from them (any format) (as appropriate)",
+    "다음 중 하나. (1) 공사의 기관 또는 개인과의 계약에 따라 활동하는 경우: 활동의 내용, 기간, 지위 및 보수를 증명하는 문서 1통 (2) 공사의 기관 또는 개인과의 계약에 따르지 않고 활동하는 경우: 신청인이 작성하는 구체적인 활동의 내용, 기간 및 하려는 활동으로 생기는 수입 예상액을 기재한 문서(적절한 양식) 적절히",
+  ],
+  "次のいずれか。関係団体からの推薦状 1通／過去の活動に関する報道 適宜／入賞、入選等の実績 適宜／過去の作品等の目録 適宜／これらに準ずるもの 適宜": [
+    "Any one of the following: a letter of recommendation from a related organization (1 copy) / press coverage of past activities (as appropriate) / records of prizes, selections, etc. (as appropriate) / a catalog of past works, etc. (as appropriate) / materials equivalent to these (as appropriate)",
+    "다음 중 하나. 관계 단체의 추천장 1통／과거 활동에 관한 보도 적절히／입상, 입선 등의 실적 적절히／과거 작품 등의 목록 적절히／이에 준하는 것 적절히",
+  ],
+  "適宜": ["As appropriate", "적절히"],
+  "適宜。派遣機関からの証明書等で、申請人の宗教家としての地位、職歴を証明する。派遣状等に地位・職歴が記載されていれば不要": [
+    "As appropriate. Prove the applicant's position and career as a religious worker with a certificate, etc. from the dispatching organization. Not required if the letter of dispatch, etc. states the position and career",
+    "적절히. 파견 기관의 증명서 등으로 신청인의 종교가로서의 지위, 경력을 증명한다. 파견장 등에 지위·경력이 기재되어 있으면 불필요",
+  ],
+  "適宜。提示": ["As appropriate. To be presented", "적절히. 제시"],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

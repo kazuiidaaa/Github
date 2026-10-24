@@ -1604,7 +1604,7 @@ export const KAIGO_RENEWAL: RuleSet = {
 };
 
 // 在留資格「法律・会計業務」。入管庁の案内ページに所属機関のカテゴリー（1〜4）による区分はなく、全書類を全カテゴリー共通（ALL）とする（Issue #301）。
-// 提出書類は案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/houmu-kaikei-2026-10-18.md、Issue #333。書類の食い違いはなかった）。申請書は様式U（認定・変更・更新とも）。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。
+// 提出書類は案内ページの本文と、チェックシート（PDF）3点（認定・変更・更新）による。照合済み（2026-10-18。照合表は docs/official/reconciliation/houmu-kaikei-2026-10-18.md、Issue #333。書類の食い違いはなかった）。申請書は様式U（認定・変更・更新とも）。取得は HOUMU_KAIKEI_ACQUISITION（原文の取得の節に照合済み、2026-10-19）。
 // 更新は、共通書類（申請書・写真・パスポート及び在留カードの提示）以外の書類が案内ページにない。
 const HOUMU_KAIKEI = "法律・会計業務";
 const HOUMU_KAIKEI_SOURCE: RuleSource = { title: "在留資格「法律・会計業務」（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/legalaccountingservices.html", kind: "page", comparedAt: "2026-10-18" };
@@ -2962,7 +2962,7 @@ export const KIGYONAI_ACQUISITION: RuleSet = {
 
 // 在留資格「特定活動」のうち、特定研究等活動（告示36号）の本人（種別 tokuteiKenkyu。Issue #299）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
 // 提出書類は、入管庁の案内ページ（designatedactivities07）の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。逐語の原文（docs/official/designatedactivities11_2026-10-18.txt）との照合も済み、チェックシートの掲載がないことも確認した（2026-10-18。照合表は docs/official/reconciliation/tokutei-katsudo-2026-10-18.md、Issue #333）。逐語の原文（docs/official/designatedactivities07_2026-10-18.txt）との照合も済み、チェックシートの掲載がないことも確認した（2026-10-18。照合表は docs/official/reconciliation/tokutei-katsudo-2026-10-18.md、Issue #333）。
-// 範囲外：特定研究等活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+// 範囲外：特定研究等活動の家族は種別「その他」。取得は TOKUTEI_KENKYU_ACQUISITION（原文の取得の節に照合済み、2026-10-19）。申請書は様式N（認定・変更・更新とも）。
 const TOKUTEI_KENKYU_STATUS = "特定活動";
 const TOKUTEI_KENKYU_CHECKED_AT = "2026-10-12";
 const TOKUTEI_KENKYU_PAGE_SOURCE: RuleSource = { title: "在留資格「特定活動」（特定研究等活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities07.html", kind: "page", comparedAt: "2026-10-18" };
@@ -3102,7 +3102,7 @@ export const TOKUTEI_KENKYU_RENEWAL: RuleSet = {
 // 在留資格「特定活動」のうち、本邦大学等卒業者（告示46号）の本人（種別 daigakuSotsugyo。Issue #300）。カテゴリー区分はなく、すべての書類がどのカテゴリーでも同じ。
 // 提出書類は、入管庁の案内ページ（designatedactivities11）の「本邦大学等卒業者の場合に必要な書類」の列の原文による（2026-10-12 に原文を確認。認定・変更・更新のチェックシートは案内ページに掲載がなく、照合していない）。
 // 告示の番号は、案内ページ・様式Nの注記とも「告示46号」（Issue #300 の依頼文の「44号」「45号」とは異なる）。
-// 範囲外：本邦大学等卒業者の家族（案内ページの家族の列）は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも）。
+// 範囲外：本邦大学等卒業者の家族（案内ページの家族の列）は種別「その他」（取得も対象外で、ACQUISITION_BY_CAUSE のまま）。本人の取得は DAIGAKU_SOTSUGYO_ACQUISITION（原文の取得の節に照合済み、2026-10-19）。申請書は様式N（認定・変更・更新とも）。
 const DAIGAKU_SOTSUGYO_STATUS = "特定活動";
 const DAIGAKU_SOTSUGYO_CHECKED_AT = "2026-10-12";
 const DAIGAKU_SOTSUGYO_PAGE_SOURCE: RuleSource = { title: "在留資格「特定活動」（本邦大学等卒業者及びその配偶者等）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities11.html", kind: "page", comparedAt: "2026-10-18" };
@@ -3222,7 +3222,7 @@ export const DAIGAKU_SOTSUGYO_RENEWAL: RuleSet = {
 // 旅券・申請書・写真は共通ルール（procedureCommonRules）に任せ、ここには書かない。案内ページに「任意」の区分に当たる書類（提示不要だが実務では取得するのが通例）の記載はなく、
 // 「任意」は、認定の旅券の写し（共通ルール）のみ。
 // 案内ページの36号（designatedactivities07）との差：変更に「卒業証明書、在職証明書、履歴書」の記載がない（36号の変更には記載あり）。足さないと決めた（原文にない書類は足さない）。
-// 範囲外：特定情報処理活動の家族は種別「その他」。取得は、事由別の規則集合（ACQUISITION_BY_CAUSE）が扱う。申請書は様式N（認定・変更・更新とも。lib/hspForm.ts の FORM_N_TOKUTEI_TYPES）。
+// 範囲外：特定情報処理活動の家族は種別「その他」。取得は TOKUTEI_JOHO_ACQUISITION（原文の取得の節に照合済み、2026-10-19）。申請書は様式N（認定・変更・更新とも。lib/hspForm.ts の FORM_N_TOKUTEI_TYPES）。
 const TOKUTEI_JOHO_STATUS = "特定活動";
 const TOKUTEI_JOHO_CHECKED_AT = "2026-10-17";
 const TOKUTEI_JOHO_PAGE_SOURCE: RuleSource = { title: "在留資格「特定活動」（特定情報処理活動）（出入国在留管理庁）", url: "https://www.moj.go.jp/isa/applications/status/designatedactivities08.html", kind: "page", comparedAt: "2026-10-18" };
@@ -3347,6 +3347,245 @@ export const TOKUTEI_JOHO_RENEWAL: RuleSet = {
   rules: [...procedureCommonRules("renewal"), tokuteiJohoRenewalActivityDocuments, tokuteiJohoResidentTax],
 };
 
+// ===== 在留資格取得許可申請（芸術・宗教・法律・会計業務・短期滞在・特定活動〔07・08・11〕。Issue #421・#422・#424・#431・#432） =====
+// 照合表は docs/official/reconciliation/acquisition-geijutsu・acquisition-shukyo・acquisition-houmu-kaikei・acquisition-tanki-taizai・
+// acquisition-tokutei-katsudou-07/08/11（いずれも 2026-10-19）。人の判断「推奨のとおり」（2026-10-19）の R 項目をすべて反映した。
+// 興行（#429。acquisition-kogyo-2026-10-19.md）は、ページに取得の節が無く、ACQUISITION_BY_CAUSE のまま（人の判断：推奨のとおり、変更なし）。
+// 共通の扱いは技人国の取得（#396）と同じ：出生の3書類・活動に応じた資料・旅券の理由書を外し、出生は「その事由を証する書類」として扱い、
+// 写真は「写真（40mm×30mm）」を全事由の必須（注記は年齢の注記のみ）、申請取次者の書類の注記は原文のとおり（ACQUISITION_AGENT_IDENTITY_NOTE）。
+// ACQUISITION_BY_CAUSE の文言・checkedAt は変えない。上書きも削除もしない書類は、ACQUISITION_BY_CAUSE の規則をそのまま引き継ぐ。
+const ACQUISITION_SET3_COMPARED_AT = "2026-10-19";
+const ACQUISITION_SET3_CHECKED_AT = "2026-10-19";
+
+/** ACQUISITION_BY_CAUSE の規則に、技人国の取得（#396）と同じ削除・上書きを当て、資格ごとの上書き（extra）を重ねる。removeIds は追加で外す書類 */
+function acquisitionSet3BaseRules(extra: Record<string, Partial<RequirementRule>> = {}, removeIds: string[] = []): RequirementRule[] {
+  return ACQUISITION_BY_CAUSE.rules
+    .filter((r) => !GIJINKOKU_ACQUISITION_REMOVED_IDS.includes(r.id) && !removeIds.includes(r.id))
+    .map((r) => {
+      const over = { ...GIJINKOKU_ACQUISITION_OVERRIDES[r.id], ...extra[r.id] };
+      return Object.keys(over).length > 0 ? { ...r, ...over } : r;
+    });
+}
+
+/** 認定・変更の規則（categories: ALL）を、取得の事由で判定する規則集合に流用する。事由で判定する規則集合では causes が無いと出ないため、全事由を付ける */
+function asAcquisitionRule(rule: RequirementRule, over: Partial<RequirementRule> = {}): RequirementRule {
+  const out: RequirementRule = { ...rule, causes: ALL_CAUSES, ...over };
+  delete out.categories;
+  return out;
+}
+
+function changeRuleOf(set: RuleSet, id: string): RequirementRule {
+  const rule = set.rules.find((r) => r.id === id);
+  if (!rule) throw new Error(`${set.id} に規則 ${id} がない`);
+  return rule;
+}
+
+// 芸術・宗教のページの URL は未記録（照合表 R-10。推測で書かない）。出典の名称に「URL 未記録」と書き、リンク先は「在留資格から探す」の一覧とする
+const ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE: RuleSource = {
+  title: "入管庁『在留資格から探す』の各ページ（URL 未記録）",
+  url: "https://www.moj.go.jp/isa/applications/status/index.html",
+  kind: "page",
+  comparedAt: ACQUISITION_SET3_COMPARED_AT,
+};
+
+// 芸術（#421。原文 geijutsu_2026-10-18.txt 135〜164行）
+const GEIJUTSU_ACQUISITION_PASSPORT_NOTE = "提示のみで、提出書類としてコピーを付ける書類ではない。案内ページの原文は「パスポート及び在留カード 提示」";
+export const GEIJUTSU_ACQUISITION: RuleSet = {
+  id: "geijutsu_acquisition",
+  title: "芸術 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "芸術",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    // R-6：名称・区分は変えず、注記に原文の「パスポート及び在留カード 提示」を書く
+    ...acquisitionSet3BaseRules({ passport_presentation: { note: GEIJUTSU_ACQUISITION_PASSPORT_NOTE } }),
+    // R-1：契約の有無で(1)(2)のいずれか。必須の1行にまとめ、(1)(2)の別と「適宜」を注記に書く
+    {
+      id: "geijutsu_activity_documents",
+      name: "申請人の活動の内容等を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "次のいずれか。(1)公私の機関又は個人との契約に基づいて活動を行う場合：活動の内容、期間、地位及び報酬を証明する文書 1通 (2)公私の機関又は個人との契約に基づかないで活動を行う場合：申請人が作成する具体的な活動の内容、期間及び行おうとする活動から生じる収入の見込額を記載した文書（適宜の様式） 適宜",
+      verify: true,
+    },
+    // R-2：履歴書（必須）と、業績の資料（必須。5種のいずれか）
+    { id: "geijutsu_resume", name: "芸術上の活動歴を詳細に記載した履歴書", party: "applicant", causes: ALL_CAUSES, level: "required", note: "1通", verify: true },
+    {
+      id: "geijutsu_achievements",
+      name: "芸術活動上の業績を明らかにすることができるもの",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "次のいずれか。関係団体からの推薦状 1通／過去の活動に関する報道 適宜／入賞、入選等の実績 適宜／過去の作品等の目録 適宜／これらに準ずるもの 適宜",
+      verify: true,
+    },
+  ],
+};
+
+// 宗教（#422。原文 shukyo_2026-10-18.txt 118〜138行）
+export const SHUKYO_ACQUISITION: RuleSet = {
+  id: "shukyo_acquisition",
+  title: "宗教 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "宗教",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [ACQUISITION_STATUS_PAGES_UNRECORDED_SOURCE, ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  rules: [
+    ...acquisitionSet3BaseRules(),
+    // R-1・R-2：必須。「適宜」は数量の指定のため注記に書く
+    {
+      id: "shukyo_dispatch_letter",
+      name: "外国の宗教団体からの派遣状等の写し等派遣機関からの派遣期間、地位及び報酬を証明する文書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "適宜",
+      verify: true,
+    },
+    {
+      id: "shukyo_organization_overview",
+      name: "派遣機関及び受入機関の概要（宗派、沿革、代表者名、組織、施設、信者数等）を明らかにする資料",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "required",
+      note: "適宜",
+      verify: true,
+    },
+    // R-3：条件付きのため要確認。原文 137行の「提示」と「提出」の違いは推測せず、名称に「（提示）」を付けない
+    {
+      id: "shukyo_status_career",
+      name: "宗教家としての地位及び職歴を証明する文書",
+      party: "applicant",
+      causes: ALL_CAUSES,
+      level: "check",
+      note: "適宜。派遣機関からの証明書等で、申請人の宗教家としての地位、職歴を証明する。派遣状等に地位・職歴が記載されていれば不要",
+      verify: true,
+    },
+  ],
+};
+
+// 法律・会計業務（#424。原文 legalaccountingservices_2026-10-18.txt 84〜102行）。R-1：認定・変更と同じ資格の証明文書を、全事由の必須で流用する
+export const HOUMU_KAIKEI_ACQUISITION: RuleSet = {
+  id: "houmu_kaikei_acquisition",
+  title: "法律・会計業務 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: HOUMU_KAIKEI,
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [
+    { title: "在留資格「法律・会計業務」在留資格取得許可申請（出入国在留管理庁）", url: HOUMU_KAIKEI_SOURCE.url, kind: "page", comparedAt: ACQUISITION_SET3_COMPARED_AT },
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  rules: [...acquisitionSet3BaseRules(), asAcquisitionRule(houmuKaikeiLicense)],
+};
+
+// 短期滞在（#431。原文 tanki-taizai_2026-10-18.txt 83〜94行）。原文の5項目と一対一（照合表の補足）。
+// R-2：事由別の書類（国籍を証する書類・事由を証する書類）も外す（原文に「区分により、それぞれ定める書類」の項目が無い）。
+// R-3：写真は外す（例外。原文に項目が無く、短期滞在は中長期在留者とならない在留資格〔入管法第19条の3第2号〕。#396 の「写真（40mm×30mm）を全事由に必須」は適用しない）。
+// R-7：ページの URL は人が確認してから出典に入れる（推測で書かない）。それまでは手続案内と申請書様式のみ
+const TANKI_TAIZAI_ACQUISITION_RULES: RequirementRule[] = [
+  { id: "tanki_reason_statement", name: "「短期滞在」の取得を必要とする理由書（書式自由）", party: "applicant", causes: ALL_CAUSES, level: "required", note: "1通", verify: true },
+  {
+    id: "tanki_departure_transport",
+    name: "出国するために必要な交通手段を確保していることを明らかにする資料（航空券等）",
+    party: "applicant",
+    causes: ALL_CAUSES,
+    level: "check",
+    note: "適宜。提示",
+    verify: true,
+  },
+];
+export const TANKI_TAIZAI_ACQUISITION: RuleSet = {
+  id: "tanki_taizai_acquisition",
+  title: "短期滞在 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: "短期滞在",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [ACQUISITION_PROCEDURE_GUIDE_SOURCE, ...ACQUISITION_BY_CAUSE.sources],
+  // 原文の並び（申請書・パスポート提示・理由書・交通手段の資料・申請取次者の書類）に合わせ、旅券の提示の後ろに入れる
+  rules: acquisitionSet3BaseRules({}, ["photo", "nationality_proof", "cause_proof"]).flatMap((r) => (r.id === "passport_presentation" ? [r, ...TANKI_TAIZAI_ACQUISITION_RULES] : [r])),
+};
+
+// 特定活動（#432）。種別（subtype）を持つ規則集合は、在留資格と種別の両方が合うときだけ選ばれる（evaluate.ts の matchRuleSet）。
+// 種別が未選択・その他（家族を含む）の特定活動の取得は、ACQUISITION_BY_CAUSE のまま。認定・変更の規則は causes を持たないため、ALL_CAUSES を付けて流用する（asAcquisitionRule）
+// 特定研究等活動（07。原文 designatedactivities07_2026-10-18.txt 125〜164行）。R-1：変更と同じ書類・区分。R-8：転職した場合の2行（要確認）。R-9：番号を書かない既存の注記のまま
+export const TOKUTEI_KENKYU_ACQUISITION: RuleSet = {
+  id: "tokutei_kenkyu_acquisition",
+  title: "特定活動（特定研究等活動） 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: TOKUTEI_KENKYU_STATUS,
+  subtype: "tokuteiKenkyu",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [
+    { title: "在留資格「特定活動」（特定研究等活動）在留資格取得許可申請（出入国在留管理庁）", url: TOKUTEI_KENKYU_PAGE_SOURCE.url, kind: "page", comparedAt: ACQUISITION_SET3_COMPARED_AT },
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  rules: [
+    ...acquisitionSet3BaseRules(),
+    ...[
+      ...tokuteiKenkyuOrganizationRules,
+      tokuteiKenkyuActivityDocuments,
+      tokuteiKenkyuCareerDocuments,
+      changeRuleOf(TOKUTEI_KENKYU_CHANGE, "resignation_certificate"),
+      changeRuleOf(TOKUTEI_KENKYU_CHANGE, "resident_tax_certificates"),
+    ].map((r) => asAcquisitionRule(r)),
+  ],
+};
+
+// 本邦大学等卒業者（11。原文 designatedactivities11_2026-10-18.txt 215〜273行。本人の列のみ。R-9：家族の列は対象外のまま）。R-1：認定・変更と同じ6件。
+// R-8：この資格の取得の節は「パスポート及び在留カード 提示」（234行）のため、名称を原文のとおりにする
+const DAIGAKU_SOTSUGYO_ACQUISITION_PASSPORT: Partial<RequirementRule> = {
+  name: "パスポート及び在留カード（提示）",
+  note: "提示のみで、提出書類としてコピーを付ける書類ではない。在留カードを持たない場合の扱いは、案内ページに記載がないため行政書士が確認する",
+};
+export const DAIGAKU_SOTSUGYO_ACQUISITION: RuleSet = {
+  id: "daigaku_sotsugyo_acquisition",
+  title: "特定活動（本邦大学卒業者） 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: DAIGAKU_SOTSUGYO_STATUS,
+  subtype: "daigakuSotsugyo",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [
+    { title: "在留資格「特定活動」（本邦大学等卒業者）在留資格取得許可申請（出入国在留管理庁）", url: DAIGAKU_SOTSUGYO_PAGE_SOURCE.url, kind: "page", comparedAt: ACQUISITION_SET3_COMPARED_AT },
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  rules: [...acquisitionSet3BaseRules({ passport_presentation: DAIGAKU_SOTSUGYO_ACQUISITION_PASSPORT }), ...daigakuSotsugyoApplicationRules.map((r) => asAcquisitionRule(r))],
+};
+
+// 特定情報処理活動（08。原文 designatedactivities08_2026-10-18.txt 120〜156行）。R-1：変更と同じ書類・区分（活動の内容等は認定・変更の選択肢）。
+// R-8：派遣の資料（要確認）。R-9：契約機関の変更があった場合の2行（要確認）。退職証明書の名称は原文のとおり「前契約機関」（変更の名称は変えない）
+export const TOKUTEI_JOHO_ACQUISITION: RuleSet = {
+  id: "tokutei_joho_acquisition",
+  title: "特定活動（特定情報処理活動） 在留資格取得許可申請（一部のみ整備）",
+  procedureType: "acquisition",
+  residenceStatus: TOKUTEI_JOHO_STATUS,
+  subtype: "tokuteiJoho",
+  basis: "acquisitionCause",
+  checkedAt: ACQUISITION_SET3_CHECKED_AT,
+  sources: [
+    { title: "在留資格「特定活動」（特定情報処理活動）在留資格取得許可申請（出入国在留管理庁）", url: TOKUTEI_JOHO_PAGE_SOURCE.url, kind: "page", comparedAt: ACQUISITION_SET3_COMPARED_AT },
+    ACQUISITION_PROCEDURE_GUIDE_SOURCE,
+    ...ACQUISITION_BY_CAUSE.sources,
+  ],
+  rules: [
+    ...acquisitionSet3BaseRules(),
+    ...[...tokuteiJohoOrganizationRules, tokuteiJohoActivityDocuments, tokuteiJohoDispatch].map((r) => asAcquisitionRule(r)),
+    asAcquisitionRule(changeRuleOf(TOKUTEI_JOHO_CHANGE, "resignation_certificate"), { name: "前契約機関が作成した退職証明書（退職日を明記したもの）" }),
+    asAcquisitionRule(changeRuleOf(TOKUTEI_JOHO_CHANGE, "resident_tax_certificates")),
+  ],
+};
+// ===== ここまで（取得：芸術・宗教・法律・会計業務・短期滞在・特定活動〔07・08・11〕） =====
+
 export const RULE_SETS: RuleSet[] = [
   GIJINKOKU_RENEWAL,
   GIJINKOKU_CHANGE,
@@ -3373,6 +3612,12 @@ export const RULE_SETS: RuleSet[] = [
   GINO_ACQUISITION,
   KAIGO_ACQUISITION,
   ACQUISITION_BY_CAUSE,
+  // 取得：芸術・宗教・法律・会計業務・短期滞在（Issue #421・#422・#424・#431）。在留資格に固有の規則集合は、
+  // 在留資格を問わない ACQUISITION_BY_CAUSE より先に選ばれる（並び順によらない。matchRuleSet）
+  GEIJUTSU_ACQUISITION,
+  SHUKYO_ACQUISITION,
+  HOUMU_KAIKEI_ACQUISITION,
+  TANKI_TAIZAI_ACQUISITION,
   // 介護（Issue #297）
   KAIGO_RENEWAL,
   KAIGO_CHANGE,
@@ -3421,4 +3666,8 @@ export const RULE_SETS: RuleSet[] = [
   TOKUTEI_JOHO_RENEWAL,
   TOKUTEI_JOHO_CHANGE,
   TOKUTEI_JOHO_COE,
+  // 特定活動〔07・08・11〕の取得（Issue #432）。種別つきの規則集合のため末尾に置く
+  TOKUTEI_KENKYU_ACQUISITION,
+  DAIGAKU_SOTSUGYO_ACQUISITION,
+  TOKUTEI_JOHO_ACQUISITION,
 ];

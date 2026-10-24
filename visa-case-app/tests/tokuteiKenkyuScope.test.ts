@@ -81,9 +81,9 @@ describe("特定研究等活動の規則集合", () => {
     expect(evaluate(make("renewal", "tokuteiKenkyu")).ruleSet).toBe(TOKUTEI_KENKYU_RENEWAL);
   });
 
-  it("取得（acquisition）は、事由別の規則集合のまま：種別 tokuteiKenkyu でも変わらない", () => {
-    expect(evaluate(make("acquisition", "tokuteiKenkyu")).ruleSet?.id).toBe(evaluate(make("acquisition", "")).ruleSet?.id);
-    expect(RULE_SETS.some((r) => r.subtype === "tokuteiKenkyu" && r.procedureType === "acquisition")).toBe(false);
+  it("取得（acquisition）は、種別 tokuteiKenkyu では取得の規則集合（#432）。未選択は事由別の規則集合のまま", () => {
+    expect(evaluate(make("acquisition", "tokuteiKenkyu")).ruleSet?.id).toBe("tokutei_kenkyu_acquisition");
+    expect(evaluate(make("acquisition", "")).ruleSet?.id).toBe("acquisition_by_cause");
   });
 
   it("種別が未選択・ほかの種別のときは、規則集合に当たらず、未選択のときだけ種別の注意（needsSubtype）が出る", () => {
