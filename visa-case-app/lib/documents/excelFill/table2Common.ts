@@ -1,4 +1,3 @@
-import type { FormResolution } from "../../hspForm";
 import { capitalValue, digitsOf, jobDescriptionLines, type FillCtx, type FillItem, type PickItem } from "./renewalMapping";
 
 /**
@@ -122,18 +121,4 @@ export function build(spec: Table2Spec): Table2Mapping {
     ? [{ no: "", label: "給与・報酬の区分", sheet: spec.monthlyBox[0], get: (c) => (c.e.monthlySalary.trim() ? "月額" : ""), writes: { 月額: { [spec.monthlyBox[1]]: "■" } } }]
     : [];
   return { name: spec.name, fill, pick, maxWork: slots.length, manual: spec.manual };
-}
-
-/**
- * 差し込む範囲を決める（手続に依存しない）。様式を特定できた高度専門職は、その様式の全表。
- * 高度専門職ではない（not_applicable）は、手続ごとに決めた様式の全表。
- * それ以外（号・活動が未確定、表にない、2号の更新）は、他の様式の表を流用せず、第1表のみ。
- */
-export function planFill<C>(
-  r: FormResolution<C>,
-  forms: { notApplicable: C; unresolved: C },
-): { form: C; firstOnly: boolean } {
-  if (r.kind === "resolved") return { form: r.form, firstOnly: false };
-  if (r.kind !== "not_applicable") return { form: forms.unresolved, firstOnly: true };
-  return { form: forms.notApplicable, firstOnly: false };
 }

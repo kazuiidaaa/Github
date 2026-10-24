@@ -1,12 +1,11 @@
 import path from "node:path";
 import type { FormDetails } from "../../formDetails";
-import { formCodeOfStatus, isAdvancedProfessional, isFormNTokuteiCase, isStatusInFormScope, resolveChangeForm, type CoeFormCode, type FormResolution } from "../../hspForm";
+import { changeFormPlan, isAdvancedProfessional, isFormNTokuteiCase, isStatusInFormScope, type CoeFormCode, type FormResolution } from "../../hspForm";
 import type { Applicant, EmploymentInfo } from "../../types";
 import {
   CHANGE_DIGIT_CHECKS,
   CHANGE_FILL_ITEMS,
   CHANGE_PICK_ITEMS,
-  CHANGE_TARGET_STATUS_KEIEI_KANRI,
   SHEET_CHANGE_APPLICANT_1,
   JOB_DESCRIPTION_LINES,
   MAX_RELATIVES,
@@ -20,7 +19,7 @@ import { fillWorkbook } from "./fillWorkbook";
 import { formMWarnings, hspChangeWarnings } from "./hspChangeCommon";
 import { HSP_CHANGE_TABLE2 } from "./hspChangeTable2";
 import { tokuteiKatsudoWarnings } from "./tokuteiKatsudo";
-import { planFill as planHspFill, type Table2Mapping } from "./table2Common";
+import type { Table2Mapping } from "./table2Common";
 
 const officialPath = (file: string) => path.join(process.cwd(), "docs", "official", file);
 
@@ -51,11 +50,11 @@ export async function fillChangeExcel(
   targetStatus: string,
 ): Promise<{ buffer: Buffer; warnings: string[] }> {
   const ctx: ChangeCtx = { a, e, f, targetStatus };
-  const resolution = resolveChangeForm(targetStatus, f.hspActivity ?? "");
-  // 高度専門職ではない「経営・管理」は様式 M（認定と同じ。#397 R-14）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
+  // 様式の選択は lib/hspForm.ts の changeFormPlan（生成書類の「対象の公式様式」欄と同じ判定）。
+  // 高度専門職ではない「経営・管理」は様式 M（#397 R-14）、「教授」は様式 I（Issue #292）、「報道」は様式 L（Issue #294）、
   // 「法律・会計業務」「医療」は様式 U（Issue #301・#302）を使う（いずれも第2表以降を含む）
-  const notApplicable: CoeFormCode = isKeieiKanri(targetStatus) ? "M" : formCodeOfStatus(targetStatus) ?? "N";
-  const plan = planHspFill<CoeFormCode>(resolution, { notApplicable, unresolved: "N" });
+  const plan = changeFormPlan(targetStatus, f.hspActivity ?? "");
+  const { resolution } = plan;
   const table2 = plan.form === "N" || plan.firstOnly ? null : HSP_CHANGE_TABLE2[plan.form];
   const first = sheetKey(SHEET_CHANGE_APPLICANT_1);
   // 様式 I・L・M・U は、第1表だけ様式 N の座標と同じ。第2表以降は、様式ごとの対応表（hspChangeTable2.ts）を使う
@@ -69,8 +68,6 @@ export async function fillChangeExcel(
   );
   return { buffer, warnings: buildWarnings(ctx, resolution, table2, plan.form) };
 }
-
-const isKeieiKanri = (targetStatus: string) => targetStatus.trim() === CHANGE_TARGET_STATUS_KEIEI_KANRI;
 
 function buildWarnings(c: ChangeCtx, resolution: FormResolution<CoeFormCode>, table2: Table2Mapping | null, form: CoeFormCode): string[] {
   const w: string[] = [];

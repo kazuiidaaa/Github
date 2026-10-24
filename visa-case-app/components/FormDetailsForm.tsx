@@ -87,8 +87,9 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
     statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }),
   );
   // 医療の申請人の区分は、手続に使う在留資格が医療のときだけ尋ねる（所属機関のカテゴリーとは別の項目）
-  const showMedicalType =
-    ruleSetFor(record.procedureType, statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }))?.basis === "applicantType";
+  // 取得（IRYO_ACQUISITION）は、basis が取得の事由で、申請人の区分は alsoBasis に持つ（acquisition-iryou-2026-10-19.md の R-1）
+  const medicalRuleSet = ruleSetFor(record.procedureType, statusForRules(record.procedureType, { currentStatus: record.currentStatus, targetStatus: record.targetStatus }));
+  const showMedicalType = medicalRuleSet?.basis === "applicantType" || (medicalRuleSet?.alsoBasis?.includes("applicantType") ?? false);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);

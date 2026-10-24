@@ -229,6 +229,23 @@
     ],
     "digest": "aca00f72eecd2033bdaa4ab90590eccf4c04fb66e004933aa74963b745852018"
   },
+  "kaigo_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "care_worker_registration",
+      "working_conditions_document",
+      "dispatch_documents",
+      "organization_overview",
+      "representative_declaration",
+      "skill_transfer_declaration"
+    ],
+    "digest": "b636fbf082ebeff0f1c8d77e7b004adc9d69ced2e4f891752bb02d4396f53f0e"
+  },
   "acquisition_by_cause": {
     "ruleIds": [
       "application_form",
@@ -777,5 +794,112 @@
       "dispatch_documents"
     ],
     "digest": "0ed869c61c06fa9a95535786f46c6491affb3a54ef383ed5d5e27bdcb3b6c7fd"
+  },
+  "geijutsu_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "geijutsu_activity_documents",
+      "geijutsu_resume",
+      "geijutsu_achievements"
+    ],
+    "digest": "dc1dcc3651fa3dd1b7575bf5b35440dc16a7310903e2373afd14235f304309f3"
+  },
+  "shukyo_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "shukyo_dispatch_letter",
+      "shukyo_organization_overview",
+      "shukyo_status_career"
+    ],
+    "digest": "0a1b8af809416c1f8775ff498b061ccd2a387f8ea539d3b63d6982453f822812"
+  },
+  "houmu_kaikei_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "legal_accounting_license"
+    ],
+    "digest": "b3986a8a091bab90904b5935585d1b5d55c3627f373be6347b5c93c7d1eb6789"
+  },
+  "tanki_taizai_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "passport_presentation",
+      "tanki_reason_statement",
+      "tanki_departure_transport",
+      "agent_identity_document"
+    ],
+    "digest": "6aa74a022c17c645d7384c8f9416b68ddd5d9b3bfc3c7a6d481858e77c8b8f1d"
+  },
+  "tokutei_kenkyu_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "organization_brochure",
+      "registry_certificate",
+      "organization_equivalent_documents",
+      "foreign_staff_list",
+      "consent_form",
+      "activity_documents",
+      "career_documents",
+      "resignation_certificate",
+      "resident_tax_certificates"
+    ],
+    "digest": "74ed6236ab78aee4fff5b7a001f2f81cc16cf916f4ff854bb9a9290153126323"
+  },
+  "daigaku_sotsugyo_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "labor_conditions_document",
+      "employment_reason",
+      "education_documents",
+      "japanese_ability",
+      "business_description",
+      "representative_declaration"
+    ],
+    "digest": "21e9e8882c2b4a3d1551dd8902e159ad8d2f2f9812affbb6677b4dfc4a9404c0"
+  },
+  "tokutei_joho_acquisition": {
+    "ruleIds": [
+      "application_form",
+      "photo",
+      "passport_presentation",
+      "agent_identity_document",
+      "nationality_proof",
+      "cause_proof",
+      "organization_brochure",
+      "registry_certificate",
+      "organization_equivalent_documents",
+      "foreign_staff_list",
+      "consent_form",
+      "activity_documents",
+      "dispatch_documents",
+      "resignation_certificate",
+      "resident_tax_certificates"
+    ],
+    "digest": "519d4b1848b8eac88eaa0d11462044d3701a93c85be07459607797ed81255dae"
   }
 }

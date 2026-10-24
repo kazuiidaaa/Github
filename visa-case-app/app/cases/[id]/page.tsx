@@ -21,6 +21,7 @@ import { useToast } from "@/components/Toast";
 import { UploadBox } from "@/components/UploadBox";
 import { Badge, Button } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
+import { currentStatusOf, StatusTransition } from "@/components/StatusTransition";
 import { findDocumentOfType, removeDocumentOfType, type UploadedDocumentType } from "@/lib/documentKinds";
 import { expiryLevel } from "@/lib/caseMetrics";
 import { canJumpToApplicantField } from "@/lib/applicantFields";
@@ -243,6 +244,9 @@ export default function CaseDetailPage() {
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             {procedure}
             <WorkflowBadge status={record.workflowStatus} />
+          </p>
+          <p className="mt-1 text-sm">
+            <StatusTransition procedureType={record.procedureType} current={currentStatusOf(record)} target={record.targetStatus} />
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-between gap-2 md:w-auto md:shrink-0 md:flex-nowrap md:justify-start">
