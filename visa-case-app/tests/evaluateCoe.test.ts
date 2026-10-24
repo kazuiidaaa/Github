@@ -40,7 +40,7 @@ describe("evaluate: 在留資格認定証明書交付申請（技術・人文知
   });
 
   it("他の手続・在留資格には適用しない", () => {
-    expect(evaluate(make({ currentStatus: "留学", targetStatus: "留学" })).ruleSet).toBeNull();
+    expect(evaluate(make({ currentStatus: "家族滞在", targetStatus: "家族滞在" })).ruleSet).toBeNull();
     // 規則のない手続（other）で確認する。change は別PRで規則が追加されうるため使わない
     expect(evaluate(make({ procedureType: "other" })).ruleSet).toBeNull();
   });

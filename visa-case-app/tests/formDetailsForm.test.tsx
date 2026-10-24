@@ -209,6 +209,40 @@ describe("医療の申請人の区分の入力欄（Issue #310）", () => {
   });
 });
 
+describe("定住者の区分の入力欄（認定・変更・更新。Issue #420）", () => {
+  const field = "定住者の区分";
+  it("手続に使う在留資格が定住者のとき、取得に加えて認定・変更・更新でも表示する（認定・変更は希望する在留資格、更新は現在の在留資格）", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "coe", targetStatus: "定住者" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "定住者" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "定住者" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "acquisition", targetStatus: "定住者" })} />)).toContain(field);
+  });
+  it("定住者以外の在留資格では表示しない", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "永住者の配偶者等" })} />)).not.toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "技能" })} />)).not.toContain(field);
+  });
+});
+
+describe("更新の回数の入力欄（定住者・日系3世の更新。Issue #420）", () => {
+  const field = "更新の回数（日系3世の更新）";
+  const render = (over: Partial<CaseRecord>, teijushaType: "" | "nikkei3" | "nikkei2Spouse" = "nikkei3") =>
+    renderToStaticMarkup(<FormDetailsForm record={makeRecord({ ...over, formDetails: { ...EMPTY_FORM_DETAILS, teijushaType } })} />);
+  it("定住者の更新で、区分が日系3世のときだけ表示する。選択肢は初めて・2回目以降", () => {
+    const m = render({ procedureType: "renewal", currentStatus: "定住者" });
+    expect(m).toContain(field);
+    expect(m).toContain("初めての更新");
+    expect(m).toContain("2回目以降の更新");
+  });
+  it("区分が日系3世以外・未選択のとき、認定・変更・取得のとき、定住者以外のときは表示しない", () => {
+    expect(render({ procedureType: "renewal", currentStatus: "定住者" }, "nikkei2Spouse")).not.toContain(field);
+    expect(render({ procedureType: "renewal", currentStatus: "定住者" }, "")).not.toContain(field);
+    expect(render({ procedureType: "coe", targetStatus: "定住者" })).not.toContain(field);
+    expect(render({ procedureType: "change", targetStatus: "定住者" })).not.toContain(field);
+    expect(render({ procedureType: "acquisition", targetStatus: "定住者" })).not.toContain(field);
+    expect(render({ procedureType: "renewal", currentStatus: "技能" })).not.toContain(field);
+  });
+});
+
 describe("誤りの要約と、誤りの欄への移動の準備（Issue #392 PR-9）", () => {
   const record = makeRecord({
     procedureType: "renewal",

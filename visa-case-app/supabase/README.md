@@ -147,3 +147,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
   ```
 
   その後、画面で案件情報の「受任日」を入力して保存し、再読み込み後も残ることを確認してください。
+
+## 0025(手続種別「永住許可申請」)
+
+- `supabase/migrations/0025_procedure_type_permanent.sql`:`cases.procedure_type` の許可する値に `permanent` を追加します(0017 と同じ作り。Issue #420)。既存データへの影響はありません。実行せずに最新のアプリを使うと、手続種別「永住許可申請」の案件を保存できません(他の手続種別は従来どおり動作します)。
+- 0024 の実行後に、SQL Editor で実行します。実行前にバックアップを取得し、制約名が `cases_procedure_type_check` であることを、0017 の節の SQL で確認してください。

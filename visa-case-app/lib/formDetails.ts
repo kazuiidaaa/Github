@@ -59,6 +59,40 @@ export const TEIJUSHA_TYPES = [
 ] as const;
 export type TeijushaType = (typeof TEIJUSHA_TYPES)[number];
 
+/**
+ * 在留資格「留学」の入学先の種類（入管庁が、入学先の種類・適正校の区分ごとに提出書類一覧表を掲載している。在留資格が留学のときだけ使う）。
+ * univ-approved＝大学等（適正校クラスⅠ又はⅡ）／univ-nonapproved＝大学等（適正校の通知を受けていない）／vocational-class1・2＝専修学校・各種学校等（クラスⅠ・Ⅱ）／
+ * vocational-nonapproved＝専修学校・各種学校等（通知を受けていない）／japanese-nonapproved・class1・class2＝告示日本語教育機関及び認定日本語教育機関（通知を受けていない・クラスⅠ・Ⅱ）／highschool-below＝高等学校・中学校・小学校。
+ * 入管庁のページは、認定・変更・更新・取得のすべてで、この9区分の一覧表を掲載している。手元に資料がある組み合わせは lib/requirements/ryugakuSheets.ts
+ */
+export const SCHOOL_TYPES = [
+  "univ-approved",
+  "univ-nonapproved",
+  "vocational-class1",
+  "vocational-class2",
+  "vocational-nonapproved",
+  "japanese-nonapproved",
+  "japanese-class1",
+  "japanese-class2",
+  "highschool-below",
+] as const;
+export type SchoolType = (typeof SCHOOL_TYPES)[number];
+
+/**
+ * 永住許可申請（手続種別 permanent）の、提出書類一覧表の区分（入管庁の案内ページ「永住許可申請１」の4つのチェックシート）。
+ * 現在の在留資格が「日本人の配偶者等」か「永住者の配偶者等」のときだけ使う。
+ * nihonjinSpouse＝日本人の配偶者／nihonjinChild＝日本人の実子（特別養子縁組を含む）／eijushaSpouse＝永住者又は特別永住者の配偶者／eijushaChild＝永住者又は特別永住者の実子
+ */
+export const EIJUU_TYPES = ["nihonjinSpouse", "nihonjinChild", "eijushaSpouse", "eijushaChild"] as const;
+export type EijuuType = (typeof EIJUU_TYPES)[number];
+
+/**
+ * 定住者（日系3世）の在留期間更新許可申請の、更新の回数（入管庁の提出書類一覧が「初めて更新許可申請を行う場合」と「2回目以降の更新許可申請を行う場合」で別のシートのため）。
+ * first＝初めての更新／second＝2回目以降の更新。在留資格が定住者・区分が日系3世の更新のときだけ使う。
+ */
+export const RENEWAL_TIMES = ["first", "second"] as const;
+export type RenewalTimes = (typeof RENEWAL_TIMES)[number];
+
 export interface FormDetails {
   // 申請人等作成用1
   /** 出生地（変更・認定・取得の各様式にあり、更新様式にはない） */
@@ -124,6 +158,12 @@ export interface FormDetails {
   applicantIdentity: "" | ApplicantIdentity;
   /** 在留資格「定住者」の区分。"" は未選択（この項目がない既存の案件も ""） */
   teijushaType: "" | TeijushaType;
+  /** 在留資格「留学」の入学先の種類。"" は未選択（この項目がない既存の案件も ""） */
+  schoolType: "" | SchoolType;
+  /** 永住許可申請の提出書類一覧表の区分。"" は未選択（この項目がない既存の案件も ""） */
+  eijuuType: "" | EijuuType;
+  /** 定住者（日系3世）の更新が、初めてか2回目以降か。"" は未選択（この項目がない既存の案件も ""） */
+  renewalTimes: "" | RenewalTimes;
   // 在留資格取得許可申請（別記第三十六号様式）固有の項目。根拠：docs/official-forms-research.md（取得編）
   /** 11 在留資格取得の事由 */
   acquisitionCause: "" | "birth" | "nationalityLoss" | "other";
@@ -232,6 +272,9 @@ export const EMPTY_FORM_DETAILS: FormDetails = {
   medicalApplicantType: "",
   applicantIdentity: "",
   teijushaType: "",
+  schoolType: "",
+  eijuuType: "",
+  renewalTimes: "",
   acquisitionCause: "",
   acquisitionCauseOther: "",
   hspActivity: "",
@@ -286,6 +329,9 @@ export function normalizeFormDetails(raw: unknown): FormDetails {
     medicalApplicantType: (MEDICAL_APPLICANT_TYPES as readonly unknown[]).includes(r.medicalApplicantType) ? (r.medicalApplicantType as MedicalApplicantType) : "",
     applicantIdentity: (APPLICANT_IDENTITIES as readonly unknown[]).includes(r.applicantIdentity) ? (r.applicantIdentity as ApplicantIdentity) : "",
     teijushaType: (TEIJUSHA_TYPES as readonly unknown[]).includes(r.teijushaType) ? (r.teijushaType as TeijushaType) : "",
+    schoolType: (SCHOOL_TYPES as readonly unknown[]).includes(r.schoolType) ? (r.schoolType as SchoolType) : "",
+    eijuuType: (EIJUU_TYPES as readonly unknown[]).includes(r.eijuuType) ? (r.eijuuType as EijuuType) : "",
+    renewalTimes: (RENEWAL_TIMES as readonly unknown[]).includes(r.renewalTimes) ? (r.renewalTimes as RenewalTimes) : "",
   };
 }
 
