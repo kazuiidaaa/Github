@@ -209,6 +209,20 @@ describe("医療の申請人の区分の入力欄（Issue #310）", () => {
   });
 });
 
+describe("定住者の区分の入力欄（認定・変更・更新。Issue #420）", () => {
+  const field = "定住者の区分";
+  it("手続に使う在留資格が定住者のとき、取得に加えて認定・変更・更新でも表示する（認定・変更は希望する在留資格、更新は現在の在留資格）", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "coe", targetStatus: "定住者" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "定住者" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "定住者" })} />)).toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "acquisition", targetStatus: "定住者" })} />)).toContain(field);
+  });
+  it("定住者以外の在留資格では表示しない", () => {
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "change", targetStatus: "永住者の配偶者等" })} />)).not.toContain(field);
+    expect(renderToStaticMarkup(<FormDetailsForm record={makeRecord({ procedureType: "renewal", currentStatus: "技能" })} />)).not.toContain(field);
+  });
+});
+
 describe("誤りの要約と、誤りの欄への移動の準備（Issue #392 PR-9）", () => {
   const record = makeRecord({
     procedureType: "renewal",

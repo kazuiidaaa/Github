@@ -1,5 +1,14 @@
 import { translatedRequirementName } from "@/lib/documents/clientGuideNames";
 import type { Lang } from "@/lib/documents/lang";
+import {
+  TEIJUSHA_INCOME_TARGETS,
+  TEIJUSHA_RESIDENCE_PERSONS,
+  teijushaIncomeNote,
+  teijushaResidenceName,
+  teijushaTaxName,
+  type TeijushaIncomeTarget,
+  type TeijushaResidencePerson,
+} from "@/lib/requirements/teijushaProcedureTexts";
 
 /**
  * 必要書類の規則（lib/requirements/rules.ts）の、画面に出る文言の訳表。
@@ -12,7 +21,59 @@ import type { Lang } from "@/lib/documents/lang";
  */
 type Translated = readonly [en: string, ko: string];
 
+/**
+ * 定住者の認定・変更・更新（Issue #420）の、対象者だけが違う書類（住民票・住民税の証明書・職業収入）の訳。
+ * 日本語の文言は lib/requirements/teijushaProcedureTexts.ts が対象者の id から組み立てるため、訳も同じ id から組み立てる。訳文は行政書士の確認前の下書き。
+ */
+const TEIJUSHA_INCOME_TARGET_TEXTS: Record<TeijushaIncomeTarget, { en: [who: string, unemployed: string]; ko: [who: string, unemployed: string] }> = {
+  nikkei2: { en: ["the second-generation Nikkei person", "the second-generation Nikkei person"], ko: ["일계 2세 본인", "일계 2세 본인"] },
+  nikkei2OrApplicant: {
+    en: ["the second-generation Nikkei person or the applicant (whoever earns more)", "the second-generation Nikkei person and the applicant"],
+    ko: ["일계 2세 본인 또는 신청인(소득이 많은 쪽)", "일계 2세 본인 및 신청인"],
+  },
+  nikkei3: { en: ["the third-generation Nikkei person", "the third-generation Nikkei person"], ko: ["일계 3세 본인", "일계 3세 본인"] },
+  nikkei3OrApplicant: {
+    en: ["the third-generation Nikkei person or the applicant (whoever earns more)", "the third-generation Nikkei person and the applicant"],
+    ko: ["일계 3세 본인 또는 신청인(소득이 많은 쪽)", "일계 3세 본인 및 신청인"],
+  },
+  supporter: { en: ["the supporter", "the supporter"], ko: ["부양자", "부양자"] },
+  japaneseOrSpouse: {
+    en: ["the Japanese national or the spouse of the Japanese national (whoever earns more)", "the Japanese national and the spouse of the Japanese national"],
+    ko: ["일본인 또는 일본인의 배우자(소득이 많은 쪽)", "일본인 및 일본인의 배우자"],
+  },
+  permanentOrSpouse: {
+    en: ["the Permanent Resident or the spouse of the Permanent Resident (whoever earns more)", "the Permanent Resident and the spouse of the Permanent Resident"],
+    ko: ["영주자 또는 영주자의 배우자(소득이 많은 쪽)", "영주자 및 영주자의 배우자"],
+  },
+  japanese: { en: ["the Japanese national", "the Japanese national"], ko: ["일본인", "일본인"] },
+};
+const TEIJUSHA_RESIDENCE_PERSON_TEXTS: Record<TeijushaResidencePerson, [en: string, ko: string]> = {
+  applicant: ["the applicant", "신청인"],
+  nikkei2: ["the second-generation Nikkei person", "일계 2세 본인"],
+  nikkei3: ["the third-generation Nikkei person", "일계 3세 본인"],
+  japanese: ["the Japanese national", "일본인"],
+  permanentOrSpouse: ["the Permanent Resident or the spouse of the Permanent Resident", "영주자 또는 영주자의 배우자"],
+  supporter: ["the supporter", "부양자"],
+};
+const TEIJUSHA_PROCEDURE_GENERATED: Record<string, Translated> = {};
+for (const target of Object.keys(TEIJUSHA_INCOME_TARGETS) as TeijushaIncomeTarget[]) {
+  const { en, ko } = TEIJUSHA_INCOME_TARGET_TEXTS[target];
+  TEIJUSHA_PROCEDURE_GENERATED[teijushaTaxName(target)] = [
+    `Residence tax assessment (or non-assessment) certificate and tax payment certificate of ${en[0]} for the most recent year`,
+    `${ko[0]}의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세증명서`,
+  ];
+  TEIJUSHA_PROCEDURE_GENERATED[teijushaIncomeNote(target)] = [
+    `Any of the following (depending on the occupation of ${en[0]}). Employed by a company: employment certificate of ${en[0]} / self-employed, etc.: copy of the final tax return and copy of the business license (if any) of ${en[0]} / unemployed (${en[1]}): copy of a bank passbook (a copy of a web passbook screen showing the transaction history is also acceptable)`,
+    `다음 중 하나(${ko[0]}의 직업에 따른다). 회사에 근무: ${ko[0]}의 재직증명서 / 자영업 등: ${ko[0]}의 확정신고서 사본·영업허가서 사본(있는 경우) / 무직(${ko[1]}): 예금통장 사본(거래 내역을 알 수 있는 웹 통장 화면 사본 등도 가능)`,
+  ];
+}
+for (const person of Object.keys(TEIJUSHA_RESIDENCE_PERSONS) as TeijushaResidencePerson[]) {
+  const [en, ko] = TEIJUSHA_RESIDENCE_PERSON_TEXTS[person];
+  TEIJUSHA_PROCEDURE_GENERATED[teijushaResidenceName(person)] = [`Certificate of residence (juminhyo) of ${en} listing all household members`, `${ko}의 세대 전원이 기재된 주민표`];
+}
+
 export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
+  ...TEIJUSHA_PROCEDURE_GENERATED,
   // 書類名（clientGuideNames.ts にないもの）
   "在留期間更新許可申請書": ["Application for permission for extension of the period of stay", "체류기간 연장 허가 신청서"],
   "在留資格変更許可申請書": ["Application for permission for change of status of residence", "체류자격 변경 허가 신청서"],
@@ -1619,6 +1680,70 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "養子縁組に係る家庭裁判所の許可書謄本": ["Transcript of the family court's permission for the adoption", "입양에 관한 가정법원의 허가서 등본"],
   "1通。日本において養子縁組を成立させた場合のみ": ["1 copy. Only if the adoption was established in Japan", "1통. 일본에서 입양을 성립시킨 경우에만"],
   "申請人と養子縁組が成立していることを証明する本国（外国）の機関から発行された証明書": ["Certificate issued by the authority of the home country (abroad) proving that the adoption of the applicant has been established", "신청인과의 입양이 성립했음을 증명하는 본국(외국) 기관에서 발급한 증명서"],
+  // 定住者の認定・変更・更新（Issue #420。照合表 coe-change-renewal-teijusha-2026-10-24.md）。住民票・住民税の証明書・職業収入の訳は、上の TEIJUSHA_PROCEDURE_GENERATED が作る。訳文は行政書士の確認前の下書き
+  "定住者 在留資格認定証明書交付申請": ["Long-Term Resident - Application for certificate of eligibility", "정주자 사증발급인정서 교부 신청"],
+  "定住者 在留資格変更許可申請": ["Long-Term Resident - Application for permission for change of status of residence", "정주자 체류자격 변경 허가 신청"],
+  "定住者 在留期間更新許可申請": ["Long-Term Resident - Application for permission for extension of the period of stay", "정주자 체류기간 연장 허가 신청"],
+  "「定住者」に係る提出書類一覧（在留資格認定証明書交付申請用。区分ごとに別のPDFで、日系3世の方の分を掲載）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (for application for certificate of eligibility; a separate PDF for each category, the one for third-generation Nikkei is listed) (Immigration Services Agency of Japan)",
+    "'정주자'에 관한 제출서류 일람(사증발급인정서 교부 신청용. 구분별로 별도의 PDF이며 일계 3세용을 게재)(출입국재류관리청)",
+  ],
+  "「定住者」に係る提出書類一覧（在留資格変更許可申請用。区分ごとに別のPDFで、日系3世の方の分を掲載）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (for application for change of status of residence; a separate PDF for each category, the one for third-generation Nikkei is listed) (Immigration Services Agency of Japan)",
+    "'정주자'에 관한 제출서류 일람(체류자격 변경 허가 신청용. 구분별로 별도의 PDF이며 일계 3세용을 게재)(출입국재류관리청)",
+  ],
+  "「定住者」に係る提出書類一覧（在留期間更新許可申請用。区分ごとに別のPDFで、日系2世の方の配偶者の分を掲載）（出入国在留管理庁）": [
+    "List of documents to be submitted for \"Long-Term Resident\" (for application for extension of the period of stay; a separate PDF for each category, the one for the spouse of a second-generation Nikkei is listed) (Immigration Services Agency of Japan)",
+    "'정주자'에 관한 제출서류 일람(체류기간 연장 허가 신청용. 구분별로 별도의 PDF이며 일계 2세의 배우자용을 게재)(출입국재류관리청)",
+  ],
+  "本邦における同居者の住民票（世帯全員の記載があるもの）": ["Certificate of residence (juminhyo) of a cohabitant in Japan listing all household members", "일본 내 동거인의 세대 전원이 기재된 주민표"],
+  "本邦に居住する方と同居する場合のみ提出する": ["Submit only if the applicant lives with a person residing in Japan", "일본에 거주하는 사람과 동거하는 경우에만 제출한다"],
+  "日本の役所に届出している場合のみ提出する": ["Submit only if notification has been made to a Japanese municipal office", "일본의 관공서에 신고한 경우에만 제출한다"],
+  "1年間の総所得及び納税状況が記載されたもの": ["One showing the total income and tax payment status for the year", "1년간의 총소득 및 납세 상황이 기재된 것"],
+  "次のいずれか。(1)申請人が自ら証明する場合：預貯金残高証明書（申請人名義のもの。変更用のシートでは「預貯金通帳残高証明書」と記載）及び雇用予定証明書又は採用内定通知書（日本の会社発行のもの）／(2)申請人に代わって滞在費用支弁者が日本にいる場合：滞在費用支弁者の直近1年分の住民税の課税（又は非課税）証明書及び納税証明書（1年間の総所得及び納税状況が記載されたもの）": [
+    "One of the following. (1) If the applicant proves it personally: a bank balance certificate (in the applicant's name; the checksheet for change of status calls it a \"bank passbook balance certificate\") and a certificate of planned employment or a notice of informal job offer (issued by a Japanese company) / (2) If a person bearing the stay costs on behalf of the applicant is in Japan: the residence tax assessment (or non-assessment) certificate and the tax payment certificate of that person for the most recent year (showing the total income for the year and the tax payment status)",
+    "다음 중 하나. (1)신청인이 스스로 증명하는 경우: 예금잔고증명서(신청인 명의의 것. 변경용 체크시트에는 '예금통장 잔고증명서'로 기재) 및 고용예정증명서 또는 채용내정통지서(일본 회사 발급) / (2)신청인을 대신하여 체류비용 지불자가 일본에 있는 경우: 체류비용 지불자의 최근 1년분 주민세 과세(또는 비과세) 증명서 및 납세증명서(1년간의 총소득 및 납세 상황이 기재된 것)",
+  ],
+  "申請人が「定住者」の方の扶養を受ける日系人の場合のみ": ["Only if the applicant is a Nikkei person supported by a Long-Term Resident", "신청인이 '정주자'의 부양을 받는 일계인인 경우에만"],
+  "申請人が「定住者」の方の扶養を受ける日系人の場合で、一度も入管当局へ提出したことがない方のみ": [
+    "Only if the applicant is a Nikkei person supported by a Long-Term Resident and has never submitted it to the immigration authorities",
+    "신청인이 '정주자'의 부양을 받는 일계인이며 한 번도 출입국 당국에 제출한 적이 없는 경우에만",
+  ],
+  "一度も入管当局へ提出したことがない方のみ": ["Only if the applicant has never submitted it to the immigration authorities", "한 번도 출입국 당국에 제출한 적이 없는 경우에만"],
+  "例：祖父母及び父母の旅券、死亡証明書、運転免許証等": ["e.g. passports, death certificates, driver's licenses of the grandparents and parents", "예: 조부모 및 부모의 여권, 사망증명서, 운전면허증 등"],
+  "例：祖父母及び父母の旅券、死亡証明書、運転免許証等。申請人が「定住者」の方の扶養を受ける日系人の場合のみ": [
+    "e.g. passports, death certificates, driver's licenses of the grandparents and parents. Only if the applicant is a Nikkei person supported by a Long-Term Resident",
+    "예: 조부모 및 부모의 여권, 사망증명서, 운전면허증 등. 신청인이 '정주자'의 부양을 받는 일계인인 경우에만",
+  ],
+  "例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等": ["e.g. ID card, driver's license, military service certificate, voter registration booklet", "예: 신분증명서(ID카드), 운전면허증, 병역증명서, 선거인 수첩 등"],
+  "例：身分証明書（IDカード）、運転免許証、軍役証明書、選挙人手帳等。申請人が「定住者」の方の扶養を受ける日系人の場合のみ": [
+    "e.g. ID card, driver's license, military service certificate, voter registration booklet. Only if the applicant is a Nikkei person supported by a Long-Term Resident",
+    "예: 신분증명서(ID카드), 운전면허증, 병역증명서, 선거인 수첩 등. 신청인이 '정주자'의 부양을 받는 일계인인 경우에만",
+  ],
+  "認知に係る証明書がある方のみ提出する": ["Submit only if there is a certificate of acknowledgment of paternity", "인지에 관한 증명서가 있는 경우에만 제출한다"],
+  "様式の記載内容は未確認": ["The contents of the form have not been verified", "양식의 기재 내용은 미확인"],
+  "一定の日本語能力があることを証明する文書": ["Document proving a certain level of Japanese language ability", "일정한 일본어 능력이 있음을 증명하는 문서"],
+  "在留期間「5年」を希望する場合に提出が必要（未成年者を除く）。例：日本語能力試験N2に合格したことを証明する文書": [
+    "Required if a period of stay of \"5 years\" is requested (except for minors). e.g. a document proving passing of the Japanese-Language Proficiency Test N2",
+    "체류기간 '5년'을 희망하는 경우에 제출이 필요(미성년자 제외). 예: 일본어능력시험 N2에 합격했음을 증명하는 문서",
+  ],
+  "適宜の様式": ["Any format", "임의 양식"],
+  "養子縁組届出受理証明書": ["Certificate of acceptance of adoption notification", "입양신고 수리증명서"],
+  "日本人の方の戸籍謄本に養子縁組事実の記載がない場合のみ提出する": [
+    "Submit only if the adoption is not recorded in the family register transcript of the Japanese national",
+    "일본인의 호적등본에 입양 사실의 기재가 없는 경우에만 제출한다",
+  ],
+  "申請人の養子縁組届出受理証明書": ["Certificate of acceptance of adoption notification of the applicant", "신청인의 입양신고 수리증명서"],
+  "日本において養子縁組を成立させた場合のみ提出する": ["Submit only if the adoption was established in Japan", "일본에서 입양을 성립시킨 경우에만 제출한다"],
+  "お二方の婚姻が継続していることを証明する資料": ["Materials proving that the marriage of the two continues", "두 분의 혼인이 계속되고 있음을 증명하는 자료"],
+  "日系3世の方の在留期間更新許可申請の提出書類一覧は、提供された資料に無い": [
+    "The list of documents for extension of the period of stay of a third-generation Nikkei person is not in the provided materials",
+    "일계 3세의 체류기간 연장 허가 신청의 제출서류 일람은 제공된 자료에 없다",
+  ],
+  "認定・変更・取得にはあるが、更新用の提出書類一覧（チェックシート）は提供された資料にない。申請書・写真・パスポート及び在留カードの提示のほかの書類は、行政書士が確認する": [
+    "A list exists for certificate of eligibility, change and acquisition, but the list (checksheet) for extension is not in the provided materials. A licensed administrative scrivener (gyoseishoshi) confirms the documents other than the application form, photo, and presentation of the passport and residence card",
+    "인정·변경·취득에는 있으나 연장용 제출서류 일람(체크시트)은 제공된 자료에 없다. 신청서·사진·여권 및 재류카드 제시 외의 서류는 행정서사가 확인한다",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {

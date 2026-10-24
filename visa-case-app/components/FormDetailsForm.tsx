@@ -94,8 +94,8 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
   const showMedicalType = medicalRuleSet?.basis === "applicantType" || (medicalRuleSet?.alsoBasis?.includes("applicantType") ?? false);
   // 日本人の配偶者等の申請人の身分は、手続に使う在留資格が日本人の配偶者等のときだけ尋ねる（規則集合が身分の軸を持つとき）
   const showIdentity = medicalRuleSet?.alsoBasis?.includes("identity") ?? false;
-  // 定住者の区分は、定住者の取得の規則集合（alsoBasis に teijushaType を持つ）が引かれるときだけ尋ねる
-  const showTeijushaType = medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false;
+  // 定住者の区分は、定住者の規則集合（取得は alsoBasis、認定・変更・更新は basis に teijushaType を持つ）が引かれるときだけ尋ねる
+  const showTeijushaType = medicalRuleSet?.basis === "teijushaType" || (medicalRuleSet?.alsoBasis?.includes("teijushaType") ?? false);
   const [form, setForm] = useState<FormDetails>(record.formDetails);
   const [saved, setSaved] = useState(false);
   const errors = validateFormDetails(form, layout, t);

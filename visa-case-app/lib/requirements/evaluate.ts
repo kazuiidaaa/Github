@@ -256,7 +256,8 @@ export function evaluate(c: CaseRecord, ruleSets: RuleSet[] = RULE_SETS): Evalua
   }
 
   // 判定の軸を複数持つ規則集合（Issue #402）。alsoBasis を持たない規則集合は、下の従来の分岐で判定する（結果を変えない）
-  if (ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) {
+  // 定住者の認定・変更・更新は、基準が定住者の区分だけ（basis: teijushaType）。同じ仕組みで判定する
+  if ((ruleSet.alsoBasis && ruleSet.alsoBasis.length > 0) || ruleSet.basis === "teijushaType") {
     return { ...evaluateByAxes(c, ruleSet), needsSubtype };
   }
 
