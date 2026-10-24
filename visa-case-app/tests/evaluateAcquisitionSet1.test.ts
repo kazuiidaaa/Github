@@ -175,6 +175,6 @@ describe("evaluate: 経営・管理／研究／企業内転勤の在留資格取
 
   it("他の在留資格の取得は、従来どおり ACQUISITION_BY_CAUSE", () => {
     // 介護の取得は、専用の規則集合（kaigo_acquisition。Issue #420・#428）が扱うため含めない
-    for (const status of ["", "留学", "永住者"]) expect(evaluate(make(status, "birth")).ruleSet?.id, status).toBe("acquisition_by_cause");
+    for (const status of ["", "外交", "永住者"]) expect(evaluate(make(status, "birth")).ruleSet?.id, status).toBe("acquisition_by_cause");
   });
 });

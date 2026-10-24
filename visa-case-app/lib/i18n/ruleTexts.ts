@@ -1363,6 +1363,49 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "적절히. 파견 기관의 증명서 등으로 신청인의 종교가로서의 지위, 경력을 증명한다. 파견장 등에 지위·경력이 기재되어 있으면 불필요",
   ],
   "適宜。提示": ["As appropriate. To be presented", "적절히. 제시"],
+
+  // 取得：公用・技能実習・留学（照合済み 2026-10-24。Issue #420）
+  "公用 在留資格取得許可申請（一部のみ整備）": [
+    "Official Business: application for permission for acquisition of status of residence (only partly covered)",
+    "공용 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "技能実習 在留資格取得許可申請（一部のみ整備）": [
+    "Technical Intern Training: application for permission for acquisition of status of residence (only partly covered)",
+    "기능실습 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "留学 在留資格取得許可申請（一部のみ整備）": [
+    "Student: application for permission for acquisition of status of residence (only partly covered)",
+    "유학 체류자격 취득 허가 신청(일부만 정비)",
+  ],
+  "口上書その他外国政府又は国際機関が発行した身分及び用務を証する文書": [
+    "Note verbale or other document issued by a foreign government or international organization certifying the person's status and business",
+    "구상서 기타 외국 정부 또는 국제기관이 발급한 신분 및 용무를 증명하는 문서",
+  ],
+  "技能実習計画認定通知書及び認定の申請書の写し": [
+    "Copy of the technical intern training plan approval notice and of the application for approval",
+    "기능실습 계획 인정 통지서 및 인정 신청서 사본",
+  ],
+  "教育機関の種類と適正校の区分に応じた提出書類一覧表に掲げる資料": [
+    "Documents listed in the list of documents to be submitted by type of educational institution and by classification of approved school",
+    "교육기관의 종류와 적정교 구분에 따른 제출서류 일람표에 게재된 자료",
+  ],
+  "各種確認書（別紙）": ["Various confirmation forms (attached form)", "각종 확인서(별지)"],
+  "1通。技能実習法第8条第1項の認定（変更の認定があったときは変更後のもの）を受けた技能実習計画に係るもの。申請する在留資格の技能実習の区分（1号〜3号、企業単独型・団体監理型）に対応する計画のもの": [
+    "1 copy. Relating to a technical intern training plan approved under Article 8, paragraph 1 of the Technical Intern Training Act (the plan as changed, if a change was approved). The plan must correspond to the technical intern training category of the status being applied for (Nos. 1 to 3; enterprise-type or supervising-organization-type)",
+    "1통. 기능실습법 제8조 제1항의 인정(변경 인정이 있었던 경우에는 변경 후의 것)을 받은 기능실습 계획에 관한 것. 신청하는 체류자격의 기능실습 구분(1호~3호, 기업단독형·단체감리형)에 대응하는 계획의 것",
+  ],
+  "各1通。1年間の総所得及び納税状況が記載されたもの。1月1日現在の住所地の市区町村から発行される。総所得及び納税状況（税金を納めているかどうか）の両方が記載されている証明書であれば、いずれか一方でよい。入国後間もない場合や転居等により発行されない場合は、最寄りの地方出入国在留管理官署に問い合わせる": [
+    "1 copy each. Showing total income and tax payment status for one year. Issued by the municipality of the place of residence as of January 1. If one certificate shows both total income and tax payment status (whether taxes have been paid), either one is sufficient. If it is not issued, for example shortly after entry or after moving, inquire at the nearest regional immigration services office",
+    "각 1통. 1년간의 총소득 및 납세 상황이 기재된 것. 1월 1일 현재 거주지의 시구정촌에서 발급된다. 총소득 및 납세 상황(세금을 납부했는지 여부)이 모두 기재된 증명서라면 어느 한쪽이어도 된다. 입국 직후이거나 이사 등으로 발급되지 않는 경우에는 가까운 지방출입국재류관리관서에 문의한다",
+  ],
+  "提出書類は、教育機関の種類（(1)大学・大学に準ずる機関・高等専門学校 (2)専修学校・各種学校等 (3)告示日本語教育機関・認定日本語教育機関 (4)高等学校・中学校・小学校）と、適正校の区分（クラスⅠ・クラスⅡ・通知を受けていない機関）ごとの一覧表による。取得では、一覧表を「１在留資格取得許可申請書及び３申請時の在留資格に該当する活動に関する資料を除いて準用」する。取得の節に「申請に当たっての留意事項・別表・経費支弁書・奨学金の給付に関する証明書一覧」のリンクがある。一覧表は入管庁の留学のページで確認する（画面には書類の名前を載せていない）": [
+    "The documents to be submitted are given in lists by type of educational institution ((1) universities, institutions equivalent to universities, and colleges of technology; (2) specialized training colleges, miscellaneous schools, etc.; (3) notified Japanese-language educational institutions and accredited Japanese-language educational institutions; (4) high schools, junior high schools, and elementary schools) and by classification of approved school (Class I, Class II, institutions not notified). For acquisition, the lists apply mutatis mutandis, excluding \"1. Application for permission for acquisition of status of residence\" and \"3. Materials on the activities corresponding to the status of residence at the time of application\". The acquisition section has links to the \"Points to note when applying\", the appended table, the statement of expense payment, and the list of certificates on scholarship payments. Check the lists on the Immigration Services Agency's page for Student (this screen does not show the document names)",
+    "제출서류는 교육기관의 종류((1) 대학·대학에 준하는 기관·고등전문학교 (2) 전수학교·각종학교 등 (3) 고시 일본어교육기관·인정 일본어교육기관 (4) 고등학교·중학교·초등학교)와 적정교 구분(클래스Ⅰ·클래스Ⅱ·통지를 받지 않은 기관)별 일람표에 따른다. 취득에서는 일람표를 \"1 체류자격 취득 허가 신청서 및 3 신청 시의 체류자격에 해당하는 활동에 관한 자료를 제외하고 준용\"한다. 취득 항목에 \"신청 시 유의사항·별표·경비지변서·장학금 급부에 관한 증명서 일람\" 링크가 있다. 일람표는 출입국재류관리청의 유학 페이지에서 확인한다(이 화면에는 서류 이름을 게재하지 않았다)",
+  ],
+  "在籍予定又は在籍中の教育機関が作成する（申請人本人が作成するものではない）。最新様式を使用する。(1)専修学校又は各種学校で日本語教育以外の教育を受ける方、(2)高等学校で教育を受ける方、(3)専ら日本語教育を受ける方（日本語別科を含む）で別表に掲げる国・地域の国籍を有し外国の高等教育機関（大学等）の卒業証書等を提出する方、(4)前回の在留諸申請から在籍する教育機関に変更がない方（専ら日本語教育を受けていた方が、他の教育を同じ教育機関で受ける場合を除く）は提出不要。令和8年6月以前に申請する場合は従前の各種確認書でよい": [
+    "To be prepared by the educational institution where the applicant is to be enrolled or is enrolled (not by the applicant). Use the latest form. Not required for: (1) persons receiving education other than Japanese-language education at a specialized training college or miscellaneous school; (2) persons receiving education at a high school; (3) persons receiving exclusively Japanese-language education (including Japanese-language special courses) who hold nationality of a country or region listed in the appended table and submit a diploma, etc. from a foreign higher education institution (university, etc.); (4) persons whose educational institution has not changed since the previous application (except persons who had been receiving exclusively Japanese-language education and will receive other education at the same institution). For applications made in June 2026 or earlier, the previous confirmation forms are acceptable",
+    "재적 예정 또는 재적 중인 교육기관에서 작성한다(신청인 본인이 작성하는 것이 아니다). 최신 양식을 사용한다. (1) 전수학교 또는 각종학교에서 일본어교육 이외의 교육을 받는 사람, (2) 고등학교에서 교육을 받는 사람, (3) 오로지 일본어교육을 받는 사람(일본어 별과 포함)으로서 별표에 게재된 국가·지역의 국적을 가지며 외국 고등교육기관(대학 등)의 졸업증서 등을 제출하는 사람, (4) 직전 재류 관련 신청 이후 재적 교육기관에 변경이 없는 사람(오로지 일본어교육을 받던 사람이 다른 교육을 같은 교육기관에서 받는 경우 제외)은 제출 불필요. 2026년 6월 이전에 신청하는 경우에는 종전의 각종 확인서도 된다",
+  ],
 };
 
 function pickLang(t: Translated | undefined, lang: Lang): string | undefined {
