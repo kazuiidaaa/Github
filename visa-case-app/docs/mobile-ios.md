@@ -80,7 +80,10 @@ OS の文字サイズや、ブラウザーの文字拡大（html の font-size 2
   - 未登録のときは、注意の図形＋「氏名が未登録です」＋「登録」の行と、一覧の下の案内文を出す。登録済みなら「氏名 ○○　編集」。どちらも行を押すと、モーダルシート（左「キャンセル」・中央に題・右「完了」。ボタンは 44pt 以上、入力は 16px、シート内でスクロール）が開く。検査は、空・制御文字・100 文字超を弾く。変更が無ければ保存せず閉じる。
   - ユーザー ID は長いので、`break-all` で折り返して全文を出し、「ユーザーIDをコピー」の行（クリップボード。成功は図形＋文字、失敗は長押しの案内）を付ける。実際の氏名・メール・ID は、コード・テスト・docs に書かない（テストは架空の値）。
   - デモ・仮データ方式は従来のまま（氏名・ID の行を出さない）。PC 版は変更しない。文言は `mobileAccount` 区分（英語・韓国語は下書き）。テストは `tests/accountName.test.ts`・`tests/mobileAccountIdentity.test.tsx`。
-- メンバー管理は別の PR。`MobileAccountDetails` 内の「メンバー管理の差し込み位置」に GroupedList を足す。それまで、PC 版への行はメンバー管理のみ案内する。
+- メンバー一覧（閲覧のみ）：`components/mobile/MobileMembers.tsx`。`MobileAccountDetails` の事務所名の下に、役割が所有者・管理者（`can(role, "manageMembers")`）のときだけ出す（`MembersSection`。それ以外は何も出さず、一覧の取得もしない）。画面の出し分けは認可ではなく、実際の拒否は `list_members`（データベース側）が行う。
+  - 各行は、氏名が登録済みなら氏名、未登録ならメールアドレス（`lib/accountName.ts` の `memberDisplayLabel`。本人の表示と同じ `accountDisplayLabel` の規則。両方は並べない）。`break-all` で折り返して全文を出し、切り詰めない。2 行目に「役割：所有者」など役割を文字で示す（色には頼らない）。本人の行には「あなた」を添える。行は 44pt 以上。
+  - 氏名は `MemberInfo.displayName`（移行 0026 の適用後のみ返る）。**0026 は本番に未適用**。適用前は列が返らず、全員がメールアドレス表示で動く。この PR は 0026 を適用しない。
+  - 追加・削除・役割の変更は PC 版の `MembersPanel`（変更なし）。iPhone 版には載せない。文言は `mobileAccount` 区分（ja/en/ko。en/ko の最終校正は #459）。テストは `tests/mobileMembers.test.tsx`。
 - 文言は `account` 区分を共用。`mobile.accountDesktop` / `accountDesktopNote` はメンバー管理のみの案内に変更。テストは `tests/mobileAccountDetails.test.tsx`。
 
 ## 残り
