@@ -51,6 +51,11 @@ OS の文字サイズや、ブラウザーの文字拡大（html の font-size 2
 - 検索 input は `min-h-[44px]`（外枠と同じ高さ）。
 - 確認方法：390 幅・iPhone の User-Agent・`html{font-size:200%}`・英語で、`/m/cases`、`/m/cases/new`、`/m/cases/[id]`、`/m/account` の最下部までスクロールし、「PC 版を開く」の下端がタブバーの上端より上にあること、詳細の項目名が右端で切れないことを見る。回帰テストは tests/mobileParts.test.tsx。
 
+## 書類（/m/cases/[id]/documents）
+- PC 版の「書類の生成と履歴」と同じ経路（`lib/documents/store.ts` の `useGeneratedDocuments` / `generateDocuments`、`precheckRowsText`、`splitHistory`）を使う。文言は `documents` 区分を共用し、iPhone 版だけの語は `mobileDocuments` 区分。
+- 載せたもの：データ状態（閲覧）、出力内容の選択と生成（公式様式を除く）、生成履歴（保管済みの表示切り替え）。案件詳細の「書類の作成と履歴」から入る。
+- PC 版へ任せるもの：公式申請様式（エクセル）の生成、書類の内容の表示、Word・PDF などの出力、状態の変更、保管（`/cases/[id]/documents`。端末の振り分け対象外）。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
@@ -61,21 +66,22 @@ Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-a
 
 ### 仕様
 - iPhone の User-Agent（`iPhone` を含む。512 文字を超える値と `Android` 併記は偽装らしいので対象外）で、下の PC 版の画面を開くと、`/m` の対応画面へ 307 で移す。iPad・PC・Android・UA 無しは対象外。
-- 対応表（完全一致。末尾のスラッシュは無視。照会文字列は引き継がない）：
+- 対応表（`/cases/<id>` 以外は完全一致。末尾のスラッシュは無視。照会文字列は引き継がない）：
 
 | PC 版 | 移動先 |
 | --- | --- |
 | `/`、`/cases` | `/m/cases` |
 | `/cases/new` | `/m/cases/new` |
+| `/cases/<id>`（id は英数字・`-`・`_` の 1〜64 文字） | `/m/cases/<id>` |
 
-- 上記以外（`/cases/[id]`、書類、`/account`、`/login`、`/reset-password`、`/about`、`/api`）は振り分けない。iPhone 版に対応画面が無い、または認証・API であるため。
+- 上記以外（`/cases/<id>/…` の下位パス（edit など）、書類、`/account`、`/login`、`/reset-password`、`/about`、`/api`）は振り分けない。iPhone 版に対応画面が無い、または認証・API であるため。`/cases/new` は予約語として `/m/cases/new` に固定し、id とは扱わない。id の形に合わない値（`.`・`%`・空白・65 文字以上など）は振り分けない。
 - `proxy.ts` は認証をしない。リダイレクトのみ。`/m` の画面は従来どおり `AuthGate` の内側にあり、未ログインなら `/login` へ移る。
 - GET と HEAD のみ。POST（Server Function など）は触らない。
 - 判定は `lib/deviceRedirect.ts`（純粋関数）、テストは `tests/deviceRedirect.test.ts`。
 
 ### 無限ループの防止
-- matcher は `/`、`/cases`、`/cases/new` の 3 つのみ。`/m` 配下、`/_next`、静的ファイル、`/api`、favicon は対象に入らない。
-- さらに、判定関数が対応表の完全一致でのみ動く。行き先は固定値で、移動先（`/m/...`）は決して対象にならない。
+- matcher は `/`、`/cases`、`/cases/new`、`/cases/:id`（1 階層のみ）の 4 つ。`/m` 配下、`/_next`、静的ファイル、`/api`、favicon は対象に入らない。
+- さらに、判定関数が対応表の完全一致と id の形の検証でのみ動く。行き先は固定値、または検証済みの id を足した `/m/cases/<id>` で、移動先（`/m/...`）は決して対象にならない。
 
 ### PC 版を選ぶ・iPhone 版へ戻る
 - iPhone 版の「PC 版を開く」を押すと、Cookie `view=pc` をセットして `/` へ移る（`Link` の `prefetch={false}`。先読みが振り分け結果を残さないため）。`view=pc` があれば振り分けない。
@@ -83,10 +89,10 @@ Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-a
 - 戻る導線：iPhone の User-Agent のときだけ、PC 版のフッターに「iPhone 版を開く」を出す（`components/OpenMobileLink.tsx`。PC・iPad には出ない）。押すと Cookie を消して `/m/cases` へ移る。PC 版のヘッダーは変えない。
 
 ### キャッシュ・安全性
-- 行き先は固定の対応表のみで、リクエストの値（Host、パス、照会文字列）を連結しないため、オープンリダイレクトは起きない。
+- 行き先は固定の対応表、または形を検証した id（英数字・`-`・`_`）を `/m/cases/` に足したパスのみで、Host・照会文字列を連結しないため、オープンリダイレクトは起きない。
 - 振り分けの応答は `Cache-Control: private, no-store` と `Vary: User-Agent, Cookie`。振り分けない応答（PC 版の静的な画面）は端末によらず同じ内容なので `Vary` は付けない（付けても静的ページの配信には反映されないことを `next start` で確認した）。
 - 307（一時的）にして、ブラウザーが恒久的に覚えないようにする。
 
 ### 未対応
-- `/cases/[id]`・書類などの振り分け（iPhone 版に対応画面ができてから対応表に足す）。
+- 書類などの振り分け（iPhone 版に対応画面ができてから対応表に足す）。
 - iPad の振り分け、PC 版の照会文字列の引き継ぎ。

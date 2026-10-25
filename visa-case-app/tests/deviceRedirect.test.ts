@@ -49,8 +49,13 @@ describe("decideDeviceRedirect（対応表）", () => {
     expect(decide({ pathname })).toBe(to);
   });
   it.each([
-    "/cases/abc",
     "/cases/abc/documents",
+    "/cases/abc/edit",
+    "/cases/abc/edit/",
+    "/cases/a.b",
+    "/cases/a%2Fb",
+    "/cases/a b",
+    `/cases/${"a".repeat(65)}`,
     "/account",
     "/login",
     "/reset-password",
@@ -65,8 +70,23 @@ describe("decideDeviceRedirect（対応表）", () => {
   ])("対象外の %s は振り分けない", (pathname) => {
     expect(decide({ pathname })).toBeNull();
   });
+  it("/cases/<id> は /m/cases/<id> へ（末尾スラッシュ可）", () => {
+    const uuid = "123e4567-e89b-12d3-a456-426614174000";
+    expect(decide({ pathname: `/cases/${uuid}` })).toBe(`/m/cases/${uuid}`);
+    expect(decide({ pathname: "/cases/abc_DEF-1/" })).toBe("/m/cases/abc_DEF-1");
+    expect(decide({ pathname: "/cases/abc", method: "HEAD" })).toBe("/m/cases/abc");
+  });
+  it("/cases/new は従来どおり /m/cases/new（詳細の id としては扱わない）", () => {
+    expect(decide({ pathname: "/cases/new" })).toBe("/m/cases/new");
+  });
+  it("/cases/<id> も view=pc・非 iPhone・POST では振り分けない", () => {
+    const pathname = "/cases/abc";
+    expect(decide({ pathname, viewCookie: "pc" })).toBeNull();
+    for (const userAgent of [IPAD, ANDROID, PC, null, undefined]) expect(decide({ pathname, userAgent })).toBeNull();
+    expect(decide({ pathname, method: "POST" })).toBeNull();
+  });
   it("/m 配下へは決して振り分けない（ループしない）", () => {
-    for (const p of ["/", "/cases", "/cases/new"]) {
+    for (const p of ["/", "/cases", "/cases/new", "/cases/abc"]) {
       const to = decide({ pathname: p });
       expect(to).not.toBeNull();
       expect(decide({ pathname: to! })).toBeNull();
@@ -101,7 +121,8 @@ describe("isRedirectablePath", () => {
   it("対応表のパスのみ true", () => {
     expect(isRedirectablePath("/")).toBe(true);
     expect(isRedirectablePath("/cases/new/")).toBe(true);
-    expect(isRedirectablePath("/cases/1")).toBe(false);
+    expect(isRedirectablePath("/cases/1")).toBe(true);
+    expect(isRedirectablePath("/cases/1/edit")).toBe(false);
     expect(isRedirectablePath("/m/cases")).toBe(false);
   });
 });

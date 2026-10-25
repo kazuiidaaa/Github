@@ -16,13 +16,26 @@ const MAX_USER_AGENT_LENGTH = 512;
 
 /**
  * PC 版の画面と、振り分け先の対応表（完全一致）。ここに無いパスは振り分けない。
- * /cases/[id]・書類・/account・/login・/reset-password・/about・/api は、iPhone 版に対応画面が無い、または認証・API なので対象外。
+ * /cases/[id] は下の動的ルール（CASE_DETAIL_PATH）で扱う。書類・/account・/login・/reset-password・/about・/api は、iPhone 版に対応画面が無い、または認証・API なので対象外。
  */
 const REDIRECT_TABLE: Readonly<Record<string, string>> = {
   "/": "/m/cases",
   "/cases": "/m/cases",
   "/cases/new": "/m/cases/new",
 };
+
+/**
+ * 案件詳細 `/cases/<id>` の形。id は英数字・ハイフン・アンダースコアのみ（1〜64 文字。実際の id は UUID）。
+ * `/` や `.` を含めないので、/cases/<id>/edit などの下位パスや、パスをすり抜ける値は一致しない。
+ * 予約語 `new` は対応表で別に扱うため、ここでは除く。
+ */
+const CASE_DETAIL_PATH = /^\/cases\/([A-Za-z0-9_-]{1,64})$/;
+
+/** 案件詳細の id を取り出す。詳細でない・予約語（new）なら null */
+function caseDetailId(normalizedPath: string): string | null {
+  const m = CASE_DETAIL_PATH.exec(normalizedPath);
+  return m && m[1] !== "new" ? m[1] : null;
+}
 
 /** iPhone の User-Agent か。"iPhone" を含むもののみ（iPad・PC・Android・UA 無しは false）。極端に長い値は偽装らしいので false */
 export function isIphoneUserAgent(userAgent: string | null | undefined): boolean {
@@ -38,12 +51,14 @@ function normalize(pathname: string): string {
 
 /** 振り分けの対象となる PC 版のパスか（Vary の付与など、proxy 側の判断にも使う） */
 export function isRedirectablePath(pathname: string): boolean {
-  return Object.hasOwn(REDIRECT_TABLE, normalize(pathname));
+  const p = normalize(pathname);
+  return Object.hasOwn(REDIRECT_TABLE, p) || caseDetailId(p) !== null;
 }
 
 /**
  * 振り分け先のパスを返す。振り分けない場合は null。
- * 返すのは上の対応表の固定値のみ（リクエストの値を連結しない）ので、オープンリダイレクトは起きない。
+ * 返すのは対応表の固定値か、`/m/cases/` に検証済みの id（英数字・ハイフン・アンダースコアのみ）を足したパスのみ。
+ * 行き先は常に同一オリジンの `/m/cases/…` で、オープンリダイレクトは起きない。
  * 照会文字列（?…）は引き継がない（PC 版の絞り込みと iPhone 版の絞り込みは別物のため）。
  */
 export function decideDeviceRedirect(input: {
@@ -58,7 +73,9 @@ export function decideDeviceRedirect(input: {
   if (input.viewCookie === VIEW_COOKIE_PC) return null;
   if (!isIphoneUserAgent(input.userAgent)) return null;
   const p = normalize(input.pathname);
-  return Object.hasOwn(REDIRECT_TABLE, p) ? REDIRECT_TABLE[p] : null;
+  if (Object.hasOwn(REDIRECT_TABLE, p)) return REDIRECT_TABLE[p];
+  const id = caseDetailId(p);
+  return id ? `/m/cases/${id}` : null;
 }
 
 /** 「PC 版を開く」を選んだときの Cookie 文字列（document.cookie 用）。secure は https のときのみ */
