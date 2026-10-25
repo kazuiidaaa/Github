@@ -1,0 +1,31 @@
+{
+  "motion": {
+    "$description": "動き。時間は 0.15〜0.3 秒、曲線は ease-apple（docs/design-system.md）。値は app/globals.css の --ease-apple、--ease-spring-*、--spring-*-duration、--dur-fade を 1:1 で写したもの。ease-spring-* は CSS の linear() による近似で CSS 専用（SwiftUI は標準のばねを使う）。",
+    "ease-apple": {
+      "$type": "cubicBezier",
+      "$value": [0.2, 0.8, 0.2, 1]
+    },
+    "ease-spring-move": {
+      "$type": "string",
+      "$description": "ばね move：減衰 1.0 / 応答 0.4 秒。CSS linear() 関数の文字列。",
+      "$value": "linear(0, 0.08, 0.239, 0.407, 0.555, 0.675, 0.768, 0.836, 0.886, 0.921, 0.946, 0.963, 0.975, 0.983, 0.989, 0.993, 1)",
+      "$extensions": { "app.visa-case": { "platforms": ["css"] } }
+    },
+    "ease-spring-rotate": {
+      "$type": "string",
+      "$description": "ばね rotate：減衰 0.8 / 応答 0.4 秒。CSS linear() 関数の文字列。",
+      "$value": "linear(0, 0.054, 0.177, 0.326, 0.476, 0.612, 0.726, 0.817, 0.886, 0.936, 0.97, 0.992, 1.005, 1.012, 1.015, 1.015, 1.013, 1.011, 1.009, 1.007, 1)",
+      "$extensions": { "app.visa-case": { "platforms": ["css"] } }
+    },
+    "ease-spring-sheet": {
+      "$type": "string",
+      "$description": "ばね sheet：減衰 0.8 / 応答 0.3 秒。CSS linear() 関数の文字列。",
+      "$value": "linear(0, 0.054, 0.177, 0.326, 0.476, 0.612, 0.726, 0.817, 0.886, 0.936, 0.97, 0.992, 1.005, 1.012, 1.015, 1.015, 1.013, 1.011, 1.009, 1.007, 1)",
+      "$extensions": { "app.visa-case": { "platforms": ["css"] } }
+    },
+    "spring-move-duration": { "$type": "duration", "$value": "0.47s" },
+    "spring-rotate-duration": { "$type": "duration", "$value": "0.46s" },
+    "spring-sheet-duration": { "$type": "duration", "$value": "0.35s" },
+    "dur-fade": { "$type": "duration", "$value": "0.15s" }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "base": {
+    "$description": "基本色。CSS 変数名は --background のように color- を付けない。値は app/globals.css の :root と :root[data-theme=\"dark\"] を 1:1 で写したもの。",
+    "background": {
+      "$type": "color",
+      "$value": "#f5f5f7",
+      "$extensions": {
+        "app.visa-case": {
+          "dark": "#1d1d1f"
+        }
+      }
+    },
+    "foreground": {
+      "$type": "color",
+      "$value": "#1d1d1f",
+      "$extensions": {
+        "app.visa-case": {
+          "dark": "#f5f5f7"
+        }
+      }
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "#0066cc",
+      "$extensions": {
+        "app.visa-case": {
+          "dark": "#2997ff"
+        }
+      }
+    },
+    "accent-hover": {
+      "$type": "color",
+      "$value": "#0058b0",
+      "$extensions": {
+        "app.visa-case": {
+          "dark": "#5cb0ff"
+        }
+      }
+    },
+    "accent-text": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "app.visa-case": {
+          "dark": "#000000"
+        }
+      }
+    },
+    "line-strong": {
+      "$type": "color",
+      "$value": "#8a8a93",
+      "$extensions": {
+        "app.visa-case": {
+          "dark": "#8e8e93"
+        }
+      }
+    }
+  }
+}

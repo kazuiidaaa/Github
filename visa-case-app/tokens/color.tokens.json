@@ -1,0 +1,423 @@
+{
+  "color": {
+    "$description": "段階色。値は app/globals.css の @theme（明色）と :root[data-theme=\"dark\"]（暗色）を 1:1 で写したもの。slate/blue/red/amber/yellow/green は Web 専用の旧色名（Tailwind の色名を別の色に読み替えている）。red=橙系、green=青緑系、amber/yellow=黄土系。新しい箇所は意味の名前（danger/success/warning/info/muted、semantic.tokens.json）を正本として使い、旧色名は Web 互換のエイリアスとして区別する。",
+    "white": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "app.visa-case": {
+          "legacyAlias": true,
+          "dark": "#2c2c2e"
+        }
+      }
+    },
+    "slate": {
+      "50": {
+        "$type": "color",
+        "$value": "#f5f5f7",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#252527"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#ececf0",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#353538"
+          }
+        }
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#d9d9de",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#424245"
+          }
+        }
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#bcbcc4",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#58585c"
+          }
+        }
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#68686d",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#a1a1a6"
+          }
+        }
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#636366",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#a8a8ad"
+          }
+        }
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#48484a",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#c7c7cc"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#3a3a3c",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#d9d9de"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#2c2c2e",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#e8e8ed"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#1d1d1f",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#f5f5f7"
+          }
+        }
+      },
+      "$description": "灰（Apple の灰）。Web 互換の旧色名。"
+    },
+    "blue": {
+      "50": {
+        "$type": "color",
+        "$value": "#eaf3ff",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#0c2a47"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#d6e8ff",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#10375e"
+          }
+        }
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#a9cdf7",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#1f5588"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#0059b3",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#6cb6ff"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#004a99",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#8cc6ff"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#003a7a",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#b0d8ff"
+          }
+        }
+      },
+      "$description": "青（情報・操作）。Web 互換の旧色名。"
+    },
+    "red": {
+      "50": {
+        "$type": "color",
+        "$value": "#fff1e6",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#3d2210"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#ffe3cc",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#4a2a12"
+          }
+        }
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#ffc999",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#6b3d1a"
+          }
+        }
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#f0a060",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#8f5326"
+          }
+        }
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#d96a1a",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#ff9f5a"
+          }
+        }
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#b84a00",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#ffa766"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#a13f00",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#ffb27a"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#8a3600",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#ffc299"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#6e2b00",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#ffd2b3"
+          }
+        }
+      },
+      "$description": "実際は橙系（エラー・要対応）。Web 専用の旧色名で、赤ではない。意味の名前 danger を正本とし、これは Web 互換のエイリアス。"
+    },
+    "amber": {
+      "50": {
+        "$type": "color",
+        "$value": "#fff8e1",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#33290a"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#ffefb8",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#40320c"
+          }
+        }
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#f5d878",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#5c4915"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#7a5200",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#f0c64d"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#6b4700",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#f5d166"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#573a00",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#f9de8a"
+          }
+        }
+      },
+      "$description": "黄土系（注意）。Web 互換の旧色名。意味の名前 warning を正本とする。"
+    },
+    "yellow": {
+      "50": {
+        "$type": "color",
+        "$value": "#fff8e1",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#33290a"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#ffefb8",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#40320c"
+          }
+        }
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#e6c24d",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#7d6320"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#6b4700",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#f5d166"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#573a00",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#f9de8a"
+          }
+        }
+      },
+      "$description": "黄土系（注意）。Web 互換の旧色名。amber と同系統。"
+    },
+    "green": {
+      "100": {
+        "$type": "color",
+        "$value": "#d9f0f5",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#0c3a44"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#00606f",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#6fd3e6"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#004f5c",
+        "$extensions": {
+          "app.visa-case": {
+            "legacyAlias": true,
+            "dark": "#8fdcec"
+          }
+        }
+      },
+      "$description": "実際は青緑系（完了）。Web 専用の旧色名で、緑ではない。意味の名前 success を正本とし、これは Web 互換のエイリアス。"
+    }
+  }
+}
