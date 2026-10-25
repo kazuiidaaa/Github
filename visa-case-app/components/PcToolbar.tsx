@@ -13,7 +13,9 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const plainButton =
   "inline-flex min-h-(--control-height-mac-large) shrink-0 items-center whitespace-nowrap rounded-mac-control border border-line-strong bg-grouped-surface px-3 text-mac-footnote font-bold text-slate-700 hover:bg-slate-100";
-const badge = "min-w-0 truncate rounded-mac-control bg-amber-100 px-2 py-1 text-mac-caption font-bold text-amber-800";
+const badge = "min-h-(--control-height-mac-small) min-w-0 truncate rounded-mac-control bg-amber-100 px-2 py-1 text-mac-caption font-bold text-amber-800";
+// 言語の選択と表示の明暗は、iPhone 版のアカウント画面とも共用の部品。ツールバーの中だけ、コントロールの高さ（標準）をそろえる
+const regularControls = "inline-flex items-center [&_button]:min-h-(--control-height-mac-regular) [&_select]:min-h-(--control-height-mac-regular)";
 
 /**
  * PC 版（幅 md 以上）の上のツールバー。既存の操作（新規登録・言語・表示の明暗・デモ終了・ログアウト）を、右の内容の上に1行で置く。
@@ -42,8 +44,12 @@ export function PcToolbar() {
       )}
       {onCaseList && <CaseSearchField />}
       <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-2">
-        <LanguageSwitcher />
-        <ThemeToggle />
+        <span className={regularControls}>
+          <LanguageSwitcher />
+        </span>
+        <span className={regularControls}>
+          <ThemeToggle />
+        </span>
         {demo ? (
           <>
             <span title={t("header.demoLong")} className={badge}>
