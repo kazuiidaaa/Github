@@ -29,3 +29,11 @@ export function checkFullName(input: string): FullNameCheck {
   if (value.length > FULL_NAME_MAX) return { ok: false, reason: "tooLong" };
   return { ok: true, value };
 }
+
+/**
+ * ログイン中の本人の表示名の規則（PC 版ヘッダーなど）。氏名が登録済みなら氏名のみ（入力されたまま。姓名の分割はしない）、
+ * 未登録のときだけメールアドレス。両方を並べない。表示の規則はここ 1 か所に置く。
+ */
+export function accountDisplayLabel(metadata: unknown, email: string | null | undefined): string {
+  return readFullName(metadata) || (email ?? "");
+}
