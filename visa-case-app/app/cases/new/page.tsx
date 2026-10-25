@@ -1,6 +1,5 @@
 "use client";
 
-import { EMPTY_FORM_DETAILS } from "@/lib/formDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -12,20 +11,19 @@ import { noRuleGuideText, procedureDescriptionText, targetStatusLegend } from "@
 import { StatusTransition } from "@/components/StatusTransition";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { Button, Field, inputClass, ToneIcon } from "@/components/ui";
-import { hasAcceptedDateError } from "@/lib/acceptedDate";
-import { buildBulkCaseNames } from "@/lib/bulkCaseNames";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
 import { ruleSetFor, shouldShowNoRuleGuide, statusForRules } from "@/lib/requirements/evaluate";
 import { useToast } from "@/components/Toast";
 import { logAudit, newId, saveCase, useCan } from "@/lib/store";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, procedureNeedsTarget, type EmploymentInfo, type ProcedureType } from "@/lib/types";
+import { buildNewCaseRecord, NEW_CASE_ERROR_ORDER, newCaseNames, validateNewCase, type NewCaseErrorKey } from "@/lib/newCaseSubmit";
+import { EMPTY_EMPLOYMENT, procedureNeedsTarget, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 import { CASE_MEMO_ZENKAKU, zenkakuHandlers } from "@/lib/zenkaku";
 import { firstErrorKey, focusField } from "@/lib/formFocus";
 
 /** 検証する欄（画面の上からの並び順）。送信時は、この順で最初の誤りの欄へフォーカスを移す */
-const ERROR_ORDER = ["procedureType", "caseName", "targetStatus", "acceptedDate", "employment", "groupName", "names"] as const;
-type ErrorKey = (typeof ERROR_ORDER)[number];
+const ERROR_ORDER = NEW_CASE_ERROR_ORDER;
+type ErrorKey = NewCaseErrorKey;
 const fieldId = (key: ErrorKey) => `new-case-${key}`;
 
 /** 文字のリンクも、押しやすさのため高さ 44px（人の決定。Issue #392） */
@@ -127,21 +125,9 @@ export default function NewCasePage() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const next: Partial<Record<ErrorKey, string>> = {};
-    const bulkNames = bulk ? buildBulkCaseNames(groupName, names) : [];
-    if (bulk) {
-      if (!groupName.trim()) next.groupName = t("caseNew.errGroupNameRequired");
-      else if (groupName.length > 100) next.groupName = t("caseNew.errGroupNameTooLong");
-      if (names.length === 0) next.names = t("caseNew.errNamesEmpty");
-      else if (bulkNames.some((n) => n.length > 100)) next.names = t("caseNew.errNamesTooLong");
-      if (hasEmploymentDateError(employment)) next.employment = t("caseNew.errEmploymentDate");
-    } else {
-      if (!caseName.trim()) next.caseName = t("caseNew.errCaseNameRequired");
-      if (caseName.length > 100) next.caseName = t("caseNew.errCaseNameTooLong");
-    }
-    if (!procedureType) next.procedureType = t("caseNew.errProcedureRequired");
-    if (needsTarget && !targetStatus.trim()) next.targetStatus = t("caseNew.errTargetRequired", { label: targetLegend });
-    if (hasAcceptedDateError(acceptedDate)) next.acceptedDate = t("caseNew.errAcceptedDate");
+    const input = { bulk, caseName, procedureType, currentStatus, targetStatus, memo, acceptedDate, employment, groupName, names };
+    const bulkNames = bulk ? newCaseNames(input) : [];
+    const next = validateNewCase(input, t, targetLegend, bulk && hasEmploymentDateError(employment));
     setErrors(next);
     const first = firstErrorKey(next, ERROR_ORDER);
     if (first) {
@@ -154,28 +140,8 @@ export default function NewCasePage() {
     const create = (name: string) => {
       const now = new Date().toISOString();
       const id = newId();
-      saveCase({
-        id,
-        caseName: name,
-        procedureType,
-        currentStatus: currentStatus.trim(),
-        targetStatus: needsTarget ? targetStatus.trim() : "",
-        memo,
-        acceptedDate,
-        workflowStatus: "preparing",
-        createdAt: now,
-        updatedAt: now,
-        applicant: { ...EMPTY_APPLICANT },
-        // 案件ごとに独立したレコードとするため、複製して保存する（作成後の同期は行わない）
-        employment: bulk ? { ...employment } : { ...EMPTY_EMPLOYMENT },
-        formDetails: { ...EMPTY_FORM_DETAILS },
-        requirementStates: {},
-        customRequirements: [],
-        plannedApplicationDate: "",
-        checkMemo: "",
-        checks: [],
-        documents: [],
-      });
+      // 案件ごとに独立したレコードとして組み立てる（lib/newCaseSubmit.ts。作成後の同期は行わない）
+      saveCase(buildNewCaseRecord({ ...input, procedureType }, name, id, now));
       logAudit(id, "case_created", bulk ? { bulk: bulkNames.length } : undefined);
       return id;
     };

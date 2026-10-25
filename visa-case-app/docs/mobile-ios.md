@@ -1,0 +1,85 @@
+# iPhone 版（/m）の方針（Issue #456）
+
+iPhone 向けに、SwiftUI の見た目（TabView、大見出しの NavigationStack、.searchable、insetGrouped の List、Menu、チップ）の画面を、別パス `/m` 配下に置く。PC 版の見た目・動作は変えない。
+
+## 別パス /m 配下にした根拠（案 A）
+Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した要点。
+- ルートの `app/layout.tsx` は 1 つ。route group（`(pc)/` など）で root layout を分けると、**別の root layout 間の移動は full page load になる**（route-groups.md）。PC 版と iPhone 版の行き来が毎回全読み込みになる。
+- route group で layout を共有せずに分ける方法は、PC 側のページ・フォルダーの移動を伴い、差分が大きく、PC 版への影響の確認が重い。
+- layout は画面遷移で再描画されず、pathname も受け取れない（layout.md）。パスで枠を出し分けるには、`usePathname` を読む client コンポーネントを使う。
+- `viewport` / `generateViewport`（`viewportFit: "cover"`、`themeColor`）は、layout または page から export でき、**入れ子の layout にも置ける**（generate-viewport.md）。`/m` の layout にだけ置けば、PC 版の `<head>` は変わらない。
+- Next.js 16 では、Middleware は **Proxy**（`proxy.ts`）に改名された（proxy.md）。認証は `AuthGate`（client）が担い、`proxy.ts` は端末の振り分けのみを行う（下の「PC 版から iPhone 版への自動の振り分け」）。
+
+## 外枠の出し分け
+- `components/AppFrame.tsx`（client）を `app/layout.tsx` に置く。`ToastProvider` > `LanguageProvider` > `AppFrame` の順は従来どおり。
+- `/m` と `/m/…` 以外では、従来と同じ要素（Header、max-w-6xl の main、AuthGate、StoreErrorBanner、PageTransition、Footer）を同じ順序で出す。PC 版の出力は変わらない。
+- `/m` 配下では、Header・Footer・max-w-6xl の main・PageTransition を出さず、`AuthGate` と `StoreErrorBanner` の内側に `app/m/layout.tsx` の枠（`MobileShell`）を置く。
+- **`/m` の画面も、必ず `AuthGate` の内側に入る。** 未ログインで開くと `/login` へ移る（tests/appFrame.test.tsx、実機の確認は PR に記載）。認証・API・データ取得の経路は新設しない。データの読み書きは `lib/store.ts` を通す（保護は Supabase の RLS）。
+
+## 構成
+- `app/m/layout.tsx`：viewport（viewport-fit=cover、明暗の themeColor）、`MobileShell`。
+- `app/m/page.tsx`：`/m` は `/m/cases` へ移す。
+- `app/m/mobile.css`：safe-area、チップ・検索欄・区切り線。すべて `.m-root` 配下に限定。
+- `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）。
+- `components/mobile/`：TabBar、LargeTitleHeader、BackLink、SearchField、FilterChips、GroupedList / GroupedRow、MenuButton、LoadingSpinner、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
+- 文言：`lib/i18n/messages/mobile.ts`（区分 `mobile`。日本語・英語・韓国語。英語・韓国語は他の区分と同じく下書き扱い）。
+
+## 規則
+- 色は globals.css の変数（`bg-white`、`slate`、`accent` など）だけを使い、明暗はそちらに任せる。状態は色だけでなく文字と図形（選択中のチップ＝チェックの印、タブ＝塗りつぶしアイコン、メニュー＝チェック）で示す。
+- 押せる範囲は 44pt 以上。入力欄の文字は 16px 以上。
+- 動き：LoadingSpinner と PullToRefresh は、動きを減らす設定では回さず・動かさない（静止した図形と文字のみ）。メニューの表示は `motion-panel`（globals.css の規則に従う）。
+- 絵文字は使わない。アイコンは SVG の線画（選択中は塗りつぶし）。
+
+## 画面構成と HIG 適合レビューの反映（Issue #456）
+- 下部タブは「案件」「アカウント」の 2 つ。新規登録は「操作」なので、タブでなく案件一覧のナビゲーションバー右の「+」（権限があるときだけ）。`/m/cases/new` は「案件」タブの配下として扱う。
+- 一覧の行・空状態の新規リンク・新規作成後の遷移は、すべて iPhone 版（`/m/cases/[id]`、`/m/cases/new`）。
+- アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・ログイン・再設定・メンバー管理の画面は、最後の PR で扱う。
+- 並び替えは上下矢印の記号。現在の並び順は、ボタンの読み上げ名と、件数の行（「並び順：…」）で示す。
+- 絞り込みは、状態のチップ 1 列を残し、手続の種類と条件は文字つきのメニューボタン（MenuButton の `buttonText`）にする。条件は複数選択（`menuitemcheckbox`）。
+- 詳細の行は「項目名（左）・値（右。長いときは下の右寄せ）」（GroupedRow の `label` / `value`）。DOM の順は項目名、値で、VoiceOver も同じ順に読む。
+- 戻るは、BackLink で「‹ ＋戻り先の画面名（案件）」に統一（詳細・新規とも）。読み上げ名は「案件へ戻る」。
+- 検索欄は、フォーカス中だけ右に「キャンセル」を出す（入力を消してフォーカスを外す）。
+- 初回の読み込み中は LoadingSpinner（reduced motion では静止）。詳細の「見つかりません」は、説明文と「案件一覧へ戻る」の行を出す。
+- 一覧の行は、入れ子を減らすため、未受領書類の件数以外の灰色のバッジ（確認未了・申請前チェック未完了）を出さない。詳細の「申請人情報の確認」「申請前チェック」で確認できる（絞り込みの条件としては使える）。
+- 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
+- 引いて更新（PullToRefresh）は、今は画面に付けていない。`lib/store.ts` に、読み込み済みのデータを取り直す関数が無く（`ensureLoaded` は読み込み済みなら何もしない。`resetStore` は権限まで消す）、付けても何も更新しないのに「更新しました」と出してしまうため。取り直す関数ができたら、`onRefresh` に渡して戻す（部品とそのテストは残してある）。読み込みに失敗したときは「もう一度読み込む」ボタンで再試行できる。
+
+## 残り
+- 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
+- themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
+- iPhone 版のアカウント・ログイン・再設定・メンバー管理（上記のとおり最後の PR）。
+
+## PC 版から iPhone 版への自動の振り分け（proxy.ts）
+Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`）で確認した要点：ルート直下の `proxy.ts` が `proxy` 関数を export する。既定の実行環境は Node.js で、`runtime` は指定できない。`matcher` が無いと静的ファイルを含む全リクエストで動くので、対象を限る。matcher は定数でなければならない。RSC のリクエストでは `rsc`・`next-router-prefetch` などの内部ヘッダーは proxy から見えず、HTML と同じ判定になる。
+
+### 仕様
+- iPhone の User-Agent（`iPhone` を含む。512 文字を超える値と `Android` 併記は偽装らしいので対象外）で、下の PC 版の画面を開くと、`/m` の対応画面へ 307 で移す。iPad・PC・Android・UA 無しは対象外。
+- 対応表（完全一致。末尾のスラッシュは無視。照会文字列は引き継がない）：
+
+| PC 版 | 移動先 |
+| --- | --- |
+| `/`、`/cases` | `/m/cases` |
+| `/cases/new` | `/m/cases/new` |
+
+- 上記以外（`/cases/[id]`、書類、`/account`、`/login`、`/reset-password`、`/about`、`/api`）は振り分けない。iPhone 版に対応画面が無い、または認証・API であるため。
+- `proxy.ts` は認証をしない。リダイレクトのみ。`/m` の画面は従来どおり `AuthGate` の内側にあり、未ログインなら `/login` へ移る。
+- GET と HEAD のみ。POST（Server Function など）は触らない。
+- 判定は `lib/deviceRedirect.ts`（純粋関数）、テストは `tests/deviceRedirect.test.ts`。
+
+### 無限ループの防止
+- matcher は `/`、`/cases`、`/cases/new` の 3 つのみ。`/m` 配下、`/_next`、静的ファイル、`/api`、favicon は対象に入らない。
+- さらに、判定関数が対応表の完全一致でのみ動く。行き先は固定値で、移動先（`/m/...`）は決して対象にならない。
+
+### PC 版を選ぶ・iPhone 版へ戻る
+- iPhone 版の「PC 版を開く」を押すと、Cookie `view=pc` をセットして `/` へ移る（`Link` の `prefetch={false}`。先読みが振り分け結果を残さないため）。`view=pc` があれば振り分けない。
+- Cookie の属性：`path=/`（全画面で効かせる）、`SameSite=Lax`（外部サイトから来た最初の GET でも読める。CSRF の対象ではない表示の好み）、`Secure` は https のときのみ（開発の http でも動かすため）、`HttpOnly` なし（画面側で書き換えるため。秘密を入れないので問題ない）、`Max-Age` は 1 年（好みの記憶であり、長すぎると戻し忘れるため自然に失効させる）。値は `pc` のみで、個人情報は入れない。
+- 戻る導線：iPhone の User-Agent のときだけ、PC 版のフッターに「iPhone 版を開く」を出す（`components/OpenMobileLink.tsx`。PC・iPad には出ない）。押すと Cookie を消して `/m/cases` へ移る。PC 版のヘッダーは変えない。
+
+### キャッシュ・安全性
+- 行き先は固定の対応表のみで、リクエストの値（Host、パス、照会文字列）を連結しないため、オープンリダイレクトは起きない。
+- 振り分けの応答は `Cache-Control: private, no-store` と `Vary: User-Agent, Cookie`。振り分けない応答（PC 版の静的な画面）は端末によらず同じ内容なので `Vary` は付けない（付けても静的ページの配信には反映されないことを `next start` で確認した）。
+- 307（一時的）にして、ブラウザーが恒久的に覚えないようにする。
+
+### 未対応
+- `/cases/[id]`・書類などの振り分け（iPhone 版に対応画面ができてから対応表に足す）。
+- iPad の振り分け、PC 版の照会文字列の引き継ぎ。
