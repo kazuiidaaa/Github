@@ -276,6 +276,49 @@
   }
 }
 
+/*
+ * PC 版のみ：入力フォーム・ダイアログ・確認画面を macOS 風に（Issue #456 PR4、docs/pc-mac-ui.md）。
+ * 部品（Button・Field・inputClass・Modal・各ページのカード）に付けた印のクラスを、ここで読み替える。
+ * iPhone 版（/m）は従来のまま。操作の高さ（44px）・文字の大きさ（入力欄 16px）・色の対比は変えない。
+ * 他のクラスより後に効かせるため、@layer の外に書く。
+ */
+@media (min-width: 48rem) {
+  /* ボタン：丸薬形（全周の丸み）から、macOS の角丸の四角へ */
+  :root:not(:has(.m-root)) .mac-button {
+    border-radius: var(--radius-mac-control);
+  }
+  /* 入力欄・選択欄：角丸 6px、面はグループ化した面。焦点は macOS の青（枠と輪の両方で示す） */
+  :root:not(:has(.m-root)) .mac-input {
+    border-radius: var(--radius-mac-control);
+    background-color: var(--color-grouped-surface);
+  }
+  :root:not(:has(.m-root)) .mac-input:focus {
+    border-color: var(--focus-ring);
+    --tw-ring-color: color-mix(in srgb, var(--focus-ring) 45%, transparent);
+  }
+  /* 項目名：一段小さく、太さは保つ（必須は「必須」の文字で別に示す） */
+  :root:not(:has(.m-root)) .mac-label {
+    font-size: var(--text-mac-footnote);
+    line-height: var(--text-mac-footnote--line-height);
+  }
+  /* カード（フォームのまとまり）：グループ化した面。角丸 10px、区切り線の色の枠 */
+  :root:not(:has(.m-root)) .mac-card {
+    border-radius: var(--radius-mac-group);
+    border-color: var(--color-separator);
+    background-color: var(--color-grouped-surface);
+  }
+  /* ダイアログ・確認画面：角丸 12px、面はグループ化した面、細い枠、見出しは一段大きい文字 */
+  :root:not(:has(.m-root)) .mac-dialog {
+    border-radius: var(--radius-mac-window);
+    background-color: var(--color-grouped-surface);
+    border: 1px solid var(--color-separator);
+  }
+  :root:not(:has(.m-root)) .mac-dialog h2 {
+    font-size: var(--text-mac-title3);
+    line-height: var(--text-mac-title3--line-height);
+  }
+}
+
 /* 書類のプレビュー（紙の見た目）は、暗色表示でも白地に黒字のまま表示する */
 .paper {
   /* 書体は Noto Sans JP・KR で明示する。画面の書体（--font-sans）の変更を受けない（Issue #216）。氏名のハングルのため KR も指定する */
@@ -357,7 +400,8 @@ button:not(:disabled):active {
 
 .anim-page-enter {
   /* 画面の切り替えは、移動なしのフェードのみ（Issue #392 PR-3）。毎回の移動は、読む妨げになるため */
-  animation: fade-in var(--dur-fade) linear both;
+  /* 終了後に動きの状態（opacity: 1）を残さない（backwards）。残すと、中のダイアログ（fixed・z-50）が、この要素の中に閉じ込められ、PC 版の上のツールバー（z-30）の下に隠れる */
+  animation: fade-in var(--dur-fade) linear backwards;
 }
 
 @keyframes fade-in {

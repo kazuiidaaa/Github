@@ -93,13 +93,13 @@ function CasesView() {
           </p>
           {!canEdit && <p className="mb-2 text-xs text-slate-500">{t("caseList.viewOnly")}</p>}
           {empty ? (
-            <p role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+            <p role={emptyRole} className="mac-card rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
               {loaded && cases.length > 0 && pendingCount === 0 ? t("caseList.noCardNone") : empty}
             </p>
           ) : (
             <ul className={`${stagger} space-y-3`}>
               {rows.map(({ record: c }) => (
-                <li key={c.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm md:grid-cols-[1fr_2fr] md:items-center">
+                <li key={c.id} className="grid gap-3 mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm md:grid-cols-[1fr_2fr] md:items-center">
                   <div>
                     <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 hover:underline">
                       {c.caseName}
@@ -156,7 +156,7 @@ function CasesView() {
       {/* 置き場所の幅が足りないとき（狭い画面幅、または文字を大きくしたとき）は、表に代えてカード形式で表示する */}
       <ul className={`${stagger} space-y-3 @[44rem]:hidden`}>
         {empty && (
-          <li role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+          <li role={emptyRole} className="mac-card rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
             {empty}
             {loaded && cases.length > 0 && active && (
               <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
@@ -173,7 +173,7 @@ function CasesView() {
           </li>
         )}
         {shown.map(({ record: c, metrics: m }) => (
-          <li key={c.id} className="relative rounded-2xl border border-slate-200 bg-white p-4 text-sm transition-colors active:bg-slate-100">
+          <li key={c.id} className="relative mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm transition-colors active:bg-slate-100">
             <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 after:absolute after:inset-0 hover:underline">
               {c.caseName}
             </Link>

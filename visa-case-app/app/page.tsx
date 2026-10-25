@@ -18,12 +18,12 @@ const URGENT_SIZE = 10;
 function CaseList({ rows, empty }: { rows: CaseRow[]; empty: string }) {
   const t = useT();
   if (rows.length === 0) {
-    return <p className="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">{empty}</p>;
+    return <p className="mac-card rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">{empty}</p>;
   }
   return (
     <ul className="anim-stagger space-y-3">
       {rows.map(({ record: c }) => (
-        <li key={c.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+        <li key={c.id} className="mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Link href={`/cases/${c.id}`} className="font-bold text-blue-700 hover:underline">
               {c.caseName}
@@ -82,7 +82,7 @@ export default function HomePage() {
               )}
             </div>
             {urgentAll.length === 0 ? (
-              <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">{t("home.urgentNone")}</p>
+              <p className="mac-card rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">{t("home.urgentNone")}</p>
             ) : (
               <ul className="anim-stagger space-y-3">
                 {urgent.map(({ record: c }) => (

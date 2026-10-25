@@ -236,7 +236,7 @@ export function ChoiceGroup({
   function renderOption(o: ChoiceOption) {
     const checked = o.value === value;
     const off = disabled || o.disabled;
-    const shape = isList ? "rounded-xl px-3 py-2 text-left" : "rounded-full px-4 py-2 text-center";
+    const shape = isList ? "mac-button rounded-xl px-3 py-2 text-left" : "mac-button rounded-full px-4 py-2 text-center";
     const tone = checked
       ? o.tone
         ? `border-current ring-1 ring-current ${TONE_STYLES[o.tone]}`
@@ -331,7 +331,7 @@ export function ChoiceGroup({
         <button
           type="button"
           onClick={clear}
-          className="mt-2 inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100"
+          className="mt-2 inline-flex min-h-[44px] items-center mac-button rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-100"
         >
           {clearLabel ?? t("input.choiceGroup_clear")}
         </button>

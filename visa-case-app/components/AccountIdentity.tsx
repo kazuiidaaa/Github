@@ -66,7 +66,7 @@ export function FullNameSection() {
   }
 
   return (
-    <form onSubmit={save} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+    <form onSubmit={save} className="space-y-4 mac-card rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="font-semibold">{t("account.nameTitle")}</h2>
       {name ? (
         <p className="break-words text-sm">

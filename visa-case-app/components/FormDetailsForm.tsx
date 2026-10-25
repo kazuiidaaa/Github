@@ -68,7 +68,7 @@ type TextKey = {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+    <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
       <h2 className="font-semibold">{title}</h2>
       {hint && <p className="mb-4 mt-1 text-xs text-muted">{hint}</p>}
       <div className={`grid gap-4 md:grid-cols-2 ${hint ? "" : "mt-4"}`}>{children}</div>
@@ -364,7 +364,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {layout.sectionTitles.relatives && (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">{L(layout.sectionTitles.relatives)}</h2>
         <div className="mt-4 max-w-xs">{select("relativesPresent", [["yes", t("caseForm.yes")], ["no", t("caseForm.no")]], t("caseForm.relativesPresentFallback"))}</div>
         {form.relativesPresent === "yes" && (
@@ -458,7 +458,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {layout.sectionTitles.workHistory && (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">{L(layout.sectionTitles.workHistory)}</h2>
         <div className="mt-4 space-y-3">
           {form.workHistory.map((w) => (

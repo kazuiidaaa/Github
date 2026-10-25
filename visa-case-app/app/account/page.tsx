@@ -20,7 +20,7 @@ export default function AccountPage() {
   const t = useT();
   if (!isSupabaseEnabled || demo) {
     return (
-      <div className="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      <div className="max-w-xl mac-card rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <h1 className="mb-2 text-xl font-semibold">{t("account.title")}</h1>
         <p className="text-slate-600">{t("account.demoNotice")}</p>
       </div>
@@ -106,7 +106,7 @@ function AccountContent() {
         </p>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 font-semibold">{t("account.infoTitle")}</h2>
         {info ? (
           <dl className="grid grid-cols-1 text-sm sm:grid-cols-[10rem_1fr] sm:gap-y-3">
@@ -135,7 +135,7 @@ function AccountContent() {
 
       <FullNameSection />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 font-semibold">{t("account.orgTitle")}</h2>
         <div className="flex items-end gap-3">
           <div className="flex-1">
@@ -154,7 +154,7 @@ function AccountContent() {
         <MembersPanel myRole={info.role} myUserId={info.userId} onChanged={() => void listAudit().then(setAudit)} />
       )}
 
-      <form onSubmit={savePassword} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+      <form onSubmit={savePassword} className="space-y-4 mac-card rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold">{t("account.pwTitle")}</h2>
         <Field label={t("account.pwCurrent")}>
           <input type="password" required autoComplete="current-password" className={inputClass} value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
@@ -175,7 +175,7 @@ function AccountContent() {
         </Button>
       </form>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <section className="overflow-hidden mac-card rounded-2xl border border-slate-200 bg-white">
         <h2 className="border-b border-slate-100 px-6 py-3 font-semibold">{t("account.auditTitle")}</h2>
         <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">

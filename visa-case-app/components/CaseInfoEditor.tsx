@@ -99,7 +99,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   if (!editing) {
     const procedure = PROCEDURE_TYPES.find((p) => p.value === record.procedureType)?.label;
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-semibold">{t("caseInfo.title")}</h2>
           {canEdit && (
@@ -140,7 +140,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
   }
 
   return (
-    <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
+    <section className="space-y-5 mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
       <h2 className="font-semibold">{t("caseInfo.editTitle")}</h2>
       {/* 誤りの要約。保存のたびに読み上げ、フォーカスは最初の誤りの欄へ移す（新規登録と同じ。設計書 4章「フォームの入力しやすさ」） */}
       {errorList.length > 0 && (

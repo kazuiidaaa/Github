@@ -164,7 +164,7 @@ export default function NewCasePage() {
 
   if (!canEdit) {
     return (
-      <div className="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      <div className="max-w-xl mac-card rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <p className="mb-1">{t("caseNew.noPermission")}</p>
         <Link href="/cases" className={textLinkClass}>
           {t("caseNew.backToList")}
@@ -199,7 +199,7 @@ export default function NewCasePage() {
             type="button"
             aria-pressed={bulk === m.v}
             onClick={() => setBulk(m.v)}
-            className={`inline-flex min-h-[44px] items-center rounded-full border px-4 py-2 font-bold ${bulk === m.v ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white hover:bg-slate-50 active:bg-slate-100"}`}
+            className={`inline-flex min-h-[44px] items-center mac-button rounded-full border px-4 py-2 font-bold ${bulk === m.v ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white hover:bg-slate-50 active:bg-slate-100"}`}
           >
             {m.label}
           </button>
@@ -218,7 +218,7 @@ export default function NewCasePage() {
           </Button>
         </div>
       )}
-      <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <form onSubmit={submit} className="space-y-5 mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         {/* 誤りの要約。送信のたびに読み上げ、フォーカスは最初の誤りの欄へ移す（設計書 4章「フォームの入力しやすさ」） */}
         {errorList.length > 0 && (
           <div role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">

@@ -110,7 +110,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
     <div className="space-y-6">
       <DeadlineBanner date={record.applicant.residenceExpiryDate} />
 
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+      <section className="flex flex-wrap items-center justify-between gap-3 mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm">
         <p className="flex items-center gap-2">
           {t("caseChecks.state")}
           <Badge tone={ready ? "green" : "yellow"}>{ready ? t("caseChecks.ready") : t("caseChecks.notReady")}</Badge>
@@ -139,7 +139,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         const items = sorted.filter((k) => k.type === type);
         if (items.length === 0 && type !== "manual") return null;
         return (
-          <section key={type} className="rounded-2xl border border-slate-200 bg-white">
+          <section key={type} className="mac-card rounded-2xl border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-4 py-3 font-semibold md:px-6">{labels.checkType(type)}</h2>
             <ul className="divide-y divide-slate-100">
               {items.map((k) => (
@@ -175,7 +175,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         );
       })}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
         <h2 className="mb-2 font-semibold">
           <label htmlFor="check-memo">{t("caseChecks.memoTitle")}</label>
         </h2>
