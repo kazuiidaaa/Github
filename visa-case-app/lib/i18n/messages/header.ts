@@ -16,6 +16,10 @@ export const header = defineMessages({
     prototypeLong: "試作版：仮データ（このブラウザ内にのみ保存）",
     prototypeShort: "試作版：仮データ",
     logout: "ログアウト",
+    sidebarAria: "サイドバー",
+    toolbarAria: "ツールバー",
+    groupCases: "案件",
+    groupHelp: "ご案内",
   },
   en: {
     siteName: "Residence Status Case Management",
@@ -31,6 +35,10 @@ export const header = defineMessages({
     prototypeLong: "Prototype: sample data (saved only in this browser)",
     prototypeShort: "Prototype: sample data",
     logout: "Sign out",
+    sidebarAria: "Sidebar",
+    toolbarAria: "Toolbar",
+    groupCases: "Cases",
+    groupHelp: "Help",
   },
   ko: {
     siteName: "체류자격 사건 관리",
@@ -46,5 +54,9 @@ export const header = defineMessages({
     prototypeLong: "시험판: 임시 데이터(이 브라우저에만 저장)",
     prototypeShort: "시험판: 임시 데이터",
     logout: "로그아웃",
+    sidebarAria: "사이드바",
+    toolbarAria: "도구 모음",
+    groupCases: "사건",
+    groupHelp: "안내",
   },
 });
