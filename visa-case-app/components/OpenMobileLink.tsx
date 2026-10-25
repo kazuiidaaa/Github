@@ -18,6 +18,8 @@ export function OpenMobileLink() {
   const show = useSyncExternalStore(subscribe, isIphone, () => false);
   if (!show) return null;
   return (
+    // 先読みを避けるため、意図して <a> を使う（上の説明を参照）
+    // eslint-disable-next-line @next/next/no-html-link-for-pages
     <a
       href="/m/cases"
       onClick={() => {

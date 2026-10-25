@@ -34,7 +34,7 @@ export const CATALOG = {
   documents, auth, about, caseList, home, account, documentView,
   caseNew, employment, casePage, caseRequirements, caseChecks, caseForm, casePoints, caseApplicant, caseInfo,
   mobile, mobileDetail,
-  mobile, mobileNew,
+  mobileNew,
 } as const;
 
 export type Catalog = typeof CATALOG;
