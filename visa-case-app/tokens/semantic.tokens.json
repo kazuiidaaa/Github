@@ -1,0 +1,69 @@
+{
+  "color": {
+    "$description": "意味の名前（正本）。旧色名の段階色への参照で、暗色は参照先の暗色値に追随する。サフィックスは、無印=記号や強調、text=文字、soft=淡い背景、line=枠線。状態は色だけで示さず、文字と図形を併記する。",
+    "danger": {
+      "$type": "color",
+      "$value": "{color.red.600}"
+    },
+    "danger-text": {
+      "$type": "color",
+      "$value": "{color.red.800}"
+    },
+    "danger-soft": {
+      "$type": "color",
+      "$value": "{color.red.50}"
+    },
+    "danger-line": {
+      "$type": "color",
+      "$value": "{color.red.200}"
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{color.green.700}"
+    },
+    "success-text": {
+      "$type": "color",
+      "$value": "{color.green.800}"
+    },
+    "success-soft": {
+      "$type": "color",
+      "$value": "{color.green.100}"
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "{color.amber.700}"
+    },
+    "warning-text": {
+      "$type": "color",
+      "$value": "{color.amber.800}"
+    },
+    "warning-soft": {
+      "$type": "color",
+      "$value": "{color.amber.50}"
+    },
+    "warning-line": {
+      "$type": "color",
+      "$value": "{color.amber.200}"
+    },
+    "info": {
+      "$type": "color",
+      "$value": "{color.blue.700}"
+    },
+    "info-text": {
+      "$type": "color",
+      "$value": "{color.blue.800}"
+    },
+    "info-soft": {
+      "$type": "color",
+      "$value": "{color.blue.50}"
+    },
+    "info-line": {
+      "$type": "color",
+      "$value": "{color.blue.200}"
+    },
+    "muted": {
+      "$type": "color",
+      "$value": "{color.slate.500}"
+    }
+  }
+}

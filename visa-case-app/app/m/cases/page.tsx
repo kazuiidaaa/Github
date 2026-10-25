@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CaseRow } from "@/components/mobile/CaseRow";
 import { FilterChips } from "@/components/mobile/FilterChips";
 import { GroupedList } from "@/components/mobile/GroupedList";
@@ -16,7 +17,7 @@ import { activeCard, cardFilter, readFilter, readPage, toQueryWithPage } from "@
 import { useLabels } from "@/lib/i18n/labels";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
-import { ensureLoaded, useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
+import { ensureLoaded, refetch, useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type WorkflowStatus } from "@/lib/types";
 
 /** 検索語を URL へ反映するまでの待ち時間（components/CaseFilters.tsx と同じ） */
@@ -65,6 +66,7 @@ function CasesView() {
   const loaded = useStoreLoaded();
   const error = useStoreError();
   const canEdit = useCan("edit");
+  const [refreshFailed, setRefreshFailed] = useState(false);
 
   const filter = useMemo(() => readFilter(new URLSearchParams(params.toString())), [params]);
   const requestedPage = readPage(new URLSearchParams(params.toString()));
@@ -186,17 +188,26 @@ function CasesView() {
     );
   }
 
+  // 引いて更新：store の再取得。失敗は文字で伝え（手元の一覧は残す）、PullToRefresh には失敗として返す（「更新しました」を出さない）
+  const onRefresh = async () => {
+    setRefreshFailed(false);
+    if (!(await refetch())) {
+      setRefreshFailed(true);
+      throw new Error("refresh failed");
+    }
+  };
+
   let empty = "";
   if (rows.length === 0) empty = cases.length === 0 ? t("caseList.noCases") : t("caseList.noMatch");
 
   return (
-    <>
+    <PullToRefresh onRefresh={onRefresh}>
       {header}
-      {/*
-        引いて更新（PullToRefresh）は付けない。lib/store.ts には読み込み済みのデータを取り直す関数が無く
-        （ensureLoaded は読み込み済みなら何もしない。resetStore は権限などまで消す）、付けても何も更新しないのに
-        「更新しました」と出してしまうため。取り直す関数ができたら、onRefresh に渡して戻す。読み込み失敗時は「もう一度読み込む」で再試行できる。
-      */}
+      {refreshFailed && (
+        <p role="alert" className="mx-4 mt-2 rounded-[10px] bg-red-50 p-3 text-sm text-red-800">
+          {t("mobile.refreshFailed")}
+        </p>
+      )}
       <div className="px-4">
         <div onCompositionStart={() => { composing.current = true; cancelTimer(); }} onCompositionEnd={(e) => { composing.current = false; push((e.target as HTMLInputElement).value); }}>
           <div>
@@ -290,7 +301,7 @@ function CasesView() {
           </button>
         </div>
       )}
-    </>
+    </PullToRefresh>
   );
 }
 
