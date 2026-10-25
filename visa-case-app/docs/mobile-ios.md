@@ -44,6 +44,11 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
 - 引いて更新（PullToRefresh）は、今は画面に付けていない。`lib/store.ts` に、読み込み済みのデータを取り直す関数が無く（`ensureLoaded` は読み込み済みなら何もしない。`resetStore` は権限まで消す）、付けても何も更新しないのに「更新しました」と出してしまうため。取り直す関数ができたら、`onRefresh` に渡して戻す（部品とそのテストは残してある）。読み込みに失敗したときは「もう一度読み込む」ボタンで再試行できる。
 
+## 書類（/m/cases/[id]/documents）
+- PC 版の「書類の生成と履歴」と同じ経路（`lib/documents/store.ts` の `useGeneratedDocuments` / `generateDocuments`、`precheckRowsText`、`splitHistory`）を使う。文言は `documents` 区分を共用し、iPhone 版だけの語は `mobileDocuments` 区分。
+- 載せたもの：データ状態（閲覧）、出力内容の選択と生成（公式様式を除く）、生成履歴（保管済みの表示切り替え）。案件詳細の「書類の作成と履歴」から入る。
+- PC 版へ任せるもの：公式申請様式（エクセル）の生成、書類の内容の表示、Word・PDF などの出力、状態の変更、保管（`/cases/[id]/documents`。端末の振り分け対象外）。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
