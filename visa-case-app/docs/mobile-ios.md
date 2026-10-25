@@ -14,13 +14,13 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - `components/AppFrame.tsx`（client）を `app/layout.tsx` に置く。`ToastProvider` > `LanguageProvider` > `AppFrame` の順は従来どおり。
 - `/m` と `/m/…` 以外では、従来と同じ要素（Header、max-w-6xl の main、AuthGate、StoreErrorBanner、PageTransition、Footer）を同じ順序で出す。PC 版の出力は変わらない。
 - `/m` 配下では、Header・Footer・max-w-6xl の main・PageTransition を出さず、`AuthGate` と `StoreErrorBanner` の内側に `app/m/layout.tsx` の枠（`MobileShell`）を置く。
-- **`/m` の画面も、必ず `AuthGate` の内側に入る。** 未ログインで開くと `/login` へ移る（tests/appFrame.test.tsx、実機の確認は PR に記載）。認証・API・データ取得の経路は新設しない。データの読み書きは `lib/store.ts` を通す（保護は Supabase の RLS）。
+- **`/m` の画面も、必ず `AuthGate` の内側に入る。** 未ログインで開くと `/m/login`（iPhone 版のログイン）へ移る（tests/appFrame.test.tsx、実機の確認は PR に記載）。認証・API・データ取得の経路は新設しない。データの読み書きは `lib/store.ts` を通す（保護は Supabase の RLS）。
 
 ## 構成
 - `app/m/layout.tsx`：viewport（viewport-fit=cover、明暗の themeColor）、`MobileShell`。
 - `app/m/page.tsx`：`/m` は `/m/cases` へ移す。
 - `app/m/mobile.css`：safe-area、チップ・検索欄・区切り線。すべて `.m-root` 配下に限定。
-- `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）。
+- `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）、`app/m/login`（ログイン）。
 - `components/mobile/`：TabBar、LargeTitleHeader、BackLink、SearchField、FilterChips、GroupedList / GroupedRow、MenuButton、LoadingSpinner、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
 - 文言：`lib/i18n/messages/mobile.ts`（区分 `mobile`。日本語・英語・韓国語。英語・韓国語は他の区分と同じく下書き扱い）。
 
@@ -33,7 +33,7 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 ## 画面構成と HIG 適合レビューの反映（Issue #456）
 - 下部タブは「案件」「アカウント」の 2 つ。新規登録は「操作」なので、タブでなく案件一覧のナビゲーションバー右の「+」（権限があるときだけ）。`/m/cases/new` は「案件」タブの配下として扱う。
 - 一覧の行・空状態の新規リンク・新規作成後の遷移は、すべて iPhone 版（`/m/cases/[id]`、`/m/cases/new`）。
-- アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・ログイン・再設定・メンバー管理の画面は、最後の PR で扱う。
+- アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・再設定の完了画面・メンバー管理の画面は、最後の PR で扱う（ログインは下の「ログイン」で追加済み）。
 - 並び替えは上下矢印の記号。現在の並び順は、ボタンの読み上げ名と、件数の行（「並び順：…」）で示す。
 - 絞り込みは、状態のチップ 1 列を残し、手続の種類と条件は文字つきのメニューボタン（MenuButton の `buttonText`）にする。条件は複数選択（`menuitemcheckbox`）。
 - 詳細の行は「項目名（左）・値（右。長いときは下の右寄せ）」（GroupedRow の `label` / `value`）。DOM の順は項目名、値で、VoiceOver も同じ順に読む。
@@ -44,6 +44,21 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
 - 引いて更新（PullToRefresh）は、案件一覧（`/m/cases`）に付ける。`lib/store.ts` に追加した `refetch()`（読み込み済みのデータの取り直し。成功は true、失敗は false）を `onRefresh` に渡す。既存の関数（`ensureLoaded`・`resetStore` など）の挙動は変えず、PC 版は `refetch` を呼ばないので影響しない。未読み込みなら `ensureLoaded` と同じ。実行中の再取得があれば同じ Promise を返す（二重実行の防止。部品側も実行中は無視する）。取得前に直前までの保存を待ち、取得中に保存・削除・ログアウトがあれば古い結果を捨てる。失敗しても手元の一覧と権限は変えず、全体のエラー表示にも触れない。一覧が「更新できませんでした。表示は更新前のままです。」（role=alert）を出し、「更新しました」は出さない。動きを減らす設定では引き量を動かさず文字だけ。キーボード用の「再読み込み」ボタンは、フォーカス時に 44pt 以上で出る。テストは `tests/storeRefetch.test.ts`。初回の読み込みに失敗したときは、従来どおり「もう一度読み込む」ボタンで再試行する。
 
+## ログイン（/m/login）
+- 見た目だけを iPhone 向けにし、認証は PC 版（`app/login/page.tsx`）と同じ関数・同じ経路を再利用する：`signIn`・`requestPasswordReset`・`startDemo`（`lib/auth.ts`）。Supabase を画面から直接呼ばない。エラー文も PC 版と同じ（`useAuthErrorText`。メールアドレスの登録の有無が推測できない文言）。
+- 形は GroupedList の入力行（項目名を左、入力欄を右）。入力欄は 16px、行と押せる範囲は 44pt 以上。メール＝`autoComplete="username"`・`inputMode="email"`・`type="email"`、パスワード＝`autoComplete="current-password"`、どちらも自動大文字化・自動修正・スペルチェックなし。パスワードは「表示する」ボタンで切り替える。
+- 「パスワードを忘れた場合」は同じ画面の再設定モード（`requestPasswordReset`）。再設定メールのリンク先 `/reset-password` は PC 版のまま。「デモを試す」は `startDemo` の後に `/m/cases` へ移る。
+- 文言は `auth` 区分（PC 版と共通）と、`lib/i18n/messages/mobileLogin.ts`（区分 `mobileLogin`。読み上げ名と見出しのみ。英語・韓国語は下書き）。
+- AuthGate の接続（必要最小限）：`/m/login` をログイン画面として扱う（未ログインでも移動させない）。**`/m` 配下で未ログインなら `/m/login` へ、ログイン済みで `/m/login` を開くと `/m/cases` へ**移す（`/m` 以外は従来どおり `/login`、`/`）。セッションの判定・Supabase の呼び出し・表示の条件は変えていない。ログアウト後・デモ終了後（`/m/account`）の行き先も `/m/login`。
+- `/m/login` では下部タブを出さない（TabBar が `isMobileLoginPath` で非表示）。
+
+## 文字を大きくしたとき（Issue #456 の後続）
+OS の文字サイズや、ブラウザーの文字拡大（html の font-size 200% で擬似的に確認）でも、表示が崩れないようにする。
+- 末尾の「PC 版を開く」は、タブバーに隠れない。タブバーは文字拡大で高くなるので、`.m-footer` の下余白は固定値でなく、`MobileShell` が `ResizeObserver` で実測してセットする `--m-tabbar-total`（safe-area を含む実高さ。`.m-root` の style）に追随する。測る前や JS が無いときは、標準の高さ（`--m-tabbar-h` ＋ safe-area）に戻る。
+- GroupedRow の項目名は `min-w-0 max-w-full break-words`（`shrink-0` にしない）。長い項目名や拡大時は、切り詰めず折り返して全文を読める。`truncate`・`line-clamp` は使わない。
+- 検索 input は `min-h-[44px]`（外枠と同じ高さ）。
+- 確認方法：390 幅・iPhone の User-Agent・`html{font-size:200%}`・英語で、`/m/cases`、`/m/cases/new`、`/m/cases/[id]`、`/m/account` の最下部までスクロールし、「PC 版を開く」の下端がタブバーの上端より上にあること、詳細の項目名が右端で切れないことを見る。回帰テストは tests/mobileParts.test.tsx。
+
 ## 書類（/m/cases/[id]/documents）
 - PC 版の「書類の生成と履歴」と同じ経路（`lib/documents/store.ts` の `useGeneratedDocuments` / `generateDocuments`、`precheckRowsText`、`splitHistory`）を使う。文言は `documents` 区分を共用し、iPhone 版だけの語は `mobileDocuments` 区分。
 - 載せたもの：データ状態（閲覧）、出力内容の選択と生成（公式様式を除く）、生成履歴（保管済みの表示切り替え）。案件詳細の「書類の作成と履歴」から入る。
@@ -52,7 +67,7 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
-- iPhone 版のアカウント・ログイン・再設定・メンバー管理（上記のとおり最後の PR）。
+- iPhone 版のアカウント（本格版）・再設定の完了画面（`/reset-password`）・メンバー管理（上記のとおり最後の PR）。
 
 ## PC 版から iPhone 版への自動の振り分け（proxy.ts）
 Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`）で確認した要点：ルート直下の `proxy.ts` が `proxy` 関数を export する。既定の実行環境は Node.js で、`runtime` は指定できない。`matcher` が無いと静的ファイルを含む全リクエストで動くので、対象を限る。matcher は定数でなければならない。RSC のリクエストでは `rsc`・`next-router-prefetch` などの内部ヘッダーは proxy から見えず、HTML と同じ判定になる。

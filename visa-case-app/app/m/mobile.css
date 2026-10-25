@@ -34,8 +34,17 @@ body:has(.m-root) {
 }
 
 /* 末尾の注意書きは、固定のタブバーに隠れないよう、その高さ分の余白を足す */
+.m-root .m-footer-plain {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+}
+
+/*
+ * 末尾の注意書きは、固定のタブバーに隠れないよう、その高さ分の余白を足す。
+ * 文字を大きくするとタブバーも高くなるので、固定値でなく、MobileShell が実測して入れる --m-tabbar-total
+ * （safe-area を含むタブバーの実高さ）に追随する。測れる前（初回描画・JS 無効）は、標準の高さを使う。
+ */
 .m-root .m-footer {
-  padding-bottom: calc(var(--m-tabbar-h) + env(safe-area-inset-bottom) + 16px);
+  padding-bottom: calc(var(--m-tabbar-total, calc(var(--m-tabbar-h) + env(safe-area-inset-bottom))) + 16px);
 }
 
 /* チップ列：スクロールバーを出さない（横にスクロールできることは、端が切れて見えることで示す） */

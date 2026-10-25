@@ -12,7 +12,7 @@ import { isSupabaseEnabled } from "@/lib/supabase";
 
 /**
  * アカウント（iPhone 版・暫定の最小版）。既存の仕組みだけを使い、認証の経路は新設しない。
- * - ログイン中のユーザー（useSession）とログアウト（signOut。移動は AuthGate が /login へ行う）
+ * - ログイン中のユーザー（useSession）とログアウト（signOut。移動は AuthGate が /m/login へ行う）
  * - デモ中はデモの終了（exitDemo）、仮データ方式では注意書き
  * - 言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle。押せる範囲だけ 44pt 以上にする）
  * パスワード変更・メンバー管理などは PC 版の /account へ移る（/account は端末の振り分けの対象外）。
@@ -41,7 +41,7 @@ export default function MobileAccountPage() {
             title={<span className="font-bold text-accent">{t("header.exitDemo")}</span>}
             onClick={() => {
               exitDemo();
-              router.replace("/login");
+              router.replace("/m/login");
             }}
             chevron={false}
           />

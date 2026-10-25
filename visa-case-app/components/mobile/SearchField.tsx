@@ -80,7 +80,7 @@ export function SearchField({
             hideTimer.current = setTimeout(() => setFocused(false), 200);
           }}
           onChange={(e) => onChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent py-2 text-base text-foreground outline-none placeholder:text-slate-500"
+          className="min-h-[44px] min-w-0 flex-1 bg-transparent py-2 text-base text-foreground outline-none placeholder:text-slate-500"
         />
         {value !== "" && (
           <button
