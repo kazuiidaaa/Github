@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -128,6 +129,33 @@ describe("GroupedRow の項目名と値", () => {
     expect(m.indexOf("国籍")).toBeGreaterThan(-1);
     expect(m.indexOf("国籍")).toBeLessThan(m.indexOf("ベトナム"));
     expect(m).toContain("text-right");
+  });
+});
+
+describe("文字拡大への追随（Issue #456）", () => {
+  it("項目名は縮められ、折り返して全文を出す（shrink-0 にしない）", () => {
+    const m = renderToStaticMarkup(
+      <GroupedList>
+        <GroupedRow label="Current status of residence" value="x" />
+      </GroupedList>,
+    );
+    const label = m.match(/<span class="([^"]*)">Current status of residence<\/span>/)?.[1] ?? "";
+    expect(label).toContain("min-w-0");
+    expect(label).toContain("max-w-full");
+    expect(label).toContain("break-words");
+    expect(label).not.toContain("shrink-0");
+    expect(label).not.toContain("truncate");
+    expect(label).not.toContain("line-clamp");
+  });
+  it("検索 input の高さも 44pt 以上", () => {
+    expect(renderToStaticMarkup(<SearchField value="" onChange={() => {}} label="検索" />)).toMatch(/<input[^>]*min-h-\[44px\]/);
+  });
+  it("末尾の余白は、実測した --m-tabbar-total に追随する（固定値だけにしない）", () => {
+    const css = readFileSync("app/m/mobile.css", "utf8");
+    expect(css).toMatch(/\.m-footer\s*\{[^}]*var\(--m-tabbar-total/);
+    const shell = readFileSync("components/mobile/MobileShell.tsx", "utf8");
+    expect(shell).toContain("ResizeObserver");
+    expect(shell).toContain("--m-tabbar-total");
   });
 });
 

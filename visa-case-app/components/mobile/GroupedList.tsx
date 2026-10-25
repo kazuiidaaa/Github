@@ -39,6 +39,7 @@ export function GroupedList({
  *
  * 2 通りの形がある。
  * - 項目名と値の行（label / value）：項目名を左、値を右に並べる（幅が足りない長い値は、項目名の下の右寄せに回り込む）。
+ *   項目名も値も min-w-0 で縮められ、長い項目名や文字拡大のときは折り返して全文を出す（切り詰めない）。
  *   DOM の順は「項目名 → 値」で、VoiceOver も項目名、値の順に読む。値には文字のほか Badge なども置ける。
  * - 見出し行（title / subtitle）：主な文字と補足の文。一覧の項目（書類名など）に使う。
  *
@@ -84,7 +85,7 @@ export function GroupedRow({
       {leading && <span className="shrink-0">{leading}</span>}
       {label !== undefined ? (
         <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-          <span className="shrink-0 break-words font-medium">{label}</span>
+          <span className="min-w-0 max-w-full break-words font-medium">{label}</span>
           <span className="min-w-0 max-w-full flex-1 basis-1/3 break-words text-right text-slate-600">{value}</span>
         </span>
       ) : (

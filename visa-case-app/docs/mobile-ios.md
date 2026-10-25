@@ -44,6 +44,13 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
 - 引いて更新（PullToRefresh）は、今は画面に付けていない。`lib/store.ts` に、読み込み済みのデータを取り直す関数が無く（`ensureLoaded` は読み込み済みなら何もしない。`resetStore` は権限まで消す）、付けても何も更新しないのに「更新しました」と出してしまうため。取り直す関数ができたら、`onRefresh` に渡して戻す（部品とそのテストは残してある）。読み込みに失敗したときは「もう一度読み込む」ボタンで再試行できる。
 
+## 文字を大きくしたとき（Issue #456 の後続）
+OS の文字サイズや、ブラウザーの文字拡大（html の font-size 200% で擬似的に確認）でも、表示が崩れないようにする。
+- 末尾の「PC 版を開く」は、タブバーに隠れない。タブバーは文字拡大で高くなるので、`.m-footer` の下余白は固定値でなく、`MobileShell` が `ResizeObserver` で実測してセットする `--m-tabbar-total`（safe-area を含む実高さ。`.m-root` の style）に追随する。測る前や JS が無いときは、標準の高さ（`--m-tabbar-h` ＋ safe-area）に戻る。
+- GroupedRow の項目名は `min-w-0 max-w-full break-words`（`shrink-0` にしない）。長い項目名や拡大時は、切り詰めず折り返して全文を読める。`truncate`・`line-clamp` は使わない。
+- 検索 input は `min-h-[44px]`（外枠と同じ高さ）。
+- 確認方法：390 幅・iPhone の User-Agent・`html{font-size:200%}`・英語で、`/m/cases`、`/m/cases/new`、`/m/cases/[id]`、`/m/account` の最下部までスクロールし、「PC 版を開く」の下端がタブバーの上端より上にあること、詳細の項目名が右端で切れないことを見る。回帰テストは tests/mobileParts.test.tsx。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
