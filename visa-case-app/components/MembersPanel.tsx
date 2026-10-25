@@ -59,7 +59,7 @@ export function MembersPanel({ myRole, myUserId, onChanged }: { myRole: string; 
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+    <section className="mac-card rounded-2xl border border-slate-200 bg-white p-6">
       <h2 className="mb-2 font-semibold">{t("account.members_title")}</h2>
       <p className="mb-4 text-xs text-slate-500">
         {t("account.members_roles")}

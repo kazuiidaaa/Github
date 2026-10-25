@@ -131,7 +131,7 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
   }
 
   return (
-    <section className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+    <section className="max-w-3xl mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
       <h2 className="mb-1 font-semibold">{t("employment.title")}</h2>
       <p className="mb-5 text-xs text-muted">{t("employment.note")}</p>
       {/* 誤りの要約（申請人情報のフォームと同じ見た目・文言） */}

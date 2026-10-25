@@ -117,7 +117,7 @@ export function UploadBox({
   }
 
   return (
-    <section className={compact ? "" : "rounded-2xl border border-slate-200 bg-white p-4 md:p-6"}>
+    <section className={compact ? "" : "mac-card rounded-2xl border border-slate-200 bg-white p-4 md:p-6"}>
       {!compact && (
         <>
           <h2 className="mb-1 font-semibold">{t(hasDocument ? "display.uploadReplaceTitle" : "display.uploadNewTitle", { label })}</h2>

@@ -45,7 +45,7 @@ export default function LoginPage() {
 
   if (!isSupabaseEnabled) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      <div className="mx-auto max-w-md mac-card rounded-2xl border border-slate-200 bg-white p-6 text-sm">
         <p className="mb-2 font-semibold">{t("auth.disabledTitle")}</p>
         <p className="text-slate-600">
           {t("auth.disabledBody", { envFile: "{envFile}", readme: "{readme}" })
@@ -60,7 +60,7 @@ export default function LoginPage() {
 
   if (mode === "reset") {
     return (
-      <form onSubmit={submitReset} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
+      <form onSubmit={submitReset} className="mx-auto max-w-sm space-y-5 mac-card rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-center text-xl font-semibold">{t("auth.resetTitle")}</h1>
         <p className="text-sm text-slate-600">{t("auth.resetIntro")}</p>
         <fieldset disabled={busy} className="space-y-5">
@@ -89,7 +89,7 @@ export default function LoginPage() {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
+    <form onSubmit={submit} className="mx-auto max-w-sm space-y-5 mac-card rounded-2xl border border-slate-200 bg-white p-6">
       <h1 className="text-center text-xl font-semibold">{t("auth.loginTitle")}</h1>
       <p className="text-sm text-slate-600">{t("auth.loginIntro")}</p>
       <fieldset disabled={busy} className="space-y-5">

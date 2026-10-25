@@ -11,7 +11,7 @@ import { CATALOG } from "@/lib/i18n/messages";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { isSupabaseEnabled } from "@/lib/supabase";
 
-const cardClass = "mx-auto max-w-sm space-y-5 rounded-2xl border border-slate-200 bg-white p-6";
+const cardClass = "mx-auto max-w-sm space-y-5 mac-card rounded-2xl border border-slate-200 bg-white p-6";
 
 export default function ResetPasswordPage() {
   const { session } = useSessionState();

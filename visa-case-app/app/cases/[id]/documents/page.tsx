@@ -135,7 +135,7 @@ export default function DocumentsPage() {
         {t("documents.intro")}
       </p>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:p-6">
         <h2 className="mb-3 font-semibold">{t("documents.dataStatus")}</h2>
         {/* 狭い幅では、項目名の下に状態を置く（項目名の列で本文の幅を削らない） */}
         <dl className="grid grid-cols-1 gap-y-1 md:grid-cols-[9rem_1fr] md:items-center md:gap-y-3">
@@ -154,7 +154,7 @@ export default function DocumentsPage() {
         </dl>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <h2 className="mb-3 font-semibold">{t("documents.outputTitle")}</h2>
         <div className="text-sm">
           {INTERNAL_DOCUMENT_TYPES.map((type) => (
@@ -213,7 +213,7 @@ export default function DocumentsPage() {
         <p className="mt-3 text-xs text-muted">{t("documents.versionNote")}</p>
       </section>
 
-      <section ref={historyRef} className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white">
+      <section ref={historyRef} className="scroll-mt-4 mac-card rounded-2xl border border-slate-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-x-3 border-b border-slate-100 px-4 py-2 sm:px-6">
           <h2 className="py-1 font-semibold">{t("documents.history")}</h2>
           {archived.length > 0 && (

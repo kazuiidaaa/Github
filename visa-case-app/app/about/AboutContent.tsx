@@ -3,7 +3,7 @@
 import { useT } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
 
-const SECTION = "rounded-2xl border border-slate-200 bg-white p-6";
+const SECTION = "mac-card rounded-2xl border border-slate-200 bg-white p-6";
 const LIST = "list-disc space-y-1 pl-5";
 
 type Section = { id: string; title: MessageKey; items: MessageKey[] };

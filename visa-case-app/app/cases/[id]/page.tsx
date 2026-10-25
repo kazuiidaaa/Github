@@ -435,7 +435,7 @@ export default function CaseDetailPage() {
           {canEdit && (
             <UploadBox caseId={record.id} documentType="photo" currentFileName={photo?.fileName} onUploaded={() => {}} />
           )}
-          <section className="rounded-2xl border border-slate-200 bg-white">
+          <section className="mac-card rounded-2xl border border-slate-200 bg-white">
             <h2 className="border-b border-slate-100 px-4 py-3 font-semibold sm:px-6">{t("casePage.registeredDocuments")}</h2>
             {record.documents.length === 0 && <p className="px-4 py-6 text-sm text-muted sm:px-6">{t("casePage.noDocuments")}</p>}
             {record.documents.map((d) => (

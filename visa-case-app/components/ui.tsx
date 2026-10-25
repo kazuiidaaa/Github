@@ -15,7 +15,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`min-h-[44px] rounded-full px-5 py-2 text-sm font-bold disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`mac-button min-h-[44px] rounded-full px-5 py-2 text-sm font-bold disabled:cursor-not-allowed ${styles} ${className}`}
     />
   );
 }
@@ -85,7 +85,7 @@ export function Field({
       : children;
   return (
     <label className="block">
-      <span className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold">
+      <span className="mac-label mb-1 flex flex-wrap items-center gap-2 text-sm font-bold">
         {label}
         {required && (
           <Badge tone="red" icon={false}>
@@ -110,7 +110,7 @@ export function Field({
 
 export const inputClass =
   // 16px 未満だと iOS Safari がフォーカス時に拡大するため text-base。高さは押しやすさのため 44px 以上（Issue #392）
-  "min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/40";
+  "mac-input min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/40";
 
 export type Tone = "green" | "yellow" | "red" | "gray" | "blue";
 

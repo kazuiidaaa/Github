@@ -10,7 +10,7 @@ import { SORT_KEYS } from "@/lib/caseMetrics";
 import { useCommittedSearch } from "@/lib/useCommittedSearch";
 
 // 入力欄は 16px（iOS Safari の自動拡大を避ける）・高さ 44px。ui.tsx の inputClass と同じ規則
-const select = "min-h-[44px] rounded-xl border border-line-strong bg-white px-3 py-2 text-base";
+const select = "mac-input min-h-[44px] rounded-xl border border-line-strong bg-white px-3 py-2 text-base";
 
 export function CaseFilters({
   filter,

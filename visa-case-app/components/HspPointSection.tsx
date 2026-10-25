@@ -81,7 +81,7 @@ export function HspPointSection({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
+    <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
       <h2 className="font-semibold">{t("casePoints.title")}</h2>
       <p className="mb-4 mt-1 text-xs text-muted">
         {t("casePoints.intro")}

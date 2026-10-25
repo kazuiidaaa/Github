@@ -62,7 +62,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         data-state={state}
-        className="motion-panel w-full max-w-md rounded-2xl bg-white p-6 shadow-overlay"
+        className="mac-dialog motion-panel w-full max-w-md rounded-2xl bg-white p-6 shadow-overlay"
       >
         {typeof children === "function" ? children({ cancel }) : children}
       </div>

@@ -164,7 +164,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4">
         {doc ? (
           <Original doc={doc} />
         ) : (
@@ -177,7 +177,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-6">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-semibold">{t("casePage.applicantInfo")}</h2>
           <Badge tone={confirmed ? "green" : "yellow"}>{confirmed ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}</Badge>

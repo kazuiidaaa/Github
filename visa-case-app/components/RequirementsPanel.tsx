@@ -231,7 +231,7 @@ export function RequirementsPanel({
         </p>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+      <section className="mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm">
         <p>
           {t("caseRequirements.summaryRequired", { count: progress.requiredCount })}
           {t("caseRequirements.summaryReceived", { count: progress.receivedCount })}
@@ -262,7 +262,7 @@ export function RequirementsPanel({
       </section>
 
       {ev.ruleSet && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
+        <div className="overflow-hidden mac-card rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
           <table className={TABLE_CLASS}>
             <thead className={THEAD_CLASS}>
               <tr>
@@ -304,7 +304,7 @@ export function RequirementsPanel({
           <p className="text-sm text-muted">{t("caseRequirements.customEmpty")}</p>
         )}
         {record.customRequirements.length > 0 && (
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
+          <div className="overflow-hidden mac-card rounded-2xl border border-slate-200 bg-white md:overflow-x-auto">
             <table className={TABLE_CLASS}>
               <thead className={THEAD_CLASS}>
                 <tr>
