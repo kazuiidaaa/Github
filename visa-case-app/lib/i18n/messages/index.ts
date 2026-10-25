@@ -24,6 +24,7 @@ import { labels } from "./labels";
 import { mobile } from "./mobile";
 import { mobileDetail } from "./mobileDetail";
 import { mobileLogin } from "./mobileLogin";
+import { mobileReset } from "./mobileReset";
 import { mobileDocuments } from "./mobileDocuments";
 import { mobileNew } from "./mobileNew";
 import { mobileAccount } from "./mobileAccount";
@@ -37,7 +38,7 @@ export const CATALOG = {
   documents, auth, about, caseList, home, account, documentView,
   caseNew, employment, casePage, caseRequirements, caseChecks, caseForm, casePoints, caseApplicant, caseInfo,
   mobile, mobileDetail,
-  mobileNew, mobileLogin, mobileDocuments, mobileAccount,
+  mobileNew, mobileLogin, mobileReset, mobileDocuments, mobileAccount,
 } as const;
 
 export type Catalog = typeof CATALOG;

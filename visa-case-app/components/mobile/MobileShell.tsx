@@ -5,7 +5,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { desktopViewCookie } from "@/lib/deviceRedirect";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { usePathname } from "next/navigation";
-import { isMobileLoginPath } from "./paths";
+import { isMobileAuthPath } from "./paths";
 import { TabBar } from "./TabBar";
 
 /**
@@ -17,7 +17,7 @@ import { TabBar } from "./TabBar";
 export function MobileShell({ children }: { children: ReactNode }) {
   const t = useT();
   // ログイン画面は下部タブが無いので、末尾の余白もタブ分を取らない
-  const onLogin = isMobileLoginPath(usePathname());
+  const onLogin = isMobileAuthPath(usePathname());
   const root = useRef<HTMLDivElement>(null);
   // 文字を大きくするとタブバーが高くなる。実高さを測って --m-tabbar-total に入れ、末尾の余白（mobile.css の .m-footer）を追随させる
   useEffect(() => {

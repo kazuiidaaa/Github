@@ -30,9 +30,27 @@ export function activeTab(pathname: string | null | undefined): MobileTabId | nu
   return null;
 }
 
+/**
+ * iPhone 版の「新しいパスワードの設定」画面。PC 版の再設定メールのリンクは /reset-password のまま（変えない）。
+ * この画面は、/m 配下で開いたとき（将来リンク先を変える場合を含む）の受け皿。
+ */
+export const MOBILE_RESET = "/m/reset-password";
+
 /** パスが iPhone 版のログイン画面か（末尾のスラッシュは無視する）。この画面では下部タブを出さない */
 export function isMobileLoginPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
   const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   return p === MOBILE_LOGIN;
+}
+
+/** パスが iPhone 版の再設定の完了画面か（末尾のスラッシュは無視する） */
+export function isMobileResetPath(pathname: string | null | undefined): boolean {
+  if (!pathname) return false;
+  const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return p === MOBILE_RESET;
+}
+
+/** ログイン前の認証画面（ログイン・再設定の完了）か。これらの画面には下部タブを出さない */
+export function isMobileAuthPath(pathname: string | null | undefined): boolean {
+  return isMobileLoginPath(pathname) || isMobileResetPath(pathname);
 }
