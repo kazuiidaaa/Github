@@ -22,6 +22,7 @@ vi.mock("../lib/store", () => ({
   useStoreError: () => ctx.error,
   useCan: () => ctx.canEdit,
   ensureLoaded: () => Promise.resolve(),
+  refetch: () => Promise.resolve(true),
 }));
 
 import MobileCasesPage from "../app/m/cases/page";
@@ -58,9 +59,10 @@ describe("案件一覧（iPhone 版）の描画", () => {
     expect(m.match(/role="group"/g)).toHaveLength(2); // 要点カードの群と、状態のチップ
     expect(m).toContain("手続：すべて");
     expect(m).toContain('aria-label="条件で絞り込む"');
-    // 新規登録はナビゲーションバー右の「+」。引いて更新は付けない
+    // 新規登録はナビゲーションバー右の「+」。引いて更新（キーボード用の再読み込みボタン）を付ける
     expect(m).toContain('aria-label="新規案件"');
-    expect(m).not.toContain("再読み込み");
+    expect(m).toContain("再読み込み");
+    expect(m).not.toContain("更新できませんでした");
     expect(names(m).sort()).toEqual(["demo-sample-a", "demo-sample-b", "demo-sample-c"]);
     expect(m).toContain("サンプル案件A");
     expect(m).toContain("該当 3 件（全 3 件）");
