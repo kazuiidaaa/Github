@@ -64,6 +64,12 @@ OS の文字サイズや、ブラウザーの文字拡大（html の font-size 2
 - 載せたもの：データ状態（閲覧）、出力内容の選択と生成（公式様式を除く）、生成履歴（保管済みの表示切り替え）。案件詳細の「書類の作成と履歴」から入る。
 - PC 版へ任せるもの：公式申請様式（エクセル）の生成、書類の内容の表示、Word・PDF などの出力、状態の変更、保管（`/cases/[id]/documents`。端末の振り分け対象外）。
 
+## アカウント本格版（/m/account）
+- Supabase 接続時（デモ以外）に、`components/MobileAccount.tsx`（`MobileAccountDetails`）を最初の一覧（ユーザー・ログアウト）の下に出す。PC 版 `app/account/page.tsx` と同じ関数を使う：`getAccount`・`listAudit`・`renameOrganization`（lib/store.ts）、`changePassword`（lib/auth.ts）。DB の変更は無い。デモ・仮データ方式は従来どおり説明のみ。
+- 載せたもの：最終ログイン、事務所名と役割、事務所名の変更（所有者のみ。他は入力と保存が無効で、理由を一覧の下に出す）、パスワード変更（current-password / new-password、メールは隠し欄 username）、監査ログ（直近100件。操作名と、日時・案件名）。ユーザー ID は iPhone 版では出さない。
+- メンバー管理は別の PR。`MobileAccountDetails` 内の「メンバー管理の差し込み位置」に GroupedList を足す。それまで、PC 版への行はメンバー管理のみ案内する。
+- 文言は `account` 区分を共用。`mobile.accountDesktop` / `accountDesktopNote` はメンバー管理のみの案内に変更。テストは `tests/mobileAccountDetails.test.tsx`。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
