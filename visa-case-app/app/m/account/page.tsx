@@ -61,10 +61,13 @@ export default function MobileAccountPage() {
 
       <GroupedList header={t("mobile.accountSectionDisplay")}>
         <GroupedRow
-          label={t("common.languageLabel")}
-          value={
-            <span className="[&_select]:min-h-[44px] [&_select]:text-base">
-              <LanguageSwitcher />
+          // 文字サイズ 200% で選択欄が行からはみ出さないよう、幅が足りないときは項目名の下へ縦に積み、行の幅まで縮められるようにする
+          title={
+            <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <span className="min-w-0 max-w-full break-words">{t("common.languageLabel")}</span>
+              <span className="min-w-[7rem] max-w-full flex-1 basis-0 text-right font-normal [&>span]:flex [&>span]:max-w-full [&>span]:justify-end [&_select]:min-h-[44px] [&_select]:min-w-0 [&_select]:max-w-full [&_select]:text-base">
+                <LanguageSwitcher />
+              </span>
             </span>
           }
         />
