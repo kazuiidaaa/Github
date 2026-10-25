@@ -190,12 +190,20 @@ export function matchesSearch(query: string, targets: string[]): boolean {
   return targets.map(normalizeSearchText).join("\u0000").includes(q);
 }
 
-export function applyFilter(cases: CaseRecord[], f: CaseFilter): CaseRow[] {
+/**
+ * 検索が当たる語を返す関数。省略すると、案件名・申請人氏名・在留資格（iPhone 版・ホームの一覧はこちら）。
+ * PC 版の案件一覧は、表で見える列の語も対象にする（lib/caseSearch.ts の listSearchTargets）。
+ * 検索語が空のときは呼ばれない（重い計算を避ける）。
+ */
+export type SearchTargets = (c: CaseRecord, m: CaseMetrics) => string[];
+
+export function applyFilter(cases: CaseRecord[], f: CaseFilter, targets?: SearchTargets): CaseRow[] {
   const q = f.query;
+  const searching = normalizeSearchText(q) !== "";
   const rows = cases
     .map((record) => ({ record, metrics: metricsOf(record) }))
     .filter(({ record: c, metrics: m }) => {
-      if (!matchesSearch(q, [c.caseName, c.applicant.legalName, c.applicant.residenceStatus || c.currentStatus])) return false;
+      if (searching && !matchesSearch(q, targets ? targets(c, m) : [c.caseName, c.applicant.legalName, c.applicant.residenceStatus || c.currentStatus])) return false;
       if (f.procedure !== "all" && c.procedureType !== f.procedure) return false;
       if (f.status !== "all" && c.workflowStatus !== f.status) return false;
       if (f.within30 && !m.within30) return false;

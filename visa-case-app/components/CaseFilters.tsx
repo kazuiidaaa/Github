@@ -45,8 +45,8 @@ export function CaseFilters({
         {/* PC 版（md 以上）の検索欄はツールバー（PcToolbar）にある。ここは md 未満のみ */}
         <input
           className="min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base md:hidden"
-          placeholder={t("caseList.searchLabel")}
-          aria-label={t("caseList.searchLabel")}
+          placeholder={t("caseList.searchLabelList")}
+          aria-label={t("caseList.searchLabelList")}
           {...search.inputProps}
         />
         <button
@@ -111,7 +111,7 @@ export function CaseFilters({
         </div>
         {active && (
           <button onClick={reset} className="min-h-[44px] text-blue-700 hover:underline">
-            {t("caseList.resetConditions")}
+            {t("caseList.clearConditions")}
           </button>
         )}
       </div>
