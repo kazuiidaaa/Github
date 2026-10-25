@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { desktopViewCookie } from "@/lib/deviceRedirect";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { usePathname } from "next/navigation";
@@ -18,8 +18,21 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const t = useT();
   // ログイン画面は下部タブが無いので、末尾の余白もタブ分を取らない
   const onLogin = isMobileLoginPath(usePathname());
+  const root = useRef<HTMLDivElement>(null);
+  // 文字を大きくするとタブバーが高くなる。実高さを測って --m-tabbar-total に入れ、末尾の余白（mobile.css の .m-footer）を追随させる
+  useEffect(() => {
+    const el = root.current;
+    const bar = el?.querySelector<HTMLElement>(".m-tabbar");
+    if (!el || !bar) return;
+    const apply = () => el.style.setProperty("--m-tabbar-total", `${bar.getBoundingClientRect().height}px`);
+    apply();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(apply);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, [onLogin]); // ログイン画面（タブ無し）から他の画面へ移ると、タブバーが現れるので測り直す
   return (
-    <div className="m-root flex min-h-dvh flex-1 flex-col">
+    <div ref={root} className="m-root flex min-h-dvh flex-1 flex-col">
       <a
         href="#main"
         onClick={(e) => {

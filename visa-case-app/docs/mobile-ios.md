@@ -52,6 +52,13 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - AuthGate の接続（必要最小限）：`/m/login` をログイン画面として扱う（未ログインでも移動させない）。**`/m` 配下で未ログインなら `/m/login` へ、ログイン済みで `/m/login` を開くと `/m/cases` へ**移す（`/m` 以外は従来どおり `/login`、`/`）。セッションの判定・Supabase の呼び出し・表示の条件は変えていない。ログアウト後・デモ終了後（`/m/account`）の行き先も `/m/login`。
 - `/m/login` では下部タブを出さない（TabBar が `isMobileLoginPath` で非表示）。
 
+## 文字を大きくしたとき（Issue #456 の後続）
+OS の文字サイズや、ブラウザーの文字拡大（html の font-size 200% で擬似的に確認）でも、表示が崩れないようにする。
+- 末尾の「PC 版を開く」は、タブバーに隠れない。タブバーは文字拡大で高くなるので、`.m-footer` の下余白は固定値でなく、`MobileShell` が `ResizeObserver` で実測してセットする `--m-tabbar-total`（safe-area を含む実高さ。`.m-root` の style）に追随する。測る前や JS が無いときは、標準の高さ（`--m-tabbar-h` ＋ safe-area）に戻る。
+- GroupedRow の項目名は `min-w-0 max-w-full break-words`（`shrink-0` にしない）。長い項目名や拡大時は、切り詰めず折り返して全文を読める。`truncate`・`line-clamp` は使わない。
+- 検索 input は `min-h-[44px]`（外枠と同じ高さ）。
+- 確認方法：390 幅・iPhone の User-Agent・`html{font-size:200%}`・英語で、`/m/cases`、`/m/cases/new`、`/m/cases/[id]`、`/m/account` の最下部までスクロールし、「PC 版を開く」の下端がタブバーの上端より上にあること、詳細の項目名が右端で切れないことを見る。回帰テストは tests/mobileParts.test.tsx。
+
 ## 書類（/m/cases/[id]/documents）
 - PC 版の「書類の生成と履歴」と同じ経路（`lib/documents/store.ts` の `useGeneratedDocuments` / `generateDocuments`、`precheckRowsText`、`splitHistory`）を使う。文言は `documents` 区分を共用し、iPhone 版だけの語は `mobileDocuments` 区分。
 - 載せたもの：データ状態（閲覧）、出力内容の選択と生成（公式様式を除く）、生成履歴（保管済みの表示切り替え）。案件詳細の「書類の作成と履歴」から入る。
