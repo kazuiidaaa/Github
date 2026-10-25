@@ -107,8 +107,11 @@ function writeLocal(all: CaseRecord[]) {
 
 // Supabase への書き込みは、操作した順に1件ずつ実行する
 let chain: Promise<void> = Promise.resolve();
+/** 書き込みの失敗の回数。settleWrites が、待っている間の失敗を見分けるのに使う */
+let writeFailures = 0;
 function enqueue(task: () => Promise<void>) {
   chain = chain.then(task).catch((e) => {
+    writeFailures++;
     error = `保存に失敗しました：${messageOf(e)}`;
     emit();
   });
@@ -214,6 +217,17 @@ export function saveCase(record: CaseRecord) {
   if (usesSupabase()) enqueue(() => remote.persistCase(record));
   else writeLocal(cases);
   emit();
+}
+
+/**
+ * ここまでに依頼した保存がすべて終わるのを待ち、失敗したときだけ、失敗の文を返す（成功は空文字）。
+ * saveCase / updateCase は画面を先に更新して裏で保存するため、保存の成否を画面で示したい呼び出し側（iPhone 版の編集シート）が使う。
+ * 仮データ方式では待つものが無く、すぐ空文字を返す。
+ */
+export async function settleWrites(): Promise<string> {
+  const before = writeFailures;
+  await chain;
+  return writeFailures > before ? error : "";
 }
 
 export function updateCase(id: string, fn: (c: CaseRecord) => CaseRecord) {
