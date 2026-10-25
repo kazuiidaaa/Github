@@ -1,13 +1,21 @@
 "use client";
 
 import { useId, useState } from "react";
-import { inputClass, mergeDescribedBy, type FieldLinkableComponent } from "@/components/ui";
+import { inputClass, mergeDescribedBy, ToneIcon, type FieldLinkableComponent } from "@/components/ui";
 import { dateValueToText, normalizeDateText, parseDateText } from "@/lib/dateInput";
 import { useT } from "@/lib/i18n/LanguageProvider";
 
 /** 表示言語に合わせた、日付が正しくないときの案内。呼び出し元の検証（error に渡す文言）で使う */
 export function useDateInvalidMessage(): string {
   return useT()("input.dateField_invalid");
+}
+
+function MarkedIcon() {
+  return (
+    <span className="mt-0.5 shrink-0">
+      <ToneIcon tone="red" />
+    </span>
+  );
 }
 
 /**
@@ -29,6 +37,7 @@ export function DateField({
   error,
   disabled,
   required,
+  marked,
   onBlur,
   "aria-label": ariaLabel,
   "aria-describedby": describedBy,
@@ -42,6 +51,8 @@ export function DateField({
   error?: string;
   disabled?: boolean;
   required?: boolean;
+  /** 誤りの文の前に、図形の印（ToneIcon）を付ける。折り返しても崩れない（iPhone 版の行で使う） */
+  marked?: boolean;
   /** 入力欄から外れたとき。入力が途中（incomplete）のときは、保存を控える判断に使う */
   onBlur?: (kind: "empty" | "incomplete" | "complete") => void;
   "aria-label"?: string;
@@ -78,6 +89,8 @@ export function DateField({
     onBlur?.(s.kind);
   }
 
+  const messageClass = marked ? "mt-1 flex items-start gap-1.5 text-xs font-bold text-danger-text" : "mt-1 block text-xs font-bold text-red-700";
+
   return (
     <>
       <input
@@ -98,13 +111,15 @@ export function DateField({
         onBlur={handleBlur}
       />
       {message && !error && (
-        <span id={errorId} role="alert" className="mt-1 block text-xs font-bold text-red-700">
-          {message}
+        <span id={errorId} role="alert" className={messageClass}>
+          {marked && <MarkedIcon />}
+          <span className="min-w-0 break-words">{message}</span>
         </span>
       )}
       {error && (
-        <span id={errorId} className="mt-1 block text-xs font-bold text-red-700">
-          {error}
+        <span id={errorId} className={messageClass}>
+          {marked && <MarkedIcon />}
+          <span className="min-w-0 break-words">{error}</span>
         </span>
       )}
     </>

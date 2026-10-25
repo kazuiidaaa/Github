@@ -4,14 +4,16 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ChoiceOption } from "@/components/ChoiceGroup";
 import { Modal } from "@/components/Modal";
-import { SelectRow, TextRow, type PickerOption } from "@/components/mobile/FormRows";
+import { DateRow, SelectRow, TextRow, type PickerOption } from "@/components/mobile/FormRows";
 import { GroupedList } from "@/components/mobile/GroupedList";
 import { Sheet } from "@/components/mobile/Sheet";
 import { StatusPickerRow } from "@/components/mobile/StatusPickerRow";
 import { gradeOptions, PROCEDURE_OPTIONS, residenceOptionText, residenceStatusOptions } from "@/components/StatusSelect";
 import { useToast } from "@/components/Toast";
 import { ToneIcon } from "@/components/ui";
+import { isAcceptedAfterPlanned } from "@/lib/acceptedDate";
 import {
+  CASE_EDIT_ERROR_ORDER,
   cancelOutcome,
   draftFromRecord,
   isDraftDirty,
@@ -84,7 +86,7 @@ export function CaseEditSheet({ record, onClose }: { record: CaseRecord; onClose
   };
   const needsTarget = needsTargetStatus(draft.procedureType);
   const targetLegend = targetStatusLegend(t, draft.procedureType);
-  const errorList = (["caseName", "targetStatus"] as const).filter((k) => errors[k] && (k !== "targetStatus" || needsTarget));
+  const errorList = CASE_EDIT_ERROR_ORDER.filter((k) => errors[k] && (k !== "targetStatus" || needsTarget));
 
   const optionText = residenceOptionText(t);
   const statusOptions = (value: string): ChoiceOption[] => {
@@ -132,7 +134,7 @@ export function CaseEditSheet({ record, onClose }: { record: CaseRecord; onClose
       draft,
       t,
       targetLegend,
-      deps: { update: updateCase, settle: settleWrites, audit: (id, action) => logAudit(id, action) },
+      deps: { update: updateCase, settle: settleWrites, audit: (id, action, detail) => logAudit(id, action, detail) },
     });
     setBusy(false);
     if (result.kind === "invalid") {
@@ -235,6 +237,22 @@ export function CaseEditSheet({ record, onClose }: { record: CaseRecord; onClose
             />
           )}
           {needsTarget && gradeRow(fieldId("targetGrade"), draft.targetStatus, (v) => set({ targetStatus: v }), draft.procedureType === "change")}
+        </GroupedList>
+
+        <GroupedList header={t("mobileDetail.editSectionDate")}>
+          <DateRow
+            id={fieldId("acceptedDate")}
+            label={t("input.acceptedDateField_label")}
+            value={draft.acceptedDate}
+            onChange={(v) => set({ acceptedDate: v })}
+            error={errors.acceptedDate}
+            hint={t("input.acceptedDateField_hint")}
+            warning={
+              isAcceptedAfterPlanned(draft.acceptedDate, record.plannedApplicationDate)
+                ? t("input.acceptedDateField_warning", { date: record.plannedApplicationDate })
+                : undefined
+            }
+          />
         </GroupedList>
 
         <GroupedList header={t("mobileDetail.editSectionMemo")}>
