@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
-import { DashboardCards, type CardKey } from "@/components/DashboardCards";
+import { DashboardCards } from "@/components/DashboardCards";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { UploadBox } from "@/components/UploadBox";
@@ -14,7 +14,6 @@ import {
   applyFilter,
   DEFAULT_FILTER,
   isFilterActive,
-  isSortKey,
   nextSort,
   PAGE_SIZE,
   paginate,
@@ -23,6 +22,7 @@ import {
   type CaseFilter,
   type SortColumn,
 } from "@/lib/caseMetrics";
+import { activeCard, cardFilter, readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { sortDirKey } from "@/lib/i18n/caseList";
 import { hasResidenceCard } from "@/lib/documentKinds";
@@ -31,41 +31,6 @@ import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
 import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
 import { currentStatusOf, StatusTransition } from "@/components/StatusTransition";
 import type { CaseMetrics } from "@/lib/caseMetrics";
-
-function readFilter(p: URLSearchParams): CaseFilter {
-  return {
-    query: p.get("q") ?? "",
-    procedure: p.get("procedure") ?? "all",
-    status: p.get("status") ?? "all",
-    within30: p.get("within30") === "1",
-    missingDocs: p.get("missing") === "1",
-    noCard: p.get("nocard") === "1",
-    unconfirmed: p.get("unconfirmed") === "1",
-    checksPending: p.get("checks") === "1",
-    sort: isSortKey(p.get("sort")) ? (p.get("sort") as CaseFilter["sort"]) : "updated",
-  };
-}
-
-/** URL の page を読む。不正な値は 1 とする。 */
-function readPage(p: URLSearchParams): number {
-  const n = Number(p.get("page"));
-  return Number.isInteger(n) && n >= 1 ? n : 1;
-}
-
-function toQuery(f: CaseFilter): string {
-  const p = new URLSearchParams();
-  if (f.query) p.set("q", f.query);
-  if (f.procedure !== "all") p.set("procedure", f.procedure);
-  if (f.status !== "all") p.set("status", f.status);
-  if (f.within30) p.set("within30", "1");
-  if (f.missingDocs) p.set("missing", "1");
-  if (f.noCard) p.set("nocard", "1");
-  if (f.unconfirmed) p.set("unconfirmed", "1");
-  if (f.checksPending) p.set("checks", "1");
-  if (f.sort !== "updated") p.set("sort", f.sort);
-  const s = p.toString();
-  return s ? `?${s}` : "?";
-}
 
 /** 並び替えの見出し。押すと並び順を切り替える（aria-sort は th に付ける）。 */
 function SortHeader({ column, label, filter, onSort }: { column: SortColumn; label: string; filter: CaseFilter; onSort: (k: CaseFilter["sort"]) => void }) {
@@ -88,26 +53,6 @@ function SortHeader({ column, label, filter, onSort }: { column: SortColumn; lab
       </button>
     </th>
   );
-}
-
-/** ダッシュボードのカードに対応する絞り込みを返す */
-function cardFilter(key: CardKey): CaseFilter {
-  const f = { ...DEFAULT_FILTER };
-  if (key === "review") f.status = "review_required";
-  if (key === "checksPending") f.checksPending = true;
-  if (key === "ready") f.status = "application_ready";
-  if (key === "missingDocs") f.missingDocs = true;
-  if (key === "unconfirmed") f.unconfirmed = true;
-  if (key === "within30") {
-    f.within30 = true;
-    f.sort = "expiry";
-  }
-  return f;
-}
-
-function activeCard(f: CaseFilter): CardKey | null {
-  const keys: CardKey[] = ["total", "review", "missingDocs", "unconfirmed", "checksPending", "ready", "within30"];
-  return keys.find((k) => toQuery(cardFilter(k)) === toQuery(f)) ?? null;
 }
 
 const procedureLabel = (c: CaseRecord) => PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
@@ -176,9 +121,7 @@ function CasesView() {
 
   // 絞り込み・並び順を変えたときは、1ページ目に戻す（page を付けない）。
   const go = (f: CaseFilter, page = 1) => {
-    const q = toQuery(f);
-    const withPage = page > 1 ? `${q === "?" ? "?" : `${q}&`}page=${page}` : q;
-    router.replace(`/cases${withPage}`, { scroll: false });
+    router.replace(`/cases${toQueryWithPage(f, page)}`, { scroll: false });
   };
 
   let empty = "";
