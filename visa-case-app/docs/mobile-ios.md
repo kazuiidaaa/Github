@@ -20,19 +20,34 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - `app/m/layout.tsx`：viewport（viewport-fit=cover、明暗の themeColor）、`MobileShell`。
 - `app/m/page.tsx`：`/m` は `/m/cases` へ移す。
 - `app/m/mobile.css`：safe-area、チップ・検索欄・区切り線。すべて `.m-root` 配下に限定。
-- `components/mobile/`：TabBar、LargeTitleHeader、SearchField、FilterChips、GroupedList / GroupedRow、MenuButton、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
+- `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）。
+- `components/mobile/`：TabBar、LargeTitleHeader、BackLink、SearchField、FilterChips、GroupedList / GroupedRow、MenuButton、LoadingSpinner、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
 - 文言：`lib/i18n/messages/mobile.ts`（区分 `mobile`。日本語・英語・韓国語。英語・韓国語は他の区分と同じく下書き扱い）。
 
 ## 規則
 - 色は globals.css の変数（`bg-white`、`slate`、`accent` など）だけを使い、明暗はそちらに任せる。状態は色だけでなく文字と図形（選択中のチップ＝チェックの印、タブ＝塗りつぶしアイコン、メニュー＝チェック）で示す。
 - 押せる範囲は 44pt 以上。入力欄の文字は 16px 以上。
-- 動き：PullToRefresh は、動きを減らす設定では内容を動かさない（文字の状態表示のみ）。メニューの表示は `motion-panel`（globals.css の規則に従う）。
+- 動き：LoadingSpinner と PullToRefresh は、動きを減らす設定では回さず・動かさない（静止した図形と文字のみ）。メニューの表示は `motion-panel`（globals.css の規則に従う）。
 - 絵文字は使わない。アイコンは SVG の線画（選択中は塗りつぶし）。
 
-## 最初の PR の範囲と、残り
-- 下部タブの「アカウント」は、既存の `/account`（PC 版の画面）へ移る。iPhone 版のアカウント・ログイン・再設定・メンバー管理の画面は、最後の PR で扱う。
+## 画面構成と HIG 適合レビューの反映（Issue #456）
+- 下部タブは「案件」「アカウント」の 2 つ。新規登録は「操作」なので、タブでなく案件一覧のナビゲーションバー右の「+」（権限があるときだけ）。`/m/cases/new` は「案件」タブの配下として扱う。
+- 一覧の行・空状態の新規リンク・新規作成後の遷移は、すべて iPhone 版（`/m/cases/[id]`、`/m/cases/new`）。
+- アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・ログイン・再設定・メンバー管理の画面は、最後の PR で扱う。
+- 並び替えは上下矢印の記号。現在の並び順は、ボタンの読み上げ名と、件数の行（「並び順：…」）で示す。
+- 絞り込みは、状態のチップ 1 列を残し、手続の種類と条件は文字つきのメニューボタン（MenuButton の `buttonText`）にする。条件は複数選択（`menuitemcheckbox`）。
+- 詳細の行は「項目名（左）・値（右。長いときは下の右寄せ）」（GroupedRow の `label` / `value`）。DOM の順は項目名、値で、VoiceOver も同じ順に読む。
+- 戻るは、BackLink で「‹ ＋戻り先の画面名（案件）」に統一（詳細・新規とも）。読み上げ名は「案件へ戻る」。
+- 検索欄は、フォーカス中だけ右に「キャンセル」を出す（入力を消してフォーカスを外す）。
+- 初回の読み込み中は LoadingSpinner（reduced motion では静止）。詳細の「見つかりません」は、説明文と「案件一覧へ戻る」の行を出す。
+- 一覧の行は、入れ子を減らすため、未受領書類の件数以外の灰色のバッジ（確認未了・申請前チェック未完了）を出さない。詳細の「申請人情報の確認」「申請前チェック」で確認できる（絞り込みの条件としては使える）。
+- 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
+- 引いて更新（PullToRefresh）は、今は画面に付けていない。`lib/store.ts` に、読み込み済みのデータを取り直す関数が無く（`ensureLoaded` は読み込み済みなら何もしない。`resetStore` は権限まで消す）、付けても何も更新しないのに「更新しました」と出してしまうため。取り直す関数ができたら、`onRefresh` に渡して戻す（部品とそのテストは残してある）。読み込みに失敗したときは「もう一度読み込む」ボタンで再試行できる。
+
+## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
+- iPhone 版のアカウント・ログイン・再設定・メンバー管理（上記のとおり最後の PR）。
 
 ## PC 版から iPhone 版への自動の振り分け（proxy.ts）
 Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`）で確認した要点：ルート直下の `proxy.ts` が `proxy` 関数を export する。既定の実行環境は Node.js で、`runtime` は指定できない。`matcher` が無いと静的ファイルを含む全リクエストで動くので、対象を限る。matcher は定数でなければならない。RSC のリクエストでは `rsc`・`next-router-prefetch` などの内部ヘッダーは proxy から見えず、HTML と同じ判定になる。
