@@ -587,6 +587,8 @@ export interface MemberInfo {
   email: string;
   role: string;
   createdAt: string;
+  /** 氏名。移行 0026 の適用前(列が無い)や、氏名が未登録の場合は undefined */
+  displayName?: string;
 }
 
 // メンバー管理の関数が返す内部メッセージは画面に出さず、原因ごとの文言に置き換える
@@ -601,16 +603,32 @@ function memberError(e: { message?: string; code?: string }): AppError {
   return toAppError(e);
 }
 
-/** owner / admin のみ。メールアドレスを含むため、権限のない場合は拒否される */
-export async function listMembers(): Promise<MemberInfo[]> {
-  const res = await client().rpc("list_members", { p_org: await getOrgId() });
-  if (res.error) throw memberError(res.error);
-  return ((res.data ?? []) as { user_id: string; email: string; role: string; created_at: string }[]).map((r) => ({
+/** list_members の1行。display_name は移行 0026 の適用後のみ含まれる */
+export interface MemberRow {
+  user_id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  display_name?: string | null;
+}
+
+/** 列が無い・null・空文字の場合は displayName を持たない(undefined) */
+export function mapMemberRow(r: MemberRow): MemberInfo {
+  const name = typeof r.display_name === "string" ? r.display_name.trim() : "";
+  return {
     userId: r.user_id,
     email: r.email,
     role: r.role,
     createdAt: r.created_at,
-  }));
+    ...(name ? { displayName: name } : {}),
+  };
+}
+
+/** owner / admin のみ。メールアドレスと氏名を含むため、権限のない場合は拒否される */
+export async function listMembers(): Promise<MemberInfo[]> {
+  const res = await client().rpc("list_members", { p_org: await getOrgId() });
+  if (res.error) throw memberError(res.error);
+  return ((res.data ?? []) as MemberRow[]).map(mapMemberRow);
 }
 
 export async function addMember(email: string, role: string): Promise<void> {
