@@ -3,6 +3,9 @@
 /** iPhone 版のパスの先頭（案 A：別パス /m 配下に置く） */
 export const MOBILE_BASE = "/m";
 
+/** iPhone 版のログイン画面（未ログインで /m 配下を開いたときの行き先。AuthGate が使う） */
+export const MOBILE_LOGIN = "/m/login";
+
 /** 下部タブの移動先 */
 export const MOBILE_TABS = [
   { id: "cases", href: "/m/cases" },
@@ -25,4 +28,11 @@ export function activeTab(pathname: string | null | undefined): MobileTabId | nu
   if (p === "/m/account" || p.startsWith("/m/account/")) return "account";
   if (p === "/m/cases" || p.startsWith("/m/cases/")) return "cases";
   return null;
+}
+
+/** パスが iPhone 版のログイン画面か（末尾のスラッシュは無視する）。この画面では下部タブを出さない */
+export function isMobileLoginPath(pathname: string | null | undefined): boolean {
+  if (!pathname) return false;
+  const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return p === MOBILE_LOGIN;
 }

@@ -7,6 +7,7 @@ import { useSessionState } from "@/lib/auth";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { useDemo } from "@/lib/demo";
 import { configIssues } from "@/lib/env";
+import { isMobileLoginPath, isMobilePath, MOBILE_LOGIN } from "@/components/mobile/paths";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { isMisconfigured, isSupabaseEnabled } from "@/lib/supabase";
 
@@ -17,15 +18,17 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const demo = useDemo();
   const pathname = usePathname();
   const router = useRouter();
-  const onLogin = pathname === "/login";
+  const onLogin = pathname === "/login" || isMobileLoginPath(pathname);
+  // /m 配下（iPhone 版）では、ログイン画面も iPhone 版へ誘導する。判定（session）と画面を出す条件は PC 版と同じ
+  const mobile = isMobilePath(pathname);
   // 再設定メールのリンク先は、未ログイン（リンクの期限切れ）でも、画面側で案内を出すため移動させない。「ご利用にあたって」（/about）も、ログイン前に読めるようにする
   const onReset = pathname === "/reset-password" || pathname === "/about";
 
   useEffect(() => {
     if (!isSupabaseEnabled || demo) return;
-    if (session === null && !onLogin && !onReset) router.replace("/login");
-    if (session && onLogin) router.replace("/");
-  }, [session, onLogin, onReset, router, demo]);
+    if (session === null && !onLogin && !onReset) router.replace(mobile ? MOBILE_LOGIN : "/login");
+    if (session && onLogin) router.replace(mobile ? "/m/cases" : "/");
+  }, [session, onLogin, onReset, mobile, router, demo]);
 
   if (isMisconfigured) {
     // 本番で設定に問題がある場合は、仮データ方式へ切り替えず、画面全体を停止する

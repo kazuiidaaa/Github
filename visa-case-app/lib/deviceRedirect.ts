@@ -1,5 +1,5 @@
 // PC 版の画面から iPhone 版（/m）への自動の振り分け（Issue #456）。proxy.ts から使う純粋な関数と定数。
-// 認証は判定しない（/m の画面は AuthGate の内側にあり、未ログインなら従来どおり /login へ移る）。
+// 認証は判定しない（/m の画面は AuthGate の内側にあり、未ログインならiPhone 版では /m/login へ移る）。
 
 /** 「PC 版を開く」を選んだ印の Cookie 名。個人情報は入れない */
 export const VIEW_COOKIE_NAME = "view";

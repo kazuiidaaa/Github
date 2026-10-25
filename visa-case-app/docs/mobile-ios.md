@@ -14,13 +14,13 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - `components/AppFrame.tsx`（client）を `app/layout.tsx` に置く。`ToastProvider` > `LanguageProvider` > `AppFrame` の順は従来どおり。
 - `/m` と `/m/…` 以外では、従来と同じ要素（Header、max-w-6xl の main、AuthGate、StoreErrorBanner、PageTransition、Footer）を同じ順序で出す。PC 版の出力は変わらない。
 - `/m` 配下では、Header・Footer・max-w-6xl の main・PageTransition を出さず、`AuthGate` と `StoreErrorBanner` の内側に `app/m/layout.tsx` の枠（`MobileShell`）を置く。
-- **`/m` の画面も、必ず `AuthGate` の内側に入る。** 未ログインで開くと `/login` へ移る（tests/appFrame.test.tsx、実機の確認は PR に記載）。認証・API・データ取得の経路は新設しない。データの読み書きは `lib/store.ts` を通す（保護は Supabase の RLS）。
+- **`/m` の画面も、必ず `AuthGate` の内側に入る。** 未ログインで開くと `/m/login`（iPhone 版のログイン）へ移る（tests/appFrame.test.tsx、実機の確認は PR に記載）。認証・API・データ取得の経路は新設しない。データの読み書きは `lib/store.ts` を通す（保護は Supabase の RLS）。
 
 ## 構成
 - `app/m/layout.tsx`：viewport（viewport-fit=cover、明暗の themeColor）、`MobileShell`。
 - `app/m/page.tsx`：`/m` は `/m/cases` へ移す。
 - `app/m/mobile.css`：safe-area、チップ・検索欄・区切り線。すべて `.m-root` 配下に限定。
-- `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）。
+- `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）、`app/m/login`（ログイン）。
 - `components/mobile/`：TabBar、LargeTitleHeader、BackLink、SearchField、FilterChips、GroupedList / GroupedRow、MenuButton、LoadingSpinner、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
 - 文言：`lib/i18n/messages/mobile.ts`（区分 `mobile`。日本語・英語・韓国語。英語・韓国語は他の区分と同じく下書き扱い）。
 
@@ -33,7 +33,7 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 ## 画面構成と HIG 適合レビューの反映（Issue #456）
 - 下部タブは「案件」「アカウント」の 2 つ。新規登録は「操作」なので、タブでなく案件一覧のナビゲーションバー右の「+」（権限があるときだけ）。`/m/cases/new` は「案件」タブの配下として扱う。
 - 一覧の行・空状態の新規リンク・新規作成後の遷移は、すべて iPhone 版（`/m/cases/[id]`、`/m/cases/new`）。
-- アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・ログイン・再設定・メンバー管理の画面は、最後の PR で扱う。
+- アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・再設定の完了画面・メンバー管理の画面は、最後の PR で扱う（ログインは下の「ログイン」で追加済み）。
 - 並び替えは上下矢印の記号。現在の並び順は、ボタンの読み上げ名と、件数の行（「並び順：…」）で示す。
 - 絞り込みは、状態のチップ 1 列を残し、手続の種類と条件は文字つきのメニューボタン（MenuButton の `buttonText`）にする。条件は複数選択（`menuitemcheckbox`）。
 - 詳細の行は「項目名（左）・値（右。長いときは下の右寄せ）」（GroupedRow の `label` / `value`）。DOM の順は項目名、値で、VoiceOver も同じ順に読む。
@@ -44,10 +44,18 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
 - 引いて更新（PullToRefresh）は、今は画面に付けていない。`lib/store.ts` に、読み込み済みのデータを取り直す関数が無く（`ensureLoaded` は読み込み済みなら何もしない。`resetStore` は権限まで消す）、付けても何も更新しないのに「更新しました」と出してしまうため。取り直す関数ができたら、`onRefresh` に渡して戻す（部品とそのテストは残してある）。読み込みに失敗したときは「もう一度読み込む」ボタンで再試行できる。
 
+## ログイン（/m/login）
+- 見た目だけを iPhone 向けにし、認証は PC 版（`app/login/page.tsx`）と同じ関数・同じ経路を再利用する：`signIn`・`requestPasswordReset`・`startDemo`（`lib/auth.ts`）。Supabase を画面から直接呼ばない。エラー文も PC 版と同じ（`useAuthErrorText`。メールアドレスの登録の有無が推測できない文言）。
+- 形は GroupedList の入力行（項目名を左、入力欄を右）。入力欄は 16px、行と押せる範囲は 44pt 以上。メール＝`autoComplete="username"`・`inputMode="email"`・`type="email"`、パスワード＝`autoComplete="current-password"`、どちらも自動大文字化・自動修正・スペルチェックなし。パスワードは「表示する」ボタンで切り替える。
+- 「パスワードを忘れた場合」は同じ画面の再設定モード（`requestPasswordReset`）。再設定メールのリンク先 `/reset-password` は PC 版のまま。「デモを試す」は `startDemo` の後に `/m/cases` へ移る。
+- 文言は `auth` 区分（PC 版と共通）と、`lib/i18n/messages/mobileLogin.ts`（区分 `mobileLogin`。読み上げ名と見出しのみ。英語・韓国語は下書き）。
+- AuthGate の接続（必要最小限）：`/m/login` をログイン画面として扱う（未ログインでも移動させない）。**`/m` 配下で未ログインなら `/m/login` へ、ログイン済みで `/m/login` を開くと `/m/cases` へ**移す（`/m` 以外は従来どおり `/login`、`/`）。セッションの判定・Supabase の呼び出し・表示の条件は変えていない。ログアウト後・デモ終了後（`/m/account`）の行き先も `/m/login`。
+- `/m/login` では下部タブを出さない（TabBar が `isMobileLoginPath` で非表示）。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。
-- iPhone 版のアカウント・ログイン・再設定・メンバー管理（上記のとおり最後の PR）。
+- iPhone 版のアカウント（本格版）・再設定の完了画面（`/reset-password`）・メンバー管理（上記のとおり最後の PR）。
 
 ## PC 版から iPhone 版への自動の振り分け（proxy.ts）
 Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`）で確認した要点：ルート直下の `proxy.ts` が `proxy` 関数を export する。既定の実行環境は Node.js で、`runtime` は指定できない。`matcher` が無いと静的ファイルを含む全リクエストで動くので、対象を限る。matcher は定数でなければならない。RSC のリクエストでは `rsc`・`next-router-prefetch` などの内部ヘッダーは proxy から見えず、HTML と同じ判定になる。

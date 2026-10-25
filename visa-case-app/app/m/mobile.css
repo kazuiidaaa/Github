@@ -34,6 +34,9 @@ body:has(.m-root) {
 }
 
 /* 末尾の注意書きは、固定のタブバーに隠れないよう、その高さ分の余白を足す */
+.m-root .m-footer-plain {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+}
 .m-root .m-footer {
   padding-bottom: calc(var(--m-tabbar-h) + env(safe-area-inset-bottom) + 16px);
 }

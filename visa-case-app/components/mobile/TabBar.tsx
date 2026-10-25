@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
-import { activeTab, MOBILE_TABS, type MobileTabId } from "./paths";
+import { activeTab, isMobileLoginPath, MOBILE_TABS, type MobileTabId } from "./paths";
 
 /** 下部タブの高さ（safe-area を除く）。本文の下余白の計算にも使う（mobile.css の --m-tabbar-h と同じ値） */
 export const TAB_BAR_HEIGHT = 49;
@@ -52,6 +52,8 @@ export function TabBar() {
   const t = useT();
   const pathname = usePathname();
   const current = activeTab(pathname);
+  // ログイン前の画面には、移動先（案件・アカウント）が無いのでタブを出さない
+  if (isMobileLoginPath(pathname)) return null;
   return (
     <nav
       aria-label={t("mobile.tabBarAria")}

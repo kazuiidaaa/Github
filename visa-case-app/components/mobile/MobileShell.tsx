@@ -4,6 +4,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { desktopViewCookie } from "@/lib/deviceRedirect";
 import { useT } from "@/lib/i18n/LanguageProvider";
+import { usePathname } from "next/navigation";
+import { isMobileLoginPath } from "./paths";
 import { TabBar } from "./TabBar";
 
 /**
@@ -14,6 +16,8 @@ import { TabBar } from "./TabBar";
  */
 export function MobileShell({ children }: { children: ReactNode }) {
   const t = useT();
+  // ログイン画面は下部タブが無いので、末尾の余白もタブ分を取らない
+  const onLogin = isMobileLoginPath(usePathname());
   return (
     <div className="m-root flex min-h-dvh flex-1 flex-col">
       <a
@@ -31,7 +35,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
-      <footer className="m-footer px-4 pt-6 text-center text-xs text-slate-600 print:hidden">
+      <footer className={`${onLogin ? "m-footer-plain" : "m-footer"} px-4 pt-6 text-center text-xs text-slate-600 print:hidden`}>
         <p>{t("footer.prototypeNotice")}</p>
         {/* 画面幅に関係なく PC 版へ移れる導線。押せる範囲は 44pt 以上 */}
         {/* 押すと「PC 版を選んだ」Cookie（view=pc）をセットし、以後は自動で /m へ振り分けない（proxy.ts）。
