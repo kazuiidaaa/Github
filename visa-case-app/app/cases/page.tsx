@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
 import { CaseListTable, procedureLabel, ResidenceStatusCell, StatusBadges } from "@/components/CaseListTable";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
@@ -18,7 +18,9 @@ import {
   summarize,
   type CaseFilter,
 } from "@/lib/caseMetrics";
+import { cachedSearchTargets } from "@/lib/caseSearch";
 import { activeCard, cardFilter, readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
+import { useLabels } from "@/lib/i18n/labels";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
@@ -31,6 +33,7 @@ const INTRO_MS = 700;
 
 function CasesView() {
   const t = useT();
+  const labels = useLabels();
   const cases = useCases();
   const loaded = useStoreLoaded();
   const error = useStoreError();
@@ -40,10 +43,14 @@ function CasesView() {
 
   const filter = useMemo(() => readFilter(new URLSearchParams(params.toString())), [params]);
   const summary = useMemo(() => summarize(cases), [cases]);
-  const rows = useMemo(() => applyFilter(cases, filter), [cases, filter]);
+  // 検索は、表で見える列の語（手続・在留資格・次の作業など）とメモにも当たる。語の組み立ては、案件ごとに覚えておき、入力のたびに作り直さない
+  const targetsOf = useMemo(() => cachedSearchTargets(t, labels.workflow), [t, labels]);
+  const rows = useMemo(() => applyFilter(cases, filter, targetsOf), [cases, filter, targetsOf]);
   const pageData = useMemo(() => paginate(rows, readPage(new URLSearchParams(params.toString()))), [rows, params]);
   const shown = pageData.items;
   const active = isFilterActive(filter);
+  const query = filter.query.trim();
+  const hasOtherConditions = isFilterActive({ ...filter, query: "" });
   // 順次表示は最初の一度だけ。絞り込み・並べ替え・ページ送りでは再生しない
   const [intro, setIntro] = useState(() => !introPlayed);
   useEffect(() => {
@@ -62,10 +69,19 @@ function CasesView() {
     router.replace(`/cases${toQueryWithPage(f, page)}`, { scroll: false });
   };
 
-  let empty = "";
+  let empty: ReactNode = "";
   if (rows.length === 0) {
     if (!loaded) empty = error ? t("caseList.loadError") : t("caseList.loading");
     else if (cases.length === 0) empty = t("caseList.noCases");
+    else if (query) {
+      // 0 件の理由：検索語だけか、絞り込み条件との組み合わせか。検索の対象も添える
+      empty = (
+        <>
+          <span className="block break-words">{t(hasOtherConditions ? "caseList.noMatchQueryAndConditions" : "caseList.noMatchQuery", { query })}</span>
+          <span className="mt-1 block text-mac-footnote">{t("caseList.noMatchScope")}</span>
+        </>
+      );
+    } else if (hasOtherConditions) empty = t("caseList.noMatchConditions");
     else empty = t("caseList.noMatch");
   }
   const emptyRole = loaded ? undefined : error ? "alert" : "status";
@@ -117,8 +133,8 @@ function CasesView() {
       {!filter.noCard && (
         <>
       {loaded && (
-        <p className="mb-2 text-sm font-medium" role="status" aria-live="polite">
-          {t("caseList.resultCount", { count: rows.length, total: cases.length })}
+        <p className="mb-2 break-words text-sm font-medium" role="status" aria-live="polite">
+          {query ? t("caseList.searchResultCount", { query, count: rows.length, total: cases.length }) : t("caseList.resultCount", { count: rows.length, total: cases.length })}
           {pageData.totalPages > 1 && (
             <span className="ml-2 font-normal text-slate-500">
               {t("caseList.showingRange", { from: (pageData.page - 1) * PAGE_SIZE + 1, to: (pageData.page - 1) * PAGE_SIZE + shown.length })}
@@ -137,8 +153,8 @@ function CasesView() {
             <span role={emptyRole}>
               {empty}
               {loaded && cases.length > 0 && active && (
-                <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
-                  {t("caseList.resetConditions")}
+                <button type="button" onClick={() => go(DEFAULT_FILTER)} className="mt-2 block min-h-[44px] w-full text-blue-700 hover:underline">
+                  {t("caseList.clearConditions")}
                 </button>
               )}
               {loaded && cases.length === 0 && canEdit && (
@@ -159,8 +175,8 @@ function CasesView() {
           <li role={emptyRole} className="mac-card rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
             {empty}
             {loaded && cases.length > 0 && active && (
-              <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
-                {t("caseList.resetConditions")}
+              <button type="button" onClick={() => go(DEFAULT_FILTER)} className="mt-2 block min-h-[44px] w-full text-blue-700 hover:underline">
+                {t("caseList.clearConditions")}
               </button>
             )}
             {loaded && cases.length === 0 && canEdit && (

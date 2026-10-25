@@ -66,13 +66,13 @@ describe("検索欄の位置（PC 版はツールバー）", () => {
     nav.query = "q=abc";
     const m = renderToStaticMarkup(<CaseSearchField />);
     expect(m).toContain('type="search"');
-    expect(m).toContain('aria-label="案件名・氏名・在留資格で検索"');
+    expect(m).toContain('aria-label="案件名・氏名・手続・在留資格・次の作業・メモで検索"');
     expect(m).toContain('value="abc"');
     expect(m).toContain("min-h-[44px]");
   });
   it("一覧の上の検索欄は md 未満のみ（PC 版では隠し、重複させない）", () => {
     nav.query = "";
     const m = renderToStaticMarkup(<CaseFilters filter={DEFAULT_FILTER} active={false} onChange={() => {}} onReset={() => {}} />);
-    expect(m).toMatch(/<input[^>]*class="[^"]*\bmd:hidden\b[^"]*"[^>]*aria-label="案件名・氏名・在留資格で検索"/);
+    expect(m).toMatch(/<input[^>]*class="[^"]*\bmd:hidden\b[^"]*"[^>]*aria-label="案件名・氏名・手続・在留資格・次の作業・メモで検索"/);
   });
 });

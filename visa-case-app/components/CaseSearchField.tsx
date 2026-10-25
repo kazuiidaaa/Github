@@ -16,7 +16,7 @@ function SearchInput() {
     router.replace(`/cases${toQueryWithPage({ ...filter, query }, 1)}`, { scroll: false });
   });
   return (
-    <div className="relative min-w-0 flex-1 basis-48 sm:max-w-72">
+    <div className="relative min-w-0 flex-1 basis-48 sm:max-w-[28rem]">
       <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" className="pointer-events-none absolute size-3.5 top-1/2 left-2.5 -translate-y-1/2 text-muted">
         <circle cx="7" cy="7" r="4.5" />
         <path d="m10.5 10.5 3 3" />
@@ -25,8 +25,8 @@ function SearchInput() {
         type="search"
         enterKeyHint="search"
         className="min-h-[44px] w-full rounded-mac-control border border-line-strong bg-grouped-surface py-0 pr-2 pl-8 text-mac-footnote"
-        placeholder={t("caseList.searchLabel")}
-        aria-label={t("caseList.searchLabel")}
+        placeholder={t("caseList.searchLabelList")}
+        aria-label={t("caseList.searchLabelList")}
         {...search.inputProps}
       />
     </div>
