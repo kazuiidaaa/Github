@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
+import { MobileAccountDetails } from "@/components/MobileAccount";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { exitDemo, signOut, useSession } from "@/lib/auth";
@@ -50,6 +51,8 @@ export default function MobileAccountPage() {
           <GroupedRow title={<span className="font-bold text-danger-text">{t("header.logout")}</span>} onClick={() => void signOut()} chevron={false} />
         )}
       </GroupedList>
+
+      {supabase && session && <MobileAccountDetails />}
 
       <GroupedList header={t("mobile.accountSectionDisplay")}>
         <GroupedRow
