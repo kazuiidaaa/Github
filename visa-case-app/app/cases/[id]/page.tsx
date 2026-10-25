@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { AppError, messageOf } from "@/lib/errors";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
@@ -24,7 +24,7 @@ import { WorkflowBadge } from "@/components/WorkflowBadge";
 import { currentStatusOf, StatusTransition } from "@/components/StatusTransition";
 import { findDocumentOfType, removeDocumentOfType, type UploadedDocumentType } from "@/lib/documentKinds";
 import { expiryLevel } from "@/lib/caseMetrics";
-import { canJumpToApplicantField } from "@/lib/applicantFields";
+import { canJumpToApplicantField, type JumpField } from "@/lib/applicantFields";
 import { unresolvedCount } from "@/lib/checks/definitions";
 import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
 import { focusField } from "@/lib/formFocus";
@@ -240,7 +240,7 @@ export default function CaseDetailPage() {
       </Link>
       <div className="mt-1 mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold break-words">{record.caseName}</h1>
+          <h1 className="text-2xl font-semibold break-words md:text-mac-title2">{record.caseName}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             {procedure}
             <WorkflowBadge status={record.workflowStatus} />
@@ -335,54 +335,86 @@ export default function CaseDetailPage() {
       </div>
 
       <div key={tab} id="case-tabpanel" role="tabpanel" aria-labelledby={`case-tab-${tab}`} className={switched ? "anim-page-enter" : undefined}>
-      {tab === "overview" && (
-        <div className="space-y-4 md:space-y-6">
-          {(() => {
-            const level = expiryLevel(daysUntil(a.residenceExpiryDate));
-            return level === "urgent" || level === "overdue" ? (
-              <DeadlineBanner date={a.residenceExpiryDate} />
-            ) : null;
-          })()}
-          <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
-            <h2 className="mb-4 flex flex-wrap items-center gap-2 font-semibold">
-              {t("casePage.applicantInfo")}
-              <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
-                {a.confirmationStatus === "confirmed" ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}
-              </Badge>
-            </h2>
-            <dl className="grid grid-cols-1 gap-y-1 text-sm md:grid-cols-[10rem_1fr] md:gap-y-3">
-              {/* 未入力の項目は、編集できるときのみ、入力欄へ移動するボタンにする */}
-              <dt className="text-muted">{t("casePage.field_legalName")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.legalName || <MissingValue field="legalName" label={t("casePage.field_legalName")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_nationality")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.nationality || <MissingValue field="nationality" label={t("casePage.field_nationality")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_dateOfBirth")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.dateOfBirth ? formatDate(a.dateOfBirth) : <MissingValue field="dateOfBirth" label={t("casePage.field_dateOfBirth")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_gender")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.gender || <MissingValue field="gender" label={t("casePage.field_gender")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_address")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.address || <MissingValue field="address" label={t("casePage.field_address")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_residenceStatus")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.residenceStatus || <MissingValue field="residenceStatus" label={t("casePage.field_residenceStatus")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_residenceExpiryDate")}</dt>
-              <dd className="mb-2 md:mb-0">
-                {a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : <MissingValue field="residenceExpiryDate" label={t("casePage.field_residenceExpiryDate")} onJump={jump} />}
-              </dd>
-              <dt className="text-muted">{t("casePage.field_residenceCardNumber")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.residenceCardNumber || <MissingValue field="residenceCardNumber" label={t("casePage.field_residenceCardNumber")} onJump={jump} />}</dd>
-              <dt className="text-muted">{t("casePage.field_workRestriction")}</dt>
-              <dd className="mb-2 break-words md:mb-0">{a.workRestriction || <MissingValue field="workRestriction" label={t("casePage.field_workRestriction")} onJump={jump} />}</dd>
-            </dl>
-            {a.confirmationStatus === "confirmed" && (
-              <p className="mt-4 text-sm text-green-700">
-                {t("casePage.confirmedBy", { name: a.confirmedBy ?? "", at: formatDateTime(a.confirmedAt) })}
-              </p>
-            )}
-          </section>
-          <CaseInfoEditor record={record} canEdit={canEdit} />
-        </div>
-      )}
+      {tab === "overview" && (() => {
+        const level = expiryLevel(daysUntil(a.residenceExpiryDate));
+        const banner = level === "urgent" || level === "overdue";
+        // 項目は、まとまりごとに分けて置く（本人／住所／在留）。未入力の項目は、編集できるときのみ、入力欄へ移動するボタンにする
+        const groups: { key: string; title: string; rows: { field: JumpField; label: string; value: ReactNode; wrap?: boolean }[] }[] = [
+          {
+            key: "person",
+            title: t("casePage.inspectorPerson"),
+            rows: [
+              { field: "legalName", label: t("casePage.field_legalName"), value: a.legalName },
+              { field: "nationality", label: t("casePage.field_nationality"), value: a.nationality },
+              { field: "dateOfBirth", label: t("casePage.field_dateOfBirth"), value: a.dateOfBirth ? formatDate(a.dateOfBirth) : "" },
+              { field: "gender", label: t("casePage.field_gender"), value: a.gender },
+            ],
+          },
+          {
+            key: "address",
+            title: t("casePage.inspectorAddress"),
+            rows: [{ field: "address", label: t("casePage.field_address"), value: a.address }],
+          },
+          {
+            key: "residence",
+            title: t("casePage.inspectorResidence"),
+            rows: [
+              { field: "residenceStatus", label: t("casePage.field_residenceStatus"), value: a.residenceStatus },
+              { field: "residenceExpiryDate", label: t("casePage.field_residenceExpiryDate"), value: a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : "" },
+              { field: "residenceCardNumber", label: t("casePage.field_residenceCardNumber"), value: a.residenceCardNumber },
+              { field: "workRestriction", label: t("casePage.field_workRestriction"), value: a.workRestriction },
+            ],
+          },
+        ];
+        // 置き場所の幅が十分なとき（@container）は、右にインスペクタ（申請人情報）、左に次の作業と案件情報
+        return (
+          <div className="@container space-y-4 md:space-y-6">
+            {banner && <DeadlineBanner date={a.residenceExpiryDate} />}
+            {/* 狭いときは、次の作業・申請人情報・案件情報の順に1列。広いときは、左に次の作業と案件情報、右にインスペクタ */}
+            <div className="grid gap-4 md:gap-6 @[60rem]:grid-cols-[minmax(0,1fr)_24rem] @[60rem]:grid-rows-[auto_1fr] @[60rem]:items-start">
+              <div className="@[60rem]:col-start-1 @[60rem]:row-start-1">
+                <NextActionCard record={record} canEdit={canEdit} onGoTab={setTab} />
+              </div>
+              <section
+                aria-labelledby="case-inspector-title"
+                className="@[60rem]:col-start-2 @[60rem]:row-span-2 @[60rem]:row-start-1"
+              >
+                <h2 id="case-inspector-title" className="mb-3 flex flex-wrap items-center gap-2 text-mac-title3 font-semibold">
+                  {t("casePage.applicantInfo")}
+                  <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
+                    {a.confirmationStatus === "confirmed" ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}
+                  </Badge>
+                </h2>
+                <div className="space-y-4">
+                  {groups.map((g) => (
+                    <section key={g.key} aria-labelledby={`case-inspector-${g.key}`}>
+                      <h3 id={`case-inspector-${g.key}`} className="mb-1 px-1 text-mac-footnote font-bold text-muted">
+                        {g.title}
+                      </h3>
+                      <dl className="divide-y divide-separator overflow-hidden rounded-mac-group border border-separator bg-grouped-surface text-mac-body">
+                        {g.rows.map((r) => (
+                          <div key={r.field} className="grid grid-cols-1 gap-x-3 gap-y-0.5 px-4 py-2.5 sm:grid-cols-[9rem_minmax(0,1fr)]">
+                            <dt className="text-muted">{r.label}</dt>
+                            <dd className="min-w-0 break-words">{r.value || <MissingValue field={r.field} label={r.label} onJump={jump} />}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
+                  ))}
+                </div>
+                {a.confirmationStatus === "confirmed" && (
+                  <p className="mt-4 text-sm text-green-700">
+                    {t("casePage.confirmedBy", { name: a.confirmedBy ?? "", at: formatDateTime(a.confirmedAt) })}
+                  </p>
+                )}
+              </section>
+              <div className="@[60rem]:col-start-1 @[60rem]:row-start-2">
+                <CaseInfoEditor record={record} canEdit={canEdit} />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {tab === "documents" && (
         <div className="space-y-6">

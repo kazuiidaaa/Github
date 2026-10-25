@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { countActiveFilters, type CaseFilter, type SortKey } from "@/lib/caseMetrics";
 import { SORT_OPTION_KEYS } from "@/lib/i18n/caseList";
 import { useLabels } from "@/lib/i18n/labels";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { PROCEDURE_TYPES, WORKFLOW_LABELS, type WorkflowStatus } from "@/lib/types";
 import { SORT_KEYS } from "@/lib/caseMetrics";
-
-/** 入力が止まってから、検索語を URL（一覧）へ反映するまでの時間 */
-const SEARCH_DEBOUNCE_MS = 300;
+import { useCommittedSearch } from "@/lib/useCommittedSearch";
 
 // 入力欄は 16px（iOS Safari の自動拡大を避ける）・高さ 44px。ui.tsx の inputClass と同じ規則
 const select = "min-h-[44px] rounded-xl border border-line-strong bg-white px-3 py-2 text-base";
@@ -31,75 +29,25 @@ export function CaseFilters({
   const [open, setOpen] = useState(() => active || countActiveFilters(filter) > 0);
   const count = countActiveFilters(filter);
 
-  // 検索欄は入力欄自身の状態で表示し、URL への反映は、変換の確定・入力の停止・Enter のときに行う（変換中は反映しない）。
-  const [text, setText] = useState(filter.query);
-  const composing = useRef(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pushed = useRef(filter.query); // 最後に URL へ反映した（または URL から受け取った）検索語
-  const onChangeRef = useRef(onChange);
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  });
-  const cancelTimer = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
-  const push = (value: string) => {
-    cancelTimer();
-    if (value === pushed.current) return;
-    pushed.current = value;
-    onChangeRef.current({ query: value });
-  };
-  // 戻る・進む、「条件をリセット」、カードの選択などによる URL 側の変更を入力欄へ反映する。
-  // 自分が反映した値の戻りは無視する（入力途中の文字を巻き戻さない）。
-  useEffect(() => {
-    if (filter.query === pushed.current) return;
-    pushed.current = filter.query;
-    cancelTimer();
-    composing.current = false;
-    setText(filter.query);
-  }, [filter.query]);
-  useEffect(() => cancelTimer, []);
+  const search = useCommittedSearch(filter.query, (query) => onChange({ query }));
   // 他の条件を変えたときは、未反映の検索語も同時に反映する。
   const change = (patch: Partial<CaseFilter>) => {
-    cancelTimer();
-    if (composing.current || text === pushed.current) return onChange(patch);
-    pushed.current = text;
-    onChange({ ...patch, query: text });
+    const pending = search.flush();
+    onChange(pending === null ? patch : { ...patch, query: pending });
   };
   const reset = () => {
-    cancelTimer();
-    composing.current = false;
-    pushed.current = "";
-    setText("");
+    search.reset();
     onReset();
   };
   return (
     <div className="mb-4 space-y-3">
       <div className="flex flex-wrap gap-3">
+        {/* PC 版（md 以上）の検索欄はツールバー（PcToolbar）にある。ここは md 未満のみ */}
         <input
-          className="min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base md:w-72"
+          className="min-h-[44px] w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-base md:hidden"
           placeholder={t("caseList.searchLabel")}
           aria-label={t("caseList.searchLabel")}
-          value={text}
-          onChange={(e) => {
-            const v = e.target.value;
-            setText(v);
-            if (composing.current || (e.nativeEvent as InputEvent).isComposing) return;
-            cancelTimer();
-            timer.current = setTimeout(() => push(v), SEARCH_DEBOUNCE_MS);
-          }}
-          onCompositionStart={() => {
-            composing.current = true;
-            cancelTimer();
-          }}
-          onCompositionEnd={(e) => {
-            composing.current = false;
-            push(e.currentTarget.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !composing.current && !e.nativeEvent.isComposing) push(e.currentTarget.value);
-          }}
+          {...search.inputProps}
         />
         <button
           type="button"
