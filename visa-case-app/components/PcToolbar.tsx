@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { exitDemo, signOut, useSession } from "@/lib/auth";
 import { useDemo } from "@/lib/demo";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { isSupabaseEnabled } from "@/lib/supabase";
 import { useCan } from "@/lib/store";
+import { CaseSearchField } from "./CaseSearchField";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -24,6 +25,7 @@ export function PcToolbar() {
   const session = useSession();
   const demo = useDemo();
   const canEdit = useCan("edit");
+  const onCaseList = usePathname() === "/cases";
   return (
     <div
       role="toolbar"
@@ -38,6 +40,7 @@ export function PcToolbar() {
           {t("caseList.newCase")}
         </Link>
       )}
+      {onCaseList && <CaseSearchField />}
       <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-2">
         <LanguageSwitcher />
         <ThemeToggle />

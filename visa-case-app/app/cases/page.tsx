@@ -4,87 +4,25 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
-import { DashboardCards } from "@/components/DashboardCards";
+import { CaseListTable, procedureLabel, ResidenceStatusCell, StatusBadges } from "@/components/CaseListTable";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { DashboardCards } from "@/components/DashboardCards";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { UploadBox } from "@/components/UploadBox";
-import { Badge } from "@/components/ui";
-import { WorkflowBadge } from "@/components/WorkflowBadge";
 import {
   applyFilter,
   DEFAULT_FILTER,
   isFilterActive,
-  nextSort,
   PAGE_SIZE,
   paginate,
-  sortState,
   summarize,
   type CaseFilter,
-  type SortColumn,
 } from "@/lib/caseMetrics";
 import { activeCard, cardFilter, readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
 import { useT } from "@/lib/i18n/LanguageProvider";
-import { sortDirKey } from "@/lib/i18n/caseList";
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
 import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
-import { PROCEDURE_TYPES, type CaseRecord } from "@/lib/types";
-import { currentStatusOf, StatusTransition } from "@/components/StatusTransition";
-import type { CaseMetrics } from "@/lib/caseMetrics";
-
-/** 並び替えの見出し。押すと並び順を切り替える（aria-sort は th に付ける）。 */
-function SortHeader({ column, label, filter, onSort }: { column: SortColumn; label: string; filter: CaseFilter; onSort: (k: CaseFilter["sort"]) => void }) {
-  const t = useT();
-  const st = sortState(filter.sort);
-  const current = st.column === column;
-  const dirLabel = t(sortDirKey(st.column, st.dir));
-  return (
-    <th
-      scope="col"
-      className="whitespace-nowrap px-4 py-0"
-      aria-sort={current ? (st.dir === "asc" ? "ascending" : "descending") : undefined}
-    >
-      <button type="button" onClick={() => onSort(nextSort(filter.sort, column))} className="inline-flex min-h-[44px] items-center gap-1 font-bold hover:underline">
-        {label}
-        <span aria-hidden="true" className={current ? "" : "text-slate-400"}>
-          {current ? (st.dir === "asc" ? "▲" : "▼") : "↕"}
-        </span>
-        <span className="sr-only">{current ? t("caseList.sortCurrent", { dir: dirLabel }) : t("caseList.sortHint")}</span>
-      </button>
-    </th>
-  );
-}
-
-const procedureLabel = (c: CaseRecord) => PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
-
-/**
- * 一覧の「在留資格」表示。手続に合わせて「今 → 申請後」の形で示す（共通部品 StatusTransition。Issue #433）。
- * 現在の在留資格の値があり、申請人情報が確認済みでないときは「未確認」を付ける。
- */
-function ResidenceStatusCell({ record: c }: { record: CaseRecord }) {
-  const t = useT();
-  const current = currentStatusOf(c);
-  return (
-    <StatusTransition
-      procedureType={c.procedureType}
-      current={current}
-      target={c.targetStatus}
-      trailing={current && c.applicant.confirmationStatus !== "confirmed" ? <Badge tone="gray">{t("caseList.unconfirmedBadge")}</Badge> : undefined}
-    />
-  );
-}
-
-function StatusBadges({ record: c, metrics: m }: { record: CaseRecord; metrics: CaseMetrics }) {
-  const t = useT();
-  return (
-    <div className="flex flex-col items-start gap-1">
-      <WorkflowBadge status={c.workflowStatus} />
-      {m.missingCount > 0 && <Badge tone="yellow">{t("caseList.missingBadge", { count: m.missingCount })}</Badge>}
-      {m.unconfirmed && <Badge tone="gray">{t("caseList.unconfirmedInfo")}</Badge>}
-      {m.checksPending && <Badge tone="gray">{t("caseList.checksPendingBadge")}</Badge>}
-    </div>
-  );
-}
 
 /** 一覧の順次表示を再生済みか。同じ画面を開き直しても、再生しない（画面を開いた最初の一度だけ。Issue #392） */
 let introPlayed = false;
@@ -135,9 +73,9 @@ function CasesView() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t("caseList.pageTitle")}</h1>
+        <h1 className="text-2xl font-semibold md:text-mac-title2">{t("caseList.pageTitle")}</h1>
         {canEdit && (
-          <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
+          <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover md:hidden">
             {t("caseList.newCase")}
           </Link>
         )}
@@ -188,67 +126,35 @@ function CasesView() {
           )}
         </p>
       )}
-      <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white md:block">
-        <table className="w-full text-left text-sm">
-          <caption className="sr-only">{t("caseList.tableCaption")}</caption>
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <SortHeader column="name" label={t("caseList.colName")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-              <SortHeader column="applicant" label={t("caseList.colApplicant")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-              <th scope="col" className="whitespace-nowrap px-4 py-3">{t("caseList.colProcedure")}</th>
-              <th scope="col" className="whitespace-nowrap px-4 py-3">{t("caseList.colStatus")}</th>
-              <SortHeader column="expiry" label={t("caseList.colExpiry")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-              <th scope="col" className="whitespace-nowrap px-4 py-3">{t("caseList.colState")}</th>
-              <SortHeader column="updated" label={t("caseList.colUpdated")} filter={filter} onSort={(sort) => go({ ...filter, sort })} />
-            </tr>
-          </thead>
-          <tbody className={stagger}>
-            {empty && (
-              <tr>
-                <td colSpan={7} role={emptyRole} className="px-4 py-10 text-center text-slate-500">
-                  {empty}
-                  {loaded && cases.length > 0 && active && (
-                    <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
-                      {t("caseList.resetConditions")}
-                    </button>
-                  )}
-                  {loaded && cases.length === 0 && canEdit && (
-                    <div className="mt-4">
-                      <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
-                        {t("caseList.newCase")}
-                      </Link>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            )}
-            {shown.map(({ record: c, metrics: m }) => (
-              <tr key={c.id} className="relative border-t border-slate-100 align-top transition-colors hover:bg-slate-50 active:bg-slate-100">
-                <td className="px-4 py-3 font-medium">
-                  <Link href={`/cases/${c.id}`} className="text-blue-700 after:absolute after:inset-0 hover:underline">
-                    {c.caseName}
+      <div className="@container">
+      <CaseListTable
+        rows={shown}
+        filter={filter}
+        onSort={(sort) => go({ ...filter, sort })}
+        stagger={stagger}
+        empty={
+          empty && (
+            <span role={emptyRole}>
+              {empty}
+              {loaded && cases.length > 0 && active && (
+                <button onClick={() => go(DEFAULT_FILTER)} className="ml-2 min-h-[44px] text-blue-700 hover:underline">
+                  {t("caseList.resetConditions")}
+                </button>
+              )}
+              {loaded && cases.length === 0 && canEdit && (
+                <span className="mt-4 block">
+                  <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
+                    {t("caseList.newCase")}
                   </Link>
-                </td>
-                <td className="px-4 py-3">{c.applicant.legalName || <span className="text-slate-400">{t("caseList.notEntered")}</span>}</td>
-                <td className="px-4 py-3">{procedureLabel(c)}</td>
-                <td className="px-4 py-3">
-                  <ResidenceStatusCell record={c} />
-                </td>
-                <td className="px-4 py-3">
-                  <ExpiryBadge date={c.applicant.residenceExpiryDate} />
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadges record={c} metrics={m} />
-                </td>
-                <td className="px-4 py-3 text-slate-500">{formatDateTime(c.updatedAt)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </span>
+              )}
+            </span>
+          )
+        }
+      />
 
-      {/* 狭い画面幅（md 未満）では、表に代えてカード形式で表示する */}
-      <ul className={`${stagger} space-y-3 md:hidden`}>
+      {/* 置き場所の幅が足りないとき（狭い画面幅、または文字を大きくしたとき）は、表に代えてカード形式で表示する */}
+      <ul className={`${stagger} space-y-3 @[44rem]:hidden`}>
         {empty && (
           <li role={emptyRole} className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
             {empty}
@@ -292,6 +198,7 @@ function CasesView() {
           </li>
         ))}
       </ul>
+      </div>
       {pageData.totalPages > 1 && (
         <nav aria-label={t("caseList.pagerAria")} className="mt-4 flex items-center justify-center gap-4 text-sm">
           <button
