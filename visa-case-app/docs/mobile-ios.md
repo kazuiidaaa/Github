@@ -86,6 +86,14 @@ OS の文字サイズや、ブラウザーの文字拡大（html の font-size 2
   - 追加・削除・役割の変更は PC 版の `MembersPanel`（変更なし）。iPhone 版には載せない。文言は `mobileAccount` 区分（ja/en/ko。en/ko の最終校正は #459）。テストは `tests/mobileMembers.test.tsx`。
 - 文言は `account` 区分を共用。`mobile.accountDesktop` / `accountDesktopNote` はメンバー管理のみの案内に変更。テストは `tests/mobileAccountDetails.test.tsx`。
 
+## 在留資格の選択（Issue #456）
+- 28 件の在留資格を 2 つのまとまりに分ける：「活動内容に応じた在留資格」（24 件。別表第一）と「身分や地位に応じた在留資格」（永住者・日本人の配偶者等・永住者の配偶者等・定住者の 4 件）。先頭に「よく使う項目」（`FEATURED_RESIDENCE_STATUSES`）を近道として置き、同じ項目は見出しの中にも残す。文字入力で、項目名と見出しの名前を絞り込める。保存される値・規則の判定は変えない。過去の自由入力の値（legacy）は「登録済みの入力」の見出しに残し、高度専門職の号は従来どおり（号つきの値は在留資格では「高度専門職」が選択中）。
+- iPhone 版（`/m/cases/new`）：`components/mobile/StatusPickerRow.tsx`。行は「項目名（左）・選んだ値（右）・›」で、押すと `Sheet` が開く。シートは、絞り込み欄、よく使う項目、見出しごとの GroupedList の順。選択中の行は、チェックと「選択中」の文字と太字（色だけにしない）。選ぶと閉じる。行・シートの押せる範囲は 44pt 以上、長い名前は折り返す（文字 200% で確認）。シートは `.m-root` の直下へ portal で出す（検索欄の form が、案件登録の form に入れ子にならないように。submit の伝わりも止める）。号の選択は、従来どおり SelectRow。
+- 現在と変更後の区別：行の見出し（「現在の在留資格」「変更後の在留資格」/「希望する在留資格」）に加え、説明文を「いま持っている在留資格」「現在の在留資格とは別の欄です」に改め、シートの題にも同じ見出しを使う。
+- PC 版：`ChoiceGroup` に `featuredInGroups` を足した（既定 false で、他の呼び出しは変わらない）。近道は選択のオン・オフ（aria-pressed）のボタンで、ラジオは見出しの中の 1 つずつ。選択中は、チェック・「選択中」の文字・「選択中：○○」の行で示す。
+- 文言は `input` 区分（`statusSelect_groupActivity` / `statusSelect_groupIdentity`、`choiceGroup_selected` / `choiceGroup_selectedIs`）。英語・韓国語は下書き（#459 で校正）。「その他」の見出しは廃止。
+- テスト：`tests/statusSelectChoice.test.tsx`、`tests/choiceGroupFeatured.test.tsx`、`tests/statusPickerRow.test.tsx`。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。

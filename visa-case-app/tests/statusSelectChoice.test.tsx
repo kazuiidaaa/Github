@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { FEATURED_RESIDENCE_STATUSES, gradeOptions, PROCEDURE_OPTIONS, procedureDescription, residenceStatusOptions, StatusSelect } from "../components/StatusSelect";
+import { FEATURED_RESIDENCE_STATUSES, STATUS_HINTS, gradeOptions, IDENTITY_RESIDENCE_STATUSES, PROCEDURE_OPTIONS, procedureDescription, residenceStatusOptions, StatusSelect } from "../components/StatusSelect";
 import { buildSections } from "../components/ChoiceGroup";
 import { ADVANCED_PROFESSIONAL_GRADE_2, PROCEDURE_TYPES, RESIDENCE_STATUSES } from "../lib/types";
 
@@ -9,12 +9,28 @@ function html(props: Partial<React.ComponentProps<typeof StatusSelect>> = {}): s
 }
 
 describe("在留資格の選択肢（Issue #214）", () => {
-  it("よく使う項目が先頭に並び、残りは「その他」にまとまり、全29項目が1度ずつ出る", () => {
-    const sections = buildSections(residenceStatusOptions());
-    expect(sections.map((s) => s.heading)).toEqual(["よく使う項目", "その他"]);
+  it("よく使う項目が先頭に並び、続けて2つのまとまりに分かれ、全項目が1度ずつ出る", () => {
+    const sections = buildSections(residenceStatusOptions(), "よく使う項目", true);
+    expect(sections.map((s) => s.heading)).toEqual(["よく使う項目", "活動内容に応じた在留資格", "身分や地位に応じた在留資格"]);
     expect(sections[0].options.map((o) => o.value)).toEqual(FEATURED_RESIDENCE_STATUSES);
-    const all = sections.flatMap((s) => s.options.map((o) => o.value));
+    expect(sections[0].shortcut).toBe(true);
+    // 見出しの中は、全項目が1度ずつ（近道に出した項目も、見出しの中に残る）
+    const all = sections.slice(1).flatMap((s) => s.options.map((o) => o.value));
     expect([...all].sort()).toEqual([...RESIDENCE_STATUSES].sort());
+  });
+
+  it("活動内容は24件、身分や地位は4件で、並びは在留資格の一覧どおり", () => {
+    const sections = buildSections(residenceStatusOptions(), "よく使う項目", true);
+    expect(sections[1].options).toHaveLength(24);
+    expect(sections[2].options.map((o) => o.value)).toEqual(["永住者", "日本人の配偶者等", "永住者の配偶者等", "定住者"]);
+    expect(sections[2].options.map((o) => o.value)).toEqual([...IDENTITY_RESIDENCE_STATUSES]);
+    expect(sections[1].options.map((o) => o.value)).toEqual(RESIDENCE_STATUSES.filter((s) => !IDENTITY_RESIDENCE_STATUSES.includes(s)));
+  });
+
+  it("見出しは、表示言語に合わせて訳せる。在留資格名は訳さない", () => {
+    const sections = buildSections(residenceStatusOptions(undefined, { activity: "A", identity: "B", legacyGroup: "L", legacyLabel: (v) => v }), "F", true);
+    expect(sections.map((s) => s.heading)).toEqual(["F", "A", "B"]);
+    expect(sections[1].options[0].label).toBe("公用");
   });
 
   it("よく使う項目は、実在する在留資格だけである", () => {
@@ -30,6 +46,50 @@ describe("在留資格の選択肢（Issue #214）", () => {
     expect(m).toContain('type="search"');
     expect(m).not.toContain("<select");
     expect(m.match(/role="radio"/g)).toHaveLength(RESIDENCE_STATUSES.length);
+  });
+
+  it("見出しは「よく使う項目」「活動内容に応じた在留資格」「身分や地位に応じた在留資格」の順に出す", () => {
+    const m = html();
+    const at = ["よく使う項目", "活動内容に応じた在留資格", "身分や地位に応じた在留資格"].map((h) => m.indexOf(h));
+    expect(at.every((i) => i >= 0)).toBe(true);
+    expect(at).toEqual([...at].sort((a, b) => a - b));
+    expect(m).not.toContain("その他");
+  });
+
+  it("よく使う項目は近道のボタン（aria-pressed）で、ラジオの項目には数えない", () => {
+    const m = html();
+    expect(m.match(/aria-pressed="false"/g)).toHaveLength(FEATURED_RESIDENCE_STATUSES.length);
+  });
+});
+
+describe("選択済みの印（色だけに頼らない）", () => {
+  it("選択中は、チェックの図形と「選択中」の文字、「選択中：○○」の行で示す", () => {
+    const m = html({ value: "留学" });
+    expect(m).toContain("選択中：留学");
+    // ラジオの項目 + 近道のボタンの両方に、文字を出す
+    expect(m.match(/>選択中</g)).toHaveLength(2);
+    expect(m.match(/aria-checked="true"/g)).toHaveLength(1);
+    expect(m.match(/aria-pressed="true"/g)).toHaveLength(1);
+  });
+  it("よく使う項目にない在留資格でも、印と文字を出す", () => {
+    const m = html({ value: "教授" });
+    expect(m).toContain("選択中：教授");
+    expect(m.match(/>選択中</g)).toHaveLength(1);
+  });
+  it("未選択のときは出さない", () => {
+    expect(html()).not.toContain("選択中");
+  });
+});
+
+describe("現在の在留資格と変更後（希望）の在留資格の区別", () => {
+  it("見出しと説明が異なり、現在は「いま持っている」、変更後は「現在とは別の欄」と示す", () => {
+    const cur = html({ legend: "現在の在留資格", hint: STATUS_HINTS.current });
+    const target = html({ legend: "変更後の在留資格", hint: STATUS_HINTS.target });
+    expect(cur).toContain("現在の在留資格");
+    expect(cur).toContain("いま持っている在留資格");
+    expect(target).toContain("変更後の在留資格");
+    expect(target).toContain("現在の在留資格とは別の欄です");
+    expect(cur).not.toContain("別の欄です");
   });
 });
 
@@ -47,12 +107,12 @@ describe("過去の自由入力の値（legacy）", () => {
 describe("無効化（disabled）", () => {
   it("すべてのボタンと絞り込み欄を無効にする", () => {
     const m = html({ value: "留学", disabled: true });
-    expect(m.match(/<button[^>]*disabled=""/g)).toHaveLength(RESIDENCE_STATUSES.length);
+    expect(m.match(/<button[^>]*disabled=""/g)).toHaveLength(RESIDENCE_STATUSES.length + FEATURED_RESIDENCE_STATUSES.length);
     expect(m).toMatch(/<input[^>]*disabled=""/);
   });
   it("号の選択も無効にする", () => {
     const m = html({ value: "高度専門職", withGrade: true, disabled: true });
-    expect(m.match(/<button[^>]*disabled=""/g)).toHaveLength(RESIDENCE_STATUSES.length + 3);
+    expect(m.match(/<button[^>]*disabled=""/g)).toHaveLength(RESIDENCE_STATUSES.length + FEATURED_RESIDENCE_STATUSES.length + 3);
   });
 });
 
@@ -121,7 +181,7 @@ describe("高度専門職の号を未選択へ戻す（Issue #214 追加対応�
   it("解除は、通常のボタンである（Tab で止まり、Space・Enter で押せる）。ラジオの項目にはしない", () => {
     const m = html({ value: "高度専門職（1号イ）", withGrade: true });
     expect(m).toMatch(/<button type="button"[^>]*>号を未選択に戻す<\/button>/);
-    // ラジオは、在留資格 29 件と号 3 件のまま
+    // ラジオは、在留資格と号 3 件のまま
     expect(m.match(/role="radio"/g)).toHaveLength(RESIDENCE_STATUSES.length + 3);
   });
   it("結果を読み上げるための領域（role=status）を出す", () => {

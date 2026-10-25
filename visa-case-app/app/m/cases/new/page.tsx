@@ -8,7 +8,9 @@ import { BackLink } from "@/components/mobile/BackLink";
 import { GroupedList } from "@/components/mobile/GroupedList";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { SelectRow, TextRow, type PickerOption } from "@/components/mobile/FormRows";
-import { gradeOptions, PROCEDURE_OPTIONS, residenceStatusOptions, type ResidenceOptionText } from "@/components/StatusSelect";
+import { StatusPickerRow } from "@/components/mobile/StatusPickerRow";
+import type { ChoiceOption } from "@/components/ChoiceGroup";
+import { gradeOptions, PROCEDURE_OPTIONS, residenceOptionText, residenceStatusOptions } from "@/components/StatusSelect";
 import { StatusTransition } from "@/components/StatusTransition";
 import { useToast } from "@/components/Toast";
 import { ToneIcon } from "@/components/ui";
@@ -58,15 +60,11 @@ export default function MobileNewCasePage() {
   const targetLegend = targetStatusLegend(t, procedureType);
   const description = procedureDescriptionText(t, procedureType);
 
-  const optionText: ResidenceOptionText = {
-    other: t("input.statusSelect_groupOther"),
-    legacyGroup: t("input.statusSelect_groupLegacy"),
-    legacyLabel: (value) => t("input.statusSelect_legacyLabel", { value }),
-  };
-  const statusOptions = (value: string): PickerOption[] => {
+  const optionText = residenceOptionText(t);
+  const statusOptions = (value: string): ChoiceOption[] => {
     const base = baseResidenceStatus(value);
     const legacy = base && !(RESIDENCE_STATUSES as readonly string[]).includes(base) ? base : undefined;
-    return residenceStatusOptions(legacy, optionText).map((o) => ({ value: o.value, label: o.label, group: o.group }));
+    return residenceStatusOptions(legacy, optionText);
   };
   const procedureOptions: PickerOption[] = PROCEDURE_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
 
@@ -206,7 +204,7 @@ export default function MobileNewCasePage() {
 
         {procedureType !== "" && (
           <GroupedList header={t("mobileNew.sectionStatus")}>
-            <SelectRow
+            <StatusPickerRow
               id="m-new-case-currentStatus"
               label={t("caseNew.currentStatusLegend")}
               options={statusOptions(currentStatus)}
@@ -217,7 +215,7 @@ export default function MobileNewCasePage() {
             />
             {gradeRow("m-new-case-currentGrade", currentStatus, setCurrentStatus, false)}
             {needsTarget && (
-              <SelectRow
+              <StatusPickerRow
                 id={fieldId("targetStatus")}
                 label={targetLegend}
                 required
