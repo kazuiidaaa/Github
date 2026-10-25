@@ -34,7 +34,7 @@ const render = (search = "") => {
   return renderToStaticMarkup(<MobileCasesPage />);
 };
 /** 一覧の行（リンク）が出ている案件名の順 */
-const names = (m: string) => [...m.matchAll(/href="\/cases\/([^"]+)"/g)].map((x) => x[1]);
+const names = (m: string) => [...m.matchAll(/href="\/m\/cases\/([^"]+)"/g)].map((x) => x[1]).filter((x) => x !== "new");
 
 beforeEach(() => {
   ctx.search = "";
@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe("案件一覧（iPhone 版）の描画", () => {
-  it("大見出し・検索・要点カード・チップ・並び替えを出し、行は PC 版の詳細へ移る", () => {
+  it("大見出し・検索・要点カード・チップ・並び替えを出し、行は iPhone 版の詳細へ移る", () => {
     const m = render();
     expect(m.match(/<h1/g)).toHaveLength(1);
     expect(m).toContain('role="search"');
@@ -102,16 +102,16 @@ describe("空・読み込み中・エラー", () => {
     const m = render("procedure=change");
     expect(m).toContain("該当する案件がありません。");
     expect(m).toContain("条件をリセット");
-    expect(m).not.toContain('href="/cases/new"');
+    expect(m).not.toContain('href="/m/cases/new"');
   });
   it("案件が 0 件：権限があるときだけ新規登録を出す", () => {
     ctx.cases = [];
-    expect(render()).toContain('href="/cases/new"');
+    expect(render()).toContain('href="/m/cases/new"');
     expect(render()).toContain("案件がありません。");
     ctx.canEdit = false;
     const m = render();
     expect(m).toContain("案件がありません。");
-    expect(m).not.toContain('href="/cases/new"');
+    expect(m).not.toContain('href="/m/cases/new"');
   });
   it("読み込み中は role=status、失敗は role=alert と再試行ボタン", () => {
     ctx.loaded = false;

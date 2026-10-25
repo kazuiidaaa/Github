@@ -51,7 +51,7 @@ const CONDITIONS = [
  * PC 版との違い：
  * - ページ送りは「さらに読み込む」方式。page=N は「N ページ目だけ」ではなく「先頭から N ページ分（PAGE_SIZE 件ずつ）」を表す。
  * - 「在留カード未登録」の絞り込み（nocard）でも、まとめてアップロードの欄は出さず、通常の一覧で示す（アップロードは PC 版の画面で行う）。
- * - 行の移動先は、/m/cases/[id] がまだ無いため PC 版の /cases/[id]（components/mobile/CaseRow.tsx に明記）。
+ * - 行の移動先は iPhone 版の詳細 /m/cases/[id]、新規登録は /m/cases/new。
  */
 function CasesView() {
   const t = useT();
@@ -232,9 +232,9 @@ function CasesView() {
                 {t("caseList.resetConditions")}
               </button>
             )}
-            {/* 新規登録は権限（useCan）に従う。/m/cases/new は別の担当のため、既存の PC 版 /cases/new へ移る */}
+            {/* 新規登録は権限（useCan）に従う */}
             {cases.length === 0 && canEdit && (
-              <Link href="/cases/new" className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 text-sm font-bold text-accent-text">
+              <Link href="/m/cases/new" className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 text-sm font-bold text-accent-text">
                 {t("caseList.newCase")}
               </Link>
             )}

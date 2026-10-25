@@ -17,8 +17,7 @@ const EXPIRY_TONES = { overdue: "red", urgent: "red", caution: "yellow", normal:
  * 期限・状態は、色だけでなく、文字と図形（Badge の印）を併記する（ExpiryBadge / WorkflowBadge と同じ考え方）。
  * 追加の注意（未受領書類・確認未了・申請前チェック未完了）は、PC 版の StatusBadges と同じ条件で Badge を出す。
  *
- * 移動先：/m/cases/[id] がまだ無いため、既存の PC 版 /cases/[id] へ移る。
- * iPhone 版の詳細画面ができたら、href をそちらへ差し替える（この 1 か所だけ）。
+ * 移動先：iPhone 版の案件詳細 /m/cases/[id]。
  *
  * props:
  * - row  applyFilter が返す 1 行分（record と metrics）
@@ -30,7 +29,7 @@ export function CaseRow({ row }: { row: CaseRowData }) {
   const procedure = PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
   return (
     <li className="m-row relative">
-      <Link href={`/cases/${c.id}`} className="block min-h-[44px] px-4 py-3 active:bg-slate-100">
+      <Link href={`/m/cases/${c.id}`} className="block min-h-[44px] px-4 py-3 active:bg-slate-100">
         <span className="flex items-start gap-3">
           <span className="min-w-0 flex-1">
             <span className="block break-words text-base font-bold">{c.caseName}</span>

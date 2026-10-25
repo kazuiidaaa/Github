@@ -116,8 +116,7 @@ export default function MobileNewCasePage() {
       return;
     }
     toast.success(t("caseNew.created"));
-    // 案件の詳細は、iPhone 版にまだ無いため PC 版の画面（書類タブ）を開く。端末の振り分けは /cases/[id] を対象にしない
-    router.push(`/cases/${created[0]}?tab=documents`);
+    router.push(`/m/cases/${created[0]}`);
   }
 
   const back = (
