@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const ctx = vi.hoisted(() => ({ demo: false, supabase: true, session: { user: { email: "user@example.com" } } as { user: { email: string } } | null }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/m/account", useRouter: () => ({ replace: () => {}, push: () => {} }) }));
-vi.mock("../lib/auth", () => ({ useSession: () => ctx.session, signOut: () => Promise.resolve(), exitDemo: () => {} }));
+vi.mock("../lib/auth", () => ({ useSession: () => ctx.session, signOut: () => Promise.resolve(), exitDemo: () => {}, updateFullName: () => Promise.resolve(null) }));
 vi.mock("../lib/store", () => ({ useCases: () => [], getAccount: () => Promise.resolve({}), listAudit: () => Promise.resolve([]), renameOrganization: () => Promise.resolve() }));
 vi.mock("../lib/demo",() => ({ useDemo: () => ctx.demo }));
 vi.mock("../lib/supabase", () => ({

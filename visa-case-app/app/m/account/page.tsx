@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
 import { MobileAccountDetails } from "@/components/MobileAccount";
+import { MobileAccountIdentity } from "@/components/MobileAccountIdentity";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { exitDemo, signOut, useSession } from "@/lib/auth";
@@ -29,28 +30,32 @@ export default function MobileAccountPage() {
     <>
       <LargeTitleHeader title={t("mobile.tabAccount")} />
 
-      <GroupedList header={t("mobile.accountSectionUser")}>
-        {demo ? (
-          <GroupedRow title={t("header.demoLong")} />
-        ) : !isSupabaseEnabled ? (
-          <GroupedRow title={t("header.prototypeLong")} />
-        ) : (
-          <GroupedRow label={t("mobile.accountSignedInAs")} value={session?.user.email ?? ""} />
-        )}
-        {demo && (
-          <GroupedRow
-            title={<span className="font-bold text-accent">{t("header.exitDemo")}</span>}
-            onClick={() => {
-              exitDemo();
-              router.replace("/m/login");
-            }}
-            chevron={false}
-          />
-        )}
-        {supabase && session && (
+      {supabase && session ? (
+        // ログイン中：氏名・メール・ユーザー ID と、ログアウト
+        <MobileAccountIdentity>
           <GroupedRow title={<span className="font-bold text-danger-text">{t("header.logout")}</span>} onClick={() => void signOut()} chevron={false} />
-        )}
-      </GroupedList>
+        </MobileAccountIdentity>
+      ) : (
+        <GroupedList header={t("mobile.accountSectionUser")}>
+          {demo ? (
+            <GroupedRow title={t("header.demoLong")} />
+          ) : !isSupabaseEnabled ? (
+            <GroupedRow title={t("header.prototypeLong")} />
+          ) : (
+            <GroupedRow label={t("mobile.accountSignedInAs")} value={session?.user.email ?? ""} />
+          )}
+          {demo && (
+            <GroupedRow
+              title={<span className="font-bold text-accent">{t("header.exitDemo")}</span>}
+              onClick={() => {
+                exitDemo();
+                router.replace("/m/login");
+              }}
+              chevron={false}
+            />
+          )}
+        </GroupedList>
+      )}
 
       {supabase && session && <MobileAccountDetails />}
 
