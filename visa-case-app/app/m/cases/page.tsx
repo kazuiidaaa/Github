@@ -6,7 +6,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CaseRow } from "@/components/mobile/CaseRow";
 import { CaseFilterSheet, countActiveConditions } from "@/components/mobile/CaseFilterSheet";
-import { GroupedList } from "@/components/mobile/GroupedList";
+import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
 import { LoadingSpinner } from "@/components/mobile/LoadingSpinner";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { SearchField } from "@/components/mobile/SearchField";
@@ -166,6 +166,11 @@ function CasesView() {
       <p className="mx-4 text-sm font-bold" role="status" aria-live="polite">
         {resultText}
       </p>
+
+      {/* 入口：期限が近い順の閲覧用一覧（/m/deadlines） */}
+      <GroupedList>
+        <GroupedRow href="/m/deadlines" title={t("mobileDeadlines.title")} subtitle={t("mobileDeadlines.entryNote")} />
+      </GroupedList>
 
       <div className="mt-2 px-4">
         <div className="flex items-start gap-1">

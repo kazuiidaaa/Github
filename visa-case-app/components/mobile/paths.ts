@@ -26,7 +26,7 @@ export function activeTab(pathname: string | null | undefined): MobileTabId | nu
   if (!pathname) return null;
   const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (p === "/m/account" || p.startsWith("/m/account/")) return "account";
-  if (p === "/m/cases" || p.startsWith("/m/cases/")) return "cases";
+  if (p === "/m/cases" || p.startsWith("/m/cases/") || p === "/m/deadlines") return "cases";
   return null;
 }
 
