@@ -135,6 +135,14 @@ Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-a
 - 書類などの振り分け（iPhone 版に対応画面ができてから対応表に足す）。
 - iPad の振り分け、PC 版の照会文字列の引き継ぎ。
 
+## 期限と次の作業（/m/deadlines。閲覧のみ）
+- `app/m/deadlines/page.tsx`：在留期限が近い順に、見出し付きの一覧（insetGrouped）で示す。見出しは「期限を過ぎている」「30日以内」「それ以降」「期限なし」（件数 0 の見出しは出さない）。期限が未入力の案件は最後の「期限なし」にまとめる。同じ日数は案件名順。
+- 区分と並びは `lib/mobileDeadlines.ts`（純粋関数 `groupByDeadline`。日数は `metricsOf` と同じ）。境界は、負＝超過、0〜30＝30日以内（本日を含む。`URGENT_DAYS`）、31 以上＝それ以降。
+- 行（`components/mobile/DeadlineRow.tsx`）：案件名、期限（印＋文字。「超過 N日」「本日まで」「あと N日」「未入力」。超過・30日以内は赤系の太字）、次にやること（`decideNextAction` の案内文。案件詳細の「次の作業」と同じ判定）。行全体が `/m/cases/[id]` へのリンクで、編集の操作は置かない。高さは 44pt 以上で、固定せず折り返す。
+- 入口：案件一覧（`/m/cases`）の件数の下に、リンク行を 1 つ置いた。`/m` は `/m/cases` への振り分けのままで、`layout.tsx`・`TabBar.tsx` は変えていない。`components/mobile/paths.ts` の `activeTab` に 1 条件だけ足し、この画面でも下部タブの「案件」を選択中にする。
+- 文言：`mobileDeadlines` 区分（ja/en/ko。en/ko は下書きで、#459 で校正）。
+- テスト：`tests/mobileDeadlines.test.tsx`（並び順、区分、次の作業の表示、行のリンク先、入口）。
+
 ## パスワード再設定の完了（/m/reset-password）
 - `app/m/reset-password/page.tsx`：新しいパスワード・確認の入力行（`InputRow` を `components/mobile/InputRow.tsx` に切り出し、ログインと共用）。認証は PC 版（`app/reset-password/page.tsx`）と同じ `useSessionState` / `setNewPassword`。判定の順序（Supabase 無効、確認中、セッション無し＝リンク無効の案内、入力）とエラー文も同じ。成功後は `/m/cases`（PC 版は `/`）。
 - 再設定メールのリンク先は PC 版の `/reset-password` のまま（`lib/auth.ts` の `redirectTo` は変えていない）。`proxy.ts` の振り分けにも足していない。このため現状は、iPhone でメールのリンクを開くと PC 版の画面が開く。リンク先を `/m/reset-password` に変えるかは別途の判断（変えると、PC のブラウザーで開いたときの行き先と、Supabase の Redirect URLs の許可リストに影響する）。
