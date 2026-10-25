@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { ABOUT_PATH } from "@/lib/notices";
+import { OpenMobileLink } from "./OpenMobileLink";
 
 /** 全画面の下部に出す共通フッター。印刷時は表示しない */
 export function Footer() {
@@ -15,6 +16,7 @@ export function Footer() {
         <Link href={ABOUT_PATH} className="font-bold text-blue-700 underline-offset-2 hover:underline">
           {t("footer.aboutLink")}
         </Link>
+        <OpenMobileLink />
       </div>
     </footer>
   );
