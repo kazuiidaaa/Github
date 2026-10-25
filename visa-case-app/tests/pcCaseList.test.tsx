@@ -24,7 +24,7 @@ function table(sort: "updated" | "name" | "expiry" = "updated", empty: React.Rea
 describe("CaseListTable（PC 版の案件一覧の表）", () => {
   it("列は 案件名／手続／在留資格／期限／次の作業 の 5 つで、行は案件の件数分ある", () => {
     const m = table();
-    const heads = [...m.matchAll(/<th [^>]*scope="col"[^>]*>(.*?)<\/th>/g)].map((x) => x[1].replace(/<[^>]*>/g, ""));
+    const heads = [...m.matchAll(/<th [^>]*scope="col"[^>]*>(.*?)<\/th>/g)].map((x) => x[1]); // 見出しの文字を含むかのみ見る（タグの除去はしない）
     expect(heads).toHaveLength(5);
     expect(heads[0]).toContain("案件名");
     expect(heads[1]).toContain("手続種別");
