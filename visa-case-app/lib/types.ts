@@ -67,10 +67,9 @@ export function getTargetStatusDisplay(procedureType: string, targetStatus: stri
     : { tableLabel: "希望：", cardLabel: "希望する在留資格", value };
 
 }
-
-/** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
+/** 入管法別表第一・第二の在留資格（案件の入力欄のプルダウン用。外交は含めない。保存済みの外交は従来どおり表示できる）。表記は規則の判定と一致させる */
+/** 入管法別表第一・第二の在留資格（外交は選択肢に含めない。保存済みの値は従来どおり表示できる）（案件の入力欄のプルダウン用）。表記は規則の判定と一致させる */
 export const RESIDENCE_STATUSES = [
-  "外交",
   "公用",
   "教授",
   "芸術",
