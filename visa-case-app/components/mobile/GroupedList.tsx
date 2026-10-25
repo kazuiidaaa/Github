@@ -37,8 +37,15 @@ export function GroupedList({
  * GroupedList の行。href があればリンク、onClick があればボタン、どちらも無ければ表示のみ。
  * 押せる行は、右端にシェブロン（›）を出し、高さは 44pt 以上。区切り線は左に 16px 内側へ寄せる。
  *
+ * 2 通りの形がある。
+ * - 項目名と値の行（label / value）：項目名を左、値を右に並べる（幅が足りない長い値は、項目名の下の右寄せに回り込む）。
+ *   DOM の順は「項目名 → 値」で、VoiceOver も項目名、値の順に読む。値には文字のほか Badge なども置ける。
+ * - 見出し行（title / subtitle）：主な文字と補足の文。一覧の項目（書類名など）に使う。
+ *
  * props:
- * - title     主な文字（必須）
+ * - label     項目名（label を渡すと項目名と値の行になる。title / subtitle は使わない）
+ * - value     値。label と組で使う
+ * - title     主な文字（label を使わないときは必須）
  * - subtitle  2 行目の補足。任意
  * - leading   左端に置く要素（アイコンなど）。任意
  * - trailing  右側に置く要素（値の文字、Badge など）。任意。シェブロンの手前に出る
@@ -48,6 +55,8 @@ export function GroupedList({
  * - current   現在地の行なら true（aria-current="page"）
  */
 export function GroupedRow({
+  label,
+  value,
   title,
   subtitle,
   leading,
@@ -57,7 +66,9 @@ export function GroupedRow({
   chevron,
   current,
 }: {
-  title: ReactNode;
+  label?: ReactNode;
+  value?: ReactNode;
+  title?: ReactNode;
   subtitle?: ReactNode;
   leading?: ReactNode;
   trailing?: ReactNode;
@@ -71,10 +82,17 @@ export function GroupedRow({
   const body = (
     <>
       {leading && <span className="shrink-0">{leading}</span>}
-      <span className="min-w-0 flex-1">
-        <span className="block break-words font-medium">{title}</span>
-        {subtitle && <span className="mt-0.5 block break-words text-xs text-slate-600">{subtitle}</span>}
-      </span>
+      {label !== undefined ? (
+        <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <span className="shrink-0 break-words font-medium">{label}</span>
+          <span className="min-w-0 max-w-full flex-1 basis-1/3 break-words text-right text-slate-600">{value}</span>
+        </span>
+      ) : (
+        <span className="min-w-0 flex-1">
+          <span className="block break-words font-medium">{title}</span>
+          {subtitle && <span className="mt-0.5 block break-words text-xs text-slate-600">{subtitle}</span>}
+        </span>
+      )}
       {trailing && <span className="shrink-0 text-sm text-slate-600">{trailing}</span>}
       {showChevron && (
         <svg aria-hidden="true" viewBox="0 0 8 14" width="8" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-slate-400">

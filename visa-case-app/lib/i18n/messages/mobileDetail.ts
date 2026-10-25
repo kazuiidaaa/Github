@@ -27,7 +27,8 @@ export const mobileDetail = defineMessages({
     openInDesktop: "PC 版で開く",
     openInDesktopNote: "編集・書類の登録・書類の作成は、PC 版で行います。",
     notFound: "案件が見つかりません。",
-    backToCases: "案件一覧",
+    notFoundBody: "削除されたか、リンクが正しくない可能性があります。案件の一覧から開き直してください。",
+    backToList: "案件一覧へ戻る",
   },
   en: {
     overview: "Overview",
@@ -54,7 +55,8 @@ export const mobileDetail = defineMessages({
     openInDesktop: "Open in desktop version",
     openInDesktopNote: "Editing, registering documents and creating documents are done in the desktop version.",
     notFound: "Case not found.",
-    backToCases: "Cases",
+    notFoundBody: "It may have been deleted, or the link may be incorrect. Open it again from the case list.",
+    backToList: "Back to the case list",
   },
   ko: {
     overview: "개요",
@@ -81,6 +83,7 @@ export const mobileDetail = defineMessages({
     openInDesktop: "PC 버전에서 열기",
     openInDesktopNote: "편집, 서류 등록, 서류 작성은 PC 버전에서 합니다.",
     notFound: "안건을 찾을 수 없습니다.",
-    backToCases: "안건 목록",
+    notFoundBody: "삭제되었거나 링크가 올바르지 않을 수 있습니다. 사건 목록에서 다시 열어 주세요.",
+    backToList: "사건 목록으로 돌아가기",
   },
 });

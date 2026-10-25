@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { DateField } from "@/components/DateField";
+import { BackLink } from "@/components/mobile/BackLink";
 import { GroupedList } from "@/components/mobile/GroupedList";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { SelectRow, TextRow, type PickerOption } from "@/components/mobile/FormRows";
@@ -120,21 +120,17 @@ export default function MobileNewCasePage() {
   }
 
   const back = (
-    <Link
+    <BackLink
       href="/m/cases"
+      label={t("mobile.tabCases")}
+      ariaLabel={t("mobile.backToCasesAria")}
       onClick={(e) => {
         if (dirty && !allowLeave.current) {
           e.preventDefault();
           setLeaveOpen(true);
         }
       }}
-      className="inline-flex min-h-[44px] items-center gap-1 px-2 text-base font-medium text-accent"
-    >
-      <svg aria-hidden="true" viewBox="0 0 10 18" width="10" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 1 1 9l8 8" />
-      </svg>
-      {t("mobile.back")}
-    </Link>
+    />
   );
 
   if (!canEdit) {

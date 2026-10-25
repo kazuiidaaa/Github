@@ -15,7 +15,8 @@ const EXPIRY_TONES = { overdue: "red", urgent: "red", caution: "yellow", normal:
  * 案件 1 件の行（GroupedList の中に並べる）。行全体が 1 つのリンクで、高さは 44pt 以上。
  * 表示：案件名、申請人氏名と手続の種類、在留期限（日付＋段階の Badge＋残り日数）、状態（WorkflowBadge）。
  * 期限・状態は、色だけでなく、文字と図形（Badge の印）を併記する（ExpiryBadge / WorkflowBadge と同じ考え方）。
- * 追加の注意（未受領書類・確認未了・申請前チェック未完了）は、PC 版の StatusBadges と同じ条件で Badge を出す。
+ * 追加の注意は、未受領書類の件数だけを出す。入れ子を減らすため、確認未了・申請前チェック未完了のバッジは詳細
+ * （/m/cases/[id] の「申請人情報の確認」「申請前チェック」）に任せる（絞り込みの条件としては引き続き使える）。
  *
  * 移動先：iPhone 版の案件詳細 /m/cases/[id]。
  *
@@ -51,11 +52,9 @@ export function CaseRow({ row }: { row: CaseRowData }) {
             </span>
           )}
         </span>
-        {(m.missingCount > 0 || m.unconfirmed || m.checksPending) && (
+        {m.missingCount > 0 && (
           <span className="mt-1.5 flex flex-wrap gap-1.5">
-            {m.missingCount > 0 && <Badge tone="yellow">{t("caseList.missingBadge", { count: m.missingCount })}</Badge>}
-            {m.unconfirmed && <Badge tone="gray">{t("caseList.unconfirmedInfo")}</Badge>}
-            {m.checksPending && <Badge tone="gray">{t("caseList.checksPendingBadge")}</Badge>}
+            <Badge tone="yellow">{t("caseList.missingBadge", { count: m.missingCount })}</Badge>
           </span>
         )}
       </Link>

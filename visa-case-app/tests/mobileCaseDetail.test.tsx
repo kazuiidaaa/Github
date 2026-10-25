@@ -28,6 +28,13 @@ describe("案件詳細（iPhone 版）", () => {
     expect(html).toContain('href="/cases/c1"');
     expect(html).toContain("PC 版で開く");
     expect(html).toContain('href="/m/cases"');
+    expect(html).toContain('aria-label="案件へ戻る"');
+  });
+  it("概要・申請人情報は「項目名（左）・値（右）」で、項目名が値より先に並ぶ", () => {
+    const html = renderToStaticMarkup(<MobileCaseDetail record={makeCase({ applicant: { ...EMPTY_APPLICANT, nationality: "ベトナム" } })} />);
+    expect(html.indexOf("国籍")).toBeGreaterThan(-1);
+    expect(html.indexOf("国籍")).toBeLessThan(html.indexOf("ベトナム"));
+    expect(html).toContain("text-right");
   });
   it("登録書類とチェックの状態は文字で示す", () => {
     const record = makeCase({
@@ -44,7 +51,11 @@ describe("案件詳細（iPhone 版）", () => {
     expect(html).toContain("確認済み");
   });
   it("見つからない表示", () => {
-    expect(renderToStaticMarkup(<MobileCaseNotFound />)).toContain("案件が見つかりません。");
+    const html = renderToStaticMarkup(<MobileCaseNotFound />);
+    expect(html).toContain("案件が見つかりません。");
+    expect(html).toContain("削除されたか");
+    expect(html).toContain("案件一覧へ戻る");
+    expect(html).toContain('href="/m/cases"');
   });
   it("文言は ja/en/ko で同じキーを持ち、区分が登録されている", () => {
     const ja = Object.keys(CATALOG.mobileDetail.ja).sort();

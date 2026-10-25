@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { BackLink } from "@/components/mobile/BackLink";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { Badge, type Tone } from "@/components/ui";
@@ -29,25 +29,22 @@ const DOCUMENT_KEYS = {
   photo: "display.docPhoto",
 } as const satisfies Record<string, MessageKey>;
 
-/** 案件詳細の戻る導線（LargeTitleHeader の leading）。押せる範囲は 44pt 以上 */
+/** 案件詳細の戻る導線（LargeTitleHeader の leading）。戻り先の画面名「案件」を添える標準形 */
 export function BackToCases() {
   const t = useT();
-  return (
-    <Link href="/m/cases" className="inline-flex min-h-[44px] items-center gap-1 px-2 text-base text-accent">
-      <svg aria-hidden="true" viewBox="0 0 10 18" width="10" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 1 1 9l8 8" />
-      </svg>
-      {t("mobileDetail.backToCases")}
-    </Link>
-  );
+  return <BackLink href="/m/cases" label={t("mobile.tabCases")} ariaLabel={t("mobile.backToCasesAria")} />;
 }
 
-/** 案件が見つからないときの表示 */
+/** 案件が見つからないときの表示。理由の説明と、一覧へ戻る行を出す */
 export function MobileCaseNotFound() {
   const t = useT();
   return (
     <>
       <LargeTitleHeader title={t("mobileDetail.notFound")} leading={<BackToCases />} />
+      <p className="px-4 text-base text-slate-600">{t("mobileDetail.notFoundBody")}</p>
+      <GroupedList>
+        <GroupedRow href="/m/cases" title={<span className="font-bold text-accent">{t("mobileDetail.backToList")}</span>} />
+      </GroupedList>
     </>
   );
 }
@@ -82,13 +79,13 @@ export function MobileCaseDetail({ record }: { record: CaseRecord }) {
       <LargeTitleHeader title={record.caseName} leading={<BackToCases />} />
 
       <GroupedList header={t("mobileDetail.overview")}>
-        <GroupedRow title={procedure} subtitle={t("mobileDetail.procedure")} />
-        <GroupedRow title={record.currentStatus || empty} subtitle={t("mobileDetail.currentStatus")} />
-        {record.targetStatus && <GroupedRow title={record.targetStatus} subtitle={t("mobileDetail.targetStatus")} />}
-        <GroupedRow title={t("mobileDetail.state")} trailing={<WorkflowBadge status={record.workflowStatus} />} />
+        <GroupedRow label={t("mobileDetail.procedure")} value={procedure} />
+        <GroupedRow label={t("mobileDetail.currentStatus")} value={record.currentStatus || empty} />
+        {record.targetStatus && <GroupedRow label={t("mobileDetail.targetStatus")} value={record.targetStatus} />}
+        <GroupedRow label={t("mobileDetail.state")} value={<WorkflowBadge status={record.workflowStatus} />} />
         <GroupedRow
-          title={t("casePage.applicantInfo")}
-          trailing={
+          label={t("casePage.applicantInfo")}
+          value={
             <Badge tone={a.confirmationStatus === "confirmed" ? "green" : "yellow"}>
               {a.confirmationStatus === "confirmed" ? t("casePage.applicantConfirmed") : t("casePage.applicantDraft")}
             </Badge>
@@ -97,23 +94,17 @@ export function MobileCaseDetail({ record }: { record: CaseRecord }) {
       </GroupedList>
 
       <GroupedList header={t("mobileDetail.deadlines")}>
+        <GroupedRow label={t("casePage.field_residenceExpiryDate")} value={a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : empty} />
         <GroupedRow
-          title={a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : empty}
-          subtitle={t("casePage.field_residenceExpiryDate")}
+          label={t("mobileDetail.plannedApplicationDate")}
+          value={record.plannedApplicationDate ? formatDate(record.plannedApplicationDate) : t("mobileDetail.notSet")}
         />
-        <GroupedRow
-          title={record.plannedApplicationDate ? formatDate(record.plannedApplicationDate) : t("mobileDetail.notSet")}
-          subtitle={t("mobileDetail.plannedApplicationDate")}
-        />
-        <GroupedRow
-          title={record.acceptedDate ? formatDate(record.acceptedDate) : t("mobileDetail.notSet")}
-          subtitle={t("mobileDetail.acceptedDate")}
-        />
+        <GroupedRow label={t("mobileDetail.acceptedDate")} value={record.acceptedDate ? formatDate(record.acceptedDate) : t("mobileDetail.notSet")} />
       </GroupedList>
 
       <GroupedList header={t("casePage.applicantInfo")} footer={t("mobileDetail.applicantNote")}>
         {fields.map(([key, value]) => (
-          <GroupedRow key={key} title={value || empty} subtitle={t(key)} />
+          <GroupedRow key={key} label={t(key)} value={value || empty} />
         ))}
       </GroupedList>
 
@@ -158,8 +149,8 @@ export function MobileCaseDetail({ record }: { record: CaseRecord }) {
         {checks.map((c) => (
           <GroupedRow
             key={c.key}
-            title={checkDisplayName(t, lang, c)}
-            trailing={<Badge tone={CHECK_TONES[c.status]}>{labels.checkStatus(c.status)}</Badge>}
+            label={checkDisplayName(t, lang, c)}
+            value={<Badge tone={CHECK_TONES[c.status]}>{labels.checkStatus(c.status)}</Badge>}
           />
         ))}
       </GroupedList>

@@ -114,6 +114,19 @@ describe("GroupedList", () => {
   });
 });
 
+describe("GroupedRow の項目名と値", () => {
+  it("DOM の順は項目名、値。値は右寄せ", () => {
+    const m = renderToStaticMarkup(
+      <GroupedList>
+        <GroupedRow label="国籍" value="ベトナム" />
+      </GroupedList>,
+    );
+    expect(m.indexOf("国籍")).toBeGreaterThan(-1);
+    expect(m.indexOf("国籍")).toBeLessThan(m.indexOf("ベトナム"));
+    expect(m).toContain("text-right");
+  });
+});
+
 describe("MenuButton", () => {
   const options: MenuOption[] = [
     { value: "a", label: "A" },
