@@ -30,8 +30,8 @@ describe("パス判定", () => {
     expect(activeTab("/m/cases/abc")).toBe("cases");
     expect(activeTab("/m/cases/new")).toBe("new");
     expect(activeTab("/m/cases/new/")).toBe("new");
-    expect(activeTab("/m/account")).toBeNull();
-    expect(MOBILE_TABS.find((t) => t.id === "account")?.href).toBe("/account");
+    expect(activeTab("/m/account")).toBe("account");
+    expect(MOBILE_TABS.find((t) => t.id === "account")?.href).toBe("/m/account");
     expect(activeTab("/m")).toBeNull();
     expect(activeTab("/cases")).toBeNull();
   });

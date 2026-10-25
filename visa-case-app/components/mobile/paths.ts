@@ -7,8 +7,8 @@ export const MOBILE_BASE = "/m";
 export const MOBILE_TABS = [
   { id: "cases", href: "/m/cases" },
   { id: "new", href: "/m/cases/new" },
-  // 最初の PR では iPhone 版のアカウント画面を作らず、既存の /account（PC 版の画面）へ移す。iPhone 版は最後の PR で扱う
-  { id: "account", href: "/account" },
+  // 暫定の最小版（ユーザー表示・言語/表示・ログアウト）。パスワード変更・メンバー管理は PC 版の /account へ移る
+  { id: "account", href: "/m/account" },
 ] as const;
 
 export type MobileTabId = (typeof MOBILE_TABS)[number]["id"];
@@ -19,10 +19,11 @@ export function isMobilePath(pathname: string | null | undefined): boolean {
   return pathname === MOBILE_BASE || pathname.startsWith(`${MOBILE_BASE}/`);
 }
 
-/** 現在のパスに対応するタブ。該当しなければ null（/m/cases/new は「新規」、/m/cases/… のその他は「案件」） */
+/** 現在のパスに対応するタブ。該当しなければ null（/m/account は「アカウント」、/m/cases/new は「新規」、/m/cases/… のその他は「案件」） */
 export function activeTab(pathname: string | null | undefined): MobileTabId | null {
   if (!pathname) return null;
   const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  if (p === "/m/account" || p.startsWith("/m/account/")) return "account";
   if (p === "/m/cases/new" || p.startsWith("/m/cases/new/")) return "new";
   if (p === "/m/cases" || p.startsWith("/m/cases/")) return "cases";
   return null;
