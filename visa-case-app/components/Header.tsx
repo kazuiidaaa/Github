@@ -49,7 +49,7 @@ export function Header() {
             menuButton.current?.focus();
           }
         }}
-        className="sticky top-0 z-40 border-b border-slate-200 bg-white/75 backdrop-blur-xl backdrop-saturate-150"
+        className="sticky top-0 z-40 border-b md:hidden border-slate-200 bg-white/75 backdrop-blur-xl backdrop-saturate-150"
       >
         {/* 狭い幅（lg 未満）は1段：ロゴとメニューボタン。残りはメニューに入れる。lg 以上は従来どおり横一列 */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 px-4 py-2 lg:flex-nowrap lg:px-6 lg:py-4">

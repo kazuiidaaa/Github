@@ -5,12 +5,16 @@ import { usePathname } from "next/navigation";
 import { AuthGate } from "@/components/AuthGate";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PcSidebar } from "@/components/PcSidebar";
+import { PcToolbar } from "@/components/PcToolbar";
 import { PageTransition } from "@/components/PageTransition";
 import { StoreErrorBanner } from "@/components/StoreErrorBanner";
 import { isMobilePath } from "@/components/mobile/paths";
 
 /**
- * 画面の外枠（ヘッダー・本文の幅・フッター）を、パスで出し分ける。
+ * 画面の外枠（PC 版はサイドバー・ツールバー・本文の幅・フッター）を、パスで出し分ける。
+ * PC 版（/m 以外）は、幅 md（768px）以上で、Finder のように左にサイドバー・上にツールバー・右に内容（Issue #456 PR2、docs/pc-mac-ui.md）。
+ * md 未満は従来のヘッダー。
  *
  * iPhone 版は /m 配下に置く（案 A）。PC 側のファイルを route group（(pc)/ など）へ移すと、
  * 差分が大きく PC 版への影響を確かめにくいため、ルートの layout は 1 つのまま、この小さな client コンポーネントで
@@ -36,14 +40,21 @@ export function AppFrame({ children }: { children: ReactNode }) {
   }
   return (
     <>
+      {/* 幅 md 未満は従来のヘッダー（メニュー）。md 以上は、Header 自身が隠れ、左のサイドバー＋上のツールバーに替わる */}
       <Header />
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none sm:px-6 md:py-8">
-        <AuthGate>
-          <StoreErrorBanner />
-          <PageTransition>{children}</PageTransition>
-        </AuthGate>
-      </main>
-      <Footer />
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <PcSidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <PcToolbar />
+          <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none sm:px-6 md:py-8">
+            <AuthGate>
+              <StoreErrorBanner />
+              <PageTransition>{children}</PageTransition>
+            </AuthGate>
+          </main>
+          <Footer />
+        </div>
+      </div>
     </>
   );
 }
