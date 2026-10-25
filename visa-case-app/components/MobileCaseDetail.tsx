@@ -1,6 +1,7 @@
 "use client";
 
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { CaseEditAction } from "@/components/mobile/CaseEditSheet";
 import { BackLink } from "@/components/mobile/BackLink";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
@@ -50,7 +51,8 @@ export function MobileCaseNotFound() {
 }
 
 /**
- * 案件詳細（iPhone 版）。閲覧のみ。編集・書類の登録は PC 版へのリンクで補う。
+ * 案件詳細（iPhone 版）。閲覧用。右上の「編集」（権限があるときだけ）で、案件名・手続・在留資格・メモを編集シートで直す。
+ * 申請人情報・書類の登録は PC 版へのリンクで補う。
  * 状態は色だけでなく文字と図形（Badge）で示す。
  */
 export function MobileCaseDetail({ record }: { record: CaseRecord }) {
@@ -76,7 +78,7 @@ export function MobileCaseDetail({ record }: { record: CaseRecord }) {
 
   return (
     <>
-      <LargeTitleHeader title={record.caseName} leading={<BackToCases />} />
+      <LargeTitleHeader title={record.caseName} leading={<BackToCases />} trailing={<CaseEditAction record={record} />} />
 
       <GroupedList header={t("mobileDetail.overview")}>
         <GroupedRow label={t("mobileDetail.procedure")} value={procedure} />

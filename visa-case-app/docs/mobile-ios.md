@@ -94,6 +94,18 @@ OS の文字サイズや、ブラウザーの文字拡大（html の font-size 2
 - 文言は `input` 区分（`statusSelect_groupActivity` / `statusSelect_groupIdentity`、`choiceGroup_selected` / `choiceGroup_selectedIs`）。英語・韓国語は下書き（#459 で校正）。「その他」の見出しは廃止。
 - テスト：`tests/statusSelectChoice.test.tsx`、`tests/choiceGroupFeatured.test.tsx`、`tests/statusPickerRow.test.tsx`。
 
+## 案件の編集シート（Issue #456）
+- 案件詳細（`/m/cases/[id]`）は閲覧用のまま。右上の「編集」（`components/mobile/CaseEditSheet.tsx` の `CaseEditAction`）を押すと、下からシート（`Sheet`）が開く。連絡先・リマインダーの編集と同じ作法で、左「キャンセル」・中央に題・右「完了」。
+- 編集できる項目は、PC 版 `CaseInfoEditor` に合わせた：案件名（必須・100 文字まで）、手続種別、現在の在留資格、変更後／希望する在留資格（`needsTargetStatus` の手続だけ。必須）、メモ。在留資格の選択は `StatusPickerRow`（高度専門職は号も選ぶ）。**受任日など、上記以外の項目はシートに載せず、保存でも触れない**（PC 版の編集欄にある受任日は、依頼の項目に無いため載せていない。要るなら別の判断）。入力の規則・誤りの文言・保存する値の整形は `lib/caseEditDraft.ts`（純粋な関数。PC 版と同じ文言キーを使う）。
+- キャンセル（Escape・背景も同じ）：変更があれば確認（「変更を破棄」「編集を続ける」。最初のフォーカスは「編集を続ける」）、なければそのまま閉じる。変更の有無は、開いたときの内容との比較（変更後の欄が要らない手続では、隠れた欄の違いは数えない）。
+- 保存：PC 版と同じ `lib/store.ts` の `updateCase` / `logAudit`。`updateCase` は画面を先に更新して裏で保存するため、`settleWrites()`（今回追加。保存の完了を待ち、失敗したときだけ失敗の文を返す）で成否を待つ。失敗したらシートを閉じず、図形つきの「保存できませんでした」の文を出す（入力は残り、「完了」を押し直せる）。変更が無ければ保存せずに閉じる。成功は「保存しました」の通知。
+- 検証の誤りは、一覧の上の要約（図形＋文）と、欄の下の文で示し、最初の誤りの欄へフォーカスを移す。色だけに頼らない。
+- 権限：`useCan("edit")` が偽（閲覧のみ・役割の取得前）なら「編集」を出さない。画面の出し分けのみで、実際の拒否はデータベース側（RLS）。
+- アクセシビリティ：role="dialog"・aria-modal・aria-labelledby。開いたら「キャンセル」へフォーカス、閉じたら「編集」ボタンへ戻す。ボタンは 44pt 以上、入力は 16px。文字 200% でも、題が折り返し、シート内でスクロールして全体を見られる。
+- 共通部品の変更（既存の使い方は変わらない）：`Sheet` に任意の `cancelLabel`・`onDone`・`busy` を足した。`useDialogA11y` は、別のダイアログが上に重なっている間は、下のダイアログが Escape・Tab を受けないようにした（シートの中の在留資格の選択で Escape を押しても、編集シートが閉じない）。`SelectRow` に任意の `wrapValue` を足した（選んだ値を折り返して全文を見せる。手続名が長いため。既定は従来どおり）。シートは、上部バーの `backdrop-filter` の影響を避けるため `.m-root` へ portal で出す。
+- `app/m/layout.tsx` と下部タブは変更していない。「PC 版で開く」の注記は、案件情報の編集が iPhone 版でできるようになったため、「申請人情報の編集と書類の登録は、PC 版で行います。」に直した。
+- 文言：`mobileDetail` 区分（ja/en/ko。en/ko の最終校正は #459）。テスト：`tests/mobileCaseEdit.test.tsx`（このリポジトリには DOM 環境が無いため、画面の状態遷移は純粋な関数と静的描画で確認し、実際のタップ操作は Playwright で確認した）。
+
 ## 残り
 - 「PC 版を開く」は、各画面の末尾にある（Cookie をセットして `/` へ移る）。
 - themeColor は OS の明暗に従う。画面内の「表示」切り替えには追随しない。

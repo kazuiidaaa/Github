@@ -20,7 +20,14 @@ export function useDialogA11y(ref: RefObject<HTMLElement | null>, onCancel: () =
     const items = () => Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE));
     (root.querySelector<HTMLElement>("[data-autofocus]") ?? items()[0] ?? root).focus();
 
+    // ダイアログの上に別のダイアログ（シートの中の選択画面など）が重なっているときは、一番上のものだけが操作を受ける
+    const isTopmost = () =>
+      !Array.from(document.querySelectorAll<HTMLElement>('[aria-modal="true"]')).some(
+        (el) => el !== root && !root.contains(el) && !!(root.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING),
+      );
+
     const onKeyDown = (e: KeyboardEvent) => {
+      if (!isTopmost()) return;
       if (e.key === "Escape") {
         e.preventDefault();
         cancelRef.current();

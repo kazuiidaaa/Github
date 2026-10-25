@@ -50,6 +50,7 @@ export type PickerOption = { value: string; label: string; group?: string; disab
  * - required  必須の印を出す
  * - error     誤りの文
  * - hint      補足の文
+ * - wrapValue 選んだ値を折り返して全文を見せる（選択肢の名前が長いとき用）。端末標準の選択画面は、透明にして重ねた select が開く。既定は 1 行で省略
  */
 export function SelectRow({
   id,
@@ -61,6 +62,7 @@ export function SelectRow({
   required,
   error,
   hint,
+  wrapValue,
 }: {
   id: string;
   label: string;
@@ -71,6 +73,7 @@ export function SelectRow({
   required?: boolean;
   error?: string;
   hint?: string;
+  wrapValue?: boolean;
 }) {
   const labelId = useId();
   const noteId = useId();
@@ -88,14 +91,23 @@ export function SelectRow({
         <div className="min-w-0 flex-1">
           <RowLabel htmlFor={id} id={labelId} label={label} required={required} />
         </div>
-        <div className="relative flex min-w-0 max-w-[55%] items-center">
+        <div className={`relative flex min-w-0 max-w-[55%] items-center ${wrapValue ? "focus-within:ring-2 focus-within:ring-accent/40" : ""}`}>
+          {wrapValue && (
+            <span aria-hidden="true" className="min-h-[44px] min-w-0 break-words py-2.5 pr-5 text-right text-base text-slate-600">
+              {options.find((o) => o.value === value)?.label || placeholder}
+            </span>
+          )}
           <select
             id={id}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             aria-invalid={error ? true : undefined}
             aria-describedby={note ? noteId : undefined}
-            className="min-h-[44px] min-w-0 max-w-full cursor-pointer appearance-none truncate bg-transparent py-2 pl-2 pr-5 text-right text-base text-slate-600 outline-none [text-align-last:right] focus-visible:ring-2 focus-visible:ring-accent/40"
+            className={
+              wrapValue
+                ? "absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
+                : "min-h-[44px] min-w-0 max-w-full cursor-pointer appearance-none truncate bg-transparent py-2 pl-2 pr-5 text-right text-base text-slate-600 outline-none [text-align-last:right] focus-visible:ring-2 focus-visible:ring-accent/40"
+            }
           >
             <option value="">{placeholder}</option>
             {plain.map(opt)}
