@@ -53,7 +53,7 @@ export default function HomePage() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t("home.title")}</h1>
+        <h1 className="text-2xl font-semibold md:text-mac-title1">{t("home.title")}</h1>
         <span className="flex items-center gap-3">
           <Link href="/cases" className="inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-100 active:bg-slate-200">
             {t("home.openCases")}

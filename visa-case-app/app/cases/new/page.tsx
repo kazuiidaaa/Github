@@ -187,7 +187,7 @@ export default function NewCasePage() {
       >
         {t("caseNew.backToList")}
       </Link>
-      <h1 className="mt-1 text-2xl font-semibold">{t("caseNew.title")}</h1>
+      <h1 className="mt-1 text-2xl font-semibold md:text-mac-title1">{t("caseNew.title")}</h1>
       <p className="mb-6 text-sm text-slate-600">{t("caseNew.intro")}</p>
       <div className="mb-4 flex flex-wrap gap-2 text-sm" role="group" aria-label={t("caseNew.modeAria")}>
         {[

@@ -306,12 +306,14 @@
     border-radius: var(--radius-mac-group);
     border-color: var(--color-separator);
     background-color: var(--color-grouped-surface);
+    box-shadow: var(--shadow-mac-raised);
   }
   /* ダイアログ・確認画面：角丸 12px、面はグループ化した面、細い枠、見出しは一段大きい文字 */
   :root:not(:has(.m-root)) .mac-dialog {
     border-radius: var(--radius-mac-window);
     background-color: var(--color-grouped-surface);
     border: 1px solid var(--color-separator);
+    box-shadow: var(--shadow-mac-overlay);
   }
   :root:not(:has(.m-root)) .mac-dialog h2 {
     font-size: var(--text-mac-title3);

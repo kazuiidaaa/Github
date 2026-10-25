@@ -11,7 +11,7 @@ import { HOME_METRIC_KEYS, metricsFor, type CardKey, type MetricDefinition } fro
 export type { CardKey };
 
 // hover は Tailwind v4 が @media (hover: hover) で囲む（タッチで固着しない）。浮く動きは動きを減らす設定では付けない。押した瞬間は active: で即時に示す
-const CARD_BASE = "rounded-2xl border bg-white motion-safe:hover:-translate-y-0.5 hover:shadow-raised active:bg-slate-100";
+const CARD_BASE = "rounded-2xl border bg-white motion-safe:hover:-translate-y-0.5 hover:shadow-raised md:hover:shadow-mac-raised active:bg-slate-100";
 
 /**
  * 説明文は操作できる要素の外に置く（タップで誤って絞り込まれないようにする）。
