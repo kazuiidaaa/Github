@@ -104,3 +104,9 @@ Next.js 16 の proxy（旧 Middleware。`node_modules/next/dist/docs/01-app/03-a
 ### 未対応
 - 書類などの振り分け（iPhone 版に対応画面ができてから対応表に足す）。
 - iPad の振り分け、PC 版の照会文字列の引き継ぎ。
+
+## パスワード再設定の完了（/m/reset-password）
+- `app/m/reset-password/page.tsx`：新しいパスワード・確認の入力行（`InputRow` を `components/mobile/InputRow.tsx` に切り出し、ログインと共用）。認証は PC 版（`app/reset-password/page.tsx`）と同じ `useSessionState` / `setNewPassword`。判定の順序（Supabase 無効、確認中、セッション無し＝リンク無効の案内、入力）とエラー文も同じ。成功後は `/m/cases`（PC 版は `/`）。
+- 再設定メールのリンク先は PC 版の `/reset-password` のまま（`lib/auth.ts` の `redirectTo` は変えていない）。`proxy.ts` の振り分けにも足していない。このため現状は、iPhone でメールのリンクを開くと PC 版の画面が開く。リンク先を `/m/reset-password` に変えるかは別途の判断（変えると、PC のブラウザーで開いたときの行き先と、Supabase の Redirect URLs の許可リストに影響する）。
+- `AuthGate`：`/m/reset-password` は未ログインでも移動させない（PC 版と同じ扱い）。この画面には下部タブを出さない（`isMobileAuthPath`）。
+- 文言は `auth` 区分を共用し、iPhone 版だけの読み上げ名は `mobileReset` 区分（ja/en/ko。en/ko は下書き）。
