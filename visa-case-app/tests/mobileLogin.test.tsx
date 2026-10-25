@@ -11,6 +11,7 @@ vi.mock("../lib/supabase", () => ({
 }));
 
 import MobileLoginPage from "../app/m/login/page";
+import { TypedPreview } from "../components/mobile/InputRow";
 import { TabBar } from "../components/mobile/TabBar";
 import { isMobileLoginPath, isMobilePath, MOBILE_LOGIN } from "../components/mobile/paths";
 import { CATALOG } from "../lib/i18n/messages";
@@ -34,6 +35,22 @@ describe("ログイン（iPhone 版）", () => {
     expect(m).toContain("ログイン");
     expect(m).toContain("パスワードを忘れた場合");
     expect(m).toContain("デモを試す");
+  });
+  it("枠付きの入力欄で、表示切替は目のアイコン＋文字（名前・押下状態を維持）、入力前は確認行を出さない", () => {
+    const m = renderToStaticMarkup(<MobileLoginPage />);
+    expect(m).toContain("border-slate-400");
+    expect(m).toContain('aria-pressed="false"');
+    expect(m).toContain('aria-label="パスワードを表示する"');
+    expect(m).toContain("<svg");
+    expect(m).toContain("表示する");
+    expect(m).not.toContain("typed-preview");
+  });
+  it("確認行は装飾（aria-hidden）で、入力中の全文を折り返して出す", () => {
+    const m = renderToStaticMarkup(<TypedPreview label="入力中:" value="a.very.long@example.test" />);
+    expect(m).toContain('aria-hidden="true"');
+    expect(m).toContain("break-all");
+    expect(m).toContain("a.very.long@example.test");
+    expect(renderToStaticMarkup(<TypedPreview label="入力中:" value="" />)).toBe("");
   });
   it("Supabase 無効のときは、入力欄を出さず案内だけ", () => {
     ctx.supabase = false;

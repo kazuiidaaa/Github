@@ -3,13 +3,24 @@
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
-import { InputRow, inputCls } from "@/components/mobile/InputRow";
+import { InputRow, inputCls, TypedPreview } from "@/components/mobile/InputRow";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { Button } from "@/components/ui";
 import { requestPasswordReset, signIn, startDemo } from "@/lib/auth";
 import { useAuthErrorText } from "@/lib/i18n/authErrors";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { isSupabaseEnabled } from "@/lib/supabase";
+
+/** 目のアイコン（表示中は斜線つき）。装飾のため読み上げない（ボタンの名前は aria-label）。 */
+function EyeIcon({ off }: { off: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {off && <path d="M4 4l16 16" />}
+    </svg>
+  );
+}
 
 /**
  * ログイン（iPhone 版）。見た目だけを iPhone 向けにし、認証は PC 版（app/login/page.tsx）と同じ関数・同じ経路を使う。
@@ -97,7 +108,7 @@ export default function MobileLoginPage() {
         <form onSubmit={submitReset} aria-label={t("mobileLogin.resetFormAria")}>
           <fieldset disabled={busy} className="min-w-0">
             <GroupedList footer={t("auth.resetIntro")}>
-              <InputRow id={emailId} label={t("auth.email")}>
+              <InputRow id={emailId} label={t("auth.email")} below={<TypedPreview label={t("mobileLogin.typedLabel")} value={email} />}>
                 {emailInput}
               </InputRow>
             </GroupedList>
@@ -128,20 +139,22 @@ export default function MobileLoginPage() {
       <form onSubmit={submit} aria-label={t("mobileLogin.loginFormAria")}>
         <fieldset disabled={busy} className="min-w-0">
           <GroupedList>
-            <InputRow id={emailId} label={t("auth.email")}>
+            <InputRow id={emailId} label={t("auth.email")} below={<TypedPreview label={t("mobileLogin.typedLabel")} value={email} />}>
               {emailInput}
             </InputRow>
             <InputRow
               id={passwordId}
               label={t("auth.password")}
+              below={shown ? <TypedPreview label={t("mobileLogin.typedLabel")} value={password} /> : undefined}
               trailing={
                 <button
                   type="button"
                   aria-pressed={shown}
                   aria-label={shown ? t("mobileLogin.passwordHideAria") : t("mobileLogin.passwordShowAria")}
                   onClick={() => setShown(!shown)}
-                  className="-mr-2 inline-flex min-h-[44px] shrink-0 items-center rounded-full px-3 text-sm font-bold text-accent"
+                  className="-mr-3 inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-accent focus-visible:outline-2 focus-visible:outline-accent"
                 >
+                  <EyeIcon off={shown} />
                   {shown ? t("input.passwordField_hide") : t("input.passwordField_show")}
                 </button>
               }
