@@ -1,0 +1,68 @@
+/*
+ * iPhone 版（/m）専用の CSS。色は globals.css の変数（--background、slate、accent など）を使い、明暗はそちらに任せる。
+ * すべて .m-root 配下（または :has(.m-root)）に限定し、PC 版の表示へ影響させない。
+ */
+
+:root {
+  /* 下部タブの高さ（safe-area を除く）。components/mobile/TabBar.tsx の TAB_BAR_HEIGHT と同じ値 */
+  --m-tabbar-h: 49px;
+}
+
+/* 画面の左右（横向きのノッチ）を避ける。上端はバー側、下端はタブバー側で避ける */
+.m-root {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ブラウザ標準の引いて更新・端のはね返りを止め、PullToRefresh に任せる */
+body:has(.m-root) {
+  overscroll-behavior-y: contain;
+}
+
+/* 上部バー：ノッチの下に収める */
+.m-root .m-navbar {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 下部タブ：ホームバーの上に収める。固定表示なので、左右の safe-area も足す */
+.m-root .m-tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* 末尾の注意書きは、固定のタブバーに隠れないよう、その高さ分の余白を足す */
+.m-root .m-footer {
+  padding-bottom: calc(var(--m-tabbar-h) + env(safe-area-inset-bottom) + 16px);
+}
+
+/* チップ列：スクロールバーを出さない（横にスクロールできることは、端が切れて見えることで示す） */
+.m-root .m-chips {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.m-root .m-chips::-webkit-scrollbar {
+  display: none;
+}
+
+/* 検索欄：WebKit 標準の消去ボタンは、自前のボタンに置き換えるので消す */
+.m-root .m-search input::-webkit-search-cancel-button,
+.m-root .m-search input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* 一覧の行：区切り線は、左を 16px 内側へ寄せる（最後の行には引かない） */
+.m-root .m-row:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 1rem;
+  height: 1px;
+  background: var(--color-slate-200);
+  pointer-events: none;
+}

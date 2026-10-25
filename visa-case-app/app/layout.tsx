@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Noto_Sans_JP, Noto_Sans_KR } from "next/font/google";
-import { AuthGate } from "@/components/AuthGate";
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
+import { AppFrame } from "@/components/AppFrame";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
-import { PageTransition } from "@/components/PageTransition";
-import { StoreErrorBanner } from "@/components/StoreErrorBanner";
 import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
 import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
@@ -41,14 +37,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-full flex flex-col">
         <ToastProvider>
           <LanguageProvider>
-          <Header />
-          <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none sm:px-6 md:py-8">
-            <AuthGate>
-              <StoreErrorBanner />
-              <PageTransition>{children}</PageTransition>
-            </AuthGate>
-          </main>
-          <Footer />
+          {/* 外枠（ヘッダー・本文・フッター）は、パスで出し分ける。/m（iPhone 版）では PC 版の枠を出さない。理由は AppFrame のコメントを参照 */}
+          <AppFrame>{children}</AppFrame>
           </LanguageProvider>
         </ToastProvider>
       </body>
