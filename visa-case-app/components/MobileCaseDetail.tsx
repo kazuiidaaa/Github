@@ -108,6 +108,10 @@ export function MobileCaseDetail({ record }: { record: CaseRecord }) {
         ))}
       </GroupedList>
 
+      <GroupedList>
+        <GroupedRow href={`/m/cases/${record.id}/documents`} title={t("mobileDocuments.entry")} />
+      </GroupedList>
+
       <GroupedList header={t("mobileDetail.documents")}>
         {record.documents.length === 0 && <GroupedRow title={t("mobileDetail.documentsNone")} />}
         {record.documents.map((d) => (
