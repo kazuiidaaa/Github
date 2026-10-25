@@ -12,6 +12,7 @@ export const mobileLogin = defineMessages({
     passwordShowAria: "パスワードを表示する",
     passwordHideAria: "パスワードを隠す",
     demoHeader: "ログインせずに試す",
+    typedLabel: "入力中:",
   },
   en: {
     loginFormAria: "Sign in",
@@ -19,6 +20,7 @@ export const mobileLogin = defineMessages({
     passwordShowAria: "Show password",
     passwordHideAria: "Hide password",
     demoHeader: "Try without signing in",
+    typedLabel: "Entered:",
   },
   ko: {
     loginFormAria: "로그인",
@@ -26,5 +28,6 @@ export const mobileLogin = defineMessages({
     passwordShowAria: "비밀번호 표시",
     passwordHideAria: "비밀번호 숨기기",
     demoHeader: "로그인 없이 체험",
+    typedLabel: "입력 중:",
   },
 });
