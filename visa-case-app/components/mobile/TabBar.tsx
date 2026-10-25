@@ -12,7 +12,6 @@ export const TAB_BAR_HEIGHT = 49;
 
 const LABELS: Record<MobileTabId, MessageKey> = {
   cases: "mobile.tabCases",
-  new: "mobile.tabNew",
   account: "mobile.tabAccount",
 };
 
@@ -31,18 +30,6 @@ function TabIcon({ id, filled }: { id: MobileTabId; filled: boolean }) {
       </svg>
     );
   }
-  if (id === "new") {
-    return filled ? (
-      <svg {...common} fill="currentColor" stroke="none">
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 5a1 1 0 0 1 1 1v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 1 1 0-2h3V8a1 1 0 0 1 1-1Z" />
-      </svg>
-    ) : (
-      <svg {...common} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 8v8M8 12h8" />
-      </svg>
-    );
-  }
   return filled ? (
     <svg {...common} fill="currentColor" stroke="none">
       <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.5a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4Zm0 13.2a8 8 0 0 1-5.6-2.3c.6-2 3-3.1 5.6-3.1s5 1.1 5.6 3.1a8 8 0 0 1-5.6 2.3Z" />
@@ -57,7 +44,7 @@ function TabIcon({ id, filled }: { id: MobileTabId; filled: boolean }) {
 }
 
 /**
- * 画面下部に固定するタブバー（SwiftUI の TabView 相当）。案件・新規・アカウントの 3 つ。
+ * 画面下部に固定するタブバー（SwiftUI の TabView 相当）。案件・アカウントの 2 つ。新規登録はタブではなく操作なので、案件一覧のナビゲーションバー右の「+」に置く。
  * props なし。現在地は usePathname から決め、選択中は塗りつぶしアイコン・青文字・aria-current="page"。
  * 各タブは 44pt 以上、下端は safe-area-inset-bottom 分の余白を足す。
  */

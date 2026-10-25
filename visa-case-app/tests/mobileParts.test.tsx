@@ -28,8 +28,9 @@ describe("パス判定", () => {
   it("タブの現在地", () => {
     expect(activeTab("/m/cases")).toBe("cases");
     expect(activeTab("/m/cases/abc")).toBe("cases");
-    expect(activeTab("/m/cases/new")).toBe("new");
-    expect(activeTab("/m/cases/new/")).toBe("new");
+    expect(activeTab("/m/cases/new")).toBe("cases");
+    expect(activeTab("/m/cases/new/")).toBe("cases");
+    expect(MOBILE_TABS.map((t) => t.id)).toEqual(["cases", "account"]);
     expect(activeTab("/m/account")).toBe("account");
     expect(MOBILE_TABS.find((t) => t.id === "account")?.href).toBe("/m/account");
     expect(activeTab("/m")).toBeNull();
@@ -38,14 +39,14 @@ describe("パス判定", () => {
 });
 
 describe("TabBar", () => {
-  it("3 つのタブを出し、現在地だけに aria-current と青文字を付ける", () => {
-    nav.pathname = "/m/cases/new";
+  it("2 つのタブ（案件・アカウント）を出し、現在地だけに aria-current と青文字を付ける", () => {
+    nav.pathname = "/m/account";
     const m = renderToStaticMarkup(<TabBar />);
-    expect(m.match(/<a /g)).toHaveLength(3);
+    expect(m.match(/<a /g)).toHaveLength(2);
     expect(m.match(/aria-current="page"/g)).toHaveLength(1);
     expect(m).toMatch(/aria-current="page"[^>]*text-accent|text-accent[^>]*aria-current="page"/);
     expect(m).toContain("案件");
-    expect(m).toContain("新規");
+    expect(m).not.toContain("新規");
     expect(m).toContain("アカウント");
     expect(m).toContain("min-h-[49px]");
     // 選択中のアイコンは塗りつぶし（fill=currentColor）、他は線画
@@ -71,6 +72,9 @@ describe("SearchField", () => {
     expect(empty).not.toContain("入力を消す");
     const filled = renderToStaticMarkup(<SearchField value="あ" onChange={() => {}} label="案件を検索" />);
     expect(filled).toContain('aria-label="入力を消す"');
+  });
+  it("「キャンセル」は、フォーカス中だけ出す（初期表示では出さない）", () => {
+    expect(renderToStaticMarkup(<SearchField value="あ" onChange={() => {}} label="案件を検索" />)).not.toContain("キャンセル");
   });
 });
 
@@ -140,6 +144,15 @@ describe("MenuButton", () => {
     expect(m).toContain('aria-label="並び替え"');
     expect(m).toContain("h-11 w-11");
     expect(m).not.toContain('role="menu"');
+  });
+  it("並び替えの記号・文字つきの丸いボタン・複数選択の属性", () => {
+    const sort = renderToStaticMarkup(<MenuButton options={options} onSelect={() => {}} label="並び替え" icon="sort" />);
+    expect(sort).toContain("M8 20V5"); // 上下の矢印
+    expect(sort).not.toContain("<circle");
+    const pill = renderToStaticMarkup(<MenuButton options={options} onSelect={() => {}} buttonText="条件（2）" checked={["a"]} />);
+    expect(pill).toContain("条件（2）");
+    expect(pill).toContain('aria-label="条件（2）"');
+    expect(pill).toContain("min-h-[44px]");
   });
   it("矢印・Home・End の移動は、無効な項目を飛ばして端で回り込む", () => {
     expect(nextMenuIndex("ArrowDown", 0, options)).toBe(2);

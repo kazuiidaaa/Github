@@ -52,7 +52,15 @@ describe("案件一覧（iPhone 版）の描画", () => {
     expect(m).toContain('role="search"');
     expect(m).toContain('aria-label="要点（押すと絞り込み）"');
     expect(m).toContain('aria-label="状態で絞り込む"');
-    expect(m).toContain('aria-label="並び替え"');
+    expect(m).toContain('aria-label="並び替え（現在：最終更新が新しい順）"');
+    expect(m).toContain("並び順：最終更新が新しい順");
+    // 状態のチップは残し、手続の種類・条件はメニューのボタンにする（チップ列は 1 つだけ）
+    expect(m.match(/role="group"/g)).toHaveLength(2); // 要点カードの群と、状態のチップ
+    expect(m).toContain("手続：すべて");
+    expect(m).toContain('aria-label="条件で絞り込む"');
+    // 新規登録はナビゲーションバー右の「+」。引いて更新は付けない
+    expect(m).toContain('aria-label="新規案件"');
+    expect(m).not.toContain("再読み込み");
     expect(names(m).sort()).toEqual(["demo-sample-a", "demo-sample-b", "demo-sample-c"]);
     expect(m).toContain("サンプル案件A");
     expect(m).toContain("該当 3 件（全 3 件）");
@@ -102,22 +110,25 @@ describe("空・読み込み中・エラー", () => {
     const m = render("procedure=change");
     expect(m).toContain("該当する案件がありません。");
     expect(m).toContain("条件をリセット");
-    expect(m).not.toContain('href="/m/cases/new"');
+    expect(m.match(/href="\/m\/cases\/new"/g)).toHaveLength(1); // ナビゲーションバーの「+」だけ
   });
   it("案件が 0 件：権限があるときだけ新規登録を出す", () => {
     ctx.cases = [];
-    expect(render()).toContain('href="/m/cases/new"');
+    expect(render().match(/href="\/m\/cases\/new"/g)).toHaveLength(2); // 「+」と空状態のリンク
     expect(render()).toContain("案件がありません。");
     ctx.canEdit = false;
     const m = render();
     expect(m).toContain("案件がありません。");
     expect(m).not.toContain('href="/m/cases/new"');
+    expect(m).not.toContain('aria-label="新規案件"');
   });
   it("読み込み中は role=status、失敗は role=alert と再試行ボタン", () => {
     ctx.loaded = false;
     ctx.cases = [];
     const loading = render();
     expect(loading).toContain("読み込み中……");
+    expect(loading).toContain("animate-spin");
+    expect(loading).toContain("motion-reduce:animate-none");
     expect(loading).not.toContain('role="alert"');
     ctx.error = "読み込みに失敗しました";
     const failed = render();

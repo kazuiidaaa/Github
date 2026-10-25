@@ -35,16 +35,22 @@ export function nextMenuIndex(key: string, current: number, options: MenuOption[
 }
 
 /**
- * 「…」ボタンで開くメニュー（SwiftUI の Menu）。並び替えの選択などに使う。
- * ボタンは 44pt 四方。aria-haspopup="menu"・aria-expanded。メニューは role="menu"。
- * value を渡すと、選択式（menuitemradio＋aria-checked）になり、選択中の項目にチェックの印を出す。
+ * ボタンで開くメニュー（SwiftUI の Menu）。並び替え・絞り込みの選択などに使う。
+ * ボタンの形は 3 通り：「…」（icon="more"、既定）、並び替え記号の上下矢印（icon="sort"）、文字つきの丸いボタン（buttonText を渡す。絞り込みの現在値を示すのに使う）。
+ * 丸い記号のボタンは 44pt 四方、文字つきは高さ 44pt 以上。aria-haspopup="menu"・aria-expanded。メニューは role="menu"。
+ * value を渡すと、単一選択式（menuitemradio＋aria-checked）になり、選択中の項目にチェックの印を出す。
+ * checked（選択中の value の配列）を渡すと、複数選択式（menuitemcheckbox＋aria-checked）になる。どちらも選んだらメニューは閉じる。
  * キー操作：ボタンで Enter / Space / ↓ で開く。開いたら選択中（無ければ先頭）へフォーカス。
  * ↑↓ で移動、Home / End で端へ、Enter / Space で決定、Esc でボタンへ戻って閉じる、Tab で閉じる。外側を押しても閉じる。
  *
  * props:
  * - options   項目の一覧
  * - onSelect  項目を選んだときに、その value を渡す。選んだらメニューは閉じる
- * - value     選択中の value。省略すると選択式にならず、ふつうの操作メニュー（menuitem）になる
+ * - value     単一選択の選択中の value。value も checked も省略すると、ふつうの操作メニュー（menuitem）になる
+ * - checked    複数選択の選択中の value の配列
+ * - icon       記号ボタンの絵柄。"more"（…、既定）または "sort"（上下矢印）
+ * - buttonText 渡すと、記号でなく文字（と ▾ の印）のボタンになる。読み上げ名は label（無ければこの文字）
+ * - align      メニューを開く向き。"end"（右端そろえ、既定）または "start"（左端そろえ）
  * - label     ボタンの読み上げ名（例：「並び替え」）。省略時は「その他の操作」（多言語）
  * - title     メニューの先頭に出す小さな見出し（例：「並び順」）。任意。メニューの読み上げ名にもなる
  */
@@ -52,12 +58,20 @@ export function MenuButton({
   options,
   onSelect,
   value,
+  checked,
+  icon = "more",
+  buttonText,
+  align = "end",
   label,
   title,
 }: {
   options: MenuOption[];
   onSelect: (value: string) => void;
   value?: string;
+  checked?: string[];
+  icon?: "more" | "sort";
+  buttonText?: string;
+  align?: "start" | "end";
   label?: string;
   title?: string;
 }) {
@@ -69,7 +83,9 @@ export function MenuButton({
   const [open, setOpen] = useState(false);
   // 開いた直後にフォーカスする位置。矢印の上で開いたときは末尾
   const [focusAt, setFocusAt] = useState(0);
-  const selectable = value !== undefined;
+  const multi = checked !== undefined;
+  const selectable = value !== undefined || multi;
+  const isOn = (v: string) => (multi ? checked.includes(v) : v === value);
 
   function openAt(index: number) {
     setFocusAt(index);
@@ -94,7 +110,7 @@ export function MenuButton({
   }, [open]);
 
   const firstIndex = () => {
-    const sel = options.findIndex((o) => o.value === value && !o.disabled);
+    const sel = options.findIndex((o) => isOn(o.value) && !o.disabled);
     if (sel >= 0) return sel;
     const f = options.findIndex((o) => !o.disabled);
     return f < 0 ? 0 : f;
@@ -108,7 +124,7 @@ export function MenuButton({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        aria-label={label ?? t("mobile.menuDefaultLabel")}
+        aria-label={label ?? buttonText ?? t("mobile.menuDefaultLabel")}
         onClick={() => (open ? close(false) : openAt(firstIndex()))}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown" && !open) {
@@ -122,14 +138,33 @@ export function MenuButton({
             close(true);
           }
         }}
-        className="flex h-11 w-11 items-center justify-center rounded-full text-accent"
+        className={
+          buttonText !== undefined
+            ? "flex min-h-[44px] items-center"
+            : "flex h-11 w-11 items-center justify-center rounded-full text-accent"
+        }
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <circle cx="12" cy="12" r="9.5" />
-          <circle cx="7.8" cy="12" r="1.1" fill="currentColor" stroke="none" />
-          <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
-          <circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none" />
-        </svg>
+        {buttonText !== undefined ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-3.5 py-1.5 text-sm font-bold text-slate-700">
+            {buttonText}
+            <svg aria-hidden="true" viewBox="0 0 12 8" width="10" height="7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m1.5 1.5 4.5 4.5 4.5-4.5" />
+            </svg>
+          </span>
+        ) : icon === "sort" ? (
+          // 並び替え（上下の矢印）。「…」は「その他の操作」を連想させ、並び替えと分からないため
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 20V5M4.5 8.5 8 5l3.5 3.5" />
+            <path d="M16 4v15M12.5 15.5 16 19l3.5-3.5" />
+          </svg>
+        ) : (
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="12" cy="12" r="9.5" />
+            <circle cx="7.8" cy="12" r="1.1" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
+            <circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none" />
+          </svg>
+        )}
       </button>
       {open && (
         <div
@@ -153,7 +188,7 @@ export function MenuButton({
               items.current[next]?.focus();
             }
           }}
-          className="motion-panel absolute right-0 top-full z-50 mt-1 min-w-[13rem] origin-top-right overflow-hidden rounded-[14px] border border-slate-200 bg-white py-1 shadow-overlay"
+          className={`motion-panel absolute top-full z-50 mt-1 min-w-[13rem] overflow-hidden ${align === "end" ? "right-0 origin-top-right" : "left-0 origin-top-left"} rounded-[14px] border border-slate-200 bg-white py-1 shadow-overlay`}
         >
           {title && (
             <p aria-hidden="true" className="px-4 pb-1 pt-2 text-xs font-bold text-slate-600">
@@ -161,7 +196,7 @@ export function MenuButton({
             </p>
           )}
           {options.map((o, i) => {
-            const checked = selectable && o.value === value;
+            const on = selectable && isOn(o.value);
             return (
               <button
                 key={o.value}
@@ -169,8 +204,8 @@ export function MenuButton({
                   items.current[i] = el;
                 }}
                 type="button"
-                role={selectable ? "menuitemradio" : "menuitem"}
-                aria-checked={selectable ? checked : undefined}
+                role={multi ? "menuitemcheckbox" : selectable ? "menuitemradio" : "menuitem"}
+                aria-checked={selectable ? on : undefined}
                 disabled={o.disabled}
                 tabIndex={-1}
                 onClick={() => {
@@ -181,14 +216,14 @@ export function MenuButton({
               >
                 {selectable && (
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center text-accent">
-                    {checked && (
+                    {on && (
                       <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m3 8.5 3.2 3.2L13 4.5" />
                       </svg>
                     )}
                   </span>
                 )}
-                <span className={checked ? "font-bold" : undefined}>{o.label}</span>
+                <span className={on ? "font-bold" : undefined}>{o.label}</span>
               </button>
             );
           })}
