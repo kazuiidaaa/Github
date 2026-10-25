@@ -21,7 +21,7 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - `app/m/page.tsx`：`/m` は `/m/cases` へ移す。
 - `app/m/mobile.css`：safe-area、チップ・検索欄・区切り線。すべて `.m-root` 配下に限定。
 - `app/m/cases`（一覧）、`app/m/cases/[id]`（詳細）、`app/m/cases/new`（新規登録）、`app/m/account`（アカウント。暫定の最小版）、`app/m/login`（ログイン）。
-- `components/mobile/`：TabBar、LargeTitleHeader、BackLink、SearchField、FilterChips、GroupedList / GroupedRow、MenuButton、LoadingSpinner、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
+- `components/mobile/`：TabBar、LargeTitleHeader、BackLink、SearchField、FilterChips、Sheet、CaseFilterSheet、CaseRow、GroupedList / GroupedRow、MenuButton、LoadingSpinner、PullToRefresh、MobileShell、paths（パス判定）。案件の型や store に依存しない。props は各ファイルの日本語コメントを参照。
 - 文言：`lib/i18n/messages/mobile.ts`（区分 `mobile`。日本語・英語・韓国語。英語・韓国語は他の区分と同じく下書き扱い）。
 
 ## 規則
@@ -34,15 +34,23 @@ Next.js 16 の資料（`node_modules/next/dist/docs/01-app/`）で確認した�
 - 下部タブは「案件」「アカウント」の 2 つ。新規登録は「操作」なので、タブでなく案件一覧のナビゲーションバー右の「+」（権限があるときだけ）。`/m/cases/new` は「案件」タブの配下として扱う。
 - 一覧の行・空状態の新規リンク・新規作成後の遷移は、すべて iPhone 版（`/m/cases/[id]`、`/m/cases/new`）。
 - アカウント（`/m/account`）は暫定の最小版：ログイン中のユーザー（useSession）、ログアウト（signOut）、デモの終了（exitDemo）、言語・明暗の切り替え（PC 版と同じ LanguageSwitcher / ThemeToggle）。認証の経路は新設しない。パスワード変更・メンバー管理は PC 版の `/account`（端末の振り分け対象外）へ移る。iPhone 版の本格的なアカウント・再設定の完了画面・メンバー管理の画面は、最後の PR で扱う（ログインは下の「ログイン」で追加済み）。
-- 並び替えは上下矢印の記号。現在の並び順は、ボタンの読み上げ名と、件数の行（「並び順：…」）で示す。
-- 絞り込みは、状態のチップ 1 列を残し、手続の種類と条件は文字つきのメニューボタン（MenuButton の `buttonText`）にする。条件は複数選択（`menuitemcheckbox`）。
+- 並び順は、絞り込みシートの中で選ぶ（ナビゲーションバーに並び替えの記号は置かない）。
+- 絞り込みと並び替えは、検索欄の横のボタン 1 つで開くシート（下の「案件一覧を軽くする」）に集約した。
 - 詳細の行は「項目名（左）・値（右。長いときは下の右寄せ）」（GroupedRow の `label` / `value`）。DOM の順は項目名、値で、VoiceOver も同じ順に読む。
 - 戻るは、BackLink で「‹ ＋戻り先の画面名（案件）」に統一（詳細・新規とも）。読み上げ名は「案件へ戻る」。
 - 検索欄は、フォーカス中だけ右に「キャンセル」を出す（入力を消してフォーカスを外す）。
 - 初回の読み込み中は LoadingSpinner（reduced motion では静止）。詳細の「見つかりません」は、説明文と「案件一覧へ戻る」の行を出す。
-- 一覧の行は、入れ子を減らすため、未受領書類の件数以外の灰色のバッジ（確認未了・申請前チェック未完了）を出さない。詳細の「申請人情報の確認」「申請前チェック」で確認できる（絞り込みの条件としては使える）。
+- 一覧の行の内容は、下の「案件一覧を軽くする」を参照。
 - 詳細の大見出しは案件名のままにする（案件名が、その画面の主題であるため。長い名前は折り返し、スクロールするとバー中央の小さな見出しに縮む）。
 - 引いて更新（PullToRefresh）は、案件一覧（`/m/cases`）に付ける。`lib/store.ts` に追加した `refetch()`（読み込み済みのデータの取り直し。成功は true、失敗は false）を `onRefresh` に渡す。既存の関数（`ensureLoaded`・`resetStore` など）の挙動は変えず、PC 版は `refetch` を呼ばないので影響しない。未読み込みなら `ensureLoaded` と同じ。実行中の再取得があれば同じ Promise を返す（二重実行の防止。部品側も実行中は無視する）。取得前に直前までの保存を待ち、取得中に保存・削除・ログアウトがあれば古い結果を捨てる。失敗しても手元の一覧と権限は変えず、全体のエラー表示にも触れない。一覧が「更新できませんでした。表示は更新前のままです。」（role=alert）を出し、「更新しました」は出さない。動きを減らす設定では引き量を動かさず文字だけ。キーボード用の「再読み込み」ボタンは、フォーカス時に 44pt 以上で出る。テストは `tests/storeRefetch.test.ts`。初回の読み込みに失敗したときは、従来どおり「もう一度読み込む」ボタンで再試行する。
+
+## 案件一覧を軽くする（Issue #456）
+- 画面の上は、大見出し・件数の 1 行（「該当 N 件（全 M 件）」）・検索欄と絞り込みボタン・一覧だけ。要点カード（SummaryCards。参照がなくなったため削除）、状態のチップ、手続・条件のメニューは置かない。
+- 行（`CaseRow`）：1 行目＝案件名（太字）と、右に状態（WorkflowBadge。図形と文字）。2 行目＝申請人氏名 ・ 手続の種類。**在留期限が 30 日以内（超過を含む。`caseMetrics` の within30 と同じ）のときだけ**、末尾に赤の図形つきで「あと N 日」「本日まで」「超過」（en/ko も同じ条件）を足す。在留期限の日付、期限の段階のバッジ、未受領書類のバッジは行に出さない。未受領書類は詳細の「必要書類」（受領 N / 必要 M と不足書類の一覧）で確認できる。固定の高さを持たず、文字を大きくすると折り返す。
+- 絞り込みボタン（検索欄の右）：1 つのシート（`Sheet`＋`CaseFilterSheet`）を開く。指定中の数（状態・手続の「すべて」以外、条件の各項目、既定と違う並び順。検索語は数えない）を、ボタンの数字と読み上げ名「絞り込みと並び替え（N件を指定中）」で示す。
+- シート：role="dialog"・aria-modal、「完了」・Escape・背景で閉じ、開いたら「完了」にフォーカス、閉じたら元のボタンへ戻す（`useDialogA11y`）。中身は GroupedList の行（状態／手続の種類／条件［期限30日以内・未受領書類・確認未了・申請前チェック未完了・在留カード未登録。複数選択］／並び順）。選ぶとすぐ一覧へ反映する（URL のクエリは従来と同じ）。選択中は aria-pressed とチェックの印。高さは固定せず、長いときや文字拡大時はシート内でスクロール（最大 90dvh）。
+- 文言は区分 `mobile`（ja/en/ko。en/ko は下書きのまま）。使わなくなったキー（要点カード・チップ・メニュー・並び順の行）は削除した。`MenuButton` と `FilterChips` の部品は、一覧では使わなくなったが、他の画面で使えるよう残している（FilterChips の `nextSelection` はシートが使う）。
+- テスト：`tests/mobileCaseList.test.tsx`（行・シート・文言）、`tests/mobileCases.test.tsx`（画面）。
 
 ## ログイン（/m/login）
 - 見た目だけを iPhone 向けにし、認証は PC 版（`app/login/page.tsx`）と同じ関数・同じ経路を再利用する：`signIn`・`requestPasswordReset`・`startDemo`（`lib/auth.ts`）。Supabase を画面から直接呼ばない。エラー文も PC 版と同じ（`useAuthErrorText`。メールアドレスの登録の有無が推測できない文言）。
