@@ -36,6 +36,7 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   mobileDetail: { en: "draft", ko: "draft" },
   mobileNew: { en: "draft", ko: "draft" },
   mobileLogin: { en: "draft", ko: "draft" },
+  mobileReset: { en: "draft", ko: "draft" },
   mobileDocuments: { en: "draft", ko: "draft" },
 };
 
