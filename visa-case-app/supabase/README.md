@@ -152,3 +152,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 
 - `supabase/migrations/0025_procedure_type_permanent.sql`:`cases.procedure_type` の許可する値に `permanent` を追加します(0017 と同じ作り。Issue #420)。既存データへの影響はありません。実行せずに最新のアプリを使うと、手続種別「永住許可申請」の案件を保存できません(他の手続種別は従来どおり動作します)。
 - 0024 の実行後に、SQL Editor で実行します。実行前にバックアップを取得し、制約名が `cases_procedure_type_check` であることを、0017 の節の SQL で確認してください。
+
+## 0026(メンバー一覧に氏名を追加)
+
+- `supabase/migrations/0026_list_members_display_name.sql`:メンバー一覧の関数 `list_members` の戻り値に、氏名 `display_name`(`auth.users` の `raw_user_meta_data` の `full_name`)を追加します(Issue #456)。戻り値の形が変わるため、関数を削除してから作り直し、0013 と同じ実行権限(anon 不可、authenticated のみ、owner / admin のみ実行可)を付け直します。
+- **任意の更新です。** 実行しなくても、アプリは従来どおり動作します(氏名は無いものとして扱います)。PC 版の画面は変わりません。iPhone 版のメンバー管理で他の人の氏名を表示するための土台です。
+- 0025 の実行後に、SQL Editor で実行します。実行前に、ファイル冒頭の確認クエリを実行してください。戻す場合は、ファイル冒頭の手順(0013 の `list_members` の定義の再実行)に従います。
