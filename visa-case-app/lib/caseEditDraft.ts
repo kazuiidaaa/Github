@@ -1,3 +1,4 @@
+import { hasAcceptedDateError } from "@/lib/acceptedDate";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { MessageParams } from "@/lib/i18n/translate";
 import { needsTargetStatus, type CaseRecord, type ProcedureType } from "@/lib/types";
@@ -5,8 +6,8 @@ import { needsTargetStatus, type CaseRecord, type ProcedureType } from "@/lib/ty
 /**
  * iPhone 版の案件の編集シート（components/mobile/CaseEditSheet.tsx）の、入力内容の扱い。
  * 画面の状態は持たない純粋な関数。編集できる項目と検証の規則は、PC 版 components/CaseInfoEditor.tsx と同じ
- * （案件名・手続種別・現在の在留資格・変更後／希望する在留資格・メモ。案件名は必須で 100 文字まで、変更後は手続によって必須）。
- * 受任日など PC 版の編集欄にあっても iPhone 版のシートに載せない項目は、保存でも触れない。
+ * （案件名・手続種別・現在の在留資格・変更後／希望する在留資格・受任日・メモ。案件名は必須で 100 文字まで、変更後は手続によって必須）。
+ * 受任日も PC 版と同じ（任意。存在しない日付は誤り。値は YYYY-MM-DD、未入力は空文字）。シートに載せない項目（申請予定日など）は、保存でも触れない。
  */
 
 type T = (key: MessageKey, params?: MessageParams) => string;
@@ -17,11 +18,13 @@ export interface CaseEditDraft {
   procedureType: ProcedureType;
   currentStatus: string;
   targetStatus: string;
+  /** 受任日（YYYY-MM-DD。未入力は空文字） */
+  acceptedDate: string;
   memo: string;
 }
 
 /** 検証する欄（画面の上からの並び順）。保存時は、この順で最初の誤りの欄へフォーカスを移す */
-export const CASE_EDIT_ERROR_ORDER = ["caseName", "targetStatus"] as const;
+export const CASE_EDIT_ERROR_ORDER = ["caseName", "targetStatus", "acceptedDate"] as const;
 export type CaseEditErrorKey = (typeof CASE_EDIT_ERROR_ORDER)[number];
 export type CaseEditErrors = Partial<Record<CaseEditErrorKey, string>>;
 
@@ -34,6 +37,7 @@ export function draftFromRecord(record: CaseRecord): CaseEditDraft {
     procedureType: record.procedureType,
     currentStatus: record.currentStatus,
     targetStatus: record.targetStatus,
+    acceptedDate: record.acceptedDate,
     memo: record.memo,
   };
 }
@@ -48,6 +52,7 @@ export function isDraftDirty(initial: CaseEditDraft, draft: CaseEditDraft): bool
     initial.procedureType !== draft.procedureType ||
     initial.currentStatus !== draft.currentStatus ||
     effectiveTarget(initial) !== effectiveTarget(draft) ||
+    initial.acceptedDate !== draft.acceptedDate ||
     initial.memo !== draft.memo
   );
 }
@@ -58,10 +63,11 @@ export function validateCaseEdit(draft: CaseEditDraft, t: T, targetLegend: strin
   if (!draft.caseName.trim()) next.caseName = t("caseNew.errCaseNameRequired");
   else if (draft.caseName.length > CASE_NAME_MAX) next.caseName = t("caseNew.errCaseNameTooLong");
   if (needsTargetStatus(draft.procedureType) && !draft.targetStatus.trim()) next.targetStatus = t("caseNew.errTargetRequired", { label: targetLegend });
+  if (hasAcceptedDateError(draft.acceptedDate)) next.acceptedDate = t("caseNew.errAcceptedDate");
   return next;
 }
 
-/** 保存する案件。シートに無い項目（受任日・申請人情報など）は、現在の記録のまま残す */
+/** 保存する案件。シートに無い項目（申請予定日・申請人情報など）は、現在の記録のまま残す */
 export function applyCaseEdit(c: CaseRecord, draft: CaseEditDraft): CaseRecord {
   return {
     ...c,
@@ -69,6 +75,7 @@ export function applyCaseEdit(c: CaseRecord, draft: CaseEditDraft): CaseRecord {
     procedureType: draft.procedureType,
     currentStatus: draft.currentStatus.trim(),
     targetStatus: needsTargetStatus(draft.procedureType) ? draft.targetStatus.trim() : "",
+    acceptedDate: draft.acceptedDate,
     memo: draft.memo,
   };
 }
@@ -90,8 +97,8 @@ export interface CaseEditDeps {
   update: (id: string, fn: (c: CaseRecord) => CaseRecord) => void;
   /** 依頼した保存が終わるのを待ち、失敗したときだけ失敗の文を返す（成功は空文字） */
   settle: () => Promise<string>;
-  /** 監査ログ（PC 版と同じ logAudit。保存の成否には含めない） */
-  audit: (caseId: string, action: string) => void;
+  /** 監査ログ（PC 版と同じ logAudit。保存の成否には含めない）。detail は、変わった項目名のみ（日付の値は残さない） */
+  audit: (caseId: string, action: string, detail?: Record<string, unknown>) => void;
 }
 
 /**
@@ -118,6 +125,7 @@ export async function submitCaseEdit(args: {
   } catch {
     return { kind: "failed" };
   }
-  deps.audit(record.id, "case_info_saved");
+  // PC 版と同じ：日付の値は監査ログに残さず、変更された項目名のみを記録する
+  deps.audit(record.id, "case_info_saved", draft.acceptedDate !== record.acceptedDate ? { acceptedDate: draft.acceptedDate } : undefined);
   return { kind: "saved" };
 }

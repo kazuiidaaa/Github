@@ -9,8 +9,9 @@ vi.mock("../lib/store", () => ({
   logAudit: () => {},
 }));
 
+import { DateRow } from "../components/mobile/FormRows";
 import { CaseEditAction, CaseEditSheet } from "../components/mobile/CaseEditSheet";
-import { applyCaseEdit, cancelOutcome, draftFromRecord, isDraftDirty, submitCaseEdit, validateCaseEdit, type CaseEditDeps } from "../lib/caseEditDraft";
+import { applyCaseEdit, CASE_EDIT_ERROR_ORDER, cancelOutcome, draftFromRecord, isDraftDirty, submitCaseEdit, validateCaseEdit, type CaseEditDeps } from "../lib/caseEditDraft";
 import { EMPTY_FORM_DETAILS } from "../lib/formDetails";
 import { jaT } from "../lib/i18n/jaT";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord } from "../lib/types";
@@ -55,11 +56,34 @@ describe("編集の開閉と表示の制御", () => {
     expect(m.indexOf("案件の編集")).toBeLessThan(m.indexOf("完了"));
     expect(m.match(/min-h-\[44px\]/g)!.length).toBeGreaterThanOrEqual(6);
   });
-  it("案件名・手続・在留資格・メモを出す。受任日など他の項目は出さない", () => {
+  it("案件名・手続・在留資格・受任日・メモを出す。申請予定日など他の項目は出さない", () => {
     const m = renderToStaticMarkup(<CaseEditSheet record={record} onClose={() => {}} />);
-    for (const s of ["試験案件", "現在の在留資格", "変更後の在留資格", "メモ", "試験のメモ", "留学"]) expect(m).toContain(s);
-    expect(m).not.toContain("受任日");
-    expect(m).not.toContain("申請予定日");
+    for (const s of ["試験案件", "現在の在留資格", "変更後の在留資格", "受任日", "2026/05/01", "メモ", "試験のメモ", "留学"]) expect(m).toContain(s);
+    expect(m).not.toContain("申請予定日（");
+  });
+  it("受任日の欄：見出しと入力欄が結び付き、数字のキーボード・16px・44pt 以上で、補足の文が入力欄に結び付く", () => {
+    const m = renderToStaticMarkup(<CaseEditSheet record={record} onClose={() => {}} />);
+    expect(m).toMatch(/<label for="m-case-edit-acceptedDate"[^>]*>受任日/);
+    const input = m.match(/<input[^>]*id="m-case-edit-acceptedDate"[^>]*>/)![0];
+    expect(input).toContain('inputMode="numeric"');
+    expect(input).toContain("min-h-[44px]");
+    expect(input).toContain("text-base");
+    expect(input).toContain("aria-describedby");
+    expect(m).toContain(t("input.acceptedDateField_hint"));
+  });
+  it("受任日が未入力の案件でも欄を出す（空欄）", () => {
+    const m = renderToStaticMarkup(<CaseEditSheet record={makeCase({ acceptedDate: "" })} onClose={() => {}} />);
+    expect(m.match(/<input[^>]*id="m-case-edit-acceptedDate"[^>]*>/)![0]).toContain('value=""');
+  });
+  it("受任日が申請予定日より後なら、三角の印と文で注意を出す（保存は止めない）", () => {
+    const m = renderToStaticMarkup(<CaseEditSheet record={makeCase({ acceptedDate: "2026-07-01" })} onClose={() => {}} />);
+    expect(m).toContain('role="note"');
+    expect(m).toContain("注意：受任日が、申請予定日（2026-06-01）より後");
+    expect(renderToStaticMarkup(<CaseEditSheet record={record} onClose={() => {}} />)).not.toContain('role="note"');
+  });
+  it("閲覧のみの役割には、受任日を含め編集を出さない", () => {
+    ctx.role = "viewer";
+    expect(renderToStaticMarkup(<CaseEditAction record={record} />)).not.toContain("受任日");
   });
   it("変更後の在留資格の欄は、手続種別（needsTargetStatus）に従って出し分ける", () => {
     const renewal = renderToStaticMarkup(<CaseEditSheet record={makeCase({ procedureType: "renewal", targetStatus: "" })} onClose={() => {}} />);
@@ -70,13 +94,24 @@ describe("編集の開閉と表示の制御", () => {
   });
 });
 
+describe("受任日の行の誤り表示", () => {
+  it("誤りは図形の印（svg）と文で示し、入力欄に aria-invalid と説明を結び付け、折り返せる", () => {
+    const m = renderToStaticMarkup(<DateRow id="d1" label="受任日" value="2026-02-30" onChange={() => {}} error="日付が正しくありません" hint="補足" />);
+    expect(m).toContain("日付が正しくありません");
+    expect(m).toMatch(/<svg[^>]*aria-hidden="true"/);
+    expect(m).toContain("break-words");
+    expect(m).toContain('aria-invalid="true"');
+    expect(m).toMatch(/aria-describedby="[^"]+ [^"]+"/);
+  });
+});
+
 describe("キャンセルの動き", () => {
   it("変更が無ければ、そのまま閉じる", () => {
     expect(isDraftDirty(initial, { ...initial })).toBe(false);
     expect(cancelOutcome(false)).toBe("close");
   });
   it("案件名・手続・在留資格・メモのどれかを変えると、確認を出す", () => {
-    for (const patch of [{ caseName: "別名" }, { procedureType: "renewal" as const }, { currentStatus: "永住者" }, { targetStatus: "永住者" }, { memo: "" }]) {
+    for (const patch of [{ caseName: "別名" }, { procedureType: "renewal" as const }, { currentStatus: "永住者" }, { targetStatus: "永住者" }, { acceptedDate: "2026-05-02" }, { acceptedDate: "" }, { memo: "" }]) {
       const dirty = isDraftDirty(initial, { ...initial, ...patch });
       expect(dirty).toBe(true);
       expect(cancelOutcome(dirty)).toBe("confirm");
@@ -104,11 +139,21 @@ describe("検証（PC 版の案件情報と同じ規則）", () => {
     expect(validateCaseEdit({ ...initial, targetStatus: " " }, t, legend).targetStatus).toContain(legend);
     expect(validateCaseEdit({ ...initial, procedureType: "renewal", targetStatus: "" }, t, legend).targetStatus).toBeUndefined();
   });
-  it("保存では前後の空白を除き、不要な変更後は空にし、受任日などシートに無い項目は変えない", () => {
-    const next = applyCaseEdit(record, { ...initial, caseName: " 新名 ", procedureType: "renewal", targetStatus: "永住者" });
+  it("受任日：未入力は正常、存在しない日付は誤り（PC 版と同じ文言）", () => {
+    expect(validateCaseEdit({ ...initial, acceptedDate: "" }, t, legend).acceptedDate).toBeUndefined();
+    expect(validateCaseEdit({ ...initial, acceptedDate: "2026-02-28" }, t, legend).acceptedDate).toBeUndefined();
+    expect(validateCaseEdit({ ...initial, acceptedDate: "2026-02-30" }, t, legend).acceptedDate).toBe(t("caseNew.errAcceptedDate"));
+  });
+  it("誤りの順は、案件名・変更後の在留資格・受任日", () => {
+    const e = validateCaseEdit({ ...initial, caseName: "", targetStatus: "", acceptedDate: "2026-13-40" }, t, legend);
+    expect(CASE_EDIT_ERROR_ORDER.filter((k) => e[k])).toEqual(["caseName", "targetStatus", "acceptedDate"]);
+  });
+  it("保存では前後の空白を除き、不要な変更後は空にし、申請予定日などシートに無い項目は変えない", () => {
+    const next = applyCaseEdit(record, { ...initial, caseName: " 新名 ", procedureType: "renewal", targetStatus: "永住者", acceptedDate: "2026-05-09" });
     expect(next.caseName).toBe("新名");
     expect(next.targetStatus).toBe("");
-    expect(next.acceptedDate).toBe("2026-05-01");
+    expect(next.acceptedDate).toBe("2026-05-09");
+    expect(applyCaseEdit(record, { ...initial, acceptedDate: "" }).acceptedDate).toBe("");
     expect(next.plannedApplicationDate).toBe("2026-06-01");
   });
 });
@@ -133,7 +178,20 @@ describe("保存の成功と失敗", () => {
     const deps = make(() => Promise.resolve(""));
     expect(await run(deps)).toEqual({ kind: "saved" });
     expect(deps.update).toHaveBeenCalledWith("c1", expect.any(Function));
-    expect(deps.audit).toHaveBeenCalledWith("c1", "case_info_saved");
+    expect(deps.audit).toHaveBeenCalledWith("c1", "case_info_saved", undefined);
+  });
+  it("受任日を変えた保存は、PC 版と同じく変わった項目名つきで監査ログを残す。変えなければ項目名なし", async () => {
+    const deps = make(() => Promise.resolve(""));
+    expect(await run(deps, { ...initial, acceptedDate: "2026-05-09" })).toEqual({ kind: "saved" });
+    expect(deps.audit).toHaveBeenCalledWith("c1", "case_info_saved", { acceptedDate: "2026-05-09" });
+    expect(deps.update).toHaveBeenCalledWith("c1", expect.any(Function));
+    const fn = deps.update.mock.calls[0][1] as (c: CaseRecord) => CaseRecord;
+    expect(fn(record).acceptedDate).toBe("2026-05-09");
+  });
+  it("不正な受任日では保存せず、受任日の欄を返す", async () => {
+    const deps = make(() => Promise.resolve(""));
+    expect(await run(deps, { ...initial, acceptedDate: "2026-02-30" })).toMatchObject({ kind: "invalid", first: "acceptedDate" });
+    expect(deps.update).not.toHaveBeenCalled();
   });
   it("保存の失敗（失敗の文・例外）は failed を返し、監査ログを残さない（シートは閉じない）", async () => {
     const a = make(() => Promise.resolve("保存に失敗しました：試験"));

@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
+import { DateField } from "@/components/DateField";
 import { Badge, ToneIcon } from "@/components/ui";
 import { useT } from "@/lib/i18n/LanguageProvider";
 
@@ -203,6 +204,64 @@ export function TextRow({
       ) : (
         <div className="pb-1" />
       )}
+    </li>
+  );
+}
+
+/**
+ * 日付の行。PC 版と同じ DateField（数字のキーボードで年4桁・月・日。値は YYYY-MM-DD、未入力は空文字）。
+ * 見出しを上、入力欄を下に置く。誤りは図形（ToneIcon）と文で示し、折り返す。注意（warning）は黄の三角と文で、保存は止めない。
+ */
+export function DateRow({
+  id,
+  label,
+  value,
+  onChange,
+  error,
+  hint,
+  warning,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  /** 保存の検証の誤りの文（DateField 自身の「途中の入力」の案内より優先） */
+  error?: string;
+  hint?: string;
+  /** 保存はできる注意の文 */
+  warning?: string;
+}) {
+  const labelId = useId();
+  const noteId = useId();
+  return (
+    <li className="m-row relative">
+      <div className="px-4 pt-2">
+        <RowLabel htmlFor={id} id={labelId} label={label} />
+        <DateField
+          id={id}
+          value={value}
+          onChange={onChange}
+          error={error}
+          marked
+          aria-describedby={hint ? noteId : undefined}
+          // text-base（16px）：iOS Safari がフォーカス時に拡大しない。高さは 44pt 以上
+          className="min-h-[44px] w-full min-w-0 bg-transparent py-2 text-base outline-none placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-accent/40"
+        />
+      </div>
+      {hint && (
+        <p id={noteId} className="px-4 pb-2.5 pt-1 text-xs text-slate-600">
+          {hint}
+        </p>
+      )}
+      {warning && (
+        <p role="note" className="mx-4 mb-2.5 flex items-start gap-1.5 rounded-[10px] bg-amber-50 p-3 text-xs font-bold leading-relaxed text-amber-900">
+          <span className="mt-0.5 shrink-0">
+            <ToneIcon tone="yellow" />
+          </span>
+          <span className="min-w-0 break-words">{warning}</span>
+        </p>
+      )}
+      {!hint && !warning && <div className="pb-1" />}
     </li>
   );
 }
