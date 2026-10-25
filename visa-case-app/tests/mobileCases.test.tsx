@@ -51,21 +51,27 @@ describe("案件一覧（iPhone 版）の描画", () => {
     const m = render();
     expect(m.match(/<h1/g)).toHaveLength(1);
     expect(m).toContain('role="search"');
-    expect(m).toContain('aria-label="要点（押すと絞り込み）"');
-    expect(m).toContain('aria-label="状態で絞り込む"');
-    expect(m).toContain('aria-label="並び替え（現在：最終更新が新しい順）"');
-    expect(m).toContain("並び順：最終更新が新しい順");
-    // 状態のチップは残し、手続の種類・条件はメニューのボタンにする（チップ列は 1 つだけ）
-    expect(m.match(/role="group"/g)).toHaveLength(2); // 要点カードの群と、状態のチップ
-    expect(m).toContain("手続：すべて");
-    expect(m).toContain('aria-label="条件で絞り込む"');
+    // 要点カード・状態のチップ・メニューは置かない（絞り込みは 1 つのシートへ）
+    expect(m).not.toContain("要点（押すと絞り込み）");
+    expect(m).not.toContain("状態で絞り込む");
+    expect(m).not.toContain('role="group"');
+    expect(m).not.toContain('aria-haspopup="menu"');
+    expect(m).not.toContain("手続：");
+    // 絞り込みボタンは 1 つ。指定がなければ数のバッジを出さない。シートは閉じている
+    expect(m.match(/aria-haspopup="dialog"/g)).toHaveLength(1);
+    expect(m).toContain('aria-label="絞り込みと並び替え"');
+    expect(m).toContain('aria-expanded="false"');
+    expect(m).not.toContain('role="dialog"');
+    // 件数は 1 行で、大見出しの後・検索欄の前
+    expect(m.match(/該当 3 件（全 3 件）/g)).toHaveLength(1);
+    expect(m.indexOf("<h1")).toBeLessThan(m.indexOf("該当 3 件"));
+    expect(m.indexOf("該当 3 件")).toBeLessThan(m.indexOf('role="search"'));
     // 新規登録はナビゲーションバー右の「+」。引いて更新（キーボード用の再読み込みボタン）を付ける
     expect(m).toContain('aria-label="新規案件"');
     expect(m).toContain("再読み込み");
     expect(m).not.toContain("更新できませんでした");
     expect(names(m).sort()).toEqual(["demo-sample-a", "demo-sample-b", "demo-sample-c"]);
     expect(m).toContain("サンプル案件A");
-    expect(m).toContain("該当 3 件（全 3 件）");
     // 状態は文字（Badge）で示す
     expect(m).toContain("申請準備完了");
   });
@@ -76,11 +82,12 @@ describe("案件一覧（iPhone 版）の描画", () => {
 });
 
 describe("絞り込み・並び替え（URL の反映）", () => {
-  it("status で絞り込み、選択中のチップは aria-pressed とチェックの印で示す", () => {
+  it("status で絞り込み、指定中の数をボタンのバッジと読み上げ名で示す", () => {
     const m = render("status=application_ready");
     expect(names(m)).toEqual(["demo-sample-b"]);
     expect(m).toContain("該当 1 件（全 3 件）");
-    expect(m).toMatch(/aria-pressed="true"[^>]*>(<span[^>]*>)<svg/);
+    expect(m).toContain('aria-label="絞り込みと並び替え（1件を指定中）"');
+    expect(m).toMatch(/aria-hidden="true"[^>]*>1<\/span><\/button>/);
   });
   it("within30 と sort=expiry（期限が近い順）", () => {
     expect(names(render("within30=1&sort=expiry"))).toEqual(["demo-sample-c"]);
@@ -97,9 +104,9 @@ describe("絞り込み・並び替え（URL の反映）", () => {
     expect(names(render("missing=1")).includes("demo-sample-b")).toBe(false);
     expect(names(render("nocard=1")).length).toBe(3);
   });
-  it("要点カードの選択状態は、cardFilter と対応する URL から求める", () => {
-    const m = render("status=review_required");
-    expect(m).toMatch(/aria-pressed="true"[^>]*>[\s\S]*?確認待ち/);
+  it("指定中の数は、状態・手続・条件・既定と違う並び順を数える（検索語は数えない）", () => {
+    expect(render("q=x")).toContain('aria-label="絞り込みと並び替え"');
+    expect(render("status=review_required&within30=1&sort=expiry")).toContain("（3件を指定中）");
   });
   it("手続の種類で絞り込む", () => {
     expect(names(render("procedure=renewal")).length).toBe(3);
