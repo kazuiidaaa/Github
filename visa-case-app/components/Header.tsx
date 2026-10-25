@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { accountDisplayLabel } from "@/lib/accountName";
 import { exitDemo, signOut, useSession } from "@/lib/auth";
 import { useDemo } from "@/lib/demo";
 import { useT } from "@/lib/i18n/LanguageProvider";
@@ -116,10 +117,10 @@ export function Header() {
                   <span className="flex min-w-0 max-w-full items-center gap-2 text-sm text-slate-600 lg:gap-3">
                     <Link
                       href="/account"
-                      title={session.user.email}
+                      title={accountDisplayLabel(session.user.user_metadata, session.user.email)}
                       className="block min-w-0 max-w-[14rem] truncate font-bold text-blue-700 hover:underline lg:max-w-none"
                     >
-                      {session.user.email}
+                      {accountDisplayLabel(session.user.user_metadata, session.user.email)}
                     </Link>
                     <button
                       onClick={() => void signOut()}

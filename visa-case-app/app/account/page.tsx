@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FullNameSection, UserIdValue } from "@/components/AccountIdentity";
 import { MembersPanel } from "@/components/MembersPanel";
 import { Button, Field, inputClass } from "@/components/ui";
 import { changePassword, signOut, useSession } from "@/lib/auth";
@@ -112,7 +113,9 @@ function AccountContent() {
             <dt className="text-slate-500">{t("account.email")}</dt>
             <dd className="mb-3 break-all sm:mb-0">{info.email}</dd>
             <dt className="text-slate-500">{t("account.userId")}</dt>
-            <dd className="mb-3 break-all font-mono text-xs sm:mb-0">{info.userId}</dd>
+            <dd className="mb-3 sm:mb-0">
+              <UserIdValue userId={info.userId} />
+            </dd>
             <dt className="text-slate-500">{t("account.lastSignIn")}</dt>
             <dd className="mb-3 sm:mb-0">{info.lastSignInAt ? formatDateTime(info.lastSignInAt) : "-"}</dd>
             <dt className="text-slate-500">{t("account.office")}</dt>
@@ -129,6 +132,8 @@ function AccountContent() {
           </Button>
         </div>
       </section>
+
+      <FullNameSection />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 font-semibold">{t("account.orgTitle")}</h2>
