@@ -53,6 +53,7 @@ export function GroupedList({
  * - onClick   押したときの処理。href が無いときだけ使う
  * - chevron   シェブロンを出すか。省略時は、押せる行なら true、表示のみなら false
  * - current   現在地の行なら true（aria-current="page"）
+ * - pressed   onClick の行が「選択のオン・オフ」のとき、今の状態（aria-pressed）。任意
  */
 export function GroupedRow({
   label,
@@ -65,6 +66,7 @@ export function GroupedRow({
   onClick,
   chevron,
   current,
+  pressed,
 }: {
   label?: ReactNode;
   value?: ReactNode;
@@ -76,6 +78,7 @@ export function GroupedRow({
   onClick?: () => void;
   chevron?: boolean;
   current?: boolean;
+  pressed?: boolean;
 }) {
   const interactive = href !== undefined || onClick !== undefined;
   const showChevron = chevron ?? interactive;
@@ -109,7 +112,7 @@ export function GroupedRow({
           {body}
         </Link>
       ) : onClick ? (
-        <button type="button" onClick={onClick} aria-current={current ? "page" : undefined} className={cls}>
+        <button type="button" onClick={onClick} aria-pressed={pressed} aria-current={current ? "page" : undefined} className={cls}>
           {body}
         </button>
       ) : (
