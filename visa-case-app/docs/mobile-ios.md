@@ -67,6 +67,11 @@ OS の文字サイズや、ブラウザーの文字拡大（html の font-size 2
 ## アカウント本格版（/m/account）
 - Supabase 接続時（デモ以外）に、`components/MobileAccount.tsx`（`MobileAccountDetails`）を最初の一覧（ユーザー・ログアウト）の下に出す。PC 版 `app/account/page.tsx` と同じ関数を使う：`getAccount`・`listAudit`・`renameOrganization`（lib/store.ts）、`changePassword`（lib/auth.ts）。DB の変更は無い。デモ・仮データ方式は従来どおり説明のみ。
 - 載せたもの：最終ログイン、事務所名と役割、事務所名の変更（所有者のみ。他は入力と保存が無効で、理由を一覧の下に出す）、パスワード変更（current-password / new-password、メールは隠し欄 username）、監査ログ（直近100件。操作名と、日時・案件名）。ユーザー ID は iPhone 版では出さない。
+- ユーザー ID と氏名（上の「ユーザー ID は出さない」を改める）：ログイン中（Supabase 接続・デモ以外）は、最初の一覧を `components/MobileAccountIdentity.tsx` が出す。氏名・メール・ユーザー ID・ログアウトの順。
+  - 氏名は Supabase Auth の `user_metadata.full_name` に保存する（`lib/auth.ts` の `updateFullName`、読み取りと検査は `lib/accountName.ts`）。データベースの表・RPC・マイグレーションは変えない。保存後は `onAuthStateChange`（USER_UPDATED）で画面が更新される。
+  - 未登録のときは、注意の図形＋「氏名が未登録です」＋「登録」の行と、一覧の下の案内文を出す。登録済みなら「氏名 ○○　編集」。どちらも行を押すと、モーダルシート（左「キャンセル」・中央に題・右「完了」。ボタンは 44pt 以上、入力は 16px、シート内でスクロール）が開く。検査は、空・制御文字・100 文字超を弾く。変更が無ければ保存せず閉じる。
+  - ユーザー ID は長いので、`break-all` で折り返して全文を出し、「ユーザーIDをコピー」の行（クリップボード。成功は図形＋文字、失敗は長押しの案内）を付ける。実際の氏名・メール・ID は、コード・テスト・docs に書かない（テストは架空の値）。
+  - デモ・仮データ方式は従来のまま（氏名・ID の行を出さない）。PC 版は変更しない。文言は `mobileAccount` 区分（英語・韓国語は下書き）。テストは `tests/accountName.test.ts`・`tests/mobileAccountIdentity.test.tsx`。
 - メンバー管理は別の PR。`MobileAccountDetails` 内の「メンバー管理の差し込み位置」に GroupedList を足す。それまで、PC 版への行はメンバー管理のみ案内する。
 - 文言は `account` 区分を共用。`mobile.accountDesktop` / `accountDesktopNote` はメンバー管理のみの案内に変更。テストは `tests/mobileAccountDetails.test.tsx`。
 

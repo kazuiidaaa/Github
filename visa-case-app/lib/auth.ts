@@ -2,6 +2,7 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { checkFullName, FULL_NAME_KEY } from "./accountName";
 import { passwordUpdateErrorMessage } from "./authMessages";
 import { clearDemoData, isDemo, localKey, setDemo } from "./demo";
 import { buildDemoSeedCases } from "./demoSeed";
@@ -123,6 +124,25 @@ export function exitDemo() {
 
 export async function signOut() {
   await supabase?.auth.signOut();
+}
+
+/**
+ * ログイン中の本人の氏名を、Supabase Auth の user_metadata.full_name に保存する（データベースの表は使わない）。
+ * 失敗時は表示用の文言（日本語。画面で訳す）を返す。成功すると onAuthStateChange（USER_UPDATED）で useSession が更新される。
+ */
+export async function updateFullName(name: string): Promise<string | null> {
+  if (!supabase) return "Supabase の接続情報が設定されていません。";
+  const checked = checkFullName(name);
+  if (!checked.ok) return "処理に失敗しました。時間をおいて再度お試しください。";
+  try {
+    const { error } = await supabase.auth.updateUser({ data: { [FULL_NAME_KEY]: checked.value } });
+    if (!error) return null;
+    return error.status && error.status < 500
+      ? "処理に失敗しました。時間をおいて再度お試しください。"
+      : "サーバーに接続できません。時間をおいて再度お試しください。";
+  } catch {
+    return "サーバーに接続できません。時間をおいて再度お試しください。";
+  }
 }
 
 /** 現在のパスワードで再認証したうえで、パスワードを変更する。失敗時は表示用の文言を返す。 */
