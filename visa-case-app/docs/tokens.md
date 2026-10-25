@@ -6,7 +6,7 @@ PC版（Web）と iPhone 版（SwiftUI）で、色・動き・影の値を 1 か
 
 | 区分 | 場所 | 内容 |
 | --- | --- | --- |
-| 正本 | `tokens/*.tokens.json`（W3C DTCG 形式） | `base`（背景・文字・アクセント等）、`color`（slate・blue・red・amber・yellow・green の各段）、`semantic`（danger / success / warning / info / muted と text / soft / line）、`motion`（曲線・時間）、`shadow`（影） |
+| 正本 | `tokens/*.tokens.json`（W3C DTCG 形式） | `base`（背景・文字・アクセント等）、`color`（slate・blue・red・amber・yellow・green の各段）、`semantic`（danger / success / warning / info / muted と text / soft / line）、`motion`（曲線・時間）、`shadow`（影）、`mac`（PC 版 Mac 風の値。docs/pc-mac-ui.md） |
 | 生成設定 | `style-dictionary.config.mjs`、`tokens/lib.mjs` | Style Dictionary v4。書き出しの処理は `tokens/lib.mjs`（回帰テストと共用） |
 | 生成物（コミットする） | `tokens/build/tokens.generated.css` | CSS 変数（明色は `:root`、暗色は `:root[data-theme="dark"]`） |
 | 生成物（コミットする） | `tokens/build/DesignTokens.swift` | SwiftUI 用の色（明暗の組）、動き、影 |

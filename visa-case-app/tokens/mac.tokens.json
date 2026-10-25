@@ -1,0 +1,88 @@
+{
+  "color": {
+    "$description": "PC 版を macOS 風に寄せるための面の階層と線（Issue #456 PR1、docs/pc-mac-ui.md）。PR2 以降で使う準備として追加。CSS 専用（iPhone 版の Swift には出力しない）。",
+    "window": {
+      "$type": "color",
+      "$description": "ウィンドウ背景（最も奥の面）。値は base.background と同じ。",
+      "$value": "#f5f5f7",
+      "$extensions": { "app.visa-case": { "dark": "#1d1d1f", "platforms": ["css"] } }
+    },
+    "grouped-surface": {
+      "$type": "color",
+      "$description": "グループ化した面（連絡先・システム設定の、角丸の白い一覧の面）。値は color.white と同じ。",
+      "$value": "#ffffff",
+      "$extensions": { "app.visa-case": { "dark": "#2c2c2e", "platforms": ["css"] } }
+    },
+    "sidebar": {
+      "$type": "color",
+      "$description": "サイドバーの面。ウィンドウ背景より一段暗い。文字は foreground / muted が 4.5 以上。",
+      "$value": "#ececf0",
+      "$extensions": { "app.visa-case": { "dark": "#252527", "platforms": ["css"] } }
+    },
+    "sidebar-selected": {
+      "$type": "color",
+      "$description": "サイドバーで選択中の行の面。選択は、この面に加えて文字の太さ・印でも示す（色だけにしない）。",
+      "$value": "#d6e8ff",
+      "$extensions": { "app.visa-case": { "dark": "#10375e", "platforms": ["css"] } }
+    },
+    "separator": {
+      "$type": "color",
+      "$description": "区切り線（一覧の行の間など。装飾の線）。入力欄・ボタンの枠は line-strong を使う。",
+      "$value": "#e0e0e5",
+      "$extensions": { "app.visa-case": { "dark": "#3a3a3d", "platforms": ["css"] } }
+    }
+  },
+  "focus-ring": {
+    "$description": "キーボード操作の焦点の輪。macOS 風の青。背景に対し 3 以上（非文字のコントラスト）。",
+    "$type": "color",
+    "$value": "#007aff",
+    "$extensions": { "app.visa-case": { "dark": "#0a84ff", "platforms": ["css"] } }
+  },
+  "radius": {
+    "$description": "角丸の段階。Tailwind の rounded-* の既定名と衝突しないよう mac- を付ける（rounded-mac-control など）。",
+    "mac-control": { "$type": "dimension", "$description": "ボタン・入力欄・小さな部品。", "$value": "6px", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-group": { "$type": "dimension", "$description": "グループ化した面・カード・一覧。", "$value": "10px", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-window": { "$type": "dimension", "$description": "ダイアログ・シート・ウィンドウ。", "$value": "12px", "$extensions": { "app.visa-case": { "platforms": ["css"] } } }
+  },
+  "control-height": {
+    "$description": "コントロールの高さ。PC（マウス）向け。最小 24px（WCAG 2.5.8）。iPhone は 44pt を維持し、これは使わない。",
+    "mac-small": { "$type": "dimension", "$value": "1.5rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-regular": { "$type": "dimension", "$value": "1.75rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-large": { "$type": "dimension", "$value": "2rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } }
+  },
+  "text": {
+    "$description": "文字の大きさの段階。本文 14px は従来の text-sm と同じ（macOS の 13px は、日本語・韓国語の可読性のため採らない）。Tailwind の text-mac-* で使う。",
+    "mac-caption": { "$type": "dimension", "$value": "0.75rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-caption--line-height": { "$type": "dimension", "$value": "1rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-footnote": { "$type": "dimension", "$value": "0.8125rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-footnote--line-height": { "$type": "dimension", "$value": "1.125rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-body": { "$type": "dimension", "$value": "0.875rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-body--line-height": { "$type": "dimension", "$value": "1.25rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-title3": { "$type": "dimension", "$value": "1.0625rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-title3--line-height": { "$type": "dimension", "$value": "1.5rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-title2": { "$type": "dimension", "$value": "1.375rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-title2--line-height": { "$type": "dimension", "$value": "1.75rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-title1": { "$type": "dimension", "$value": "1.75rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } },
+    "mac-title1--line-height": { "$type": "dimension", "$value": "2.125rem", "$extensions": { "app.visa-case": { "platforms": ["css"] } } }
+  },
+  "shadow": {
+    "$description": "控えめな macOS 風の影。mac-raised は面（カード）、mac-overlay はメニュー・ダイアログ・通知。PC 版のみ、globals.css が shadow-raised / shadow-overlay をこれに読み替える。",
+    "mac-raised": {
+      "$type": "shadow",
+      "$value": [
+        { "color": "rgb(0 0 0 / 0.04)", "offsetX": "0", "offsetY": "1px", "blur": "1px", "spread": "0" },
+        { "color": "rgb(0 0 0 / 0.07)", "offsetX": "0", "offsetY": "1px", "blur": "3px", "spread": "0" }
+      ],
+      "$extensions": { "app.visa-case": { "platforms": ["css"] } }
+    },
+    "mac-overlay": {
+      "$type": "shadow",
+      "$value": [
+        { "color": "rgb(0 0 0 / 0.08)", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1px" },
+        { "color": "rgb(0 0 0 / 0.18)", "offsetX": "0", "offsetY": "12px", "blur": "32px", "spread": "-4px" },
+        { "color": "rgb(0 0 0 / 0.08)", "offsetX": "0", "offsetY": "2px", "blur": "8px", "spread": "0" }
+      ],
+      "$extensions": { "app.visa-case": { "platforms": ["css"] } }
+    }
+  }
+}
