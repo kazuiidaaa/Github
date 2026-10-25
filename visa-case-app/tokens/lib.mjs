@@ -12,6 +12,7 @@ export const TOKEN_FILES = [
   "semantic.tokens.json",
   "motion.tokens.json",
   "shadow.tokens.json",
+  "mac.tokens.json",
 ];
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -119,7 +120,7 @@ export function generateSwift(entries) {
     "  /// 明色・暗色の両方の値を持つ色。",
     "  public enum Colors {",
   );
-  for (const e of entries.filter((x) => x.type === "color")) {
+  for (const e of entries.filter((x) => x.type === "color" && (!x.platforms || x.platforms.includes("swift")))) {
     const name = camel(e.path.slice(1));
     const l = swiftHex(resolveColor(entries, e, "light"));
     const d = swiftHex(resolveColor(entries, e, "dark"));
@@ -141,7 +142,7 @@ export function generateSwift(entries) {
     "    /// blur は CSS の blur 半径（px）。SwiftUI の radius に使うときは、見た目を確かめて調整する。",
     "    public struct Layer { public let x: Double, y: Double, blur: Double, spread: Double, opacity: Double }",
   );
-  for (const e of entries.filter((x) => x.type === "shadow")) {
+  for (const e of entries.filter((x) => x.type === "shadow" && (!x.platforms || x.platforms.includes("swift")))) {
     const layers = e.value.map((l) => {
       const op = l.color.match(/\/\s*([\d.]+)\s*\)/)[1];
       return `Layer(x: ${px(l.offsetX)}, y: ${px(l.offsetY)}, blur: ${px(l.blur)}, spread: ${px(l.spread)}, opacity: ${op})`;
