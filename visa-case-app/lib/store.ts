@@ -20,6 +20,11 @@ let cases: CaseRecord[] = EMPTY;
 let loaded = false;
 let loading: Promise<void> | null = null;
 let error = "";
+/** 書き込み（保存・削除）の回数と、ストアを作り直した回数。再取得の結果を捨てるかの判定に使う */
+let writes = 0;
+let epoch = 0;
+/** 実行中の再取得。あれば、新たに始めず同じものを返す（二重実行の防止） */
+let refetching: Promise<boolean> | null = null;
 /** ログイン中の利用者の役割。取得できていない間は null（権限なしとして扱う） */
 let role: string | null = usesSupabase() ? null : "owner";
 const listeners = new Set<() => void>();
@@ -129,8 +134,42 @@ export function ensureLoaded(): Promise<void> {
   return loading;
 }
 
+/**
+ * 読み込み済みのデータを取り直す（iPhone 版の「引いて更新」用）。成功は true、失敗は false。
+ * - 未読み込みなら ensureLoaded と同じ（その結果が読み込み済みか）。実行中の再取得があれば、同じ Promise を返す。
+ * - 失敗しても、手元の案件・権限は変えない。全体のエラー表示（error）にも触れず、呼び出し側が通知する。
+ * - 取得中に保存・削除・ログアウトがあった場合、古い結果で上書きしないよう、結果を捨てる（成功として返す）。
+ * - 直前までの保存が終わってから取得する。
+ */
+export function refetch(): Promise<boolean> {
+  if (!loaded) return ensureLoaded().then(() => loaded);
+  if (refetching) return refetching;
+  const startEpoch = epoch;
+  refetching = (async () => {
+    try {
+      await chain;
+      const startWrites = writes;
+      const next = usesSupabase() ? await remote.loadAll() : readLocal();
+      const nextRole = usesSupabase() ? (await remote.getAccount()).role || null : role;
+      if (epoch === startEpoch && writes === startWrites) {
+        cases = next;
+        role = nextRole;
+      }
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refetching = null;
+      emit();
+    }
+  })();
+  return refetching;
+}
+
 /** ログアウト時に、メモリ上の案件データを破棄する */
 export function resetStore() {
+  epoch++;
+  refetching = null;
   cases = EMPTY;
   loaded = false;
   loading = null;
@@ -169,6 +208,7 @@ export function useCase(id: string): CaseRecord | undefined {
 }
 
 export function saveCase(record: CaseRecord) {
+  writes++;
   const exists = cases.some((c) => c.id === record.id);
   cases = exists ? cases.map((c) => (c.id === record.id ? record : c)) : [record, ...cases];
   if (usesSupabase()) enqueue(() => remote.persistCase(record));
@@ -187,6 +227,7 @@ export function updateCase(id: string, fn: (c: CaseRecord) => CaseRecord) {
  * 監査ログは案件への外部キーを持たないため、削除後も残る。
  */
 export async function deleteCase(id: string): Promise<boolean> {
+  writes++;
   if (!usesSupabase()) {
     cases = cases.filter((c) => c.id !== id);
     writeLocal(cases);
