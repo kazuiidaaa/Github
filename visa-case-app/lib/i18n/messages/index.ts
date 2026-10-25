@@ -23,6 +23,7 @@ import { input } from "./input";
 import { labels } from "./labels";
 import { mobile } from "./mobile";
 import { mobileDetail } from "./mobileDetail";
+import { mobileNew } from "./mobileNew";
 
 /**
  * 訳表の区分の一覧。区分を足すときは、ここへ1行足し、reviewStatus.ts にも同じ区分を足す。
@@ -33,6 +34,7 @@ export const CATALOG = {
   documents, auth, about, caseList, home, account, documentView,
   caseNew, employment, casePage, caseRequirements, caseChecks, caseForm, casePoints, caseApplicant, caseInfo,
   mobile, mobileDetail,
+  mobile, mobileNew,
 } as const;
 
 export type Catalog = typeof CATALOG;
