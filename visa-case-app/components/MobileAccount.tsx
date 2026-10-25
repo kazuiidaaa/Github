@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
+import { MembersSection } from "@/components/mobile/MobileMembers";
 import { TextRow } from "@/components/mobile/FormRows";
 import { Button } from "@/components/ui";
 import { changePassword, useSession } from "@/lib/auth";
@@ -68,7 +69,7 @@ function PasswordRow({
  * getAccount / listAudit / renameOrganization（lib/store.ts）、changePassword（lib/auth.ts）。DB の変更は無い。
  * 表示：アカウント情報（最終ログイン・事務所名と役割）、事務所名の変更（所有者のみ）、パスワードの変更、監査ログ。
  * メールとログアウトは app/m/account/page.tsx の最初の一覧が出す。
- * メンバー管理（MembersPanel）は別の PR。追加するときは、下の「メンバー管理の差し込み位置」に GroupedList を足す。
+ * メンバー一覧（閲覧のみ。氏名またはメールアドレスと役割）は MobileMembers。追加・削除・役割の変更は PC 版の MembersPanel。
  */
 export function MobileAccountDetails() {
   const t = useT();
@@ -181,7 +182,8 @@ export function MobileAccountDetails() {
         )}
       </div>
 
-      {/* メンバー管理の差し込み位置（別の PR）：info && can(info.role, "manageMembers") のとき、ここに GroupedList を足す */}
+      {/* メンバー一覧（所有者・管理者のみ。出し分けは表示の制御で、認可はデータベース側の規則が行う） */}
+      <MembersSection role={info?.role} myUserId={userId} />
 
       <form onSubmit={savePassword} aria-label={t("account.pwTitle")}>
         <fieldset disabled={busy} className="min-w-0">

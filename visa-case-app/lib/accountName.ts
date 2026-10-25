@@ -37,3 +37,11 @@ export function checkFullName(input: string): FullNameCheck {
 export function accountDisplayLabel(metadata: unknown, email: string | null | undefined): string {
   return readFullName(metadata) || (email ?? "");
 }
+
+/**
+ * メンバー一覧の1行の表示名。ログイン中の本人の規則（accountDisplayLabel）と同じ：氏名が登録済みなら氏名のみ、
+ * 未登録（移行 0026 の適用前で列が無い場合を含む）ならメールアドレス。
+ */
+export function memberDisplayLabel(member: { displayName?: string; email: string }): string {
+  return accountDisplayLabel({ [FULL_NAME_KEY]: member.displayName }, member.email);
+}
