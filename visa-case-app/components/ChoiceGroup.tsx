@@ -13,6 +13,8 @@ export type ChoiceOption = {
   hint?: string;
   /** true にすると、一覧表示で先頭の「よく使う項目」にも並ぶ */
   featured?: boolean;
+  /** 「よく使う項目」の中での並び順（小さいほど先）。未指定の項目は、元の順で後ろに並ぶ */
+  featuredOrder?: number;
   disabled?: boolean;
   /** 指定すると、選択中のボタンを、この状態の色と図形（`Badge` と同じ）で表示する。未指定は、通常の選択色（チェック印） */
   tone?: Tone;
@@ -42,6 +44,11 @@ export type ChoiceGroupProps = {
   /** 一覧表示で、先頭の見出しに使う名前。既定は「よく使う項目」（表示言語に合わせて訳す） */
   featuredLabel?: string;
   /**
+   * true にすると、「よく使う項目」を近道のボタンとして先頭に置いたうえで、同じ項目を元の見出しの中にも並べる（全体の一覧は見出しごとにそろう）。
+   * 近道のボタンは選択のオン・オフ（aria-pressed）で、ラジオの項目は見出しの中の 1 つずつだけ。絞り込み中は近道を出さない。既定は false（見出しに重ねない）。
+   */
+  featuredInGroups?: boolean;
+  /**
    * 指定すると、選択中のとき、項目の下に「未選択に戻す」ボタンを出す（任意の選択のための引数）。
    * 押すと呼ばれ、呼び出し側が未選択の値（空文字など）にする。無効（disabled）のときと、未選択のときは出さない。
    * 未指定の既存の呼び出しは、これまでと同じ（選択済みの項目を押しても、何も変わらない）。
@@ -67,16 +74,16 @@ export function filterOptions(options: readonly ChoiceOption[], query: string): 
   return options.filter((o) => normalizeForSearch(`${o.label}${o.hint ?? ""}${o.group ?? ""}`).includes(q));
 }
 
-export type ChoiceSection = { key: string; heading: string; options: ChoiceOption[] };
+export type ChoiceSection = { key: string; heading: string; options: ChoiceOption[]; /** 近道のボタン（ラジオの項目には数えない） */ shortcut?: boolean };
 
-/** 「よく使う項目」を先頭に置き、続けて group ごとにまとめる（group の初出順）。よく使う項目は、元の見出しには重ねて並べない */
-export function buildSections(options: readonly ChoiceOption[], featuredLabel = FEATURED_DEFAULT): ChoiceSection[] {
+/** 「よく使う項目」を先頭に置き、続けて group ごとにまとめる（group の初出順）。よく使う項目は、既定では元の見出しに重ねて並べない（featuredInGroups で重ねる） */
+export function buildSections(options: readonly ChoiceOption[], featuredLabel = FEATURED_DEFAULT, featuredInGroups = false): ChoiceSection[] {
   const sections: ChoiceSection[] = [];
-  const featured = options.filter((o) => o.featured);
-  if (featured.length > 0) sections.push({ key: "featured", heading: featuredLabel, options: featured });
+  const featured = options.filter((o) => o.featured).sort((a, b) => (a.featuredOrder ?? Infinity) - (b.featuredOrder ?? Infinity));
+  if (featured.length > 0) sections.push({ key: "featured", heading: featuredLabel, options: featured, shortcut: featuredInGroups });
   const byGroup = new Map<string, ChoiceOption[]>();
   for (const o of options) {
-    if (o.featured) continue;
+    if (o.featured && !featuredInGroups) continue;
     const g = o.group ?? NO_GROUP;
     byGroup.set(g, [...(byGroup.get(g) ?? []), o]);
   }
@@ -134,6 +141,7 @@ export function ChoiceGroup({
   variant = "auto",
   searchable,
   featuredLabel,
+  featuredInGroups,
   onClear,
   clearLabel,
 }: ChoiceGroupProps) {
@@ -148,11 +156,17 @@ export function ChoiceGroup({
   const isList = variant === "list" || (variant === "auto" && options.length > SEGMENT_MAX);
   const showSearch = isList && (searchable ?? true);
   const visible = useMemo(() => (showSearch ? filterOptions(options, query) : [...options]), [options, query, showSearch]);
-  const sections = useMemo(() => (isList ? buildSections(visible, featuredLabel ?? t("input.choiceGroup_featured")) : []), [isList, visible, featuredLabel, t]);
+  const allSections = useMemo(
+    () => (isList ? buildSections(visible, featuredLabel ?? t("input.choiceGroup_featured"), featuredInGroups) : []),
+    [isList, visible, featuredLabel, featuredInGroups, t],
+  );
+  // 絞り込み中は、近道を出さない（結果は見出しの中に並ぶ）
+  const sections = useMemo(() => allSections.filter((s) => !s.shortcut || !query), [allSections, query]);
 
-  // 画面の並び順（「よく使う項目」を先頭に置いた順）。矢印キーの移動は、この順に従う。
-  const flat = useMemo(() => (isList ? sections.flatMap((s) => s.options) : visible), [isList, sections, visible]);
+  // 画面の並び順（「よく使う項目」を先頭に置いた順。近道のボタンは除く）。矢印キーの移動は、この順に従う。
+  const flat = useMemo(() => (isList ? sections.filter((s) => !s.shortcut).flatMap((s) => s.options) : visible), [isList, sections, visible]);
 
+  const selectedOption = options.find((o) => o.value === value);
   const selectedVisible = flat.some((o) => o.value === value && !o.disabled);
   const firstEnabled = flat.find((o) => !o.disabled)?.value;
   // 全体で 1 つだけ Tab で止まる項目（選択中。見えていなければ先頭の有効な項目）
@@ -200,6 +214,25 @@ export function ChoiceGroup({
     refs.current[target]?.focus();
   }
 
+  // 近道のボタン（選択のオン・オフ）。選択中はチェックの印と文字でも示す
+  function renderShortcut(o: ChoiceOption) {
+    const checked = o.value === value;
+    return (
+      <button
+        key={o.value}
+        type="button"
+        aria-pressed={checked}
+        disabled={disabled || o.disabled}
+        onClick={() => choose(o.value)}
+        className={`inline-flex min-h-[44px] w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60 ${checked ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white text-slate-800 hover:bg-slate-100"}`}
+      >
+        {checked && <CheckIcon />}
+        <span className="min-w-0 flex-1 break-words">{o.label}</span>
+        {checked && <span className="shrink-0 text-xs font-medium">{t("input.choiceGroup_selected")}</span>}
+      </button>
+    );
+  }
+
   function renderOption(o: ChoiceOption) {
     const checked = o.value === value;
     const off = disabled || o.disabled;
@@ -225,10 +258,11 @@ export function ChoiceGroup({
         className={`inline-flex min-h-[44px] items-center gap-2 border text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60 ${shape} ${tone} ${isList ? "w-full" : ""}`}
       >
         {checked && (o.tone ? <ToneIcon tone={o.tone} /> : <CheckIcon />)}
-        <span className="flex flex-col">
-          <span>{o.label}</span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="break-words">{o.label}</span>
           {o.hint && <span className="text-xs font-medium opacity-80">{o.hint}</span>}
         </span>
+        {checked && isList && <span className="shrink-0 text-xs font-medium">{t("input.choiceGroup_selected")}</span>}
       </button>
     );
   }
@@ -256,6 +290,12 @@ export function ChoiceGroup({
           </p>
         </div>
       )}
+      {isList && selectedOption && (
+        <p className="mb-2 flex items-start gap-1.5 text-sm font-bold">
+          <CheckIcon />
+          <span className="min-w-0 break-words">{t("input.choiceGroup_selectedIs", { label: selectedOption.label })}</span>
+        </p>
+      )}
 
       <div
         role="radiogroup"
@@ -277,7 +317,7 @@ export function ChoiceGroup({
                       {s.heading}
                     </div>
                   )}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{s.options.map(renderOption)}</div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{s.options.map(s.shortcut ? renderShortcut : renderOption)}</div>
                 </div>
               ))}
             </div>

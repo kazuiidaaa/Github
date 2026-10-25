@@ -4,8 +4,8 @@ import { ADVANCED_PROFESSIONAL_GRADE_2, ADVANCED_PROFESSIONAL_GRADES, ADVANCED_P
 
 /** 在留資格の選択肢に添える説明文（日本語）。呼び出し元が props として渡す。表示言語に合わせるときは、useStatusHints() を使う */
 export const STATUS_HINTS = {
-  current: "在留カードの「在留資格」欄の記載から選びます。例：技術・人文知識・国際業務",
-  target: "変更後（または取得したい）在留資格を選びます。例：技術・人文知識・国際業務",
+  current: "いま持っている在留資格を、在留カードの「在留資格」欄の記載から選びます。例：技術・人文知識・国際業務",
+  target: "変更後（または取得したい）在留資格を選びます。現在の在留資格とは別の欄です。例：技術・人文知識・国際業務",
   card: "在留カードの「在留資格」欄の記載どおりに選びます。",
 } as const;
 
@@ -25,11 +25,25 @@ export const FEATURED_RESIDENCE_STATUSES: readonly string[] = [
   "特定活動",
 ];
 
+/** 「身分や地位に応じた在留資格」（入管法別表第二）。残りの在留資格は「活動内容に応じた在留資格」（別表第一） */
+export const IDENTITY_RESIDENCE_STATUSES: readonly string[] = ["永住者", "日本人の配偶者等", "永住者の配偶者等", "定住者"];
+
 export const LEGACY_GROUP = "登録済みの入力";
-const OTHER_GROUP = "その他";
+const ACTIVITY_GROUP = "活動内容に応じた在留資格";
+const IDENTITY_GROUP = "身分や地位に応じた在留資格";
 
 /** 選択肢の見出し・注記の文言。省略時は日本語（既存の呼び出し・テストと同じ）。在留資格名そのものは、訳さない */
-export type ResidenceOptionText = { other: string; legacyGroup: string; legacyLabel: (value: string) => string };
+export type ResidenceOptionText = { activity: string; identity: string; legacyGroup: string; legacyLabel: (value: string) => string };
+
+/** 表示言語に合わせた ResidenceOptionText。t は useT() の返り値 */
+export function residenceOptionText(t: ReturnType<typeof useT>): ResidenceOptionText {
+  return {
+    activity: t("input.statusSelect_groupActivity"),
+    identity: t("input.statusSelect_groupIdentity"),
+    legacyGroup: t("input.statusSelect_groupLegacy"),
+    legacyLabel: (value) => t("input.statusSelect_legacyLabel", { value }),
+  };
+}
 
 /** 表示言語に合わせた、STATUS_HINTS と同じ形の説明文。呼び出し元（各画面）が hint として渡す */
 export function useStatusHints(): { current: string; target: string; card: string } {
@@ -38,17 +52,22 @@ export function useStatusHints(): { current: string; target: string; card: strin
 }
 
 /**
- * 在留資格の選択肢。よく使う項目を先頭に、残りは「その他」にまとめる。
+ * 在留資格の選択肢。「活動内容に応じた在留資格」と「身分や地位に応じた在留資格」の 2 つにまとめる。
+ * よく使う項目は featured を付けて、一覧の先頭の近道にも並べる（見出しの中にも残す）。
  * 過去に自由入力で保存された値（legacy）は、選択肢として残す。
  */
 export function residenceStatusOptions(legacy?: string, text?: ResidenceOptionText): ChoiceOption[] {
-  const otherGroup = text?.other ?? OTHER_GROUP;
+  const activityGroup = text?.activity ?? ACTIVITY_GROUP;
+  const identityGroup = text?.identity ?? IDENTITY_GROUP;
   const legacyGroup = text?.legacyGroup ?? LEGACY_GROUP;
-  const known: readonly string[] = RESIDENCE_STATUSES;
-  const featured = FEATURED_RESIDENCE_STATUSES.filter((s) => known.includes(s)).map((s) => ({ value: s, label: s, featured: true }));
-  const rest = RESIDENCE_STATUSES.filter((s) => !FEATURED_RESIDENCE_STATUSES.includes(s)).map((s) => ({ value: s, label: s, group: otherGroup }));
+  const statuses = RESIDENCE_STATUSES.map((s) => ({
+    value: s,
+    label: s,
+    group: IDENTITY_RESIDENCE_STATUSES.includes(s) ? identityGroup : activityGroup,
+    ...(FEATURED_RESIDENCE_STATUSES.includes(s) ? { featured: true, featuredOrder: FEATURED_RESIDENCE_STATUSES.indexOf(s) } : {}),
+  }));
   const old = legacy ? [{ value: legacy, label: text ? text.legacyLabel(legacy) : `${legacy}（登録済みの入力）`, group: legacyGroup }] : [];
-  return [...featured, ...old, ...rest];
+  return [...old, ...statuses];
 }
 
 /** 高度専門職の号の選択肢。2号は、許可されるとき（または保存済みのとき）だけ加える */
@@ -99,11 +118,7 @@ export function StatusSelect({
   // 過去に自由入力で保存した値も、選択肢として残して表示する
   const legacy = base && !(RESIDENCE_STATUSES as readonly string[]).includes(base) ? base : undefined;
   const name = legend ?? t("input.statusSelect_legend");
-  const optionText: ResidenceOptionText = {
-    other: t("input.statusSelect_groupOther"),
-    legacyGroup: t("input.statusSelect_groupLegacy"),
-    legacyLabel: (value) => t("input.statusSelect_legacyLabel", { value }),
-  };
+  const optionText = residenceOptionText(t);
   const main = (
     // id は、外から該当の欄へフォーカスを移すための目印（フォーカスは、中の選択済み・先頭の項目へ入る）
     <div id={id}>
@@ -117,6 +132,7 @@ export function StatusSelect({
       hint={hint}
       error={error}
       variant="list"
+      featuredInGroups
     />
     </div>
   );
