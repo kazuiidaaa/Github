@@ -1609,6 +1609,15 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "Family register transcript or removed family register transcript (full certificate of matters) of the Japanese national (the applicant's parent or adoptive parent)",
     "일본인(신청인의 부모 또는 양부모)의 호적등본 또는 제적등본(전부사항증명서)",
   ],
+  // 仮訳（Issue #452 C-6。認定・変更のシートの書類名）
+  "申請人の親の戸籍謄本又は除籍謄本（全部事項証明書）": [
+    "Family register transcript or removed family register transcript (full certificate of matters) of the applicant's parent",
+    "신청인의 부모의 호적등본 또는 제적등본(전부사항증명서)",
+  ],
+  "日本人（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）": [
+    "Family register transcript or removed family register transcript (full certificate of matters) of the Japanese national (the applicant's parent or adoptive parent)",
+    "일본인(신청인의 부모 또는 양부모)의 호적등본 또는 제적등본(전부사항증명서)",
+  ],
   "申請人の国籍国（外国）の機関から発行された結婚証明書": [
     "Marriage certificate issued by an authority of the applicant's country of nationality (foreign country)",
     "신청인의 국적국(외국) 기관에서 발급한 결혼 증명서",
