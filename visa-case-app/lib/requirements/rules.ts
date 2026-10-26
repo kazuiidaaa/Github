@@ -4229,6 +4229,8 @@ interface NihonjinDoc {
   rule: Omit<RequirementRule, "party" | "causes" | "categories" | "identities">;
   /** 手続ごとの対象の身分（省略した手続には出さない。全身分なら undefined 相当の ALL_IDENTITIES） */
   procedures: Partial<Record<NihonjinProcedure, ApplicantIdentity[]>>;
+  /** 手続ごとに書類名を変える場合の名称（シートの書類名のとおり。省略した手続は rule.name。Issue #452 C-6） */
+  names?: Partial<Record<NihonjinProcedure, string>>;
 }
 const NH_BOTH: ApplicantIdentity[] = ["spouse", "child"];
 const NH_SPOUSE: ApplicantIdentity[] = ["spouse"];
@@ -4241,7 +4243,12 @@ const NH_EXPENSE_NOTE =
 const NIHONJIN_PROCEDURE_DOCS: NihonjinDoc[] = [
   // 戸籍謄本：配偶者は3手続、実子・特別養子は認定・変更のみ（更新のシートに無い）
   { rule: { id: "nihonjin_spouse_family_register", name: "配偶者（日本人）の方の戸籍謄本（全部事項証明書）", level: "required" }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE, renewal: NH_SPOUSE } },
-  { rule: { id: "nihonjin_child_family_register", name: "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" }, procedures: { coe: NH_CHILD, change: NH_CHILD } },
+  {
+    rule: { id: "nihonjin_child_family_register", name: "日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）", level: "required" },
+    procedures: { coe: NH_CHILD, change: NH_CHILD },
+    // C-6：認定・変更はシートの書類名のとおり別にする（取得の名称は変えない）
+    names: { coe: "申請人の親の戸籍謄本又は除籍謄本（全部事項証明書）", change: "日本人（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）" },
+  },
   { rule: { id: "nihonjin_marriage_certificate", name: "申請人の国籍国（外国）の機関から発行された結婚証明書", level: "required" }, procedures: { coe: NH_SPOUSE, change: NH_SPOUSE } },
   {
     rule: {
@@ -4315,7 +4322,7 @@ function nihonjinProcedureRules(procedure: NihonjinProcedure): RequirementRule[]
   const docs = NIHONJIN_PROCEDURE_DOCS.flatMap((d): RequirementRule[] => {
     const identities = d.procedures[procedure];
     // 全身分の書類は identities を省略する（身分が未選択の間も出す）
-    return identities ? [{ ...d.rule, party: "applicant", ...(identities.length === NH_BOTH.length ? {} : { identities }) }] : [];
+    return identities ? [{ ...d.rule, ...(d.names?.[procedure] ? { name: d.names[procedure] } : {}), party: "applicant", ...(identities.length === NH_BOTH.length ? {} : { identities }) }] : [];
   });
   return [...procedureCommonRules(procedure), ...docs];
 }

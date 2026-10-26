@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FORM_DETAILS, type ApplicantIdentity } from "../lib/formDetails";
 import { identityNotice } from "../lib/i18n/caseRequirements";
-import { ruleDocumentName, ruleText } from "../lib/i18n/ruleTexts";
+import { RULE_TEXT_TRANSLATIONS, ruleDocumentName, ruleText } from "../lib/i18n/ruleTexts";
 import { evaluate, ruleSetOfCase } from "../lib/requirements/evaluate";
 import { RULE_SETS, ruleSetComparedAt, type RuleSet } from "../lib/requirements/rules";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type ProcedureType } from "../lib/types";
@@ -193,7 +193,19 @@ describe("日本人の配偶者等の認定・変更・更新（coe-change-renew
       const a = acq.rules.find((r) => r.id === id)!;
       const used = Object.values(SETS).flatMap((rs) => rs.rules.filter((r) => r.id === id));
       expect(used.length, id).toBeGreaterThan(0);
+      // 実子の戸籍謄本は、認定・変更でシートの書類名が違うため別名（Issue #452 C-6。下のテスト）
+      if (id === "nihonjin_child_family_register") continue;
       for (const r of used) expect(r.name, id).toBe(a.name);
+    }
+  });
+
+  it("実子の戸籍謄本の書類名は、シートのとおり認定と変更で別。取得の名称は変えない（Issue #452 C-6）", () => {
+    const nameOf = (rs: RuleSet) => rs.rules.find((r) => r.id === "nihonjin_child_family_register")?.name;
+    expect(nameOf(SETS.coe)).toBe("申請人の親の戸籍謄本又は除籍謄本（全部事項証明書）");
+    expect(nameOf(SETS.change)).toBe("日本人（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）");
+    expect(nameOf(RULE_SETS.find((r) => r.id === "nihonjin_haigusha_acquisition")!)).toBe("日本人の方（申請人の親又は養親）の戸籍謄本又は除籍謄本（全部事項証明書）");
+    for (const name of [nameOf(SETS.coe)!, nameOf(SETS.change)!]) {
+      expect(RULE_TEXT_TRANSLATIONS[name], name).toBeTruthy();
     }
   });
 
