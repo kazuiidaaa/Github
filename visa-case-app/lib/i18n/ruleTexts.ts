@@ -2040,6 +2040,30 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
   "身元保証人の身分事項を明らかにする書類（運転免許証、在留カードの写し等）": ["Documents clarifying the guarantor's personal status (a copy of a driver's license, residence card, etc.)", "신원보증인의 신분 사항을 밝히는 서류(운전면허증, 재류카드 사본 등)"],
   "了解書": ["Written acknowledgment", "양해서"],
   "出入国在留管理庁のホームページからダウンロードできる": ["Can be downloaded from the website of the Immigration Services Agency", "출입국재류관리청 홈페이지에서 다운로드할 수 있다"],
+  // 永住許可申請の追加行（EJ-4・EJ-5・EJ-8。人の判断 2026-10-26）。仮訳
+  "旅券（パスポート）又は在留資格証明書（提示）": ["Passport or certificate of status of residence (to be presented)", "여권 또는 재류자격증명서(제시)"],
+  "提示のみで、提出書類としてコピーを付ける書類ではない。提示ができない場合は、その理由を記載した理由書を提出する。申請人以外の方が申請書類を提出する場合であっても、申請人の旅券等の提示が必要": [
+    "To be presented only; no copy is attached as a submitted document. If it cannot be presented, submit a statement of reasons. Even when a person other than the applicant submits the application documents, the applicant's passport etc. must be presented",
+    "제시만 하며, 제출 서류로 사본을 첨부하는 서류가 아니다. 제시할 수 없는 경우에는 그 이유를 기재한 이유서를 제출한다. 신청인 이외의 사람이 신청 서류를 제출하는 경우에도 신청인의 여권 등을 제시해야 한다",
+  ],
+  "在留カード（提示）": ["Residence card (to be presented)", "재류카드(제시)"],
+  "提示のみで、提出書類としてコピーを付ける書類ではない。申請人以外の方が申請を行う場合は、在留カードの写しを申請人に携帯させ、来庁する方が申請人の在留カードを持参する。資格外活動許可書の交付を受けている方は、資格外活動許可書も提示する": [
+    "To be presented only; no copy is attached as a submitted document. When a person other than the applicant files the application, the applicant carries a copy of the residence card and the person visiting the office brings the applicant's residence card. A person who has been issued a permit for activity other than that permitted by the status of residence also presents that permit",
+    "제시만 하며, 제출 서류로 사본을 첨부하는 서류가 아니다. 신청인 이외의 사람이 신청하는 경우에는 재류카드 사본을 신청인에게 휴대하게 하고, 내청하는 사람이 신청인의 재류카드를 지참한다. 자격외활동허가서를 교부받은 사람은 자격외활동허가서도 제시한다",
+  ],
+  "身分を証する文書等（提示）": ["Documents proving identity, etc. (to be presented)", "신분을 증명하는 문서 등(제시)"],
+  "申請人本人以外の方が申請書類を提出する場合。提出する方の身分を証する文書等の提示": [
+    "When a person other than the applicant submits the application documents. Present documents proving the identity of the person submitting",
+    "신청인 본인 이외의 사람이 신청 서류를 제출하는 경우. 제출하는 사람의 신분을 증명하는 문서 등을 제시한다",
+  ],
+  "永住許可申請セルフチェックシート（「日本人の配偶者等」、「永住者の配偶者等」用）": [
+    "Self-check sheet for the permanent residence application (for \"Spouse or Child of Japanese National\" and \"Spouse or Child of Permanent Resident\")",
+    "영주 허가 신청 셀프 체크 시트('일본인의 배우자 등', '영주자의 배우자 등'용)",
+  ],
+  "出入国在留管理庁のホームページからダウンロードできる。審査を円滑に行う観点から、ほかの書類と合わせて提出するよう案内ページがお願いしている（提出書類一覧表の書類ではない）。一つでも「いいえ（No）」に該当する場合は、不許可となる可能性が高くなる": [
+    "Can be downloaded from the website of the Immigration Services Agency. The guidance page asks that it be submitted together with the other documents to facilitate the examination (it is not a document on the list of documents to submit). If any answer is \"No\", permission is likely to be denied",
+    "출입국재류관리청 홈페이지에서 다운로드할 수 있다. 심사를 원활히 하기 위해 다른 서류와 함께 제출해 달라고 안내 페이지가 요청하고 있다(제출서류 일람표의 서류가 아니다). 하나라도 '아니오(No)'에 해당하면 불허가될 가능성이 높아진다",
+  ],
   "永住者の配偶者等 永住許可申請（一部のみ整備）": ["Spouse etc. of Permanent Resident - Application for permission for permanent residence (partially covered)", "영주자의 배우자 등 영주 허가 신청(일부만 정비)"],
   "永住許可申請に係る提出書類一覧表（永住者又は特別永住者の配偶者の方）": ["List of documents to submit for the permanent residence application (spouse of a Permanent Resident or Special Permanent Resident)", "영주 허가 신청 제출서류 일람표(영주자 또는 특별영주자의 배우자)"],
   "永住許可申請に係る提出書類一覧表（永住者又は特別永住者の実子の方）": ["List of documents to submit for the permanent residence application (biological child of a Permanent Resident or Special Permanent Resident)", "영주 허가 신청 제출서류 일람표(영주자 또는 특별영주자의 친자)"],

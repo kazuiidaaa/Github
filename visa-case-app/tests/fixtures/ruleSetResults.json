@@ -1429,9 +1429,13 @@
       "eijuu_relatives_list",
       "eijuu_identity_guarantee",
       "eijuu_identity_guarantee_documents",
-      "eijuu_written_acknowledgment"
+      "eijuu_written_acknowledgment",
+      "eijuu_passport_presentation",
+      "eijuu_residence_card_presentation",
+      "eijuu_agent_identity_document",
+      "eijuu_selfcheck_sheet"
     ],
-    "digest": "a64c17b30040f177720e77fda493be8ebd838df6c3c0eb4b632ea6c8d5139d0d"
+    "digest": "603fa3e9e462fa558e539fde177350613f2fa131e24851b975e798903e62f103"
   },
   "eijuu_eijusha_haigusha": {
     "ruleIds": [
@@ -1467,8 +1471,12 @@
       "eijuu_relatives_list",
       "eijuu_identity_guarantee",
       "eijuu_identity_guarantee_documents",
-      "eijuu_written_acknowledgment"
+      "eijuu_written_acknowledgment",
+      "eijuu_passport_presentation",
+      "eijuu_residence_card_presentation",
+      "eijuu_agent_identity_document",
+      "eijuu_selfcheck_sheet"
     ],
-    "digest": "99efbfce776faeb2e95a08868f9a7c26c86d836ad455a04522feb983898eb37b"
+    "digest": "51aa3340622323db39cd3240d824aa0f477fe4eed07ad80d38bf9b2bbffe1e79"
   }
 }
