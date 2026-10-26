@@ -206,6 +206,21 @@ describe("提出書類一覧表4点の書類（EJ-3）", () => {
     expect(evaluate(make("permanent", "日本人の配偶者等")).items.map((i) => i.rule.id)).toEqual(expect.arrayContaining(added.map(([id]) => id)));
   });
 
+  it("人の判断の注記（EJ-7・EJ-9・EJ-10）：マイナ保険証の書類、保証人の目安、実子の職業の読み替え", () => {
+    for (const [rs, children] of [[nh, ["nihonjinChild"]], [eh, ["eijushaChild"]]] as const) {
+      const note = (id: string) => rs.rules.find((r) => r.id === id)?.note ?? "";
+      for (const sfx of ["spouse", "child"]) {
+        expect(note(`eijuu_health_insurance_card_${sfx}`), sfx).toContain("マイナ保険証を所持している方：マイナポータルの健康保険証情報");
+        expect(note(`eijuu_health_insurance_card_${sfx}`), sfx).toContain("「資格確認証」（写し）");
+      }
+      expect(note("eijuu_identity_guarantee")).toContain("配偶者の区分は配偶者、実子の区分は申請人を扶養する方（親など）");
+      expect(note("eijuu_occupation_child")).toContain("申請人及び申請人を扶養する方お二方とも無職");
+      expect(note("eijuu_occupation_child")).not.toContain("お二方とも無職".replace("お二方", "配偶者の方お二方"));
+      expect(note("eijuu_occupation_spouse")).toContain("申請人及び配偶者の方お二方とも無職");
+      expect(children.length).toBe(1);
+    }
+  });
+
   it("規則の id は規則集合の中で重ならない", () => {
     for (const rs of [nh, eh]) {
       const all = rs.rules.map((r) => r.id);
