@@ -44,6 +44,7 @@ export const AUDIT_KEYS: Record<string, MessageKey> = {
   document_archived: "account.audit_document_archived",
   member_added: "account.audit_member_added",
   member_role_changed: "account.audit_member_role_changed",
+  member_name_changed: "account.audit_member_name_changed",
   member_removed: "account.audit_member_removed",
   organization_renamed: "account.audit_organization_renamed",
   password_changed: "account.audit_password_changed",
