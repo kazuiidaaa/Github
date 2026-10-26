@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GroupRelationBadge } from "@/components/GroupRelationBadge";
 import { ToneIcon } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
 import type { CaseRow as CaseRowData } from "@/lib/caseMetrics";
@@ -16,10 +17,13 @@ import { PROCEDURE_TYPES } from "@/lib/types";
  *
  * 移動先：iPhone 版の案件詳細 /m/cases/[id]。
  *
+ * グループの中の行（inGroup）で、主たる申請人との関係があるときは、3 行目に文字の印（GroupRelationBadge）を出す（色だけにしない）。
+ *
  * props:
  * - row  applyFilter が返す 1 行分（record と metrics）
+ * - inGroup  グループの見出しの下に並ぶ行か
  */
-export function CaseRow({ row }: { row: CaseRowData }) {
+export function CaseRow({ row, inGroup = false }: { row: CaseRowData; inGroup?: boolean }) {
   const t = useT();
   const { record: c, metrics: m } = row;
   const procedure = PROCEDURE_TYPES.find((p) => p.value === c.procedureType)?.label;
@@ -54,6 +58,11 @@ export function CaseRow({ row }: { row: CaseRowData }) {
             </span>
           )}
         </span>
+        {inGroup && c.groupRelation && (
+          <span className="mt-1 block">
+            <GroupRelationBadge relation={c.groupRelation} />
+          </span>
+        )}
       </Link>
     </li>
   );

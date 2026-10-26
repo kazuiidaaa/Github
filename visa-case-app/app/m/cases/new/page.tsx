@@ -18,7 +18,7 @@ import { firstErrorKey, focusField } from "@/lib/formFocus";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { procedureDescriptionText, targetStatusLegend } from "@/lib/i18n/caseNew";
 import { buildNewCaseRecord, NEW_CASE_ERROR_ORDER, newCaseNames, validateNewCase, type NewCaseErrorKey } from "@/lib/newCaseSubmit";
-import { logAudit, newId, saveCase, useCan } from "@/lib/store";
+import { createGroup, logAudit, newId, saveCase, useCan, useGroupsAvailable } from "@/lib/store";
 import {
   ADVANCED_PROFESSIONAL_GRADE_2,
   ADVANCED_PROFESSIONAL_STATUS,
@@ -42,6 +42,7 @@ export default function MobileNewCasePage() {
   const toast = useToast();
   const t = useT();
   const canEdit = useCan("edit");
+  const groupsAvailable = useGroupsAvailable();
   const [bulk, setBulk] = useState(false);
   const [caseName, setCaseName] = useState("");
   const [procedureType, setProcedureType] = useState<ProcedureType | "">("");
@@ -101,9 +102,11 @@ export default function MobileNewCasePage() {
       return;
     }
     if (!procedureType) return;
+    // まとめて登録のグループ名は、グループの名前として残し、作る案件をそのグループに入れる（機能が使えない間は従来どおり）
+    const group = bulk ? createGroup(groupName) : null;
     const created = newCaseNames(input).map((name) => {
       const id = newId();
-      saveCase(buildNewCaseRecord({ ...input, procedureType }, name, id, new Date().toISOString()));
+      saveCase(buildNewCaseRecord({ ...input, procedureType }, name, id, new Date().toISOString(), group?.id));
       logAudit(id, "case_created", bulk ? { bulk: names.length } : undefined);
       return id;
     });
@@ -246,7 +249,7 @@ export default function MobileNewCasePage() {
                 value={groupName}
                 onChange={setGroupName}
                 error={errors.groupName}
-                hint={t("caseNew.groupNameHint")}
+                hint={groupsAvailable ? `${t("caseNew.groupNameHint")} ${t("caseGroup.bulkNote")}` : t("caseNew.groupNameHint")}
               />
             </GroupedList>
             <GroupedList header={t("mobileNew.sectionNames")} footer={errors.names ? undefined : t("caseNew.namesHint")}>
