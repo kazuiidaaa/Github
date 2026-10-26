@@ -306,6 +306,10 @@
   :root:not(:has(.m-root)) .mac-metric > :is(button, a) {
     border-radius: inherit;
   }
+  /* 説明・注意・エラーの枠：グループ化した面と同じ角丸 10px（従来は 12px で不揃い。Issue #456 HIG レビューの未対応分） */
+  :root:not(:has(.m-root)) .mac-notice {
+    border-radius: var(--radius-mac-group);
+  }
   /* 項目名：一段小さく、太さは保つ（必須は「必須」の文字で別に示す） */
   :root:not(:has(.m-root)) .mac-label {
     font-size: var(--text-mac-footnote);

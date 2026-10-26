@@ -5,7 +5,7 @@ export function UnresolvedNote({ count }: { count: number }) {
   const t = useT();
   if (count <= 0) return null;
   return (
-    <div role="note" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
+    <div role="note" className="mt-4 mac-notice rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
       <p>{t("documents.unresolvedLine1", { count })}</p>
       <p>{t("documents.unresolvedLine2")}</p>
     </div>

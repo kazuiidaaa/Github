@@ -131,19 +131,19 @@ export default function DocumentPreviewPage() {
           {t("documentView.back")}
         </Link>
         {stale && (
-          <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="mac-notice rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
             {t("documentView.stale")}
           </p>
         )}
         {doc.outputFormat !== "html" && (
-          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
+          <p className="mac-notice rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
             {t("documentView.outputNote", { format: docLabels.outputFormat(doc.outputFormat) })}
           </p>
         )}
         {isOfficialForm(doc.documentType) && <OfficialFormNotice />}
         {/* 画面の言語と書類の言語は別。画面を日本語以外にしたときに、書類の言語が変わらないことを示す */}
         {screenLang !== "ja" && (
-          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
+          <p className="mac-notice rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
             {t(
               doc.documentType !== "client_guide"
                 ? "documentView.langNoticeJa"
@@ -163,14 +163,14 @@ export default function DocumentPreviewPage() {
               hint={t("documentView.guideLangHint")}
             />
             {lang !== "ja" && (
-              <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+              <p className="mac-notice rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
                 {t("documentView.guideLangNotice")}
               </p>
             )}
           </div>
         )}
         {doc.version < latest && (
-          <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{t("documentView.newerVersion", { latest })}</p>
+          <p className="mac-notice rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{t("documentView.newerVersion", { latest })}</p>
         )}
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && doc.status === "draft" && (

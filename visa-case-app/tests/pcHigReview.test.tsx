@@ -43,4 +43,20 @@ describe("PC 版 HIG 適合レビューの反映（Issue #456）", () => {
   it("PC 版では、ホームのページ内の「新規案件」を出さない（ツールバーにあるため。md 未満のみ残す）", () => {
     expect(read("app/page.tsx")).toMatch(/href="\/cases\/new" className="[^"]*md:hidden"/);
   });
+
+  it("説明・注意・エラーの枠（rounded-xl）は、PC 版で 10px へ読み替える印（mac-notice）を持つ。入力欄・ボタン・iPhone 版の札は対象外", () => {
+    const css = read("app/globals.css");
+    expect(css).toMatch(/\.mac-notice\s*\{\s*border-radius: var\(--radius-mac-group\);/);
+    for (const f of ["app/cases/new/page.tsx", "components/NextActionCard.tsx", "components/RequirementsPanel.tsx", "components/FormDetailsForm.tsx", "components/DeadlineBanner.tsx"]) {
+      for (const line of read(f).split("\n").filter((l) => l.includes("rounded-xl"))) {
+        expect(line, `${f}: ${line.trim().slice(0, 80)}`).toContain("mac-notice");
+      }
+    }
+  });
+
+  it("「必要書類」の状態のセルは、PC の表で 2×2 に収まる幅を確保する（縦 4 段にしない）", () => {
+    const src = read("components/RequirementsPanel.tsx");
+    expect(src).toContain("md:min-w-[14rem]");
+    expect(src).toMatch(/<td className=\{TD_STATUS_CLASS\}>\s*<CellLabel>\{t\("caseRequirements.colStatus"\)\}/);
+  });
 });

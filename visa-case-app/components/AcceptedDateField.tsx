@@ -28,7 +28,7 @@ export function AcceptedDateField({
         <DateField className={`${inputClass} md:w-56`} value={value} onChange={onChange} />
       </Field>
       {afterPlanned && (
-        <p role="note" className="mt-2 rounded-xl bg-amber-50 p-3 text-xs font-bold leading-relaxed text-amber-900">
+        <p role="note" className="mt-2 mac-notice rounded-xl bg-amber-50 p-3 text-xs font-bold leading-relaxed text-amber-900">
           {t("input.acceptedDateField_warning", { date: plannedApplicationDate })}
         </p>
       )}

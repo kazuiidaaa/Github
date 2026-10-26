@@ -189,7 +189,7 @@ export function ChecksPanel({ record }: { record: CaseRecord }) {
         />
       </section>
 
-      <div className="rounded-xl bg-slate-100 p-4 text-xs leading-relaxed text-slate-700">
+      <div className="mac-notice rounded-xl bg-slate-100 p-4 text-xs leading-relaxed text-slate-700">
         {t("caseChecks.disclaimer")}
       </div>
 

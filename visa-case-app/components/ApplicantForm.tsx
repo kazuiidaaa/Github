@@ -186,7 +186,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           {t("caseApplicant.intro")}
         </p>
         {errorFields.length > 0 && (
-          <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div role="alert" className="mb-5 mac-notice rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             <p className="font-medium">{t("caseApplicant.errorSummary", { count: errorFields.length })}</p>
             <ul className="mt-1 list-disc pl-5">
               {errorFields.map((k) => (
@@ -214,7 +214,7 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           {text("workRestriction", t("casePage.field_workRestriction"), { placeholder: t("caseApplicant.exWorkRestriction") })}
         </div>
 
-        <div className="mt-6 rounded-xl bg-slate-50 p-4 text-sm">
+        <div className="mt-6 mac-notice rounded-xl bg-slate-50 p-4 text-sm">
           {confirmed ? (
             <>
               <p className="text-green-700">

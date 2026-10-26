@@ -139,7 +139,7 @@ export function EmploymentForm({ record }: { record: CaseRecord }) {
       <p className="mb-5 text-xs text-muted">{t("employment.note")}</p>
       {/* 誤りの要約（申請人情報のフォームと同じ見た目・文言） */}
       {dateError && (
-        <div id={ERROR_SUMMARY_ID} role="alert" className="mb-5 rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+        <div id={ERROR_SUMMARY_ID} role="alert" className="mb-5 mac-notice rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
           <p className="flex items-center gap-1.5 font-bold">
             <ToneIcon tone="red" />
             {t("caseForm.errorSummary", { count: 1 })}

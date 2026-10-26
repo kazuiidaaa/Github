@@ -9,7 +9,7 @@ export function DeadlineBanner({ date }: { date: string }) {
   const days = daysUntil(date);
   if (days === null) {
     return (
-      <p className="rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+      <p className="mac-notice rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
         {t("dialog.deadline_missing")}
       </p>
     );
@@ -24,7 +24,7 @@ export function DeadlineBanner({ date }: { date: string }) {
   return (
     <div
       role="alert"
-      className={`rounded-xl border p-4 ${
+      className={`mac-notice rounded-xl border p-4 ${
         urgent ? "border-red-400 bg-red-50 text-red-900" : "border-slate-200 bg-white text-slate-800"
       }`}
     >

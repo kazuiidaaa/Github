@@ -130,7 +130,7 @@ export function HspPointSection({
             })}
           </div>
           {estimate && (
-            <div role="status" className="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
+            <div role="status" className="mt-4 mac-notice rounded-xl bg-slate-50 p-3 text-sm">
               <p>
                 {t("casePoints.estimateTotal")}
                 <strong>{t("casePoints.estimatePoints", { total: estimate.total })}</strong>

@@ -421,7 +421,7 @@ export default function CaseDetailPage() {
       {tab === "documents" && (
         <div className="space-y-6">
           {canEdit && !doc && (
-            <p className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <p className="mac-notice rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
               {t("casePage.documentsFirst")}
             </p>
           )}
@@ -454,7 +454,7 @@ export default function CaseDetailPage() {
       )}
 
       {!canEdit && tab !== "overview" && tab !== "documents" && (
-        <p className="mb-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{t("casePage.readOnlyNotice")}</p>
+        <p className="mb-4 mac-notice rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{t("casePage.readOnlyNotice")}</p>
       )}
       {/* 編集権限がない場合は、タブ内のすべての入力・操作を無効にする（最終的な拒否はデータベース側で行う） */}
       <fieldset disabled={!canEdit} className="m-0 min-w-0 border-0 p-0">

@@ -307,7 +307,7 @@ export function ChoiceGroup({
       >
         {isList ? (
           visible.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-line-strong px-3 py-3 text-sm text-slate-600">{t("input.choiceGroup_noMatch")}</p>
+            <p className="mac-notice rounded-xl border border-dashed border-line-strong px-3 py-3 text-sm text-slate-600">{t("input.choiceGroup_noMatch")}</p>
           ) : (
             <div className="space-y-3">
               {sections.map((s) => (

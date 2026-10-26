@@ -24,7 +24,7 @@ export function NextActionCard({
   return (
     <section
       aria-label={t("dialog.nextAction_aria")}
-      className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"
+      className="mac-notice rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
