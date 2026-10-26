@@ -847,9 +847,9 @@ export const RULE_TEXT_TRANSLATIONS: Record<string, Translated> = {
     "A document, such as a certificate from the dispatching organization, certifying the applicant's position and career as a religious person. Not required if the position and career are stated in the dispatch letter, etc. (the document above certifying the dispatch period, position and remuneration) (marked △ on the checklist)",
     "파견 기관의 증명서 등으로 신청인의 종교인으로서의 지위 및 경력을 증명하는 문서. 파견장 등(위의 파견 기간, 지위 및 보수를 증명하는 문서)에 지위·경력이 기재되어 있으면 제출 불필요(체크시트에서 △)",
   ],
-  "チェックシートで△だが、凡例がなく条件が読み取れないため要確認。1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）": [
-    "Marked △ on the checklist, but there is no legend and the condition cannot be read, so confirm. One stating the total income and tax payment status for one year. If a single certificate states both, either one is sufficient (issued by the municipality of residence as of January 1)",
-    "체크시트에서 △이지만 범례가 없어 조건을 알 수 없으므로 확인 필요. 1년간의 총소득 및 납세 상황이 기재된 것. 두 가지가 모두 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 거주지의 시구정촌에서 발급)",
+  "チェックシートは△だが、案内ページに各1通と書かれているため必須とした（R-2。2026-10-26 の人の判断）。1年間の総所得及び納税状況が記載されたもの。両方が記載されている証明書であれば、いずれか一方でよい（1月1日現在の住所地の市区町村から発行される）。発行されない場合は、入管に相談する": [
+    "The checklist marks this △, but the guidance page states one of each, so it is treated as required (R-2; human decision of 2026-10-26). One stating the total income and tax payment status for one year. If a single certificate states both, either one is sufficient (issued by the municipality of residence as of January 1). If it is not issued, consult the Immigration Services Agency",
+    "체크시트에서는 △이지만 안내 페이지에 각 1통으로 기재되어 있어 필수로 함(R-2. 2026-10-26 사람의 판단). 1년간의 총소득 및 납세 상황이 기재된 것. 두 가지가 모두 기재된 증명서라면 어느 한쪽이어도 됨(1월 1일 현재 거주지의 시구정촌에서 발급). 발급되지 않는 경우에는 출입국 당국에 상담",
   ],
 
   // 報道（Issue #294）

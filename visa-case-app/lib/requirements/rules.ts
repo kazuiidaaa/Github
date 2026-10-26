@@ -2531,9 +2531,8 @@ export const SHUKYO_RENEWAL: RuleSet = {
       name: "住民税の課税（又は非課税）証明書及び納税証明書",
       party: "applicant",
       categories: ALL,
-      level: "check",
-      verify: true,
-      note: `チェックシートで△だが、凡例がなく条件が読み取れないため要確認。${RESIDENT_TAX_NOTE}`,
+      level: "required",
+      note: `チェックシートは△だが、案内ページに各1通と書かれているため必須とした（R-2。2026-10-26 の人の判断）。${RESIDENT_TAX_NOTE}。発行されない場合は、入管に相談する`,
     },
   ],
 };
