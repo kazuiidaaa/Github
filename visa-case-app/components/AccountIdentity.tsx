@@ -74,7 +74,7 @@ export function FullNameSection() {
           <span className="font-bold">{name}</span>
         </p>
       ) : (
-        <p className="flex items-start gap-2 rounded-xl bg-yellow-100 p-3 text-sm text-yellow-800">
+        <p className="flex items-start gap-2 mac-notice rounded-xl bg-yellow-100 p-3 text-sm text-yellow-800">
           <span className="mt-0.5 shrink-0">
             <ToneIcon tone="yellow" />
           </span>

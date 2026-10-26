@@ -26,7 +26,7 @@ export function AboutContent() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 text-sm">
       <h1 className="text-xl font-bold md:text-mac-title1">{t("about.title")}</h1>
-      <p className="rounded-xl bg-amber-50 p-3 text-amber-900">{t("about.notice")}</p>
+      <p className="mac-notice rounded-xl bg-amber-50 p-3 text-amber-900">{t("about.notice")}</p>
       {SECTIONS.map((s) => (
         <section key={s.id} className={SECTION} aria-labelledby={s.id}>
           <h2 id={s.id} className="mb-2 font-bold">

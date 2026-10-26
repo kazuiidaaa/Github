@@ -237,12 +237,12 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
 
   return (
     <div className="max-w-4xl space-y-6">
-      <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+      <p className="mac-notice rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
         {t("caseForm.intro", { formName: L(layout.formName) })}
       </p>
 
       {errorFields.length > 0 && (
-        <div id="form-details-error-summary" role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+        <div id="form-details-error-summary" role="alert" className="mac-notice rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
           <p className="flex items-center gap-1.5 font-bold">
             <ToneIcon tone="red" />
             {t("caseForm.errorSummary", { count: errorFields.length })}
@@ -258,7 +258,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
       )}
 
       {warnings.length > 0 && (
-        <div role="status" className="rounded-xl border border-warning-line bg-warning-soft p-3 text-sm text-warning-text">
+        <div role="status" className="mac-notice rounded-xl border border-warning-line bg-warning-soft p-3 text-sm text-warning-text">
           {/* 注意は色だけでなく、三角の図形でも示す */}
           <ul className="space-y-1">
             {warnings.map((w) => (
@@ -299,7 +299,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
           // 希望する在留資格は、案件情報の targetStatus を表示するのみ（二重入力を避ける）
           <div>
             <Field label={L(layout.desiredStatusLabel)} hint={t("caseForm.hintDesiredStatus", { caseLabel: L(layout.desiredStatusCaseLabel ?? t("caseForm.defaultDesiredCaseLabel")) })}>
-              <div className="flex min-h-[44px] flex-wrap items-center gap-x-3 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm">
+              <div className="flex min-h-[44px] flex-wrap items-center gap-x-3 mac-notice rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm">
                 <span className="break-words py-2 font-medium">{record.targetStatus || t("caseForm.notSet")}</span>
                 {onGoOverview && (
                   <button type="button" onClick={onGoOverview} className={textLinkClass}>
@@ -370,7 +370,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         {form.relativesPresent === "yes" && (
           <div className="mt-4 space-y-4">
             {form.relatives.map((r, i) => (
-              <div key={r.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-3">
+              <div key={r.id} className="grid gap-3 mac-notice rounded-xl border border-slate-200 p-3 md:grid-cols-3">
                 <p className="text-xs font-medium text-muted md:col-span-3">{t("caseForm.relativeNth", { n: i + 1 })}</p>
                 <Field label={t("caseForm.relRelationship")}>
                   <input className={inputClass} value={r.relationship} onChange={(e) => updateRelative(r.id, { relationship: e.target.value })} {...zenkakuHandlers(RELATIVE_ZENKAKU.relationship, (v) => updateRelative(r.id, { relationship: v }))} />
@@ -462,7 +462,7 @@ export function FormDetailsForm({ record, onGoOverview }: { record: CaseRecord; 
         <h2 className="font-semibold">{L(layout.sectionTitles.workHistory)}</h2>
         <div className="mt-4 space-y-3">
           {form.workHistory.map((w) => (
-            <div key={w.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-4">
+            <div key={w.id} className="grid gap-3 mac-notice rounded-xl border border-slate-200 p-3 md:grid-cols-4">
               <Field label={t("caseForm.workJoined")}>
                 <input className={inputClass} placeholder="YYYY-MM" value={w.joinedOn} onChange={(e) => updateWork(w.id, { joinedOn: e.target.value })} />
               </Field>

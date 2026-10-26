@@ -101,7 +101,7 @@ function AccountContent() {
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold md:text-mac-title1">{t("account.title")}</h1>
       {error && (
-        <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm text-danger-text">
+        <p role="alert" className="mac-notice rounded-xl bg-danger-soft p-3 text-sm text-danger-text">
           {text.error(error)}
         </p>
       )}

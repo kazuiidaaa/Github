@@ -46,6 +46,8 @@ const TBODY_CLASS = "block md:table-row-group";
 const TR_CLASS =
   "grid grid-cols-2 gap-x-4 border-t border-slate-100 px-4 py-4 first:border-t-0 md:table-row md:p-0 md:align-top md:first:border-t";
 const TD_CLASS = "col-span-2 block py-1.5 md:table-cell md:px-4 md:py-3";
+/** 状態の選択（4 つのボタン）のセル。PC の表では 2×2 に収まる幅を確保し、1 行が縦に 4 段（約 225px）にならないようにする（Issue #456） */
+const TD_STATUS_CLASS = `${TD_CLASS} md:min-w-[14rem]`;
 /** カードで2列に並べる、短い値のセル（提出者・判定・必須か任意か） */
 const TD_HALF_CLASS = "block py-1.5 md:table-cell md:whitespace-nowrap md:px-4 md:py-3";
 /** カードの見出しになる、書類名のセル */
@@ -159,7 +161,7 @@ export function RequirementsPanel({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
+      <div className="mac-notice rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
         <p className="font-medium">
           {t("caseRequirements.candidateNotice")}
         </p>
@@ -184,16 +186,16 @@ export function RequirementsPanel({
         )}
       </div>
 
-      {!ev.ruleSet && <p className="rounded-xl bg-slate-100 p-4 text-sm text-slate-700">{noRuleMessage(t)}</p>}
+      {!ev.ruleSet && <p className="mac-notice rounded-xl bg-slate-100 p-4 text-sm text-slate-700">{noRuleMessage(t)}</p>}
 
       {ev.needsSubtype && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t("caseRequirements.needsSubtype")}
         </p>
       )}
 
       {notices.category && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(notices.category)}
           <button type="button" onClick={onGoEmployment} className="ml-2 inline-flex min-h-[44px] items-center underline active:opacity-70">
             {t("caseRequirements.needsCategoryAction")}
@@ -202,31 +204,31 @@ export function RequirementsPanel({
       )}
 
       {applicantNotice && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(applicantNotice)}
         </p>
       )}
 
       {renewalTimesNoticeKey && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(renewalTimesNoticeKey)}
         </p>
       )}
 
       {identityNoticeKey && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(identityNoticeKey)}
         </p>
       )}
 
       {schoolNoticeKey && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t(schoolNoticeKey)}
         </p>
       )}
 
       {notices.cause && (
-        <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+        <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
           {t("caseRequirements.needsCause")}
         </p>
       )}
@@ -445,7 +447,7 @@ function Row({
           <p className="mt-1 text-xs text-muted">{t("caseRequirements.overrideNote", { result: t(RESULT_KEY[item.effective]) })}</p>
         )}
       </td>
-      <td className={TD_CLASS}>
+      <td className={TD_STATUS_CLASS}>
         <CellLabel>{t("caseRequirements.colStatus")}</CellLabel>
         <StatusSelect label={ruleName} value={state.status} onChange={(v) => onPatch(rule.id, { status: v }, "requirement_status_changed")} />
       </td>

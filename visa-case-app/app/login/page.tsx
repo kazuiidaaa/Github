@@ -74,7 +74,7 @@ export default function LoginPage() {
           </p>
         )}
         {sent && (
-          <p role="status" className="rounded-xl bg-slate-100 p-3 text-sm text-slate-800">
+          <p role="status" className="mac-notice rounded-xl bg-slate-100 p-3 text-sm text-slate-800">
             {t("auth.resetSent")}
           </p>
         )}

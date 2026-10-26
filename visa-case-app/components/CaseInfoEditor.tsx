@@ -144,7 +144,7 @@ export function CaseInfoEditor({ record, canEdit }: { record: CaseRecord; canEdi
       <h2 className="font-semibold">{t("caseInfo.editTitle")}</h2>
       {/* 誤りの要約。保存のたびに読み上げ、フォーカスは最初の誤りの欄へ移す（新規登録と同じ。設計書 4章「フォームの入力しやすさ」） */}
       {errorList.length > 0 && (
-        <div role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+        <div role="alert" className="mac-notice rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
           <p className="flex items-center gap-1.5 font-bold">
             <ToneIcon tone="red" />
             {t("caseNew.errorSummary", { count: errorList.length })}

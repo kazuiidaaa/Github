@@ -209,12 +209,12 @@ export default function NewCasePage() {
         ))}
       </div>
       {bulk && (
-        <p className="mb-4 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+        <p className="mb-4 mac-notice rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
           {t("caseNew.bulkNote")}
         </p>
       )}
       {restored && (
-        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 mac-notice rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
           <span>{t("caseNew.restored")}</span>
           <Button type="button" variant="secondary" onClick={clearInput}>
             {t("caseNew.restoredClear")}
@@ -224,7 +224,7 @@ export default function NewCasePage() {
       <form onSubmit={submit} className="space-y-5 mac-card rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         {/* 誤りの要約。送信のたびに読み上げ、フォーカスは最初の誤りの欄へ移す（設計書 4章「フォームの入力しやすさ」） */}
         {errorList.length > 0 && (
-          <div role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
+          <div role="alert" className="mac-notice rounded-xl border border-danger-line bg-danger-soft p-3 text-sm text-danger-text">
             <p className="flex items-center gap-1.5 font-bold">
               <ToneIcon tone="red" />
               {t("caseNew.errorSummary", { count: errorList.length })}
@@ -260,7 +260,7 @@ export default function NewCasePage() {
         )}
         {/* 手続種別を選ぶまで在留資格の欄は出さない。非表示の間も入力値は保持し、再表示で戻る（保存は表示中の欄のみ） */}
         {procedureType === "" ? (
-          <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+          <p role="note" className="mac-notice rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
             {t("caseNew.procedureNote")}
           </p>
         ) : (
@@ -282,7 +282,7 @@ export default function NewCasePage() {
               </div>
             )}
             {/* 入力中の手続と在留資格の確認（共通部品。Issue #433） */}
-            <p className="min-w-0 rounded-xl bg-slate-100 p-3 text-sm">
+            <p className="min-w-0 mac-notice rounded-xl bg-slate-100 p-3 text-sm">
               <StatusTransition procedureType={procedureType} current={currentStatus} target={needsTarget ? targetStatus : undefined} />
             </p>
           </div>
@@ -291,7 +291,7 @@ export default function NewCasePage() {
           <AcceptedDateField value={acceptedDate} onChange={setAcceptedDate} />
         </div>
         {showNoRuleGuide && (
-          <p role="note" className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
+          <p role="note" className="mac-notice rounded-xl bg-slate-100 p-3 text-xs leading-relaxed text-slate-700">
             {noRuleGuideText(t, statusForRules(procedureType, { currentStatus, targetStatus }))}
           </p>
         )}

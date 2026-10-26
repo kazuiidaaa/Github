@@ -10,7 +10,7 @@ export function LoadingNotice({ error }: { error?: string }) {
   const t = useT();
   if (error || storeError) {
     return (
-      <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">
+      <p role="alert" className="mac-notice rounded-xl bg-red-50 p-3 text-sm text-red-800">
         {t("common.loadFailedGuide")}
       </p>
     );

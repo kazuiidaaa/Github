@@ -131,7 +131,7 @@ export default function DocumentsPage() {
         <h1 className="mt-1 text-2xl font-semibold break-words">{t("documents.title", { name: record.caseName })}</h1>
       </div>
 
-      <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+      <p className="mac-notice rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
         {t("documents.intro")}
       </p>
 
@@ -176,7 +176,7 @@ export default function DocumentsPage() {
           </label>
         </div>
         {selected.includes("client_guide") && (
-          <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3 text-sm">
+          <div className="mt-4 space-y-2 mac-notice rounded-xl bg-slate-50 p-3 text-sm">
             <p>
               {t("documents.guideNote")}
             </p>
@@ -189,7 +189,7 @@ export default function DocumentsPage() {
         {officialSelected && (
           <div className="mt-4 space-y-2">
             {scopeWarnings.map((w) => (
-              <p key={w} role="alert" className="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
+              <p key={w} role="alert" className="mac-notice rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
                 {t("documents.scopeNote", { warning: w })}
               </p>
             ))}
