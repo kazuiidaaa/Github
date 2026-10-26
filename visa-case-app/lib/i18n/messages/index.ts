@@ -4,6 +4,7 @@ import { auth } from "./auth";
 import { caseApplicant } from "./caseApplicant";
 import { caseChecks } from "./caseChecks";
 import { caseForm } from "./caseForm";
+import { caseGroup } from "./caseGroup";
 import { caseInfo } from "./caseInfo";
 import { caseList } from "./caseList";
 import { caseNew } from "./caseNew";
@@ -37,7 +38,7 @@ import { mobileAccount } from "./mobileAccount";
 export const CATALOG = {
   common, header, footer, input, dialog, display, labels,
   documents, auth, about, caseList, home, account, documentView,
-  caseNew, employment, casePage, caseRequirements, caseChecks, caseForm, casePoints, caseApplicant, caseInfo,
+  caseNew, employment, casePage, caseRequirements, caseChecks, caseForm, casePoints, caseApplicant, caseInfo, caseGroup,
   mobile, mobileDetail,
   mobileNew, mobileLogin, mobileReset, mobileDocuments, mobileAccount, mobileDeadlines,
 } as const;

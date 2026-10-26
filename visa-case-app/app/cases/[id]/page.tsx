@@ -8,6 +8,7 @@ import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { ConfirmDocumentDeleteDialog } from "@/components/ConfirmDocumentDeleteDialog";
 import { DeadlineBanner } from "@/components/DeadlineBanner";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { CaseGroupSection } from "@/components/CaseGroupSection";
 import { CaseInfoEditor } from "@/components/CaseInfoEditor";
 import { ChecksPanel } from "@/components/ChecksPanel";
 import { EmploymentForm } from "@/components/EmploymentForm";
@@ -408,8 +409,9 @@ export default function CaseDetailPage() {
                   </p>
                 )}
               </section>
-              <div className="@[60rem]:col-start-1 @[60rem]:row-start-2">
+              <div className="space-y-6 @[60rem]:col-start-1 @[60rem]:row-start-2">
                 <CaseInfoEditor record={record} canEdit={canEdit} />
+                <CaseGroupSection record={record} canEdit={canEdit} />
               </div>
             </div>
           </div>

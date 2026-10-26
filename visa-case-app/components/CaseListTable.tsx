@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { currentStatusOf, StatusTransition } from "@/components/StatusTransition";
 import { Badge } from "@/components/ui";
+import { GroupRelationBadge } from "@/components/GroupRelationBadge";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
+import { headingGroupId, type GroupHeads } from "@/lib/caseGroups";
 import { nextSort, sortState, type CaseFilter, type CaseMetrics, type CaseRow, type SortColumn } from "@/lib/caseMetrics";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n/LanguageProvider";
@@ -76,6 +78,8 @@ function PlainHeader({ children }: { children: ReactNode }) {
   );
 }
 
+const NO_GROUPS: GroupHeads = new Map();
+
 /**
  * 案件一覧の表（PC 版）。Finder の一覧表示のように、列（案件名／手続／在留資格／期限／次の作業）と、見出しでの並べ替え、行の選択を持つ。
  * - 行の選択：上下の矢印・Home・End で行を移り（フォーカスと選択が同じ）、Enter で開く。選択中の行は、面の色に加えて、左の太い線と太字で示す（色だけに頼らない）。
@@ -84,12 +88,15 @@ function PlainHeader({ children }: { children: ReactNode }) {
  */
 export function CaseListTable({
   rows,
+  groupHeads = NO_GROUPS,
   filter,
   onSort,
   stagger,
   empty,
 }: {
   rows: CaseRow[];
+  /** グループの見出し用（グループの機能が使えない間・グループが無いときは空） */
+  groupHeads?: GroupHeads;
   filter: CaseFilter;
   onSort: (k: CaseFilter["sort"]) => void;
   stagger: string;
@@ -134,15 +141,24 @@ export function CaseListTable({
               </td>
             </tr>
           )}
-          {rows.map(({ record: c, metrics: m }) => {
+          {rows.map(({ record: c, metrics: m }, i) => {
             const isSelected = selected === c.id;
+            const headId = headingGroupId(rows[i - 1]?.record, c, groupHeads);
+            const inGroup = Boolean(c.groupId && groupHeads.has(c.groupId));
             return (
+              <Fragment key={c.id}>
+              {headId && (
+                <tr className="border-t border-separator bg-window">
+                  <th scope="colgroup" colSpan={5} className="px-3 py-2 text-left text-mac-footnote font-bold">
+                    <GroupHeading name={groupHeads.get(headId)!.name} count={groupHeads.get(headId)!.count} />
+                  </th>
+                </tr>
+              )}
               <tr
-                key={c.id}
                 data-selected={isSelected ? "true" : undefined}
                 className={`relative border-t border-separator align-top transition-colors hover:bg-window active:bg-sidebar data-[selected=true]:bg-sidebar-selected data-[selected=true]:shadow-[inset_4px_0_0_var(--focus-ring)]`}
               >
-                <td className="min-w-0 px-3 py-3 break-words">
+                <td className={`min-w-0 py-3 pr-3 break-words ${inGroup ? "pl-7" : "pl-3"}`}>
                   <Link
                     href={`/cases/${c.id}`}
                     data-row-link
@@ -155,6 +171,11 @@ export function CaseListTable({
                   <span className="mt-0.5 block text-mac-footnote text-muted">
                     {c.applicant.legalName || t("caseList.notEntered")}
                   </span>
+                  {inGroup && c.groupRelation && (
+                    <span className="mt-1 block">
+                      <GroupRelationBadge relation={c.groupRelation} />
+                    </span>
+                  )}
                 </td>
                 <td className="min-w-0 px-3 py-3 break-words">{procedureLabel(c)}</td>
                 <td className="min-w-0 px-3 py-3 break-words">
@@ -173,10 +194,25 @@ export function CaseListTable({
                   </span>
                 </td>
               </tr>
+              </Fragment>
             );
           })}
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** グループの見出しの中身（フォルダの印・名前・件数）。表とカード表示で共用する */
+export function GroupHeading({ name, count }: { name: string; count: number }) {
+  const t = useT();
+  return (
+    <span className="inline-flex min-w-0 max-w-full items-center gap-2">
+      <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M2.5 5.5a1 1 0 0 1 1-1h4l1.5 2h7.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1z" strokeLinejoin="round" />
+      </svg>
+      <span className="min-w-0 break-words">{name}</span>
+      <span className="shrink-0 font-normal text-muted">{t("caseGroup.countLabel", { count })}</span>
+    </span>
   );
 }

@@ -25,6 +25,7 @@ export const REVIEW_STATUS: Record<Namespace, Record<Exclude<Lang, "ja">, Review
   casePoints: { en: "draft", ko: "draft" },
   caseApplicant: { en: "draft", ko: "draft" },
   caseInfo: { en: "draft", ko: "draft" },
+  caseGroup: { en: "draft", ko: "draft" },
   documents: { en: "draft", ko: "draft" },
   documentView: { en: "draft", ko: "draft" },
   home: { en: "draft", ko: "draft" },

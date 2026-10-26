@@ -15,7 +15,7 @@ import { ConfirmLeaveDialog } from "@/components/ConfirmLeaveDialog";
 import { clearNewCaseDraft, INITIAL_BULK_NAMES, isNewCaseDirty, loadNewCaseDraft, saveNewCaseDraft } from "@/lib/newCaseDraft";
 import { ruleSetFor, shouldShowNoRuleGuide, statusForRules } from "@/lib/requirements/evaluate";
 import { useToast } from "@/components/Toast";
-import { logAudit, newId, saveCase, useCan } from "@/lib/store";
+import { createGroup, logAudit, newId, saveCase, useCan, useGroupsAvailable } from "@/lib/store";
 import { buildNewCaseRecord, NEW_CASE_ERROR_ORDER, newCaseNames, validateNewCase, type NewCaseErrorKey } from "@/lib/newCaseSubmit";
 import { EMPTY_EMPLOYMENT, procedureNeedsTarget, type EmploymentInfo, type ProcedureType } from "@/lib/types";
 import { CASE_MEMO_ZENKAKU, zenkakuHandlers } from "@/lib/zenkaku";
@@ -35,6 +35,7 @@ export default function NewCasePage() {
   const t = useT();
   const hints = useStatusHints();
   const canEdit = useCan("edit");
+  const groupsAvailable = useGroupsAvailable();
   const [caseName, setCaseName] = useState("");
   const [procedureType, setProcedureType] = useState<ProcedureType | "">("");
   const [currentStatus, setCurrentStatus] = useState("");
@@ -137,11 +138,13 @@ export default function NewCasePage() {
     }
     if (!procedureType) return;
 
+    // まとめて登録のグループ名は、グループの名前として残し、作る案件をそのグループに入れる（グループの機能が使えない間は従来どおり）
+    const group = bulk ? createGroup(groupName) : null;
     const create = (name: string) => {
       const now = new Date().toISOString();
       const id = newId();
       // 案件ごとに独立したレコードとして組み立てる（lib/newCaseSubmit.ts。作成後の同期は行わない）
-      saveCase(buildNewCaseRecord({ ...input, procedureType }, name, id, now));
+      saveCase(buildNewCaseRecord({ ...input, procedureType }, name, id, now, group?.id));
       logAudit(id, "case_created", bulk ? { bulk: bulkNames.length } : undefined);
       return id;
     };
@@ -317,6 +320,7 @@ export default function NewCasePage() {
                 onChange={(e) => setGroupName(e.target.value)}
               />
             </Field>
+            {groupsAvailable && <p className="-mt-3 text-xs text-muted">{t("caseGroup.bulkNote")}</p>}
             <Field label={t("caseNew.namesLabel")} error={errors.names} hint={t("caseNew.namesHint")}>
               <div id={fieldId("names")} className="space-y-2">
                 {names.map((n, i) => (
