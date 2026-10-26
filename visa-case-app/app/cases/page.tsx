@@ -159,7 +159,7 @@ function CasesView() {
               )}
               {loaded && cases.length === 0 && canEdit && (
                 <span className="mt-4 block">
-                  <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
+                  <Link href="/cases/new" className="mac-button inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
                     {t("caseList.newCase")}
                   </Link>
                 </span>
@@ -181,7 +181,7 @@ function CasesView() {
             )}
             {loaded && cases.length === 0 && canEdit && (
               <div className="mt-4">
-                <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
+                <Link href="/cases/new" className="mac-button inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover active:bg-accent-hover">
                   {t("caseList.newCase")}
                 </Link>
               </div>
@@ -221,7 +221,7 @@ function CasesView() {
             type="button"
             disabled={pageData.page <= 1}
             onClick={() => go(filter, pageData.page - 1)}
-            className="min-h-[44px] rounded-full border border-line-strong bg-white px-4 py-2 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
+            className="mac-button min-h-[44px] rounded-full border border-line-strong bg-white px-4 py-2 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
           >
             {t("caseList.prevPage")}
           </button>
@@ -232,7 +232,7 @@ function CasesView() {
             type="button"
             disabled={pageData.page >= pageData.totalPages}
             onClick={() => go(filter, pageData.page + 1)}
-            className="min-h-[44px] rounded-full border border-line-strong bg-white px-4 py-2 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
+            className="mac-button min-h-[44px] rounded-full border border-line-strong bg-white px-4 py-2 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
           >
             {t("caseList.nextPage")}
           </button>

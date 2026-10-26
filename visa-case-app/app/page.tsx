@@ -55,11 +55,12 @@ export default function HomePage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold md:text-mac-title1">{t("home.title")}</h1>
         <span className="flex items-center gap-3">
-          <Link href="/cases" className="inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-100 active:bg-slate-200">
+          <Link href="/cases" className="mac-button inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-100 active:bg-slate-200">
             {t("home.openCases")}
           </Link>
           {canEdit && (
-            <Link href="/cases/new" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover">
+            // PC 版は、ツールバーに同じ「新規案件」があるため、ページ内のボタンを出さない（案件一覧と同じ。md 未満のみ残す）
+            <Link href="/cases/new" className="mac-button inline-flex min-h-[44px] items-center rounded-full bg-accent px-4 text-sm font-bold text-accent-text hover:bg-accent-hover md:hidden">
               {t("home.newCase")}
             </Link>
           )}
@@ -86,7 +87,7 @@ export default function HomePage() {
             ) : (
               <ul className="anim-stagger space-y-3">
                 {urgent.map(({ record: c }) => (
-                  <li key={c.id} className="rounded-2xl border border-line-strong bg-white p-4 text-sm">
+                  <li key={c.id} className="rounded-2xl border border-line-strong bg-white p-4 text-sm md:rounded-mac-group">
                     <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                       <div>
                         <Link href={`/cases/${c.id}`} className="font-bold text-blue-700 hover:underline">

@@ -51,7 +51,10 @@ export function EmploymentFields({
       <div className="grid gap-4 md:grid-cols-2">
         {TEXT_FIELDS.map((f) =>
           f.key === "companyAddress" ? (
-            <AddressField key={f.key} label={t(f.label)} value={form.companyAddress} onChange={(v) => set("companyAddress", v)} />
+            // 郵便番号と所在地を 1 つのまとまりで出すため、2 列の片側に置くと、反対側に大きな空白ができる。横いっぱいに置く
+            <div key={f.key} className="md:col-span-2">
+              <AddressField label={t(f.label)} value={form.companyAddress} onChange={(v) => set("companyAddress", v)} />
+            </div>
           ) : (
           <Field key={f.key} label={t(f.label)}>
             <input

@@ -252,7 +252,7 @@ export default function CaseDetailPage() {
         <div className="flex w-full flex-wrap items-center justify-between gap-2 md:w-auto md:shrink-0 md:flex-nowrap md:justify-start">
           <Link
             href={`/cases/${record.id}/documents`}
-            className="inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50 active:bg-slate-100 md:whitespace-nowrap"
+            className="mac-button inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-white px-4 py-2 text-sm font-bold hover:bg-slate-50 active:bg-slate-100 md:whitespace-nowrap"
           >
             {t("casePage.createDocuments")}
           </Link>

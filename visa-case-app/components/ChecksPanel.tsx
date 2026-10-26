@@ -234,7 +234,7 @@ function CheckRow({
   const ref = referenceFor(record, check.key, t);
   const flushNote = useAutoSave(note, check.note, (v) => onPatch(check.key, { note: v }));
   return (
-    <li className="grid gap-2 px-4 py-4 text-sm md:grid-cols-[1fr_22rem] md:px-6 md:py-3">
+    <li className="grid gap-2 px-4 py-4 text-sm md:grid-cols-[1fr_27rem] md:px-6 md:py-3">
       <div>
         <p className="font-bold md:font-normal">{name}</p>
         {ref.text && (

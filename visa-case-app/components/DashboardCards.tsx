@@ -11,7 +11,7 @@ import { HOME_METRIC_KEYS, metricsFor, type CardKey, type MetricDefinition } fro
 export type { CardKey };
 
 // hover は Tailwind v4 が @media (hover: hover) で囲む（タッチで固着しない）。浮く動きは動きを減らす設定では付けない。押した瞬間は active: で即時に示す
-const CARD_BASE = "rounded-2xl border bg-white motion-safe:hover:-translate-y-0.5 hover:shadow-raised md:hover:shadow-mac-raised active:bg-slate-100";
+const CARD_BASE = "mac-metric rounded-2xl border bg-white motion-safe:hover:-translate-y-0.5 hover:shadow-raised md:hover:shadow-mac-raised active:bg-slate-100";
 
 /**
  * 説明文は操作できる要素の外に置く（タップで誤って絞り込まれないようにする）。
@@ -24,6 +24,7 @@ function CardShell({
   className,
   infoOpen,
   onInfo,
+  compact,
   children,
 }: {
   metric: MetricDefinition;
@@ -32,12 +33,14 @@ function CardShell({
   className: string;
   infoOpen: boolean;
   onInfo: () => void;
+  /** PC 版の案件一覧用：説明を見えない位置へ置き（読み上げには残す）、カードを低くする */
+  compact?: boolean;
   children: (body: React.ReactNode) => React.ReactNode;
 }) {
   const t = useT();
   const { label, description } = useMetricText()(metric.key);
   return (
-    <div className={`${className} relative w-36 shrink-0 snap-start md:w-auto`}>
+    <div className={`${className} ${compact ? "mac-metric-compact" : ""} relative w-36 shrink-0 snap-start md:w-auto`}>
       {children(
         <>
           <span className="block pr-7 text-xs text-slate-500 md:pr-0">{label}</span>
@@ -55,7 +58,7 @@ function CardShell({
           i
         </span>
       </button>
-      <p id={descId} className="hidden px-4 pb-4 text-xs leading-relaxed text-slate-500 md:block">
+      <p id={descId} className={`hidden px-4 pb-4 text-xs leading-relaxed text-slate-500 md:block ${compact ? "md:sr-only" : ""}`}>
         {description}
       </p>
     </div>
@@ -68,6 +71,7 @@ function MetricRow({
   metrics,
   activeKey,
   renderCard,
+  footer,
   className = "",
 }: {
   gridClass: string;
@@ -75,6 +79,8 @@ function MetricRow({
   activeKey?: CardKey | null;
   renderCard: (m: MetricDefinition, info: { open: boolean; toggle: () => void }) => React.ReactNode;
   className?: string;
+  /** PC 版：カードの下に出す 1 行（選択中のカードの説明） */
+  footer?: React.ReactNode;
 }) {
   const t = useT();
   const metricText = useMetricText();
@@ -94,6 +100,7 @@ function MetricRow({
       >
         {metrics.map((m) => renderCard(m, { open: infoKey === m.key, toggle: () => setInfoKey(infoKey === m.key ? null : m.key) }))}
       </div>
+      {footer}
       {shown && shownText && (
         <p role="status" className="mt-2 rounded-xl border border-line-strong px-3 py-2 text-xs leading-relaxed text-slate-600 md:hidden">
           <span className="font-bold">{shownText.label}</span>{t("display.metricLabelDescJoin")}{shownText.description}
@@ -114,10 +121,21 @@ export function DashboardCards({
   onSelect: (key: CardKey) => void;
 }) {
   const uid = useId();
+  const metricText = useMetricText();
+  const activeText = active ? metricText(active) : null;
   return (
     <MetricRow
       className="mb-6"
-      gridClass="md:grid md:grid-cols-4 xl:grid-cols-7"
+      footer={
+        activeText && (
+          <p className="mt-2 hidden text-mac-footnote text-slate-600 md:block">
+            <span className="font-bold">{activeText.label}</span>
+            {" — "}
+            {activeText.description}
+          </p>
+        )
+      }
+      gridClass="md:grid md:grid-cols-[repeat(auto-fill,minmax(min(100%,8rem),1fr))]"
       metrics={metricsFor()}
       activeKey={active}
       renderCard={(m, info) => {
@@ -130,10 +148,11 @@ export function DashboardCards({
             descId={descId}
             infoOpen={info.open}
             onInfo={info.toggle}
+            compact
             className={`${CARD_BASE} hover:bg-slate-50 ${active === m.key ? "border-accent ring-2 ring-accent" : "border-slate-200"}`}
           >
             {(body) => (
-              <button onClick={() => onSelect(m.key)} aria-pressed={active === m.key} aria-describedby={descId} className="block w-full rounded-t-2xl p-3 pb-2 text-left md:p-4 md:pb-2">
+              <button onClick={() => onSelect(m.key)} aria-pressed={active === m.key} aria-describedby={descId} className="block w-full rounded-t-2xl p-3 pb-2 text-left md:p-4 md:pb-3">
                 {body}
               </button>
             )}
@@ -149,7 +168,7 @@ export function HomeMetricCards({ summary }: { summary: Summary }) {
   const uid = useId();
   return (
     <MetricRow
-      gridClass="md:grid md:grid-cols-3 xl:grid-cols-6"
+      gridClass="md:grid md:grid-cols-[repeat(auto-fill,minmax(min(100%,9.5rem),1fr))]"
       metrics={metricsFor(HOME_METRIC_KEYS)}
       renderCard={(m, info) => {
         const descId = `${uid}-${m.key}`;

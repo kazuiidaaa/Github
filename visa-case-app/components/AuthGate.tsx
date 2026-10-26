@@ -51,10 +51,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
         <p className="mb-2 font-semibold">{t("common.sessionCheckFailed")}</p>
         <p>{t("common.sessionCheckFailedGuide")}</p>
         <div className="mt-3 flex gap-3">
-          <button type="button" onClick={() => window.location.reload()} className="rounded-full border border-red-300 px-3 py-1 font-bold">
+          <button type="button" onClick={() => window.location.reload()} className="mac-button rounded-full border border-red-300 px-3 py-1 font-bold">
             {t("common.reload")}
           </button>
-          <Link href="/login" className="rounded-full bg-red-700 px-3 py-1 font-bold text-white">
+          <Link href="/login" className="mac-button rounded-full bg-red-700 px-3 py-1 font-bold text-white">
             {t("common.toLogin")}
           </Link>
         </div>

@@ -283,7 +283,7 @@ export function ImageZoom({ src, alt, className = "" }: { src: string; alt: stri
   }
 
   const btn =
-    "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-line-strong bg-white px-4 text-sm font-bold hover:bg-slate-50 active:bg-slate-100 disabled:opacity-40";
+    "mac-button inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-line-strong bg-white px-4 text-sm font-bold hover:bg-slate-50 active:bg-slate-100 disabled:opacity-40";
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-center gap-2">
