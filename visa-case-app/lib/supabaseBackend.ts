@@ -1,6 +1,7 @@
 import { normalizeFormDetails } from "./formDetails";
 import type { AuditOutcome } from "./auditDetail";
 import { AppError, toAppError } from "./errors";
+import { normalizeRelation } from "./caseGroups";
 import { storageExtension } from "./documentValidation";
 import { supabase } from "./supabase";
 import {
@@ -12,6 +13,7 @@ import {
   type OrgCategory,
   type RequirementState,
   type RequirementStatus,
+  type CaseGroup,
   type CaseRecord,
   type CheckRecord,
   type CheckStatus,
@@ -99,6 +101,9 @@ interface CaseRow {
   memo: string | null;
   workflow_status: WorkflowStatus;
   accepted_date: string | null;
+  /** 移行 0027 の適用後のみ含まれる */
+  group_id?: string | null;
+  group_relation?: string | null;
   planned_application_date: string | null;
   check_memo: string | null;
   created_at: string;
@@ -156,6 +161,59 @@ export async function currentUserEmail(): Promise<string> {
 
 export function reset() {
   orgIdPromise = null;
+  groupsAvailable = false;
+}
+
+/**
+ * グループの機能が使えるか（移行 0027 の適用済みか）。loadGroups で表の有無を確かめて決める。
+ * false の間は、cases の group_id / group_relation を読み書きしない（列が無い本番でも従来どおり動かすため）。
+ */
+let groupsAvailable = false;
+
+export function isGroupsAvailable(): boolean {
+  return groupsAvailable;
+}
+
+/** 表・列が存在しないことを示すエラーか（移行 0027 の未適用）。権限・通信のエラーは含めない */
+export function isMissingSchemaError(e: { message?: string; code?: string } | null | undefined): boolean {
+  if (!e) return false;
+  const code = String(e.code ?? "");
+  if (code === "42P01" || code === "42703" || code === "PGRST205" || code === "PGRST204") return true;
+  return /schema cache|does not exist/i.test(e.message ?? "");
+}
+
+interface GroupRow {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export function mapGroupRow(r: GroupRow): CaseGroup {
+  return { id: r.id, name: r.name, createdAt: r.created_at };
+}
+
+/**
+ * グループの一覧を取得する（作成順）。表が無い（移行 0027 の未適用）場合は、空で返し、機能を無効のままにする。
+ * 表が無い以外のエラー（権限・通信）は、他の読み込みと同様に失敗として扱う。
+ */
+export async function loadGroups(): Promise<{ available: boolean; groups: CaseGroup[] }> {
+  await getOrgId();
+  const res = await client().from("case_groups").select("id, name, created_at").order("created_at", { ascending: true });
+  if (res.error) {
+    if (isMissingSchemaError(res.error)) {
+      groupsAvailable = false;
+      return { available: false, groups: [] };
+    }
+    throw toAppError(res.error);
+  }
+  groupsAvailable = true;
+  return { available: true, groups: ((res.data ?? []) as GroupRow[]).map(mapGroupRow) };
+}
+
+/** グループを作る（id は呼び出し側で決める）。機能が無効（移行の未適用）なら失敗させる */
+export async function createGroup(g: CaseGroup): Promise<void> {
+  if (!groupsAvailable) throw new AppError("グループの機能は、まだ使えません。管理者にご確認ください。");
+  ok(await client().from("case_groups").insert({ id: g.id, organization_id: await getOrgId(), name: g.name, created_at: g.createdAt }));
 }
 
 function toApplicant(row: ApplicantRow | ApplicantRow[] | null): Applicant {
@@ -274,6 +332,8 @@ export async function loadAll(): Promise<CaseRecord[]> {
     requirementStates: toRequirementStates(r.requirement_states),
     customRequirements: toCustomRequirements(r.custom_requirements),
     acceptedDate: r.accepted_date ?? "",
+    ...(r.group_id ? { groupId: r.group_id } : {}),
+    ...(r.group_id && normalizeRelation(r.group_relation) ? { groupRelation: normalizeRelation(r.group_relation) } : {}),
     plannedApplicationDate: r.planned_application_date ?? "",
     checkMemo: r.check_memo ?? "",
     checks: toChecks(r.case_checks),
@@ -297,6 +357,8 @@ export async function persistCase(c: CaseRecord): Promise<void> {
       memo: c.memo || null,
       workflow_status: c.workflowStatus,
       accepted_date: c.acceptedDate || null,
+      // 移行 0027 の適用前は、列が無いため送らない（従来どおり保存できる）
+      ...(groupsAvailable ? { group_id: c.groupId || null, group_relation: c.groupId ? (c.groupRelation ?? null) : null } : {}),
       planned_application_date: c.plannedApplicationDate || null,
       check_memo: c.checkMemo || null,
       created_by: uid,

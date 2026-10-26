@@ -281,6 +281,16 @@ export interface CheckRecord {
   checkedBy?: string;
 }
 
+/** 主たる申請人との関係の印（表示用のみ。判定・自動処理には使わない） */
+export type GroupRelation = "primary" | "companion" | "other";
+
+/** 案件のグループ（フォルダ）。組織単位。空になっても削除しない */
+export interface CaseGroup {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface CaseRecord {
   id: string;
   caseName: string;
@@ -299,6 +309,10 @@ export interface CaseRecord {
   customRequirements: CustomRequirement[];
   /** 受任日（YYYY-MM-DD）。行政書士が依頼を受けた日。未定なら空（任意項目） */
   acceptedDate: string;
+  /** 属するグループの ID（任意。1案件は1グループのみ）。無ければ未設定。移行 0027 の適用前も未設定 */
+  groupId?: string;
+  /** 主たる申請人との関係の印（任意。グループに属するときのみ意味を持つ） */
+  groupRelation?: GroupRelation;
   /** 申請予定日（YYYY-MM-DD）。未定なら空 */
   plannedApplicationDate: string;
   /** 申請前チェック全体に対する行政書士メモ */

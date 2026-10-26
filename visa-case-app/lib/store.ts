@@ -8,15 +8,22 @@ import { normalizeFormDetails } from "./formDetails";
 import { can, type Action } from "./permissions";
 import { usesSupabase } from "./supabase";
 import * as remote from "./supabaseBackend";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type CaseRecord, type DocumentRecord } from "./types";
+import { normalizeRelation } from "./caseGroups";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type Applicant, type CaseGroup, type CaseRecord, type DocumentRecord } from "./types";
 
 // 接続情報が設定されていれば Supabase、未設定ならブラウザ内の仮データを使う。
 // 画面側は、どちらの場合も同じ関数・フックで読み書きする。
 
 export const CASES_KEY = "visa-case-app:cases:v1";
+export const GROUPS_KEY = "visa-case-app:groups:v1";
 const EMPTY: CaseRecord[] = [];
+const EMPTY_GROUPS: CaseGroup[] = [];
 
 let cases: CaseRecord[] = EMPTY;
+/** 案件のグループ（フォルダ）。Supabase 利用時は、移行 0027 の適用後のみ取得できる */
+let groups: CaseGroup[] = EMPTY_GROUPS;
+/** グループの機能が使えるか。仮データ方式は常に true。Supabase は、表があるとき（移行 0027 の適用後）のみ true */
+let groupsAvailable = !usesSupabase();
 let loaded = false;
 let loading: Promise<void> | null = null;
 let error = "";
@@ -70,6 +77,8 @@ function migrateLocal(c: LegacyCase): CaseRecord {
     requirementStates: migrateStates(c.requirementStates),
     customRequirements: c.customRequirements ?? [],
     acceptedDate: c.acceptedDate ?? "",
+    groupId: c.groupId || undefined,
+    groupRelation: c.groupId ? normalizeRelation(c.groupRelation) : undefined,
     plannedApplicationDate: c.plannedApplicationDate ?? "",
     checkMemo: c.checkMemo ?? "",
     checks: c.checks ?? [],
@@ -105,6 +114,32 @@ function writeLocal(all: CaseRecord[]) {
   }
 }
 
+function readLocalGroups(): CaseGroup[] {
+  try {
+    const raw = localStorage.getItem(localKey(GROUPS_KEY));
+    if (!raw) return EMPTY_GROUPS;
+    return (JSON.parse(raw) as CaseGroup[]).filter((g) => g && typeof g.id === "string" && typeof g.name === "string");
+  } catch {
+    return EMPTY_GROUPS;
+  }
+}
+
+function writeLocalGroups(all: CaseGroup[]) {
+  try {
+    localStorage.setItem(localKey(GROUPS_KEY), JSON.stringify(all));
+  } catch {
+    // 保存できない環境では、この画面を開いている間のみ保持する
+  }
+}
+
+/** 案件とグループを読み込む。Supabase では、グループの表が無い場合も、案件は従来どおり読み込む */
+async function loadSnapshot(): Promise<{ cases: CaseRecord[]; groups: CaseGroup[]; available: boolean }> {
+  if (!usesSupabase()) return { cases: readLocal(), groups: readLocalGroups(), available: true };
+  const loadedCases = await remote.loadAll();
+  const g = await remote.loadGroups();
+  return { cases: loadedCases, groups: g.groups, available: g.available };
+}
+
 // Supabase への書き込みは、操作した順に1件ずつ実行する
 let chain: Promise<void> = Promise.resolve();
 /** 書き込みの失敗の回数。settleWrites が、待っている間の失敗を見分けるのに使う */
@@ -122,7 +157,10 @@ export function ensureLoaded(): Promise<void> {
   if (!loading) {
     loading = (async () => {
       try {
-        cases = usesSupabase() ? await remote.loadAll() : readLocal();
+        const snap = await loadSnapshot();
+        cases = snap.cases;
+        groups = snap.groups;
+        groupsAvailable = snap.available;
         if (usesSupabase()) role = (await remote.getAccount()).role || null;
         loaded = true;
         error = "";
@@ -152,10 +190,12 @@ export function refetch(): Promise<boolean> {
     try {
       await chain;
       const startWrites = writes;
-      const next = usesSupabase() ? await remote.loadAll() : readLocal();
+      const next = await loadSnapshot();
       const nextRole = usesSupabase() ? (await remote.getAccount()).role || null : role;
       if (epoch === startEpoch && writes === startWrites) {
-        cases = next;
+        cases = next.cases;
+        groups = next.groups;
+        groupsAvailable = next.available;
         role = nextRole;
       }
       return true;
@@ -174,6 +214,8 @@ export function resetStore() {
   epoch++;
   refetching = null;
   cases = EMPTY;
+  groups = EMPTY_GROUPS;
+  groupsAvailable = !usesSupabase();
   loaded = false;
   loading = null;
   error = "";
@@ -187,6 +229,19 @@ export function useCases(): CaseRecord[] {
     void ensureLoaded();
   }, []);
   return useSyncExternalStore(subscribe, () => cases, () => EMPTY);
+}
+
+/** 案件のグループの一覧（作成順）。機能が使えない間は空 */
+export function useGroups(): CaseGroup[] {
+  useEffect(() => {
+    void ensureLoaded();
+  }, []);
+  return useSyncExternalStore(subscribe, () => groups, () => EMPTY_GROUPS);
+}
+
+/** グループの機能が使えるか。Supabase で移行 0027 が未適用の間は false（画面でグループの操作を出さない） */
+export function useGroupsAvailable(): boolean {
+  return useSyncExternalStore(subscribe, () => groupsAvailable, () => false);
 }
 
 export function useRole(): string | null {
@@ -217,6 +272,21 @@ export function saveCase(record: CaseRecord) {
   if (usesSupabase()) enqueue(() => remote.persistCase(record));
   else writeLocal(cases);
   emit();
+}
+
+/**
+ * グループを作る。画面を先に更新し、Supabase へは案件の保存より先に書き込む（同じ順序の待ち行列）。
+ * 続けて saveCase / updateCase でこの ID を案件に付けてよい。機能が使えない間は何もせず null を返す。
+ */
+export function createGroup(name: string): CaseGroup | null {
+  if (!groupsAvailable) return null;
+  const group: CaseGroup = { id: crypto.randomUUID(), name: name.trim(), createdAt: new Date().toISOString() };
+  writes++;
+  groups = [...groups, group];
+  if (usesSupabase()) enqueue(() => remote.createGroup(group));
+  else writeLocalGroups(groups);
+  emit();
+  return group;
 }
 
 /**

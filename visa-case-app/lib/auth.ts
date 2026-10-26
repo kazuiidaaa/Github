@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { checkFullName, FULL_NAME_KEY } from "./accountName";
 import { passwordUpdateErrorMessage } from "./authMessages";
 import { clearDemoData, isDemo, localKey, setDemo } from "./demo";
-import { buildDemoSeedCases } from "./demoSeed";
+import { buildDemoSeedCases, buildDemoSeedGroups } from "./demoSeed";
 import { resetDocuments, DOCUMENTS_KEY } from "./documents/store";
-import { CASES_KEY, logAudit, resetStore } from "./store";
+import { CASES_KEY, GROUPS_KEY, logAudit, resetStore } from "./store";
 import { supabase } from "./supabase";
 
 /** undefined：確認中、null：未ログイン。取得に失敗した場合は failed が true になる */
@@ -100,6 +100,7 @@ function seedDemoCases() {
   if (!isDemo()) return; // デモに切り替えられなかった場合は、通常の保存領域へ書かない
   try {
     localStorage.setItem(localKey(CASES_KEY), JSON.stringify(buildDemoSeedCases()));
+    localStorage.setItem(localKey(GROUPS_KEY), JSON.stringify(buildDemoSeedGroups()));
   } catch {
     // 保存できない場合は、案件のない状態で開始する
   }
@@ -107,7 +108,7 @@ function seedDemoCases() {
 
 /** デモモードを開始する。サーバーには接続せず、ブラウザ内の仮データで動作する。 */
 export function startDemo() {
-  clearDemoData([CASES_KEY, DOCUMENTS_KEY]); // 前回の消去漏れがあれば取り除く
+  clearDemoData([CASES_KEY, GROUPS_KEY, DOCUMENTS_KEY]); // 前回の消去漏れがあれば取り除く
   setDemo(true); // 先に切り替える（resetStore が、切替後の方式で役割を初期化するため）
   seedDemoCases();
   resetStore();
@@ -117,7 +118,7 @@ export function startDemo() {
 /** デモモードを終了し、デモで入力したデータを破棄する。 */
 export function exitDemo() {
   setDemo(false);
-  clearDemoData([CASES_KEY, DOCUMENTS_KEY]);
+  clearDemoData([CASES_KEY, GROUPS_KEY, DOCUMENTS_KEY]);
   resetStore();
   resetDocuments();
 }

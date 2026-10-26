@@ -4,6 +4,7 @@ import type { CaseRecord } from "../lib/types";
 // 値はすべてダミー。lib/store.ts の refetch（再取得）の挙動を、Supabase 利用時の経路で検証する。
 const remote = vi.hoisted(() => ({
   loadAll: vi.fn(),
+  loadGroups: vi.fn(),
   getAccount: vi.fn(),
   persistCase: vi.fn(),
   reset: vi.fn(),
@@ -40,6 +41,7 @@ function holdLoad() {
 
 beforeEach(() => {
   remote.loadAll.mockReset().mockResolvedValue([rec("a")]);
+  remote.loadGroups.mockReset().mockResolvedValue({ available: false, groups: [] });
   remote.getAccount.mockReset().mockResolvedValue({ role: "owner" });
   remote.persistCase.mockReset().mockResolvedValue(undefined);
   remote.reset.mockReset();
