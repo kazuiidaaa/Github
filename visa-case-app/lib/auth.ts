@@ -136,7 +136,11 @@ export async function updateFullName(name: string): Promise<string | null> {
   if (!checked.ok) return "処理に失敗しました。時間をおいて再度お試しください。";
   try {
     const { error } = await supabase.auth.updateUser({ data: { [FULL_NAME_KEY]: checked.value } });
-    if (!error) return null;
+    if (!error) {
+      // 氏名そのものは個人情報のため記録しない（いつ・誰が。対象は本人のみ）。値は sanitizeAuditDetail でも保存されない
+      logAudit(null, "member_name_changed");
+      return null;
+    }
     return error.status && error.status < 500
       ? "処理に失敗しました。時間をおいて再度お試しください。"
       : "サーバーに接続できません。時間をおいて再度お試しください。";
