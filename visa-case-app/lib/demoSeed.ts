@@ -1,7 +1,7 @@
 import { CHECK_DEFINITIONS } from "./checks/definitions";
 import { EMPTY_FORM_DETAILS } from "./formDetails";
 import { evaluate } from "./requirements/evaluate";
-import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type CheckRecord, type RequirementState } from "./types";
+import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseGroup, type CaseRecord, type CheckRecord, type RequirementState } from "./types";
 
 // デモ開始時に用意する、架空の案件。実在の個人・会社・書類とは無関係で、番号・住所・連絡先は含めない。
 // 在留期限は、デモ開始日からの相対日数で作る（固定日付だと、日がたつと状態が変わるため）。
@@ -116,5 +116,18 @@ export function buildDemoSeedCases(now: Date = new Date()): CaseRecord[] {
   c.acceptedDate = dateString(now, -45);
   c.plannedApplicationDate = dateString(now, 7);
 
+  // 案件A・Cは、同じグループ（家族の同時申請の例）。Bはグループなし
+  a.groupId = DEMO_GROUP_ID;
+  a.groupRelation = "primary";
+  c.groupId = DEMO_GROUP_ID;
+  c.groupRelation = "companion";
+
   return [a, b, c];
+}
+
+const DEMO_GROUP_ID = "demo-group-1";
+
+/** デモ用の架空のグループ（buildDemoSeedCases の案件A・Cが属する） */
+export function buildDemoSeedGroups(now: Date = new Date()): CaseGroup[] {
+  return [{ id: DEMO_GROUP_ID, name: "サンプルグループ", createdAt: new Date(now.getTime() - 50 * DAY_MS).toISOString() }];
 }

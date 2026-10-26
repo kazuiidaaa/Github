@@ -158,3 +158,11 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
 - `supabase/migrations/0026_list_members_display_name.sql`:メンバー一覧の関数 `list_members` の戻り値に、氏名 `display_name`(`auth.users` の `raw_user_meta_data` の `full_name`)を追加します(Issue #456)。戻り値の形が変わるため、関数を削除してから作り直し、0013 と同じ実行権限(anon 不可、authenticated のみ、owner / admin のみ実行可)を付け直します。
 - **任意の更新です。** 実行しなくても、アプリは従来どおり動作します(氏名は無いものとして扱います)。PC 版の画面は変わりません。iPhone 版のメンバー管理で他の人の氏名を表示するための土台です。
 - 0025 の実行後に、SQL Editor で実行します。実行前に、ファイル冒頭の確認クエリを実行してください。戻す場合は、ファイル冒頭の手順(0013 の `list_members` の定義の再実行)に従います。
+
+## 0027(案件のグループ)
+
+- `supabase/migrations/0027_case_groups.sql`:案件をグループ(フォルダ)でまとめるための表 `case_groups`(名前・組織・作成日)と、`cases` の任意の列 `group_id`(1案件は1グループのみ)・`group_relation`(主たる申請人との関係の印:`primary` / `companion` / `other`)を追加します(Issue #474 / #456)。
+- **任意の更新です。** 実行しなくても、アプリは従来どおり動作します(表が無い間は、グループの機能が画面に出ないだけです。案件の保存にもグループの列を含めません)。既存の案件は、グループなしのままです。
+- 権限は既存の `cases` と同等です(閲覧は全役割、作成・更新は owner / admin / staff、削除は owner / admin。viewer は閲覧のみ)。グループを削除しても案件は消えません(`group_id` だけが空になります)。アプリは、空になったグループも削除しません。
+- 0026 の実行後に、SQL Editor で実行します。実行前に、ファイル冒頭の確認クエリ(どちらも 0 件)を実行してください。PostgreSQL 15 以上が必要です。戻す場合は、ファイル冒頭の手順に従います(グループの情報は失われ、案件は残ります)。
+- 設計は `docs/case-groups.md` を参照してください。
