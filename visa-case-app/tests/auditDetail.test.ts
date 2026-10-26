@@ -23,3 +23,10 @@ describe("監査ログの detail", () => {
     expect(sanitizeAuditDetail({})).toBeUndefined();
   });
 });
+
+describe("グループの監査記録", () => {
+  it("groupId（UUID）は値を残し、名前などは項目名のみ", () => {
+    expect(sanitizeAuditDetail({ groupId: "3f2b8c1e-0000-4000-8000-000000000001" })).toEqual({ groupId: "3f2b8c1e-0000-4000-8000-000000000001" });
+    expect(sanitizeAuditDetail({ groupName: "ダミー名" })).toEqual({ changedFields: ["groupName"] });
+  });
+});

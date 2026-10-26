@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // 値はすべてダミー。PC 版のグループ表示（一覧の見出し・関係の印、案件詳細のグループ欄）を検証する。
 const store = vi.hoisted(() => ({
   available: true,
+  canDelete: true,
   groups: [] as { id: string; name: string; createdAt: string }[],
   cases: [] as unknown[],
 }));
@@ -12,7 +13,10 @@ vi.mock("../lib/store", () => ({
   useGroupsAvailable: () => store.available,
   useGroups: () => store.groups,
   useCases: () => store.cases,
+  useCan: () => store.canDelete,
   createGroup: vi.fn(),
+  renameGroup: vi.fn(),
+  deleteGroup: vi.fn(),
   updateCase: vi.fn(),
   logAudit: vi.fn(),
 }));
@@ -30,6 +34,7 @@ const groups = buildDemoSeedGroups();
 
 beforeEach(() => {
   store.available = true;
+  store.canDelete = true;
   store.groups = groups;
   store.cases = demo;
 });
@@ -85,5 +90,23 @@ describe("案件詳細のグループ欄", () => {
     store.available = false;
     store.groups = [];
     expect(renderToStaticMarkup(<CaseGroupSection record={outside} canEdit />)).toBe("");
+  });
+});
+
+describe("PC 版のグループの名前の変更・削除の入口", () => {
+  const inGroup = demo.find((c) => c.groupId)! as CaseRecord;
+  it("編集できる役割には名前の変更を、owner / admin には削除も出す（担当者には削除を出さない）", () => {
+    const admin = renderToStaticMarkup(<CaseGroupSection record={inGroup} canEdit />);
+    expect(admin).toContain("グループの名前を変更");
+    expect(admin).toContain("グループを削除");
+    store.canDelete = false;
+    const staff = renderToStaticMarkup(<CaseGroupSection record={inGroup} canEdit />);
+    expect(staff).toContain("グループの名前を変更");
+    expect(staff).not.toContain("グループを削除");
+  });
+  it("閲覧のみには、どちらも出さない", () => {
+    const html = renderToStaticMarkup(<CaseGroupSection record={inGroup} canEdit={false} />);
+    expect(html).not.toContain("グループの名前を変更");
+    expect(html).not.toContain("グループを削除");
   });
 });

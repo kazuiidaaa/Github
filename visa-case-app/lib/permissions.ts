@@ -14,6 +14,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 export type Action =
   | "edit" // 案件の作成・編集、書類・必要書類・チェック・文書の管理
   | "deleteCase"
+  | "deleteGroup" // 案件グループの削除（名前の変更は edit）
   | "manageMembers" // メンバーの一覧・追加・削除
   | "changeRole"
   | "renameOrganization";
@@ -21,6 +22,7 @@ export type Action =
 const ALLOWED: Record<Action, readonly Role[]> = {
   edit: ["owner", "admin", "staff"],
   deleteCase: ["owner", "admin"],
+  deleteGroup: ["owner", "admin"],
   manageMembers: ["owner", "admin"],
   changeRole: ["owner"],
   renameOrganization: ["owner"],

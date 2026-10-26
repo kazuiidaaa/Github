@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   casesRows: [] as unknown[],
   upserts: [] as { table: string; row: Record<string, unknown> }[],
   inserts: [] as { table: string; row: Record<string, unknown> }[],
+  updates: [] as { table: string; row: Record<string, unknown> }[],
+  deletes: [] as string[],
 }));
 
 vi.mock("../lib/supabase", () => ({
@@ -24,7 +26,15 @@ vi.mock("../lib/supabase", () => ({
         return { data: [], error: null };
       };
       const b: Record<string, unknown> = {};
-      for (const m of ["select", "eq", "in", "order", "limit", "delete"]) b[m] = () => b;
+      for (const m of ["select", "eq", "in", "order", "limit"]) b[m] = () => b;
+      b.delete = () => {
+        state.deletes.push(table);
+        return b;
+      };
+      b.update = (row: Record<string, unknown>) => {
+        state.updates.push({ table, row });
+        return b;
+      };
       b.upsert = (row: Record<string, unknown>) => {
         state.upserts.push({ table, row });
         return b;
@@ -74,6 +84,8 @@ beforeEach(() => {
   state.casesRows = [];
   state.upserts = [];
   state.inserts = [];
+  state.updates = [];
+  state.deletes = [];
 });
 
 describe("isMissingSchemaError", () => {
@@ -181,5 +193,37 @@ describe("移行 0027 の適用後", () => {
       table: "case_groups",
       row: { id: "g-9", organization_id: "org-1", name: "新しいグループ", created_at: "2026-02-01T00:00:00.000Z" },
     });
+  });
+
+  it("renameGroup は名前のみを更新する。0 行の更新（権限なし）は失敗にする", async () => {
+    const b = await fresh();
+    await b.loadGroups();
+    state.groupsResult = { data: [{ id: "g-1" }], error: null };
+    await b.renameGroup("g-1", "変更後");
+    expect(state.updates).toEqual([{ table: "case_groups", row: { name: "変更後" } }]);
+    state.groupsResult = { data: [], error: null };
+    await expect(b.renameGroup("g-1", "変更後")).rejects.toThrow();
+  });
+
+  it("deleteGroup は case_groups のみを削除し、cases には触れない。0 行の削除（権限なし）は失敗にする", async () => {
+    const b = await fresh();
+    await b.loadGroups();
+    state.groupsResult = { data: [{ id: "g-1" }], error: null };
+    await b.deleteGroup("g-1");
+    expect(state.deletes).toEqual(["case_groups"]);
+    expect(state.updates).toHaveLength(0);
+    state.groupsResult = { data: [], error: null };
+    await expect(b.deleteGroup("g-1")).rejects.toThrow();
+  });
+});
+
+describe("移行 0027 の未適用での名前変更・削除", () => {
+  it("拒否する", async () => {
+    state.groupsResult = { data: null, error: { code: "PGRST205", message: "Could not find the table" } };
+    const b = await fresh();
+    await b.loadGroups();
+    await expect(b.renameGroup("g-1", "x")).rejects.toThrow();
+    await expect(b.deleteGroup("g-1")).rejects.toThrow();
+    expect(state.deletes).toHaveLength(0);
   });
 });

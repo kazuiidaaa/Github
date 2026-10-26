@@ -216,6 +216,26 @@ export async function createGroup(g: CaseGroup): Promise<void> {
   ok(await client().from("case_groups").insert({ id: g.id, organization_id: await getOrgId(), name: g.name, created_at: g.createdAt }));
 }
 
+/**
+ * グループの名前を変える。更新できる役割は DB の規則（owner / admin / staff）が決める。
+ * 権限が無いと、DB は例外にせず 0 行の更新で返すため、行が無かったときは失敗として扱う。
+ */
+export async function renameGroup(id: string, name: string): Promise<void> {
+  if (!groupsAvailable) throw new AppError("グループの機能は、まだ使えません。管理者にご確認ください。");
+  const rows = ok(await client().from("case_groups").update({ name }).eq("id", id).select("id")) as { id: string }[] | null;
+  if (!rows || rows.length === 0) throw new AppError("グループの名前を変更できませんでした。権限をご確認ください。");
+}
+
+/**
+ * グループを削除する。所属していた案件は消えず、DB 側（外部キーの on delete set null）で group_id のみが null になる。
+ * 削除できる役割は DB の規則（owner / admin）が決める。権限が無いと 0 行の削除で返るため、行が無かったときは失敗として扱う。
+ */
+export async function deleteGroup(id: string): Promise<void> {
+  if (!groupsAvailable) throw new AppError("グループの機能は、まだ使えません。管理者にご確認ください。");
+  const rows = ok(await client().from("case_groups").delete().eq("id", id).select("id")) as { id: string }[] | null;
+  if (!rows || rows.length === 0) throw new AppError("グループを削除できませんでした。権限をご確認ください。");
+}
+
 function toApplicant(row: ApplicantRow | ApplicantRow[] | null): Applicant {
   const a = Array.isArray(row) ? row[0] : row;
   return {

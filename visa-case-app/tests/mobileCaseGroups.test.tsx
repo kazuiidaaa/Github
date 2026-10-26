@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const store = vi.hoisted(() => ({
   available: true,
   canEdit: true,
+  canDelete: true,
   groups: [] as { id: string; name: string; createdAt: string }[],
   cases: [] as unknown[],
 }));
@@ -13,8 +14,10 @@ vi.mock("../lib/store", () => ({
   useGroupsAvailable: () => store.available,
   useGroups: () => store.groups,
   useCases: () => store.cases,
-  useCan: () => store.canEdit,
+  useCan: (a: string) => (a === "deleteGroup" ? store.canDelete : store.canEdit),
   createGroup: vi.fn(),
+  renameGroup: vi.fn(),
+  deleteGroup: vi.fn(),
   updateCase: vi.fn(),
   settleWrites: vi.fn(),
   logAudit: vi.fn(),
@@ -35,6 +38,7 @@ const outside = demo.find((c) => !c.groupId)! as CaseRecord;
 beforeEach(() => {
   store.available = true;
   store.canEdit = true;
+  store.canDelete = true;
   store.groups = buildDemoSeedGroups();
   store.cases = demo;
 });
@@ -72,5 +76,13 @@ describe("iPhone 版の案件詳細のグループ欄", () => {
     store.available = false;
     store.groups = [];
     expect(renderToStaticMarkup(<MobileCaseGroup record={outside} />)).toBe("");
+  });
+});
+
+describe("iPhone 版のグループの名前の変更・削除の入口", () => {
+  it("編集できる役割には「名前の変更・削除」の行を出す。閲覧のみには出さない", () => {
+    expect(renderToStaticMarkup(<MobileCaseGroup record={inGroup} />)).toContain('id="m-case-group-manage"');
+    store.canEdit = false;
+    expect(renderToStaticMarkup(<MobileCaseGroup record={inGroup} />)).not.toContain('id="m-case-group-manage"');
   });
 });
