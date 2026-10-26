@@ -1,5 +1,6 @@
 "use client";
 
+import type { MessageKey } from "@/lib/i18n/messages";
 import { DateField } from "@/components/DateField";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -34,6 +35,14 @@ const RESULT_KEY = {
   optional: "caseRequirements.resultOptional",
 } as const satisfies Record<Result, string>;
 const RESULT_TONE: Record<Result, "red" | "gray" | "yellow"> = { required: "red", not_required: "gray", check: "yellow", optional: "gray" };
+/**
+ * 判定の表示の文言。check（条件付き）は、条件の注記（note）があれば「該当する場合のみ」、なければ「状況により必要」。
+ * 表示のみで、判定（evaluate）の結果は変えない。
+ */
+export function resultLabelKey(result: Result, note?: string): MessageKey {
+  if (result === "check") return note ? "caseRequirements.resultCheckConditional" : "caseRequirements.resultCheckSituational";
+  return RESULT_KEY[result];
+}
 const PARTY_KEY = { applicant: "caseRequirements.partyApplicant", organization: "caseRequirements.partyOrganization" } as const;
 
 // 狭い画面幅（md 未満）では、表の行をカード状に縦積みして表示する。
@@ -388,7 +397,7 @@ export function RequirementsPanel({
   );
 }
 
-function Row({
+export function Row({
   item,
   today,
   onPatch,
@@ -420,7 +429,7 @@ function Row({
               })
             : reasonText(t, item.reasonCode, (n) => requirementNote(lang, n))}
         </p>
-        {rule.verify && <Badge tone="yellow">{t("caseRequirements.verifyBadge")}</Badge>}
+        {rule.verify && <Badge tone="blue">{t("caseRequirements.verifyBadge")}</Badge>}
         {rule.id === "photo" && (
           <div className="mt-2 text-xs">
             {photo ? (
@@ -442,9 +451,9 @@ function Row({
       </td>
       <td className={TD_HALF_CLASS}>
         <CellLabel>{t("caseRequirements.colResult")}</CellLabel>
-        <Badge tone={RESULT_TONE[item.result]}>{t(RESULT_KEY[item.result])}</Badge>
+        <Badge tone={RESULT_TONE[item.result]}>{t(resultLabelKey(item.result, rule.note))}</Badge>
         {state.override && (
-          <p className="mt-1 text-xs text-muted">{t("caseRequirements.overrideNote", { result: t(RESULT_KEY[item.effective]) })}</p>
+          <p className="mt-1 text-xs text-muted">{t("caseRequirements.overrideNote", { result: t(resultLabelKey(item.effective, rule.note)) })}</p>
         )}
       </td>
       <td className={TD_STATUS_CLASS}>
