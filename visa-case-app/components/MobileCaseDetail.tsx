@@ -4,6 +4,7 @@ import { ExpiryBadge } from "@/components/ExpiryBadge";
 import { CaseEditAction } from "@/components/mobile/CaseEditSheet";
 import { BackLink } from "@/components/mobile/BackLink";
 import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
+import { MobileCaseGroup } from "@/components/mobile/MobileCaseGroup";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { Badge, type Tone } from "@/components/ui";
 import { WorkflowBadge } from "@/components/WorkflowBadge";
@@ -94,6 +95,8 @@ export function MobileCaseDetail({ record }: { record: CaseRecord }) {
           }
         />
       </GroupedList>
+
+      <MobileCaseGroup record={record} />
 
       <GroupedList header={t("mobileDetail.deadlines")}>
         <GroupedRow label={t("casePage.field_residenceExpiryDate")} value={a.residenceExpiryDate ? <ExpiryBadge date={a.residenceExpiryDate} /> : empty} />

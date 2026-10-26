@@ -18,6 +18,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("../lib/store", () => ({
   useCases: () => ctx.cases,
+  useGroups: () => [],
   useStoreLoaded: () => ctx.loaded,
   useStoreError: () => ctx.error,
   useCan: () => ctx.canEdit,

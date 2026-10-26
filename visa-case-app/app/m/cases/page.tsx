@@ -10,10 +10,25 @@ import { GroupedList, GroupedRow } from "@/components/mobile/GroupedList";
 import { LoadingSpinner } from "@/components/mobile/LoadingSpinner";
 import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { SearchField } from "@/components/mobile/SearchField";
+import { groupHeads as buildGroupHeads, orderRowsByGroup } from "@/lib/caseGroups";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, PAGE_SIZE, type CaseFilter } from "@/lib/caseMetrics";
 import { readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
 import { useT } from "@/lib/i18n/LanguageProvider";
-import { ensureLoaded, refetch, useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
+import { ensureLoaded, refetch, useCan, useCases, useGroups, useStoreError, useStoreLoaded } from "@/lib/store";
+
+/** グループの見出し（フォルダの印・名前・件数。GroupedList の header に置く） */
+function GroupHeading({ name, count }: { name: string; count: number }) {
+  const t = useT();
+  return (
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+      <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M2.5 5.5a1 1 0 0 1 1-1h4l1.5 2h7.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1z" strokeLinejoin="round" />
+      </svg>
+      <span className="min-w-0 break-words">{name}</span>
+      <span className="shrink-0 font-normal">{t("caseGroup.countLabel", { count })}</span>
+    </span>
+  );
+}
 
 /** 検索語を URL へ反映するまでの待ち時間（components/CaseFilters.tsx と同じ） */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -35,6 +50,7 @@ function CasesView() {
   const router = useRouter();
   const params = useSearchParams();
   const cases = useCases();
+  const groups = useGroups();
   const loaded = useStoreLoaded();
   const error = useStoreError();
   const canEdit = useCan("edit");
@@ -43,7 +59,9 @@ function CasesView() {
 
   const filter = useMemo(() => readFilter(new URLSearchParams(params.toString())), [params]);
   const requestedPage = readPage(new URLSearchParams(params.toString()));
-  const rows = useMemo(() => applyFilter(cases, filter), [cases, filter]);
+  // グループに入っている案件は、グループごとにまとめた並びにする（グループ外は従来どおり。「さらに読み込む」もこの並びで進む）
+  const rows = useMemo(() => orderRowsByGroup(applyFilter(cases, filter), groups), [cases, filter, groups]);
+  const groupHeads = useMemo(() => buildGroupHeads(rows, groups), [rows, groups]);
   const active = isFilterActive(filter);
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(requestedPage, pages);
@@ -151,6 +169,15 @@ function CasesView() {
   const resultText = t("caseList.resultCount", { count: rows.length, total: cases.length });
   const activeCount = countActiveConditions(filter);
 
+  // 表示する行を、グループごと（連続する同じグループ）と、グループ外の連なりに分ける
+  const segments: { groupId: string | null; rows: typeof shown }[] = [];
+  for (const row of shown) {
+    const gid = row.record.groupId && groupHeads.has(row.record.groupId) ? row.record.groupId : null;
+    const prev = segments[segments.length - 1];
+    if (prev && prev.groupId === gid) prev.rows.push(row);
+    else segments.push({ groupId: gid, rows: [row] });
+  }
+
   let empty = "";
   if (rows.length === 0) empty = cases.length === 0 ? t("caseList.noCases") : t("caseList.noMatch");
 
@@ -234,11 +261,24 @@ function CasesView() {
           )}
         </div>
       ) : (
-        <GroupedList ariaLabel={t("mobile.casesListAria")} footer={t("caseList.disclaimer")}>
-          {shown.map((row) => (
-            <CaseRow key={row.record.id} row={row} />
-          ))}
-        </GroupedList>
+        <>
+          {segments.map((seg, i) => {
+            const last = i === segments.length - 1;
+            const head = seg.groupId ? groupHeads.get(seg.groupId) : undefined;
+            return (
+              <GroupedList
+                key={`${seg.groupId ?? "none"}-${seg.rows[0].record.id}`}
+                ariaLabel={head ? undefined : t("mobile.casesListAria")}
+                header={head ? <GroupHeading name={head.name} count={head.count} /> : undefined}
+                footer={last ? t("caseList.disclaimer") : undefined}
+              >
+                {seg.rows.map((row) => (
+                  <CaseRow key={row.record.id} row={row} inGroup={!!head} />
+                ))}
+              </GroupedList>
+            );
+          })}
+        </>
       )}
 
       {shown.length < rows.length && (
