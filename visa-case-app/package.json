@@ -29,7 +29,7 @@
     "eslint": "10.13.0",
     "eslint-config-next": "16.4.2",
     "jszip": "^3.10.2",
-    "style-dictionary": "^4.4.0",
+    "style-dictionary": "^5.7.1",
     "tailwindcss": "^4",
     "typescript": "5.9.3",
     "vitest": "^5.0.5"
