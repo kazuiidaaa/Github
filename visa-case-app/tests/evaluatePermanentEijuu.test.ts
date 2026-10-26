@@ -35,7 +35,7 @@ const ids = (e: ReturnType<typeof evaluate>, r: string) => e.items.filter((i) =>
 const set = (id: string) => RULE_SETS.find((r) => r.id === id)!;
 const nh = set("eijuu_nihonjin_haigusha");
 const eh = set("eijuu_eijusha_haigusha");
-const COMMON = ["eijuu_application_form", "eijuu_photo", "eijuu_household_residence_certificate", "eijuu_identity_guarantee", "eijuu_identity_guarantee_documents", "eijuu_written_acknowledgment"];
+const COMMON = ["eijuu_application_form", "eijuu_photo", "eijuu_household_residence_certificate", "eijuu_identity_guarantee", "eijuu_identity_guarantee_documents", "eijuu_written_acknowledgment", "eijuu_passport_presentation", "eijuu_residence_card_presentation"];
 
 describe("永住許可申請の手続（EJ-1）", () => {
   it("手続種別 permanent がある。変更後の在留資格は不要（現在の在留資格で規則を引く）", () => {
@@ -83,7 +83,7 @@ describe("永住許可申請の区分（EJ-2）", () => {
     expect(eijuuTypesOf(eh)).toEqual(["eijushaSpouse", "eijushaChild"]);
   });
 
-  it("区分が未選択の間は、区分に共通の6書類だけを出し、案内を出す", () => {
+  it("区分が未選択の間は、区分に共通の書類（必須8件）だけを出し、案内を出す", () => {
     for (const status of ["日本人の配偶者等", "永住者の配偶者等"]) {
       const e = evaluate(make("permanent", status));
       expect(e.needsEijuuType, status).toBe(true);
@@ -106,19 +106,19 @@ describe("永住許可申請の区分（EJ-2）", () => {
 });
 
 describe("提出書類一覧表4点の書類（EJ-3）", () => {
-  // 一覧表の書類数：日本人の配偶者21・日本人の実子19・永住者等の配偶者20・永住者等の実子19（区分を選んだときに required または check で出る数）
+  // 一覧表の書類数：日本人の配偶者21・日本人の実子19・永住者等の配偶者20・永住者等の実子19に、人の判断で足した3行（EJ-4の必須2行・EJ-5の要確認1行）を加えた数（区分を選んだときに required または check で出る数）
   const cases: [string, string, EijuuType, number, number][] = [
-    ["日本人の配偶者", "日本人の配偶者等", "nihonjinSpouse", 21, 7],
-    ["日本人の実子・特別養子", "日本人の配偶者等", "nihonjinChild", 19, 7],
-    ["永住者等の配偶者", "永住者の配偶者等", "eijushaSpouse", 20, 7],
-    ["永住者等の実子", "永住者の配偶者等", "eijushaChild", 19, 7],
+    ["日本人の配偶者", "日本人の配偶者等", "nihonjinSpouse", 24, 8],
+    ["日本人の実子・特別養子", "日本人の配偶者等", "nihonjinChild", 22, 8],
+    ["永住者等の配偶者", "永住者の配偶者等", "eijushaSpouse", 23, 8],
+    ["永住者等の実子", "永住者の配偶者等", "eijushaChild", 22, 8],
   ];
   for (const [label, status, type, total, checks] of cases) {
-    it(`${label}：書類は${total}件（うち該当者のみの要確認が${checks}件）。任意の書類はない`, () => {
+    it(`${label}：書類は${total}件（うち該当者のみの要確認が${checks}件）。任意の書類はセルフチェックシートのみ（EJ-8）`, () => {
       const e = evaluate(make("permanent", status, type));
       expect(ids(e, "required").length + ids(e, "check").length).toBe(total);
       expect(ids(e, "check").length).toBe(checks);
-      expect(ids(e, "optional")).toEqual([]);
+      expect(ids(e, "optional")).toEqual(["eijuu_selfcheck_sheet"]);
       expect(e.items.every((i) => !i.rule.verify)).toBe(true);
     });
   }
@@ -148,6 +148,10 @@ describe("提出書類一覧表4点の書類（EJ-3）", () => {
       "eijuu_identity_guarantee",
       "eijuu_identity_guarantee_documents",
       "eijuu_written_acknowledgment",
+      "eijuu_passport_presentation",
+      "eijuu_residence_card_presentation",
+      "eijuu_agent_identity_document",
+      "eijuu_selfcheck_sheet",
     ]);
     expect(ids(e, "check")).toEqual([
       "eijuu_resident_tax_timely_spouse",
@@ -157,6 +161,7 @@ describe("提出書類一覧表4点の書類（EJ-3）", () => {
       "eijuu_nhi_receipt_spouse",
       "eijuu_social_insurance_receipt_spouse",
       "eijuu_social_insurance_certificate_spouse",
+      "eijuu_agent_identity_document",
     ]);
   });
 
@@ -180,12 +185,25 @@ describe("提出書類一覧表4点の書類（EJ-3）", () => {
     expect(only("永住者の配偶者等", "eijushaChild")).toEqual(["eijuu_parentage_proof"]);
   });
 
-  it("一覧表にない書類（旅券・在留カードの提示、申請取次者の書類、セルフチェックシート）は足していない（EJ-4〜EJ-8）", () => {
+  it("一覧表にない書類のうち、人の判断で足した4行（EJ-4・EJ-5・EJ-8）は、区分に共通で、全4区分に出る", () => {
+    const added: [string, string][] = [
+      ["eijuu_passport_presentation", "required"],
+      ["eijuu_residence_card_presentation", "required"],
+      ["eijuu_agent_identity_document", "check"],
+      ["eijuu_selfcheck_sheet", "optional"],
+    ];
     for (const rs of [nh, eh]) {
+      for (const [id, level] of added) {
+        const r = rs.rules.find((x) => x.id === id)!;
+        expect(r.level, id).toBe(level);
+        expect(r.eijuuTypes, id).toBeUndefined();
+      }
       for (const r of rs.rules) {
-        expect(r.name, r.id).not.toMatch(/旅券|パスポート|在留カード（提示）|身分を証する|セルフチェック|預貯金通帳の写し$/);
+        expect(r.name, r.id).not.toMatch(/預貯金通帳の写し$/);
       }
     }
+    // 区分が未選択の間も、区分に共通の書類として出る
+    expect(evaluate(make("permanent", "日本人の配偶者等")).items.map((i) => i.rule.id)).toEqual(expect.arrayContaining(added.map(([id]) => id)));
   });
 
   it("規則の id は規則集合の中で重ならない", () => {
