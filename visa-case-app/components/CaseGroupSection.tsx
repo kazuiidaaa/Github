@@ -3,19 +3,21 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GroupRelationBadge } from "@/components/GroupRelationBadge";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 import { Button, Field, inputClass } from "@/components/ui";
 import { GROUP_RELATIONS, groupNameError, normalizeRelation, sortCasesInGroup, withGroup } from "@/lib/caseGroups";
 import { focusField } from "@/lib/formFocus";
 import { relationKey } from "@/lib/i18n/caseGroup";
 import { useT } from "@/lib/i18n/LanguageProvider";
-import { createGroup, logAudit, updateCase, useCases, useGroups, useGroupsAvailable } from "@/lib/store";
+import { createGroup, deleteGroup, logAudit, renameGroup, updateCase, useCan, useCases, useGroups, useGroupsAvailable } from "@/lib/store";
 import type { CaseRecord, GroupRelation } from "@/lib/types";
 
 const NEW = "__new__";
 const EDIT_BUTTON_ID = "case-group-edit";
 const SELECT_ID = "case-group-select";
 const NAME_ID = "case-group-new-name";
+const RENAME_ID = "case-group-rename";
 
 /**
  * 案件詳細の「グループ」。案件を、グループに入れる・移す・外す（案件は消えない）。新しいグループをその場で作って入れることもできる。
@@ -33,6 +35,12 @@ export function CaseGroupSection({ record, canEdit }: { record: CaseRecord; canE
   const [newName, setNewName] = useState("");
   const [relation, setRelation] = useState<GroupRelation | "">(record.groupRelation ?? "");
   const [error, setError] = useState("");
+  const canDelete = useCan("deleteGroup");
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameError, setRenameError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [busy, setBusy] = useState(false);
   const focusAfterToggle = useRef<"form" | "editButton" | null>(null);
   useEffect(() => {
     const target = focusAfterToggle.current;
@@ -56,6 +64,32 @@ export function CaseGroupSection({ record, canEdit }: { record: CaseRecord; canE
     setError("");
     focusAfterToggle.current = "form";
     setEditing(true);
+  }
+
+  async function saveRename() {
+    if (!current || busy) return;
+    const problem = groupNameError(renameValue);
+    if (problem) {
+      setRenameError(t(problem === "required" ? "caseGroup.errNameRequired" : "caseGroup.errNameTooLong"));
+      requestAnimationFrame(() => focusField(RENAME_ID));
+      return;
+    }
+    setBusy(true);
+    const done = await renameGroup(current.id, renameValue);
+    setBusy(false);
+    if (done) {
+      toast.success(t("caseGroup.renameSaved"));
+      setRenaming(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!current || busy) return;
+    setBusy(true);
+    const done = await deleteGroup(current.id);
+    setBusy(false);
+    setDeleting(false);
+    if (done) toast.success(t("caseGroup.deleted"));
   }
 
   function finish() {
@@ -128,7 +162,65 @@ export function CaseGroupSection({ record, canEdit }: { record: CaseRecord; canE
               )}
             </div>
           )}
+          {current && canEdit && available && (
+            <div className="mt-4 border-t border-separator pt-4">
+              <h3 className="mb-2 text-mac-footnote font-bold text-muted">{t("caseGroup.manage")}</h3>
+              {renaming ? (
+                <div className="space-y-3">
+                  <Field label={t("caseGroup.renameLabel")} required error={renameError}>
+                    <input
+                      id={RENAME_ID}
+                      className={inputClass}
+                      value={renameValue}
+                      aria-invalid={renameError ? true : undefined}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                    />
+                  </Field>
+                  <div className="flex flex-wrap justify-end gap-3">
+                    <Button type="button" variant="secondary" disabled={busy} onClick={() => setRenaming(false)}>
+                      {t("caseGroup.cancel")}
+                    </Button>
+                    <Button type="button" disabled={busy} onClick={() => void saveRename()}>
+                      {t("caseGroup.save")}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      setRenameValue(current.name);
+                      setRenameError("");
+                      setRenaming(true);
+                      requestAnimationFrame(() => focusField(RENAME_ID));
+                    }}
+                  >
+                    {t("caseGroup.renameOpen")}
+                  </Button>
+                  {canDelete && (
+                    <Button type="button" variant="danger" onClick={() => setDeleting(true)}>
+                      {t("caseGroup.deleteOpen")}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           <p className="mt-4 text-xs text-muted">{t("caseGroup.hint")}</p>
+          {deleting && current && (
+            <ConfirmDialog
+              title={t("caseGroup.deleteTitle")}
+              message={t("caseGroup.deleteMessage", { name: current.name })}
+              note={t("caseGroup.deleteNote")}
+              confirmLabel={t("caseGroup.deleteConfirm")}
+              tone="caution"
+              busy={busy}
+              onCancel={() => setDeleting(false)}
+              onConfirm={() => void confirmDelete()}
+            />
+          )}
         </>
       ) : (
         <div className="space-y-5">

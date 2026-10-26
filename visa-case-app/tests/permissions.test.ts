@@ -7,6 +7,13 @@ describe("can", () => {
     expect(can("viewer", "deleteCase")).toBe(false);
     expect(can("viewer", "manageMembers")).toBe(false);
   });
+  it("案件グループの削除は owner / admin のみ。名前の変更は編集と同じ（staff 以上）", () => {
+    expect(can("owner", "deleteGroup")).toBe(true);
+    expect(can("admin", "deleteGroup")).toBe(true);
+    expect(can("staff", "deleteGroup")).toBe(false);
+    expect(can("viewer", "deleteGroup")).toBe(false);
+    expect(can("staff", "edit")).toBe(true);
+  });
   it("担当者は編集できるが、案件を削除できない", () => {
     expect(can("staff", "edit")).toBe(true);
     expect(can("staff", "deleteCase")).toBe(false);

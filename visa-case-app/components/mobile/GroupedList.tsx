@@ -57,6 +57,7 @@ export function GroupedList({
  * - pressed   onClick の行が「選択のオン・オフ」のとき、今の状態（aria-pressed）。任意
  */
 export function GroupedRow({
+  id,
   label,
   value,
   title,
@@ -69,6 +70,8 @@ export function GroupedRow({
   current,
   pressed,
 }: {
+  /** 押せる行（onClick）のボタンに付ける id。フォーカスを戻す先の指定に使う。任意 */
+  id?: string;
   label?: ReactNode;
   value?: ReactNode;
   title?: ReactNode;
@@ -113,7 +116,7 @@ export function GroupedRow({
           {body}
         </Link>
       ) : onClick ? (
-        <button type="button" onClick={onClick} aria-pressed={pressed} aria-current={current ? "page" : undefined} className={cls}>
+        <button type="button" id={id} onClick={onClick} aria-pressed={pressed} aria-current={current ? "page" : undefined} className={cls}>
           {body}
         </button>
       ) : (

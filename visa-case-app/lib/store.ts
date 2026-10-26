@@ -283,10 +283,87 @@ export function createGroup(name: string): CaseGroup | null {
   const group: CaseGroup = { id: crypto.randomUUID(), name: name.trim(), createdAt: new Date().toISOString() };
   writes++;
   groups = [...groups, group];
-  if (usesSupabase()) enqueue(() => remote.createGroup(group));
-  else writeLocalGroups(groups);
+  if (usesSupabase()) {
+    // 作成に成功したときだけ、監査ログに残す（名前は残さず、ID のみ）
+    enqueue(async () => {
+      await remote.createGroup(group);
+      await remote.audit(null, "group_created", sanitizeAuditDetail({ groupId: group.id }));
+    });
+  } else writeLocalGroups(groups);
   emit();
   return group;
+}
+
+/** グループの書き込みを、操作した順に実行する。失敗したら画面を変えず、全体のエラーに理由を出して false を返す */
+async function runGroupWrite(failure: string, task: () => Promise<void>, apply: () => void): Promise<boolean> {
+  writes++;
+  if (!usesSupabase()) {
+    apply();
+    writeLocalGroups(groups);
+    writeLocal(cases);
+    emit();
+    return true;
+  }
+  let done = false;
+  chain = chain
+    .then(async () => {
+      try {
+        await task();
+        apply();
+        done = true;
+        error = "";
+      } catch (e) {
+        writeFailures++;
+        error = `${failure}：${messageOf(e)}`;
+      }
+      emit();
+    })
+    .catch(() => {});
+  await chain;
+  return done;
+}
+
+/** グループの名前を変える。失敗したときは名前を変えず false を返す。名前の中身は監査ログに残さない */
+export async function renameGroup(id: string, name: string): Promise<boolean> {
+  const next = name.trim();
+  if (!groupsAvailable || !next || !groups.some((g) => g.id === id)) return false;
+  return runGroupWrite(
+    "グループの名前を変更できませんでした",
+    async () => {
+      if (!usesSupabase()) return;
+      await remote.renameGroup(id, next);
+      await remote.audit(null, "group_renamed", sanitizeAuditDetail({ groupId: id }));
+    },
+    () => {
+      groups = groups.map((g) => (g.id === id ? { ...g, name: next } : g));
+    },
+  );
+}
+
+/**
+ * グループを削除する。所属していた案件は消さず、グループから外れるだけ（空のグループは自動では削除しない）。
+ * 失敗したときはグループも案件も変えず false を返す。
+ */
+export async function deleteGroup(id: string): Promise<boolean> {
+  if (!groupsAvailable || !groups.some((g) => g.id === id)) return false;
+  return runGroupWrite(
+    "グループを削除できませんでした。グループと案件は残っています",
+    async () => {
+      if (!usesSupabase()) return;
+      await remote.deleteGroup(id);
+      await remote.audit(null, "group_deleted", sanitizeAuditDetail({ groupId: id }));
+    },
+    () => {
+      groups = groups.filter((g) => g.id !== id);
+      cases = cases.map((c) => {
+        if (c.groupId !== id) return c;
+        const next = { ...c };
+        delete next.groupId;
+        delete next.groupRelation;
+        return next;
+      });
+    },
+  );
 }
 
 /**

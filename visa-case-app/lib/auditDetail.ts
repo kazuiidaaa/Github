@@ -6,6 +6,7 @@ export type AuditOutcome = "success" | "failure";
 /** 値をそのまま保存してよい項目（ID・種別・列挙値・件数のみ） */
 const SAFE_KEYS = new Set([
   "requirementId",
+  "groupId",
   "checkKey",
   "documentType",
   "type",
