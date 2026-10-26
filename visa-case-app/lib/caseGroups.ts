@@ -37,12 +37,45 @@ function relationRank(r: GroupRelation | undefined): number {
  * 元の配列は変更しない。
  */
 export function sortCasesInGroup(cases: readonly CaseRecord[]): CaseRecord[] {
-  return [...cases].sort((a, b) => {
-    const d = relationRank(a.groupRelation) - relationRank(b.groupRelation);
-    if (d !== 0) return d;
-    if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1;
-    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-  });
+  return [...cases].sort(compareInGroup);
+}
+
+/** グループ内の比較（主たる申請人 → 帯同者 → その他 → 未設定、同じ関係は登録順） */
+export function compareInGroup(a: CaseRecord, b: CaseRecord): number {
+  const d = relationRank(a.groupRelation) - relationRank(b.groupRelation);
+  if (d !== 0) return d;
+  if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+/**
+ * 一覧の行を、グループごとにまとめた順に並べ直す（一覧は 1 本の並びのまま、ページ分割もこの並びで行う）。
+ * - グループの行は、そのグループの最初の案件が一覧に現れる位置にまとめて置く（並び順の指定を保つ）。
+ * - グループ内は compareInGroup の順。グループ外の行、存在しないグループを指す行は、元の位置のまま。
+ */
+export function orderRowsByGroup<T extends { record: CaseRecord }>(rows: readonly T[], groups: readonly CaseGroup[]): T[] {
+  const known = new Set(groups.map((g) => g.id));
+  const members = new Map<string, T[]>();
+  for (const r of rows) {
+    const id = r.record.groupId;
+    if (id && known.has(id)) {
+      const list = members.get(id);
+      if (list) list.push(r);
+      else members.set(id, [r]);
+    }
+  }
+  const out: T[] = [];
+  const emitted = new Set<string>();
+  for (const r of rows) {
+    const id = r.record.groupId;
+    if (!id || !known.has(id)) {
+      out.push(r);
+    } else if (!emitted.has(id)) {
+      emitted.add(id);
+      out.push(...[...members.get(id)!].sort((a, b) => compareInGroup(a.record, b.record)));
+    }
+  }
+  return out;
 }
 
 export interface GroupSection {
@@ -96,4 +129,23 @@ export function withGroup(c: CaseRecord, groupId: string, relation?: GroupRelati
   if (relation === "") delete next.groupRelation;
   else if (relation !== undefined) next.groupRelation = relation;
   return next;
+}
+
+/** 一覧の見出し用。グループの名前と、一覧（絞り込み後）に出る案件の数 */
+export type GroupHeads = Map<string, { name: string; count: number }>;
+
+export function groupHeads<T extends { record: CaseRecord }>(rows: readonly T[], groups: readonly CaseGroup[]): GroupHeads {
+  const heads: GroupHeads = new Map(groups.map((g) => [g.id, { name: g.name, count: 0 }]));
+  for (const r of rows) {
+    const h = r.record.groupId ? heads.get(r.record.groupId) : undefined;
+    if (h) h.count++;
+  }
+  return heads;
+}
+
+/** 行の前に、グループの見出しを出すか（前の行と別のグループに入った最初の行）。見出しの対象のグループを返す */
+export function headingGroupId(prev: CaseRecord | undefined, cur: CaseRecord, heads: GroupHeads): string | null {
+  const id = cur.groupId;
+  if (!id || !heads.has(id)) return null;
+  return prev && prev.groupId === id ? null : id;
 }

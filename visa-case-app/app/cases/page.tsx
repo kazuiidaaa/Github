@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CaseFilters } from "@/components/CaseFilters";
-import { CaseListTable, procedureLabel, ResidenceStatusCell, StatusBadges } from "@/components/CaseListTable";
+import { CaseListTable, GroupHeading, procedureLabel, ResidenceStatusCell, StatusBadges } from "@/components/CaseListTable";
 import { ExpiryBadge } from "@/components/ExpiryBadge";
+import { GroupRelationBadge } from "@/components/GroupRelationBadge";
 import { DashboardCards } from "@/components/DashboardCards";
 import { LoadingNotice } from "@/components/LoadingNotice";
 import { UploadBox } from "@/components/UploadBox";
@@ -18,13 +19,14 @@ import {
   summarize,
   type CaseFilter,
 } from "@/lib/caseMetrics";
+import { groupHeads as buildGroupHeads, headingGroupId, orderRowsByGroup } from "@/lib/caseGroups";
 import { cachedSearchTargets } from "@/lib/caseSearch";
 import { activeCard, cardFilter, readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
 import { useLabels } from "@/lib/i18n/labels";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { hasResidenceCard } from "@/lib/documentKinds";
 import { formatDateTime } from "@/lib/format";
-import { useCan, useCases, useStoreError, useStoreLoaded } from "@/lib/store";
+import { useCan, useCases, useGroups, useStoreError, useStoreLoaded } from "@/lib/store";
 
 /** 一覧の順次表示を再生済みか。同じ画面を開き直しても、再生しない（画面を開いた最初の一度だけ。Issue #392） */
 let introPlayed = false;
@@ -35,6 +37,7 @@ function CasesView() {
   const t = useT();
   const labels = useLabels();
   const cases = useCases();
+  const groups = useGroups();
   const loaded = useStoreLoaded();
   const error = useStoreError();
   const router = useRouter();
@@ -46,7 +49,10 @@ function CasesView() {
   // 検索は、表で見える列の語（手続・在留資格・次の作業など）とメモにも当たる。語の組み立ては、案件ごとに覚えておき、入力のたびに作り直さない
   const targetsOf = useMemo(() => cachedSearchTargets(t, labels.workflow), [t, labels]);
   const rows = useMemo(() => applyFilter(cases, filter, targetsOf), [cases, filter, targetsOf]);
-  const pageData = useMemo(() => paginate(rows, readPage(new URLSearchParams(params.toString()))), [rows, params]);
+  // グループに入っている案件は、グループごとにまとめた並びにする（グループ外は従来どおり。ページ分割もこの並びで行う）
+  const orderedRows = useMemo(() => orderRowsByGroup(rows, groups), [rows, groups]);
+  const groupHeads = useMemo(() => buildGroupHeads(rows, groups), [rows, groups]);
+  const pageData = useMemo(() => paginate(orderedRows, readPage(new URLSearchParams(params.toString()))), [orderedRows, params]);
   const shown = pageData.items;
   const active = isFilterActive(filter);
   const query = filter.query.trim();
@@ -145,6 +151,7 @@ function CasesView() {
       <div className="@container">
       <CaseListTable
         rows={shown}
+        groupHeads={groupHeads}
         filter={filter}
         onSort={(sort) => go({ ...filter, sort })}
         stagger={stagger}
@@ -188,11 +195,24 @@ function CasesView() {
             )}
           </li>
         )}
-        {shown.map(({ record: c, metrics: m }) => (
-          <li key={c.id} className="relative mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm transition-colors active:bg-slate-100">
+        {shown.map(({ record: c, metrics: m }, i) => {
+          const headId = headingGroupId(shown[i - 1]?.record, c, groupHeads);
+          return (
+          <Fragment key={c.id}>
+          {headId && (
+            <li className="px-1 pt-2 text-sm font-bold">
+              <GroupHeading name={groupHeads.get(headId)!.name} count={groupHeads.get(headId)!.count} />
+            </li>
+          )}
+          <li className={`relative mac-card rounded-2xl border border-slate-200 bg-white p-4 text-sm transition-colors active:bg-slate-100 ${c.groupId && groupHeads.has(c.groupId) ? "ml-3" : ""}`}>
             <Link href={`/cases/${c.id}`} className="font-medium text-blue-700 after:absolute after:inset-0 hover:underline">
               {c.caseName}
             </Link>
+            {c.groupId && groupHeads.has(c.groupId) && c.groupRelation && (
+              <span className="ml-2 align-middle">
+                <GroupRelationBadge relation={c.groupRelation} />
+              </span>
+            )}
             <dl className="mt-3 grid grid-cols-[6rem_1fr] gap-y-2">
               <dt className="text-slate-500">{t("caseList.colApplicant")}</dt>
               <dd>{c.applicant.legalName || <span className="text-slate-400">{t("caseList.notEntered")}</span>}</dd>
@@ -212,7 +232,9 @@ function CasesView() {
               <dd className="text-slate-500">{formatDateTime(c.updatedAt)}</dd>
             </dl>
           </li>
-        ))}
+          </Fragment>
+          );
+        })}
       </ul>
       </div>
       {pageData.totalPages > 1 && (

@@ -68,7 +68,14 @@ export function newCaseNames(input: Pick<NewCaseInput, "bulk" | "caseName" | "gr
  * 案件 1 件分のレコードを組み立てる。検証を通った入力で呼ぶこと（手続種別は選択済み）。
  * 案件ごとに独立したレコードとするため、雇用情報は複製する（作成後の同期は行わない）。
  */
-export function buildNewCaseRecord(input: NewCaseInput & { procedureType: ProcedureType }, name: string, id: string, now: string): CaseRecord {
+export function buildNewCaseRecord(
+  input: NewCaseInput & { procedureType: ProcedureType },
+  name: string,
+  id: string,
+  now: string,
+  /** まとめて登録で作ったグループの ID。関係は空欄（後から案件の詳細で設定する） */
+  groupId?: string,
+): CaseRecord {
   const needsTarget = procedureNeedsTarget(input.procedureType);
   return {
     id,
@@ -78,6 +85,7 @@ export function buildNewCaseRecord(input: NewCaseInput & { procedureType: Proced
     targetStatus: needsTarget ? input.targetStatus.trim() : "",
     memo: input.memo,
     acceptedDate: input.acceptedDate,
+    ...(groupId ? { groupId } : {}),
     workflowStatus: "preparing",
     createdAt: now,
     updatedAt: now,

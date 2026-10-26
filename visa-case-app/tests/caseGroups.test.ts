@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
   GROUP_NAME_MAX,
   groupCases,
+  groupHeads,
+  headingGroupId,
+  orderRowsByGroup,
   groupNameError,
   normalizeRelation,
   sortCasesInGroup,
   withGroup,
 } from "../lib/caseGroups";
-import type { CaseGroup, CaseRecord } from "../lib/types";
+import { buildNewCaseRecord, type NewCaseInput } from "../lib/newCaseSubmit";
+import { EMPTY_EMPLOYMENT, type CaseGroup, type CaseRecord } from "../lib/types";
 
 // 値はすべてダミー。
 const c = (id: string, createdAt: string, groupId?: string, groupRelation?: CaseRecord["groupRelation"]): CaseRecord =>
@@ -104,5 +108,48 @@ describe("withGroup", () => {
     expect(out.groupId).toBeUndefined();
     expect(out.groupRelation).toBeUndefined();
     expect(out.id).toBe("1");
+  });
+});
+
+describe("orderRowsByGroup / groupHeads / headingGroupId（一覧の並び）", () => {
+  const groups = [g("g1", "2026-03-01"), g("g2", "2026-03-02")];
+  const row = (rec: CaseRecord) => ({ record: rec });
+
+  it("グループは最初の案件の位置にまとめ、グループ内は主たる申請人が先頭。グループ外は元の位置のまま", () => {
+    const rows = [
+      row(c("x", "2026-01-01")),
+      row(c("a", "2026-01-02", "g1", "companion")),
+      row(c("y", "2026-01-03")),
+      row(c("b", "2026-01-04", "g1", "primary")),
+      row(c("z", "2026-01-05", "gone", "primary")),
+    ];
+    expect(orderRowsByGroup(rows, groups).map((r) => r.record.id)).toEqual(["x", "b", "a", "y", "z"]);
+  });
+
+  it("見出しは、前の行と別のグループに入った最初の行にだけ出す。件数は一覧に出る案件の数", () => {
+    const rows = orderRowsByGroup(
+      [row(c("a", "2026-01-02", "g1", "primary")), row(c("b", "2026-01-03", "g1")), row(c("x", "2026-01-01"))],
+      groups,
+    );
+    const heads = groupHeads(rows, groups);
+    expect(heads.get("g1")).toEqual({ name: "グループg1", count: 2 });
+    expect(heads.get("g2")).toEqual({ name: "グループg2", count: 0 });
+    expect(headingGroupId(undefined, rows[0].record, heads)).toBe("g1");
+    expect(headingGroupId(rows[0].record, rows[1].record, heads)).toBeNull();
+    expect(headingGroupId(rows[1].record, rows[2].record, heads)).toBeNull();
+  });
+});
+
+describe("まとめて登録のグループ", () => {
+  const input: NewCaseInput & { procedureType: "renewal" } = {
+    bulk: true, caseName: "", procedureType: "renewal", currentStatus: "", targetStatus: "", memo: "", acceptedDate: "",
+    employment: { ...EMPTY_EMPLOYMENT }, groupName: "グループ", names: ["", ""],
+  };
+  it("作成する案件をグループに入れる（関係は空欄）。グループがなければ従来どおり", () => {
+    const withGroupId = buildNewCaseRecord(input, "A", "id1", "2026-01-01T00:00:00.000Z", "g-1");
+    expect(withGroupId.groupId).toBe("g-1");
+    expect(withGroupId.groupRelation).toBeUndefined();
+    const plain = buildNewCaseRecord(input, "A", "id2", "2026-01-01T00:00:00.000Z");
+    expect(plain).not.toHaveProperty("groupId");
   });
 });
