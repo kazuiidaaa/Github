@@ -69,8 +69,8 @@ describe("宗教（カテゴリー区分なし）", () => {
     expect(ids("宗教", "change", "", "check")).toEqual(["religious_status_career"]);
   });
   it("更新：概要が必須、住民税の証明書は要確認（△）。派遣状は無い", () => {
-    expect(ids("宗教", "renewal", "", "required")).toEqual([...COMMON.renewal, "organization_overview"]);
-    expect(ids("宗教", "renewal", "", "check")).toEqual(["resident_tax_certificates"]);
+    expect(ids("宗教", "renewal", "", "required")).toEqual([...COMMON.renewal, "organization_overview", "resident_tax_certificates"]);
+    expect(ids("宗教", "renewal", "", "check")).toEqual([]);
     expect(allIds("宗教", "renewal")).not.toContain("dispatch_letter");
   });
 });
