@@ -68,7 +68,7 @@ export function ThemeToggle() {
       type="button"
       onClick={next}
       aria-label={t("common.themeAria", { label })}
-      className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
+      className="mac-button inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
     >
       <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6">
         <circle cx="8" cy="8" r="6" />

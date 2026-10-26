@@ -20,7 +20,7 @@ export function NextActionCard({
   const a = decideNextAction(record, t);
   // リンク型のボタンも、Button と同じ高さ 44px（人の決定。Issue #392）
   const buttonClass =
-    "inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover active:opacity-80";
+    "mac-button inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-text hover:bg-accent-hover active:opacity-80";
   return (
     <section
       aria-label={t("dialog.nextAction_aria")}

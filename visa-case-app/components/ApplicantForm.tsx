@@ -205,7 +205,10 @@ export function ApplicantForm({ record, onGoDocuments }: { record: CaseRecord; o
           <div className="md:col-span-2">
             <AddressField id={applicantFieldId("address")} label={t("casePage.field_address")} value={form.address} disabled={confirmed} onChange={(v) => set("address", v)} />
           </div>
-          <StatusSelect id={applicantFieldId("residenceStatus")} legend={t("casePage.field_residenceStatus")} required error={errors.residenceStatus} hint={hints.card} value={form.residenceStatus} disabled={confirmed} onChange={(v) => set("residenceStatus", v)} withGrade />
+          {/* 選択肢が多いため、2 列の片側ではなく、横いっぱいに置く（狭い列に置くと、項目名が 1 文字ずつ折れていた） */}
+          <div className="md:col-span-2">
+            <StatusSelect id={applicantFieldId("residenceStatus")} legend={t("casePage.field_residenceStatus")} required error={errors.residenceStatus} hint={hints.card} value={form.residenceStatus} disabled={confirmed} onChange={(v) => set("residenceStatus", v)} withGrade />
+          </div>
           {date("residenceExpiryDate", t("casePage.field_residenceExpiryDate"))}
           {text("residenceCardNumber", t("casePage.field_residenceCardNumber"))}
           {text("workRestriction", t("casePage.field_workRestriction"), { placeholder: t("caseApplicant.exWorkRestriction") })}

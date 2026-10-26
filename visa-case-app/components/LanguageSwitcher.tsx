@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
         }}
         aria-label={t("common.languageLabel")}
         aria-describedby={draft ? noteId : undefined}
-        className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
+        className="mac-button rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
       >
         {LANGS.map((l) => (
           <option key={l} value={l} lang={l}>

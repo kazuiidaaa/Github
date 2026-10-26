@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
         <p role="alert" className="text-slate-700">
           {t("auth.resetLinkInvalid")}
         </p>
-        <Link href="/login" className="inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 text-sm font-bold text-accent-text">
+        <Link href="/login" className="mac-button inline-flex min-h-[44px] items-center rounded-full bg-accent px-5 text-sm font-bold text-accent-text">
           {t("auth.toLoginScreen")}
         </Link>
       </div>

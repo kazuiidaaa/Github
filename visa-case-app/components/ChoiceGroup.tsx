@@ -224,7 +224,7 @@ export function ChoiceGroup({
         aria-pressed={checked}
         disabled={disabled || o.disabled}
         onClick={() => choose(o.value)}
-        className={`inline-flex min-h-[44px] w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60 ${checked ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white text-slate-800 hover:bg-slate-100"}`}
+        className={`mac-button inline-flex min-h-[44px] w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60 ${checked ? "border-accent bg-accent text-accent-text" : "border-line-strong bg-white text-slate-800 hover:bg-slate-100"}`}
       >
         {checked && <CheckIcon />}
         <span className="min-w-0 flex-1 break-words">{o.label}</span>
@@ -259,7 +259,7 @@ export function ChoiceGroup({
       >
         {checked && (o.tone ? <ToneIcon tone={o.tone} /> : <CheckIcon />)}
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="break-words">{o.label}</span>
+          <span className={isList ? "break-words" : "break-words md:whitespace-nowrap"}>{o.label}</span>
           {o.hint && <span className="text-xs font-medium opacity-80">{o.hint}</span>}
         </span>
         {checked && isList && <span className="shrink-0 text-xs font-medium">{t("input.choiceGroup_selected")}</span>}
@@ -317,7 +317,7 @@ export function ChoiceGroup({
                       {s.heading}
                     </div>
                   )}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{s.options.map(s.shortcut ? renderShortcut : renderOption)}</div>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-2">{s.options.map(s.shortcut ? renderShortcut : renderOption)}</div>
                 </div>
               ))}
             </div>

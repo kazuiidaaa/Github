@@ -296,6 +296,16 @@
     border-color: var(--focus-ring);
     --tw-ring-color: color-mix(in srgb, var(--focus-ring) 45%, transparent);
   }
+  /* 件数カード（案件一覧・ホーム）：グループ化した面と同じ角丸・枠。中のボタンの焦点の輪も、カードの角丸に沿わせる（従来は上だけ 16px で、輪が四角く見えた） */
+  :root:not(:has(.m-root)) .mac-metric {
+    border-radius: var(--radius-mac-group);
+  }
+  :root:not(:has(.m-root)) .mac-metric:not(.border-accent) {
+    border-color: var(--color-separator);
+  }
+  :root:not(:has(.m-root)) .mac-metric > :is(button, a) {
+    border-radius: inherit;
+  }
   /* 項目名：一段小さく、太さは保つ（必須は「必須」の文字で別に示す） */
   :root:not(:has(.m-root)) .mac-label {
     font-size: var(--text-mac-footnote);
