@@ -52,7 +52,21 @@ export interface RequirementRule {
   note?: string;
   /** 内容の確認が不十分な項目（画面に「要確認」を表示） */
   verify?: boolean;
+  /**
+   * 在留資格「留学」で、申請人の国籍が別表掲載国・地域か否かで要否が異なる書類（Issue #496）。
+   * lib/requirements/ryugakuScreeningCountries.ts の classifyNationality で applicant.nationality を判定できたときだけ、
+   * ここの level/note で上の level/note/verify を上書きする（verify は外し、確定した要否にする）。
+   * 判定できない（不明）ときは、上の level/note/verify（要確認＋列ごとの注記）のフォールバックのまま変えない。
+   */
+  countryVariant?: { listed: CountryVariantOutcome; other: CountryVariantOutcome };
 }
+
+/**
+ * countryVariant の1列分の確定した要否。level は RequirementRule["level"] と同じ3種に、列が別表に掲載されず提出不要の
+ * not_required を加えたもの（RequirementRule.level 自体は not_required を持てないため、別の型にしてある）。
+ * note は、要否が条件次第の列（check）にだけ付ける（required・not_required の列は、条件なしのため note を持たない）。
+ */
+export type CountryVariantOutcome = { level: "required" | "check" | "optional" | "not_required"; note?: string };
 
 /** 判定の軸。category＝所属機関のカテゴリー（employment.category）、acquisitionCause＝取得の事由、applicantType＝医療の申請人の区分、identity＝日本人の配偶者等の申請人の身分、teijushaType＝定住者の区分、eijuuType＝永住許可申請の提出書類一覧表の区分、renewalTimes＝定住者（日系3世）の更新の回数、schoolType＝留学の入学先の種類（いずれも案件の入力） */
 export type RuleAxis = "category" | "acquisitionCause" | "applicantType" | "identity" | "teijushaType" | "eijuuType" | "renewalTimes" | "schoolType";
