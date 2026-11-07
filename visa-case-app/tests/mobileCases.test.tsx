@@ -115,6 +115,21 @@ describe("絞り込み・並び替え（URL の反映）", () => {
   });
 });
 
+describe("検索の対象（PC版 app/cases/page.tsx と同じ。メモ・手続なども当たる。Issue #514）", () => {
+  it("メモの語で検索できる（以前は案件名・申請人氏名・在留資格のみで、メモには当たらなかった）", () => {
+    const cases = seed();
+    cases[1] = { ...cases[1], memo: "雇用契約書の再提出を待つ" };
+    ctx.cases = cases;
+    expect(names(render("q=" + encodeURIComponent("雇用契約書")))).toEqual(["demo-sample-b"]);
+  });
+  it("手続の語で検索できる（デモの3件は、すべて在留期間更新）", () => {
+    expect(names(render("q=" + encodeURIComponent("在留期間更新"))).sort()).toEqual(["demo-sample-a", "demo-sample-b", "demo-sample-c"]);
+  });
+  it("状態の名前で検索できる（サンプル案件Aだけが要確認）", () => {
+    expect(names(render("q=" + encodeURIComponent("要確認")))).toEqual(["demo-sample-a"]);
+  });
+});
+
 describe("空・読み込み中・エラー", () => {
   it("該当なし：案件はあるので、条件のリセットを出し、新規登録は出さない", () => {
     const m = render("procedure=change");

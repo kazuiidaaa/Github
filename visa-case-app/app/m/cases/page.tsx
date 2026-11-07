@@ -12,7 +12,9 @@ import { LargeTitleHeader } from "@/components/mobile/LargeTitleHeader";
 import { SearchField } from "@/components/mobile/SearchField";
 import { groupHeads as buildGroupHeads, orderRowsByGroup } from "@/lib/caseGroups";
 import { applyFilter, DEFAULT_FILTER, isFilterActive, PAGE_SIZE, type CaseFilter } from "@/lib/caseMetrics";
+import { cachedSearchTargets } from "@/lib/caseSearch";
 import { readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
+import { useLabels } from "@/lib/i18n/labels";
 import { useT } from "@/lib/i18n/LanguageProvider";
 import { ensureLoaded, refetch, useCan, useCases, useGroups, useStoreError, useStoreLoaded } from "@/lib/store";
 
@@ -47,6 +49,7 @@ const SEARCH_DEBOUNCE_MS = 300;
  */
 function CasesView() {
   const t = useT();
+  const labels = useLabels();
   const router = useRouter();
   const params = useSearchParams();
   const cases = useCases();
@@ -59,8 +62,10 @@ function CasesView() {
 
   const filter = useMemo(() => readFilter(new URLSearchParams(params.toString())), [params]);
   const requestedPage = readPage(new URLSearchParams(params.toString()));
+  // 検索は、PC版と同じ対象（手続・在留資格・次の作業・メモなど）に当たる。語の組み立ては案件ごとに覚えておく（app/cases/page.tsx と同じ）
+  const targetsOf = useMemo(() => cachedSearchTargets(t, labels.workflow), [t, labels]);
   // グループに入っている案件は、グループごとにまとめた並びにする（グループ外は従来どおり。「さらに読み込む」もこの並びで進む）
-  const rows = useMemo(() => orderRowsByGroup(applyFilter(cases, filter), groups), [cases, filter, groups]);
+  const rows = useMemo(() => orderRowsByGroup(applyFilter(cases, filter, targetsOf), groups), [cases, filter, targetsOf, groups]);
   const groupHeads = useMemo(() => buildGroupHeads(rows, groups), [rows, groups]);
   const active = isFilterActive(filter);
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
@@ -208,8 +213,8 @@ function CasesView() {
           >
             <SearchField
               value={text}
-              label={t("caseList.searchLabel")}
-              placeholder={t("mobile.casesSearchPlaceholder")}
+              label={t("caseList.searchLabelList")}
+              placeholder={t("caseList.searchLabelList")}
               onChange={(v) => {
                 setText(v);
                 if (composing.current) return;
