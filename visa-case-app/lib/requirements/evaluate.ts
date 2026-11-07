@@ -3,6 +3,7 @@ import { PROCEDURE_TYPES, type CaseRecord, type RequirementState } from "../type
 import { evidenceNumbers, resolveHspPointSheet } from "../hspPoints";
 import { jaT, reasonText, type ReasonCode } from "../i18n/caseRequirements";
 import { isCollected } from "./progress";
+import { classifyNationality } from "./ryugakuScreeningCountries";
 import {
   ACQUISITION_CAUSE_LABELS,
   RULE_SETS,
@@ -429,6 +430,8 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
 
     let result: Result;
     let reasonCode: ReasonCode;
+    // 国籍から別表掲載国・地域か否かを判定できたときに、level/note/verify を差し替えた規則（countryVariant を持つ規則のみ。Issue #496）
+    let effectiveRule: RequirementRule = rule;
     if (notRequired) {
       result = "not_required";
       reasonCode = notRequired;
@@ -436,23 +439,50 @@ function evaluateByAxes(c: CaseRecord, ruleSet: RuleSet): Evaluation {
       result = "not_required";
       reasonCode = { kind: "conditionNotMet", note: rule.note };
     } else {
-      result = rule.level;
-      // 選択済みの軸の値だけを、理由の文に入れる（全て未選択なら「共通」）
-      reasonCode = {
-        kind: "axesLevel",
-        level: rule.level,
-        ...(has("acquisitionCause") && cause !== "" ? { cause } : {}),
-        ...(has("category") && category !== "" ? { category } : {}),
-        ...(has("applicantType") && type !== "" ? { type } : {}),
-        ...(has("identity") && identity !== "" ? { identity } : {}),
-        ...(has("teijushaType") && teijushaType !== "" ? { teijushaType } : {}),
-        ...(has("schoolType") && schoolType !== "" ? { schoolType } : {}),
-        ...(has("eijuuType") && eijuuType !== "" ? { eijuuType } : {}),
-        ...(renewalTimes !== "" ? { renewalTimes } : {}),
-      };
+      // 列（別表掲載国・地域／同左以外）で要否が異なる書類は、国籍を判定できた間だけ、確定した要否に差し替える。
+      // 判定できない（国籍未入力・対応付け不可・別表データ未整備）ときは、rule の level/note/verify（要確認＋列ごとの注記）のまま変えない
+      let level = rule.level;
+      let countryNotApplicable = false;
+      const classification = rule.countryVariant ? classifyNationality(c.applicant.nationality) : "unknown";
+      if (rule.countryVariant && classification !== "unknown") {
+        const outcome = rule.countryVariant[classification];
+        if (outcome.level === "not_required") {
+          countryNotApplicable = true;
+          effectiveRule = { ...rule, note: outcome.note, verify: undefined };
+        } else {
+          level = outcome.level;
+          effectiveRule = { ...rule, level: outcome.level, note: outcome.note, verify: undefined };
+        }
+      }
+      if (countryNotApplicable) {
+        result = "not_required";
+        reasonCode = { kind: "conditionNotMet" };
+      } else {
+        result = level;
+        // 選択済みの軸の値だけを、理由の文に入れる（全て未選択なら「共通」）
+        reasonCode = {
+          kind: "axesLevel",
+          level,
+          ...(has("acquisitionCause") && cause !== "" ? { cause } : {}),
+          ...(has("category") && category !== "" ? { category } : {}),
+          ...(has("applicantType") && type !== "" ? { type } : {}),
+          ...(has("identity") && identity !== "" ? { identity } : {}),
+          ...(has("teijushaType") && teijushaType !== "" ? { teijushaType } : {}),
+          ...(has("schoolType") && schoolType !== "" ? { schoolType } : {}),
+          ...(has("eijuuType") && eijuuType !== "" ? { eijuuType } : {}),
+          ...(renewalTimes !== "" ? { renewalTimes } : {}),
+        };
+      }
     }
     const state = c.requirementStates[rule.id] ?? NO_STATE;
-    pushItem(items, c, ruleSet, { rule, result, effective: state.override ?? result, reason: reasonText(jaT, reasonCode), reasonCode, state });
+    pushItem(items, c, ruleSet, {
+      rule: effectiveRule,
+      result,
+      effective: state.override ?? result,
+      reason: reasonText(jaT, reasonCode),
+      reasonCode,
+      state,
+    });
   }
   return { ...summarize(ruleSet, needsCategory, categoryOutOfRange, needsCause, items), needsApplicantType, needsIdentity, needsTeijushaType, needsSchoolType, needsEijuuType, needsRenewalTimes };
 }

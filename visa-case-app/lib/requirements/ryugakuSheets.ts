@@ -1,5 +1,5 @@
 import { SCHOOL_TYPES, type SchoolType } from "../formDetails";
-import type { RequirementRule } from "./rules";
+import type { CountryVariantOutcome, RequirementRule } from "./rules";
 
 // 在留資格「留学」の提出書類一覧表（チェックシート。入管庁が入学先の種類・適正校の区分ごとに掲載）の表。Issue #420。
 // 照合表は docs/official/reconciliation/ryugaku-procedures-2026-10-24.md。資料は docs/official/ryugaku-{coe|change-acquisition|renewal}-checksheet-*.pdf。
@@ -500,17 +500,35 @@ const SHEETS: Record<SheetProcedure, Sheets> = { coe: COE, change: CHANGE, renew
 
 const LEVEL_MARK: Record<string, string> = { o: "○", c: "△（備考欄参照）", "-": "－" };
 
-/** 1つの行を、規則の level・note・verify に直す。"-" だけ（全列で不要）は null */
-function resolveRow(row: Row): { level: RequirementRule["level"]; note?: string; verify?: boolean } | null {
+/** 列（"o"・"c"・"-"）1つ分の、別表掲載国・地域か否かを判定できたときの確定した要否。note は条件次第の列（c）にだけ付ける */
+function countryVariantOutcomeOf(code: string, note?: string): CountryVariantOutcome {
+  if (code === "o") return { level: "required" };
+  if (code === "c") return { level: "check", ...(note ? { note } : {}) };
+  return { level: "not_required" };
+}
+
+/**
+ * 1つの行を、規則の level・note・verify に直す。"-" だけ（全列で不要）は null。
+ * 列で要否が異なる行（別表掲載国・地域／同左以外）は、従来どおりの要確認＋列ごとの注記（level・note・verify。国籍が判定できない
+ * ときのフォールバック用）に加え、countryVariant（判定できたときに使う、列ごとの確定した要否）も返す（Issue #496）
+ */
+function resolveRow(
+  row: Row,
+): { level: RequirementRule["level"]; note?: string; verify?: boolean; countryVariant?: RequirementRule["countryVariant"] } | null {
   const codes = row.l.split("");
   if (codes.every((c) => c === "-")) return null;
   const same = codes.every((c) => c === codes[0]);
   const level = codes.includes("o") && same ? "required" : "check";
   if (same) return { level, ...(row.note ? { note: row.note } : {}) };
-  // 列で要否が異なる行：要確認にして、列ごとの要否を注記に書く
+  // 列で要否が異なる行：要確認にして、列ごとの要否を注記に書く（フォールバック）
   const [listed, other] = codes;
   const prefix = `要否は列で異なる（別表掲載国・地域＝${LEVEL_MARK[listed]}、同左以外＝${LEVEL_MARK[other]}）`;
-  return { level: "check", note: row.note ? `${prefix}。${row.note}` : prefix, verify: true };
+  return {
+    level: "check",
+    note: row.note ? `${prefix}。${row.note}` : prefix,
+    verify: true,
+    countryVariant: { listed: countryVariantOutcomeOf(listed, row.note), other: countryVariantOutcomeOf(other, row.note) },
+  };
 }
 
 /**
@@ -521,14 +539,19 @@ function resolveRow(row: Row): { level: RequirementRule["level"]; note?: string;
 export function ryugakuSheetRules(procedure: RyugakuProcedure): RequirementRule[] {
   const sheets = SHEETS[procedure === "acquisition" ? "change" : procedure];
   const types = RYUGAKU_SHEET_TYPES[procedure];
-  const groups = new Map<string, { k: DocKey; name: string; level: RequirementRule["level"]; note?: string; verify?: boolean; schoolTypes: SchoolType[] }>();
+  const groups = new Map<
+    string,
+    { k: DocKey; name: string; level: RequirementRule["level"]; note?: string; verify?: boolean; countryVariant?: RequirementRule["countryVariant"]; schoolTypes: SchoolType[] }
+  >();
   for (const type of types) {
     for (const row of sheets[type] ?? []) {
       if (procedure === "acquisition" && row.k === "activity") continue;
       const resolved = resolveRow(row);
       if (!resolved) continue;
       const name = row.name ?? DOCS[row.k];
-      const key = [row.k, name, resolved.level, resolved.note ?? "", resolved.verify ? "v" : ""].join("\u0000");
+      const key = [row.k, name, resolved.level, resolved.note ?? "", resolved.verify ? "v" : "", resolved.countryVariant ? JSON.stringify(resolved.countryVariant) : ""].join(
+        "\u0000",
+      );
       const found = groups.get(key);
       if (found) found.schoolTypes.push(type);
       else groups.set(key, { k: row.k, name, ...resolved, schoolTypes: [type] });
@@ -548,6 +571,7 @@ export function ryugakuSheetRules(procedure: RyugakuProcedure): RequirementRule[
       level: g.level,
       ...(g.note ? { note: g.note } : {}),
       ...(g.verify ? { verify: true } : {}),
+      ...(g.countryVariant ? { countryVariant: g.countryVariant } : {}),
     };
   });
   // 手元に一覧表が無い入学先の種類（現在はなし）。この行を再び使うときは、lib/i18n/ruleTexts.ts に、名前と注記の訳を足す（以前の訳は履歴の ryugaku_sheet_not_obtained の行）。

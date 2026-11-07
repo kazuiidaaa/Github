@@ -1,10 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { FormDetailsForm } from "../components/FormDetailsForm";
 import { EMPTY_FORM_DETAILS, SCHOOL_TYPES, type SchoolType } from "../lib/formDetails";
 import { schoolTypeNotice } from "../lib/i18n/caseRequirements";
 import { evaluate, ruleSetOfCase } from "../lib/requirements/evaluate";
 import { RULE_SETS, ruleSetComparedAt } from "../lib/requirements/rules";
+import { LISTED_COUNTRIES, classifyNationality } from "../lib/requirements/ryugakuScreeningCountries";
 import { RYUGAKU_SHEET_TYPES, ryugakuSheetRules } from "../lib/requirements/ryugakuSheets";
 import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type ProcedureType } from "../lib/types";
 
@@ -12,10 +13,10 @@ import { EMPTY_APPLICANT, EMPTY_EMPLOYMENT, type CaseRecord, type ProcedureType 
 type Proc = "coe" | "change" | "renewal" | "acquisition";
 const STATUS = "留学";
 
-function make(procedureType: ProcedureType, schoolType: SchoolType | "" = "", cause: "" | "other" = ""): CaseRecord {
+function make(procedureType: ProcedureType, schoolType: SchoolType | "" = "", cause: "" | "other" = "", nationality = ""): CaseRecord {
   return {
     id: "c1", caseName: "試験", procedureType, currentStatus: procedureType === "renewal" ? STATUS : "", targetStatus: procedureType === "renewal" ? "" : STATUS,
-    memo: "", workflowStatus: "preparing", createdAt: "", updatedAt: "", applicant: { ...EMPTY_APPLICANT }, employment: { ...EMPTY_EMPLOYMENT },
+    memo: "", workflowStatus: "preparing", createdAt: "", updatedAt: "", applicant: { ...EMPTY_APPLICANT, nationality }, employment: { ...EMPTY_EMPLOYMENT },
     formDetails: { ...EMPTY_FORM_DETAILS, schoolType, acquisitionCause: cause },
     requirementStates: {}, customRequirements: [], acceptedDate: "", plannedApplicationDate: "", checkMemo: "", checks: [], documents: [],
   };
@@ -190,6 +191,96 @@ describe("留学の認定・変更・更新・取得（ryugaku-procedures-2026-1
       expect(rs.sources.some((s) => s.url === "https://www.moj.go.jp/isa/applications/status/student.html" && s.kind === "page")).toBe(true);
       expect(rs.sources.some((s) => s.title.includes("未確認") && s.title.includes("PDFのURLは番号がなく"))).toBe(true);
     }
+  });
+});
+
+// Issue #496：国籍から「別表掲載国・地域か否か」を判定できるようにする（lib/requirements/ryugakuScreeningCountries.ts）。
+// 別表の実際の掲載国・地域名は未入手のため、試験はダミーの国名（「テスト国A」等）・ダミーの一覧データのみを使う。
+describe("classifyNationality（Issue #496。国籍の自由入力文字列から、別表掲載国・地域か否かを判定する）", () => {
+  it("一覧（listedCountries）が空、または国籍が未入力のときは「不明」（unknown）", () => {
+    expect(classifyNationality("テスト国A", [])).toBe("unknown");
+    expect(classifyNationality("", ["テスト国A"])).toBe("unknown");
+    expect(classifyNationality("   ", ["テスト国A"])).toBe("unknown");
+    expect(classifyNationality("", [])).toBe("unknown");
+  });
+
+  it("本番データ（LISTED_COUNTRIES）は、別表の原文を未入手のため空である。国籍の既定の判定は常に「不明」", () => {
+    expect(LISTED_COUNTRIES).toEqual([]);
+    expect(classifyNationality("テスト国A")).toBe("unknown");
+  });
+
+  it("一覧があるとき、一致すれば「listed」、一致しなければ「other」と確定できる（表記のゆれは吸収する）", () => {
+    const list = ["テスト国A", "テスト国B"];
+    expect(classifyNationality("テスト国A", list)).toBe("listed");
+    expect(classifyNationality(" テスト国Ａ ", list)).toBe("listed"); // 前後の空白・全角英字のゆれ
+    expect(classifyNationality("テスト国C", list)).toBe("other");
+  });
+});
+
+describe("留学の更新等：国籍から確定した要否に差し替える（Issue #496。ダミーの一覧データを注入して検証）", () => {
+  afterEach(() => {
+    LISTED_COUNTRIES.length = 0;
+  });
+
+  /** proc・type の doc 規則1件（key。effective による絞り込みをしない。未選択時や退行確認用） */
+  const itemOf = (proc: Proc, type: SchoolType, key: string, nationality = "") =>
+    evaluate(make(proc, type, proc === "acquisition" ? "other" : "", nationality))
+      .items.filter((i) => i.rule.id === `ryugaku_${key}` || i.rule.id.startsWith(`ryugaku_${key}_`))
+      .find((i) => i.rule.schoolTypes?.includes(type));
+
+  it("列で要否が異なる行（co）：別表掲載国・地域は確定した要確認、同左以外は確定した必須。verify は外れる", () => {
+    LISTED_COUNTRIES.push("テスト国A");
+    const listed = itemOf("renewal", "japanese-nonapproved", "living", "テスト国A")!;
+    expect(listed.effective).toBe("check");
+    expect(listed.rule.verify).toBeFalsy();
+    expect(listed.rule.note).toBe("別表掲載国・地域は、直近の在留期間更新許可申請時において、資格外活動許可に係る指導を受けている場合");
+
+    const other = itemOf("renewal", "japanese-nonapproved", "living", "テスト国B")!;
+    expect(other.effective).toBe("required");
+    expect(other.rule.verify).toBeFalsy();
+    expect(other.rule.note).toBeUndefined();
+  });
+
+  it("列で要否が異なる行（-o）：別表掲載国・地域は確定した不要（not_required）、同左以外は確定した必須", () => {
+    LISTED_COUNTRIES.push("テスト国A");
+    const listed = itemOf("coe", "vocational-class2", "expense", "テスト国A")!;
+    expect(listed.effective).toBe("not_required");
+    expect(listed.rule.verify).toBeFalsy();
+
+    const other = itemOf("coe", "vocational-class2", "expense", "テスト国B")!;
+    expect(other.effective).toBe("required");
+    expect(other.rule.verify).toBeFalsy();
+  });
+
+  it("列で要否が異なる行（-c）：別表掲載国・地域は確定した不要、同左以外は確定した要確認", () => {
+    LISTED_COUNTRIES.push("テスト国A");
+    const listed = itemOf("coe", "vocational-class2", "scholarship", "テスト国A")!;
+    expect(listed.effective).toBe("not_required");
+
+    const other = itemOf("coe", "vocational-class2", "scholarship", "テスト国B")!;
+    expect(other.effective).toBe("check");
+    expect(other.rule.verify).toBeFalsy();
+    expect(other.rule.note).toBe("奨学金の給付を受ける場合（詳細は奨学金の給付に関する証明書一覧のとおり）");
+  });
+
+  it("一覧にない表記（対応付け不可ではなく、一覧がある上で不一致）は「同左以外」と確定する", () => {
+    LISTED_COUNTRIES.push("テスト国A");
+    const unmatched = itemOf("coe", "vocational-class2", "expense", "テスト国X")!;
+    expect(unmatched.effective).toBe("required");
+  });
+
+  it("判定できない間（国籍未入力、または一覧未整備）は、従来どおり要確認＋列ごとの注記のまま（退行なし）", () => {
+    LISTED_COUNTRIES.push("テスト国A");
+    const empty = itemOf("coe", "vocational-class2", "expense", "")!;
+    expect(empty.effective).toBe("check");
+    expect(empty.rule.verify).toBe(true);
+    expect(empty.rule.note).toContain("別表掲載国・地域＝－、同左以外＝○");
+
+    LISTED_COUNTRIES.length = 0; // 一覧未整備（本番データと同じ状態）に戻す
+    const noData = itemOf("coe", "vocational-class2", "expense", "テスト国A")!;
+    expect(noData.effective).toBe("check");
+    expect(noData.rule.verify).toBe(true);
+    expect(noData.rule.note).toContain("別表掲載国・地域＝－、同左以外＝○");
   });
 });
 
