@@ -13,7 +13,7 @@ import { procedureNeedsTarget, PROCEDURE_TYPES, type CaseRecord, type WorkflowSt
  * - 次の作業（案内の文、状態の名前、未受領書類・確認未了などの札の文）
  * - メモ（案件のメモ。表には出ないが、探すときの手がかり）
  * 画面に出る文字（次の作業・札・状態の名前）は、表示言語の文を使う。氏名・案件名・在留資格名・手続名・メモは、保存値のまま。
- * iPhone 版の一覧は、これを使わず、従来の対象（案件名・申請人氏名・在留資格）のまま（lib/caseMetrics.ts の applyFilter）。
+ * iPhone 版の一覧（app/m/cases/page.tsx）も、これを同じように渡して使う（Issue #514）。
  */
 export function listSearchTargets(c: CaseRecord, m: CaseMetrics, t: T, workflowLabel: (s: WorkflowStatus) => string): string[] {
   const expiry = c.applicant.residenceExpiryDate;
