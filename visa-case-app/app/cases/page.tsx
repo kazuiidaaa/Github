@@ -20,6 +20,7 @@ import {
   type CaseFilter,
 } from "@/lib/caseMetrics";
 import { groupHeads as buildGroupHeads, headingGroupId, orderRowsByGroup } from "@/lib/caseGroups";
+import { downloadCaseListCsv } from "@/lib/caseListCsv";
 import { cachedSearchTargets } from "@/lib/caseSearch";
 import { activeCard, cardFilter, readFilter, readPage, toQueryWithPage } from "@/lib/caseListQuery";
 import { useLabels } from "@/lib/i18n/labels";
@@ -139,14 +140,25 @@ function CasesView() {
       {!filter.noCard && (
         <>
       {loaded && (
-        <p className="mb-2 break-words text-sm font-medium" role="status" aria-live="polite">
-          {query ? t("caseList.searchResultCount", { query, count: rows.length, total: cases.length }) : t("caseList.resultCount", { count: rows.length, total: cases.length })}
-          {pageData.totalPages > 1 && (
-            <span className="ml-2 font-normal text-slate-500">
-              {t("caseList.showingRange", { from: (pageData.page - 1) * PAGE_SIZE + 1, to: (pageData.page - 1) * PAGE_SIZE + shown.length })}
-            </span>
-          )}
-        </p>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="break-words text-sm font-medium" role="status" aria-live="polite">
+            {query ? t("caseList.searchResultCount", { query, count: rows.length, total: cases.length }) : t("caseList.resultCount", { count: rows.length, total: cases.length })}
+            {pageData.totalPages > 1 && (
+              <span className="ml-2 font-normal text-slate-500">
+                {t("caseList.showingRange", { from: (pageData.page - 1) * PAGE_SIZE + 1, to: (pageData.page - 1) * PAGE_SIZE + shown.length })}
+              </span>
+            )}
+          </p>
+          {/* 絞り込み・並び順を反映した、表示中（ページ送りの前の全件）の行を書き出す（Issue #515） */}
+          <button
+            type="button"
+            onClick={() => downloadCaseListCsv(orderedRows)}
+            disabled={orderedRows.length === 0}
+            className="mac-button inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-line-strong bg-white px-4 text-sm font-bold hover:bg-slate-100 active:bg-slate-200 disabled:opacity-50"
+          >
+            {t("caseList.exportCsv")}
+          </button>
+        </div>
       )}
       <div className="@container">
       <CaseListTable
